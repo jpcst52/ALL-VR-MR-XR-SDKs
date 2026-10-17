@@ -1,0 +1,173 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+		000000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = { LastUpgradeCheck = 1600; };
+			buildConfigurationList = 00000000000000000000000A;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			mainGroup = 000000000000000000000002;
+			productRefGroup = 000000000000000000000003;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (000000000000000000000004 /* SpatialAtlas */,);
+		};
+		000000000000000000000002 /* Main group */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000005 /* SpatialAtlas */,
+				000000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		000000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (000000000000000000000007 /* SpatialAtlas.app */,);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		000000000000000000000004 /* SpatialAtlas */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 00000000000000000B;
+			buildPhases = (
+				000000000000000008 /* Sources */,
+				000000000000000009 /* Frameworks */,
+				00000000000000000C /* Resources */,
+			);
+			buildRules = ();
+			dependencies = ();
+			name = SpatialAtlas;
+			productName = SpatialAtlas;
+			productReference = 000000000000000007;
+			productType = "com.apple.product-type.application";
+		};
+		000000000000000005 /* SpatialAtlas */ = {
+			isa = PBXGroup;
+			children = (
+				00000000000000000D /* SpatialAtlasApp.swift */,
+				00000000000000000E /* ContentView.swift */,
+				00000000000000000F /* AtlasView.swift */,
+			);
+			path = SpatialAtlas;
+			sourceTree = "<group>";
+		};
+		000000000000000006 /* Products */ = {
+			isa = PBXGroup;
+			children = ();
+			name = Products;
+			sourceTree = "<group>";
+		};
+		000000000000000007 /* SpatialAtlas.app */ = {
+			isa = PBXFileReference;
+			explicitFileType = wrapper.application;
+			includeInIndex = 0;
+			path = SpatialAtlas.app;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		00000000000000000D /* SpatialAtlasApp.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = SpatialAtlasApp.swift;
+			sourceTree = "<group>";
+		};
+		00000000000000000E /* ContentView.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = ContentView.swift;
+			sourceTree = "<group>";
+		};
+		00000000000000000F /* AtlasView.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = AtlasView.swift;
+			sourceTree = "<group>";
+		};
+		0000000000000010 /* Sources */ = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		0000000000000011 /* Frameworks */ = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		0000000000000012 /* Resources */ = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		0000000000000013 /* SpatialAtlasApp.swift in Sources */ = { isa = PBXBuildFile; fileRef = 00000000000000000D; };
+		0000000000000014 /* ContentView.swift in Sources */ = { isa = PBXBuildFile; fileRef = 00000000000000000E; };
+		0000000000000015 /* AtlasView.swift in Sources */ = { isa = PBXBuildFile; fileRef = 00000000000000000F; };
+		000000000000000008 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0000000000000013,
+				0000000000000014,
+				0000000000000015,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		000000000000000009 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		00000000000000000C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		00000000000000000A = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0000000000000016,
+				0000000000000017,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		00000000000000000B = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0000000000000018,
+				0000000000000019,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0000000000000016 /* Project Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = { SDKROOT = xros; };
+			name = Debug;
+		};
+		0000000000000017 /* Project Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = { SDKROOT = xros; };
+			name = Release;
+		};
+		0000000000000018 /* Target Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.example.SpatialAtlas;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 7;
+				XROS_DEPLOYMENT_TARGET = 2.0;
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+			};
+			name = Debug;
+		};
+		0000000000000019 /* Target Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.example.SpatialAtlas;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 7;
+				XROS_DEPLOYMENT_TARGET = 2.0;
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+			};
+			name = Release;
+		};
+	};
+	rootObject = 000000000000000000000001;
+}

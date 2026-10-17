@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>A-Frame — Orbit Garden</title>
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <style>
+      body { margin: 0; font: 16px/1.5 system-ui, sans-serif; color: #f5f3ff; background: #171326; }
+      header { position: fixed; z-index: 2; top: 1rem; left: 1rem; max-width: 26rem; padding: .8rem 1rem; border-radius: .7rem; background: #171326dd; }
+      h1, p { margin: 0; }
+      p { color: #d6cfee; }
+      a-scene { height: 100vh; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Orbit Garden</h1>
+      <p>Enter VR with the headset icon. Look around at the slowly orbiting color lanterns.</p>
+    </header>
+    <a-scene background="color: #171326" renderer="colorManagement: true">
+      <a-entity light="type: ambient; color: #b8c8ff; intensity: 0.8"></a-entity>
+      <a-entity light="type: directional; color: #fff1cf; intensity: 1.4" position="-2 4 3"></a-entity>
+      <a-cylinder position="0 -0.12 0" radius="3" height="0.2" color="#253b47" material="roughness: 0.9"></a-cylinder>
+      <a-sky color="#171326"></a-sky>
+      <a-entity position="0 1.6 -4" animation="property: rotation; to: 0 360 0; loop: true; dur: 18000; easing: linear">
+        <a-sphere position="-1.4 0 0" radius="0.4" color="#f6a6ff" animation="property: position; dir: alternate; dur: 1800; loop: true; to: -1.4 0.5 0"></a-sphere>
+        <a-octahedron position="0.4 0.5 0.3" radius="0.55" color="#8be9fd" animation="property: rotation; to: 360 360 0; loop: true; dur: 6000; easing: linear"></a-octahedron>
+        <a-torus-knot position="1.6 -0.2 -0.4" radius="0.32" radius-tubular="0.08" color="#ffcf70" animation="property: scale; dir: alternate; dur: 1500; loop: true; to: 1.25 1.25 1.25"></a-torus-knot>
+      </a-entity>
+      <a-entity camera look-controls wasd-controls position="0 1.6 0">
+        <a-cursor color="#ffffff" scale="0.6 0.6 0.6"></a-cursor>
+      </a-entity>
+    </a-scene>
+  </body>
+</html>

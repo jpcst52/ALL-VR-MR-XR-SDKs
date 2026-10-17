@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Three.js — Prism Bloom</title>
+    <style>
+      html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #101723; color: #eff6ff; font: 16px/1.5 system-ui, sans-serif; }
+      canvas { display: block; }
+      #info { position: fixed; z-index: 1; top: 1rem; left: 1rem; max-width: 24rem; padding: .75rem 1rem; border-radius: .7rem; background: #101723d9; }
+      h1, p { margin: 0; }
+      p { color: #c1ccdd; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <header id="info">
+      <h1>Prism Bloom</h1>
+      <p>Drag to orbit on desktop. Use the VR button to view the animated prism in immersive VR.</p>
+    </header>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

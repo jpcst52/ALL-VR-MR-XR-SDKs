@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WebXR — Color Field</title>
+    <style>
+      :root { color-scheme: dark; font: 16px/1.5 system-ui, sans-serif; }
+      body { box-sizing: border-box; display: grid; min-height: 100vh; margin: 0; padding: 2rem; place-items: center; background: #101522; color: #edf2ff; }
+      main { width: min(100%, 38rem); }
+      h1 { margin-bottom: .25rem; }
+      p { color: #b9c5dc; }
+      button { border: 0; border-radius: .5rem; padding: .8rem 1.2rem; background: #85f0d0; color: #10221d; font: inherit; font-weight: 700; cursor: pointer; }
+      button:disabled { cursor: not-allowed; opacity: .55; }
+      #status { min-height: 3rem; padding-top: .7rem; }
+      canvas { display: block; width: 100%; height: auto; margin-top: 1rem; border: 1px solid #34415c; background: #17223a; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Color Field</h1>
+      <p>A tiny WebXR Device API demo. Enter VR to see a gently shifting color field; the preview below remains available without a headset.</p>
+      <button id="enter" type="button" disabled>Checking WebXR…</button>
+      <p id="status" role="status" aria-live="polite">Checking browser support…</p>
+      <canvas id="preview" width="640" height="360" aria-label="Color field preview"></canvas>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
