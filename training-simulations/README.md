@@ -54,6 +54,10 @@ The tests verify the catalog (three business, three research, six industrial), t
 - High-risk industrial practice with animated 3D work areas (scaffold, control room, outdoor process unit, suspended platform, welding bay, electrical panel) and critical-miss feedback.
 - One scenario catalog and scene presented in desktop mode and in a WebXR immersive VR view where supported.
 
+## Research background
+
+The hands-on design follows the argument that hand-based manipulation is a distinctive educational strength of VR (Johnson-Glenberg, 2018), and the consequence-driven feedback targets what Slater (2009) calls plausibility, the sense that events respond to you. The industrial scenarios address hazard-recognition training, where an immersive condition outperformed 2D training in one construction study (Sacks et al., 2013). A caution applies to realism: immersion can raise presence while lowering learning if it adds cognitive load (Makransky et al., 2019), so visual detail should be tested, not assumed to help. Full references, evidence gaps, and study ideas are in [docs/research](../docs/research/README.md).
+
 ## Scope and limitations
 
 This is a non-certified learning prototype—not an employer's safety policy, a permit, a competence assessment, professional qualification, research-ethics approval, laboratory procedure, or substitute for an approved study protocol. Employers and research teams should review and adapt examples to their jurisdiction, workplace, institution, and current procedures. The research examples teach process habits; they do not collect real participants' data or handle real samples.

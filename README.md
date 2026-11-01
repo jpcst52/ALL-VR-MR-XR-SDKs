@@ -14,6 +14,7 @@ Small, separate examples that highlight a distinctive capability of each technol
 - [Multiplayer examples](#multiplayer-examples)
 - [Fieldwork XR Practice Lab](#fieldwork-xr-practice-lab)
 - [VR emulator captures](#vr-emulator-captures)
+- [Research background](#research-background)
 - [Slide decks](#slide-decks)
 - [Tools](#tools)
 - [Platform notes](#platform-notes)
@@ -112,6 +113,10 @@ The [Practice Lab](training-simulations/README.md#in-vr-emulated-headset) and th
 | Scenario cards in VR | Selecting hotspots | Circuit Lab in VR |
 |---|---|---|
 | ![Scenario cards in VR](training-simulations/screenshots/vr/01-catalog.png) | ![Selecting hotspots with a controller ray](training-simulations/screenshots/vr/04-selecting-hotspots.png) | ![Circuit Lab in VR](multi-player/screenshots/vr/01-circuit-lab-in-vr.png) |
+
+## Research background
+
+The examples are built on published work about immersive training, and the open questions are collected so they can grow into studies. For example, a meta-analysis found XR training performs about as well as conventional methods overall, with the strongest case where real practice is hazardous (Kaplan et al., 2021); hand-based manipulation is argued to be a distinctive educational strength of VR (Johnson-Glenberg, 2018); and more immersion can raise presence while lowering learning if it adds load (Makransky et al., 2019). See [docs/research](docs/research/README.md) for the annotated bibliography, evidence gaps, measurement instruments (SSQ, presence), and study ideas. A BibTeX file is included.
 
 ## Slide decks
 
