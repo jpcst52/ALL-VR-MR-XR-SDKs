@@ -1,6 +1,6 @@
 # Babylon.js Luminous Totem
 
-A small Babylon.js scene with a floating emissive polyhedron, animated halo, desktop orbit camera, and Babylon's default WebXR experience UI.
+A small Babylon.js scene with a floating emissive polyhedron, animated halo, three orbiting beacons, a desktop orbit camera, a totem color control, and Babylon's default WebXR experience UI.
 
 ## Prerequisites
 
@@ -11,7 +11,7 @@ A small Babylon.js scene with a floating emissive polyhedron, animated halo, des
 
 ## Launch
 
-From this folder, run `python -m http.server 8003` and open <http://localhost:8003>. Orbit with pointer/touch on desktop; use the Babylon.js VR button when available.
+From this folder, run `python -m http.server 8003` and open <http://localhost:8003>. Orbit with pointer/touch, use **Change totem hue** to cycle its emissive color, and use the Babylon.js VR button when available.
 
 ## Limitations
 

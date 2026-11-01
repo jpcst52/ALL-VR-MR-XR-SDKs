@@ -1,6 +1,6 @@
 # Three.js Prism Bloom
 
-A compact Three.js scene with a faceted animated prism, a luminous orbit ring, desktop orbit controls, and Three.js's WebXR VR entry button.
+A compact Three.js scene with a faceted animated prism, orbiting emissive satellites, desktop orbit controls, a prism color control, and Three.js's WebXR VR entry button.
 
 ## Prerequisites
 
@@ -11,7 +11,7 @@ A compact Three.js scene with a faceted animated prism, a luminous orbit ring, d
 
 ## Launch
 
-From this folder, run `python -m http.server 8002` and open <http://localhost:8002>. Drag to orbit on desktop. Select **ENTER VR** when it appears to request an immersive session.
+From this folder, run `python -m http.server 8002` and open <http://localhost:8002>. Drag to orbit, use **Change prism glow** to cycle the prism palette, and select **ENTER VR** when it appears to request an immersive session.
 
 ## Limitations
 

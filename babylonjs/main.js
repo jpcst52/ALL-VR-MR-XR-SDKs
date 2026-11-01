@@ -14,7 +14,7 @@ async function createScene() {
   hemi.intensity = 0.85;
   const point = new BABYLON.PointLight("glow", new BABYLON.Vector3(0, 2, 0), scene);
   point.diffuse = new BABYLON.Color3(0.35, 0.85, 1);
-  point.intensity = 24;
+  point.intensity = 6;
 
   const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 12, height: 12 }, scene);
   const groundMaterial = new BABYLON.StandardMaterial("groundMaterial", scene);
@@ -37,6 +37,28 @@ async function createScene() {
   haloMaterial.emissiveColor = new BABYLON.Color3(0.1, 0.9, 0.8);
   halo.material = haloMaterial;
 
+  const beacons = [0, 1, 2].map((index) => {
+    const beacon = BABYLON.MeshBuilder.CreateSphere(`beacon-${index}`, { diameter: 0.22, segments: 16 }, scene);
+    const material = new BABYLON.StandardMaterial(`beacon-material-${index}`, scene);
+    material.emissiveColor = [new BABYLON.Color3(1, 0.48, 0.25), new BABYLON.Color3(0.35, 0.95, 0.82), new BABYLON.Color3(0.48, 0.62, 1)][index];
+    beacon.material = material;
+    return beacon;
+  });
+
+  const palette = [
+    new BABYLON.Color3(0.04, 0.3, 0.42),
+    new BABYLON.Color3(0.44, 0.2, 0.62),
+    new BABYLON.Color3(0.65, 0.24, 0.12),
+    new BABYLON.Color3(0.08, 0.48, 0.31),
+  ];
+  const status = document.querySelector("#status");
+  let paletteIndex = 0;
+  document.querySelector("#change-hue").addEventListener("click", () => {
+    paletteIndex = (paletteIndex + 1) % palette.length;
+    totemMaterial.emissiveColor = palette[paletteIndex];
+    status.textContent = `Totem hue changed (${paletteIndex + 1} of ${palette.length}).`;
+  });
+
   scene.onBeforeRenderObservable.add(() => {
     const time = performance.now() * 0.001;
     totem.rotation.y = time * 0.45;
@@ -44,6 +66,10 @@ async function createScene() {
     halo.rotation.z = time * 0.18;
     totem.position.y = 1.45 + Math.sin(time * 1.2) * 0.12;
     point.position.y = totem.position.y + 0.3;
+    beacons.forEach((beacon, index) => {
+      const angle = time * 0.42 + (index / beacons.length) * Math.PI * 2;
+      beacon.position.set(Math.cos(angle) * 2, 1.4 + Math.sin(time + index) * 0.18, Math.sin(angle) * 2);
+    });
   });
 
   try {

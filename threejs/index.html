@@ -7,9 +7,11 @@
     <style>
       html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #101723; color: #eff6ff; font: 16px/1.5 system-ui, sans-serif; }
       canvas { display: block; }
-      #info { position: fixed; z-index: 1; top: 1rem; left: 1rem; max-width: 24rem; padding: .75rem 1rem; border-radius: .7rem; background: #101723d9; }
+      #info { position: fixed; z-index: 1; top: 1rem; left: 1rem; max-width: 25rem; padding: .75rem 1rem; border-radius: .7rem; background: #101723e8; }
       h1, p { margin: 0; }
       p { color: #c1ccdd; }
+      button { margin-top: .75rem; border: 1px solid #76e7d4; border-radius: .45rem; padding: .45rem .7rem; background: #162a36; color: #eff6ff; font: inherit; cursor: pointer; }
+      #status { min-height: 1.5em; margin-top: .35rem; font-size: .9rem; }
     </style>
     <script type="importmap">
       {
@@ -23,7 +25,9 @@
   <body>
     <header id="info">
       <h1>Prism Bloom</h1>
-      <p>Drag to orbit on desktop. Use the VR button to view the animated prism in immersive VR.</p>
+      <p>Drag to orbit. Choose a glow, then explore the orbiting satellites or enter VR.</p>
+      <button id="change-look" type="button">Change prism glow</button>
+      <p id="status" role="status" aria-live="polite">Prism Bloom is ready to explore.</p>
     </header>
     <script type="module" src="./main.js"></script>
   </body>

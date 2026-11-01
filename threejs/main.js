@@ -31,6 +31,16 @@ const prism = new THREE.Mesh(
 prism.position.y = 1.3;
 scene.add(prism);
 
+const satellites = [0xffa66b, 0x76e7d4, 0x8db7ff].map((color, index) => {
+  const satellite = new THREE.Mesh(
+    new THREE.SphereGeometry(0.13, 20, 16),
+    new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.7 }),
+  );
+  satellite.userData.phase = (index / 3) * Math.PI * 2;
+  scene.add(satellite);
+  return satellite;
+});
+
 const floor = new THREE.Mesh(
   new THREE.CircleGeometry(4, 64),
   new THREE.MeshStandardMaterial({ color: "#243449", roughness: 0.9 }),
@@ -47,11 +57,26 @@ ring.rotation.x = Math.PI / 2.4;
 ring.position.y = 1.3;
 scene.add(ring);
 
+const palette = ["#b8a5ff", "#76e7d4", "#ffb36b", "#91b5ff"];
+const status = document.querySelector("#status");
+let paletteIndex = 0;
+document.querySelector("#change-look").addEventListener("click", () => {
+  paletteIndex = (paletteIndex + 1) % palette.length;
+  prism.material.color.set(palette[paletteIndex]);
+  prism.material.emissive.set(palette[paletteIndex]);
+  prism.material.emissiveIntensity = 0.18;
+  status.textContent = `Prism glow changed to ${palette[paletteIndex]}.`;
+});
+
 const clock = new THREE.Clock();
 renderer.setAnimationLoop(() => {
   const elapsed = clock.getElapsedTime();
   prism.rotation.set(elapsed * 0.28, elapsed * 0.45, elapsed * 0.18);
   ring.rotation.z = elapsed * 0.2;
+  satellites.forEach((satellite) => {
+    const angle = elapsed * 0.35 + satellite.userData.phase;
+    satellite.position.set(Math.cos(angle) * 1.65, 1.3 + Math.sin(angle * 1.7) * 0.42, Math.sin(angle) * 1.65);
+  });
   controls.update();
   renderer.render(scene, camera);
 });

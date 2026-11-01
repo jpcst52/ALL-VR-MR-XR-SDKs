@@ -2,6 +2,8 @@ const enterButton = document.querySelector("#enter");
 const status = document.querySelector("#status");
 const preview = document.querySelector("#preview");
 const previewContext = preview.getContext("2d");
+const speedControl = document.querySelector("#speed");
+const speedValue = document.querySelector("#speed-value");
 const xrCanvas = document.createElement("canvas");
 
 let activeSession = null;
@@ -11,7 +13,7 @@ let referenceSpace = null;
 const startTime = performance.now();
 
 function drawPreview() {
-  const t = (performance.now() - startTime) / 1000;
+  const t = ((performance.now() - startTime) / 1000) * Number(speedControl.value);
   const gradient = previewContext.createLinearGradient(0, 0, preview.width, preview.height);
   gradient.addColorStop(0, `hsl(${(190 + t * 18) % 360} 80% 45%)`);
   gradient.addColorStop(1, `hsl(${(285 + t * 18) % 360} 75% 28%)`);
@@ -21,10 +23,35 @@ function drawPreview() {
   previewContext.beginPath();
   previewContext.arc(preview.width / 2, preview.height / 2, 42 + Math.sin(t) * 10, 0, Math.PI * 2);
   previewContext.fill();
+  previewContext.strokeStyle = "rgba(255,255,255,.35)";
+  previewContext.lineWidth = 2;
+  for (let index = 0; index < 3; index += 1) {
+    previewContext.beginPath();
+    previewContext.ellipse(
+      preview.width / 2,
+      preview.height / 2,
+      95 + index * 36,
+      30 + index * 18,
+      t * 0.15 + index * 0.65,
+      0,
+      Math.PI * 2,
+    );
+    previewContext.stroke();
+  }
+  previewContext.fillStyle = "#ffffff";
+  for (let index = 0; index < 8; index += 1) {
+    const angle = t * (0.25 + index * 0.025) + (index / 8) * Math.PI * 2;
+    previewContext.beginPath();
+    previewContext.arc(preview.width / 2 + Math.cos(angle) * (118 + (index % 3) * 34), preview.height / 2 + Math.sin(angle) * (42 + (index % 3) * 20), 3 + (index % 2), 0, Math.PI * 2);
+    previewContext.fill();
+  }
   requestAnimationFrame(drawPreview);
 }
 
 drawPreview();
+speedControl.addEventListener("input", () => {
+  speedValue.textContent = `${Number(speedControl.value).toFixed(1)}x`;
+});
 
 function drawXRFrame(_time, frame) {
   if (!activeSession || !gl || !xrLayer || !referenceSpace) return;
@@ -33,7 +60,7 @@ function drawXRFrame(_time, frame) {
   if (!pose) return;
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, xrLayer.framebuffer);
-  const t = (performance.now() - startTime) / 1000;
+  const t = ((performance.now() - startTime) / 1000) * Number(speedControl.value);
   for (const view of pose.views) {
     const viewport = xrLayer.getViewport(view);
     gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);

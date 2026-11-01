@@ -1,6 +1,6 @@
 # A-Frame Orbit Garden
 
-A single-file A-Frame scene with animated lantern shapes, a walkable ground, and standard A-Frame VR entry controls.
+A single-file A-Frame scene with animated lantern shapes, gaze-to-select interactions, a walkable ground, and standard A-Frame VR entry controls.
 
 ## Prerequisites
 
@@ -11,7 +11,7 @@ A single-file A-Frame scene with animated lantern shapes, a walkable ground, and
 
 ## Launch
 
-From this folder, run `python -m http.server 8001` and open <http://localhost:8001>. Use the VR headset icon supplied by A-Frame to enter VR when supported.
+From this folder, run `python -m http.server 8001` and open <http://localhost:8001>. Point the cursor at a lantern to select and enlarge it; use the VR headset icon supplied by A-Frame to enter VR when supported.
 
 ## Limitations
 

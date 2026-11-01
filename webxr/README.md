@@ -1,6 +1,6 @@
 # WebXR Color Field
 
-A small, framework-free demo using the browser's WebXR Device API directly. It shows an animated fallback preview and, when available, opens an immersive VR session that clears each XR view with a changing color.
+A small, framework-free demo using the browser's WebXR Device API directly. It shows an animated, layered fallback preview with an adjustable animation speed and, when available, opens an immersive VR session that clears each XR view with a changing color.
 
 ## Prerequisites
 
@@ -10,7 +10,7 @@ A small, framework-free demo using the browser's WebXR Device API directly. It s
 
 ## Launch
 
-From this folder, run `python -m http.server 8000`, then open <http://localhost:8000> in the browser. Click **Enter VR** from the page to request the session; session requests must be triggered by a user gesture.
+From the repository root, run `python -m http.server 8000`, then open <http://localhost:8000/webxr/> in the browser. Adjust **Color-field speed** to change the preview and immersive color transition. Click **Enter VR** from the page to request the session; session requests must be triggered by a user gesture.
 
 ## Limitations
 
