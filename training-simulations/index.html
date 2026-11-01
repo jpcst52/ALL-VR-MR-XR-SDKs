@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Six short browser-based business and research training simulations with an optional WebXR view.">
+    <title>Fieldwork XR — Practice Lab</title>
+    <link rel="stylesheet" href="./style.css">
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <canvas id="scene" aria-hidden="true"></canvas>
+    <main class="panel">
+      <header class="brand">
+        <p class="eyebrow">FIELDWORK XR · PRACTICE LAB</p>
+        <h1>Small scenarios.<br>Better decisions.</h1>
+        <p class="intro">Choose a three-minute practice run for everyday business work or responsible research.</p>
+      </header>
+
+      <form id="profile" class="profile">
+        <label for="learner-name">Your name</label>
+        <div class="profile-entry">
+          <input id="learner-name" name="name" maxlength="32" autocomplete="given-name" placeholder="Enter your name" required>
+          <button class="button button-primary" type="submit">Start practicing</button>
+        </div>
+        <p id="welcome" class="welcome" role="status" aria-live="polite">Your name is used only in this browser session.</p>
+      </form>
+
+      <section id="catalog" class="catalog" aria-label="Training simulations" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">PICK A SCENARIO</p>
+            <h2>Choose your practice</h2>
+          </div>
+          <p id="progress" class="progress">0 / 6 complete</p>
+        </div>
+        <div class="category">
+          <h3><span class="category-mark business-mark"></span>Local business essentials</h3>
+          <p class="category-note">Practical skills for shops, service teams, and small workplaces.</p>
+          <div id="business-list" class="scenario-list"></div>
+        </div>
+        <div class="category">
+          <h3><span class="category-mark research-mark"></span>Research practice</h3>
+          <p class="category-note">Ethical, careful habits for community and field research.</p>
+          <div id="research-list" class="scenario-list"></div>
+        </div>
+      </section>
+
+      <section id="simulation" class="simulation" aria-live="polite" hidden>
+        <div class="section-heading">
+          <button id="back-to-catalog" class="button button-quiet" type="button">← All scenarios</button>
+          <p id="step-count" class="progress"></p>
+        </div>
+        <p id="simulation-category" class="eyebrow"></p>
+        <h2 id="simulation-title"></h2>
+        <p id="simulation-brief" class="brief"></p>
+        <div id="decision-card" class="decision-card">
+          <p id="decision-kicker" class="decision-kicker"></p>
+          <h3 id="decision-prompt"></h3>
+          <div id="choices" class="choices"></div>
+        </div>
+        <div id="feedback" class="feedback" role="status" aria-live="polite" hidden>
+          <p id="feedback-label" class="decision-kicker"></p>
+          <p id="feedback-copy"></p>
+          <p id="principle" class="principle"></p>
+          <button id="continue" class="button button-primary" type="button">Continue</button>
+        </div>
+        <div id="completion" class="completion" role="status" aria-live="polite" hidden>
+          <p class="decision-kicker">PRACTICE COMPLETE</p>
+          <h3 id="completion-title"></h3>
+          <p id="completion-copy"></p>
+          <button id="retry" class="button button-primary" type="button">Try again</button>
+          <button id="finish" class="button button-quiet" type="button">Choose another scenario</button>
+        </div>
+        <p class="training-note">Practice example only—not a substitute for workplace procedures, research ethics review, or role-specific training.</p>
+      </section>
+      <p id="xr-note" class="xr-note">Desktop mode: choose answers here. On a WebXR-capable headset, enter VR and point a controller at a floating choice card.</p>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

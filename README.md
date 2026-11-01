@@ -18,6 +18,7 @@ Small, separate examples that highlight a distinctive capability of each technol
 | `unity-xri/` | Unity XR Interaction Toolkit | Grab selection color feedback |
 | `multi-player/vr/` | Three.js + WebXR | Multiplayer collaborative VR waterworks |
 | `multi-player/ar/` | Three.js + WebXR | Multiplayer shared AR layout with hit-test alignment |
+| `training-simulations/` | Three.js + WebXR | Six short small-business and research practice scenarios |
 
 Each folder has its own README with setup instructions, prerequisites, and platform limitations. Unity examples are Unity-ready source folders rather than full Unity projects: copy the scripts into a compatible Unity project and follow that example's setup instructions.
 
@@ -29,6 +30,7 @@ For the browser demos, start a static server from the repository root with `pyth
 - `http://localhost:8000/threejs/`
 - `http://localhost:8000/babylonjs/`
 - `http://localhost:8000/webxr/`
+- `http://localhost:8000/training-simulations/`
 
 Use `Ctrl+C` to stop the server. Network access is needed for the pinned CDN libraries; immersive XR additionally requires a compatible device/browser and a secure context.
 
@@ -49,7 +51,7 @@ The [run guide slide deck](Run-the-XR-Examples.pptx) walks through the launch st
 
 ## Browser examples
 
-The four browser examples include desktop interactions so their scenes can be explored without a headset. WebGL and CDN access are needed to see the rendered scenes. Screenshots of the browser fallbacks are collected in [screenshots/](screenshots/).
+The browser examples include desktop interactions so their scenes can be explored without a headset. WebGL and CDN access are needed to see the rendered scenes. Screenshots of the earlier browser scene examples are collected in [screenshots/](screenshots/).
 
 | Example | Desktop interaction |
 |---|---|
@@ -59,8 +61,11 @@ The four browser examples include desktop interactions so their scenes can be ex
 | WebXR | Adjust the color-field animation speed in the preview and immersive session. |
 | Multiplayer VR | Join a room, see remote participants, and place or grab shared waterworks parts. |
 | Multiplayer AR | Calibrate a shared board origin using hit testing, then edit the shared layout. |
+| Fieldwork XR Practice Lab | Enter a name, choose one of six business or research scenarios, and practice decisions with feedback. |
 
 The multiplayer examples require the separate Node.js relay described in [`multi-player/`](multi-player/); they do not work as static pages alone.
+
+The [Fieldwork XR Practice Lab](training-simulations/) includes three broadly applicable local-business scenarios and three research-practice simulations. Start it with `python -m http.server 8003` from that folder; its README explains name handling, the learning activities, and WebXR limitations.
 
 ## Platform notes
 
