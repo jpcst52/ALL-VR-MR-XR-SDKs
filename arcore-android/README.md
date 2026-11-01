@@ -14,7 +14,9 @@ A small native Android AR example. ARCore detects horizontal planes; tap a detec
 2. Connect an ARCore-supported device, enable USB debugging, and run the `app` configuration. Accept the camera permission and any Google Play Services for AR installation prompt.
 3. Slowly move the camera to scan a floor. Tap the detected floor to place the cube; tap again to move it.
 
-Command line (with Gradle 8.9 and Android SDK configured): `gradle :app:assembleDebug`, then `gradle :app:installDebug`.
+Command line: the Gradle wrapper is included, so no separate Gradle install is needed. With `JAVA_HOME` pointing at JDK 17 and `ANDROID_HOME` at the Android SDK, run `./gradlew :app:assembleDebug` (Windows: `gradlew.bat :app:assembleDebug`), then `./gradlew :app:installDebug` with a device connected. The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. The first build downloads Gradle 8.9 and the Android Gradle Plugin, which can take several minutes.
+
+The build has been verified to produce an APK (JDK 17, SDK Platform 35). Running it on an emulator is not verified: with a Google APIs x86_64 Android 14 image and the ARCore emulator APK sideloaded, the app launches but ARCore's session creation failed in my testing. Use a physical ARCore-supported device, or an emulator image with Google Play, to try plane detection.
 
 ## Official references
 
