@@ -72,10 +72,16 @@ async function createScene() {
     });
   });
 
+  // Use only the built-in generic controller profiles; the online profile repository is not reachable offline.
+  BABYLON.WebXRMotionControllerManager.UseOnlineRepository = false;
+  BABYLON.WebXRMotionControllerManager.BaseRepositoryUrl = new URL("../vendor/babylon/xr-profiles", document.baseURI).href;
+
   try {
     await scene.createDefaultXRExperienceAsync({
       floorMeshes: [ground],
       uiOptions: { sessionMode: "immersive-vr" },
+      // Controller models are fetched from the web; skip them so the example works with no internet.
+      inputOptions: { doNotLoadControllerMesh: true },
     });
   } catch (error) {
     console.warn("Immersive VR is unavailable; the desktop scene remains active.", error);

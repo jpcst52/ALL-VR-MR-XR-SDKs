@@ -28,6 +28,17 @@ const CONTENT_TYPES = new Map([
   [".md", "text/markdown; charset=utf-8"],
   [".png", "image/png"],
   [".svg", "image/svg+xml"],
+  [".jpg", "image/jpeg"],
+  [".jpeg", "image/jpeg"],
+  [".webp", "image/webp"],
+  [".woff2", "font/woff2"],
+  [".glb", "model/gltf-binary"],
+  [".gltf", "model/gltf+json"],
+  [".hdr", "application/octet-stream"],
+  [".ktx2", "image/ktx2"],
+  [".mp4", "video/mp4"],
+  [".ico", "image/x-icon"],
+  [".txt", "text/plain; charset=utf-8"],
 ]);
 
 export function validRoom(value) {

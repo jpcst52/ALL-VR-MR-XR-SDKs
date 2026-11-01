@@ -27,3 +27,9 @@ xcuserdata/
 
 # JavaScript dependencies
 **/node_modules/
+
+# University branding: not for the public repo unless permission is confirmed
+branding/
+
+# Third-party licensed assets (Unity Asset Store etc.) must never be committed
+assets-private/
