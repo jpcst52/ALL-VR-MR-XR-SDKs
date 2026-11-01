@@ -1,0 +1,8 @@
+{
+  "name": "PittBradford.XRTraining.Editor",
+  "rootNamespace": "PittBradford.XR.EditorTools",
+  "references": ["PittBradford.XRTraining", "Unity.XR.Management", "Unity.XR.Management.Editor", "Unity.XR.OpenXR", "Unity.XR.OpenXR.Editor", "Unity.InputSystem"],
+  "includePlatforms": ["Editor"],
+  "excludePlatforms": [],
+  "autoReferenced": true
+}
