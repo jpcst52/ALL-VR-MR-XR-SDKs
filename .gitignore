@@ -24,3 +24,6 @@ xcuserdata/
 .env
 .env.*
 !.env.example
+
+# JavaScript dependencies
+**/node_modules/

@@ -1,0 +1,13 @@
+{
+  "name": "xr-multiplayer-examples",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test",
+    "relay": "node server.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.18.3"
+  }
+}

@@ -16,6 +16,8 @@ Small, separate examples that highlight a distinctive capability of each technol
 | `arcore-android/` | Google ARCore | Plane detection and cube placement |
 | `apple-spatial/` | ARKit / visionOS | SwiftUI spatial atlas |
 | `unity-xri/` | Unity XR Interaction Toolkit | Grab selection color feedback |
+| `multi-player/vr/` | Three.js + WebXR | Multiplayer collaborative VR waterworks |
+| `multi-player/ar/` | Three.js + WebXR | Multiplayer shared AR layout with hit-test alignment |
 
 Each folder has its own README with setup instructions, prerequisites, and platform limitations. Unity examples are Unity-ready source folders rather than full Unity projects: copy the scripts into a compatible Unity project and follow that example's setup instructions.
 
@@ -30,7 +32,20 @@ For the browser demos, start a static server from the repository root with `pyth
 
 Use `Ctrl+C` to stop the server. Network access is needed for the pinned CDN libraries; immersive XR additionally requires a compatible device/browser and a secure context.
 
-The [run guide slide deck](Run-the-XR-Examples.pptx) walks through the launch steps and learning goal for all ten examples. The [screenshots](screenshots/) show the interactive browser scenes on desktop.
+## Multiplayer examples
+
+The two multiplayer WebXR examples share a small WebSocket relay. In a terminal, run:
+
+```powershell
+cd multi-player
+npm install
+npm test
+npm start
+```
+
+Open `http://localhost:8443/multi-player/vr/` and `http://localhost:8443/multi-player/ar/`; clients who join the same room see and edit shared parts. Network-connected headsets/phones require HTTPS with a trusted certificate. See the [multiplayer setup guide](multi-player/README.md) for detailed run steps, AR alignment, relay behavior, and limitations.
+
+The [run guide slide deck](Run-the-XR-Examples.pptx) walks through the launch steps and learning goal for the original ten examples. The [multiplayer deck](multi-player/Multiplayer-WebXR-Examples.pptx) covers the shared VR and AR experiences. Browse the [multiplayer screenshots](multi-player/screenshots/README.md) for desktop captures and the AR fallback preview; the [original screenshots](screenshots/) cover the other interactive browser scenes.
 
 ## Browser examples
 
@@ -42,6 +57,10 @@ The four browser examples include desktop interactions so their scenes can be ex
 | Babylon.js | Cycle the totem's emissive color and watch orbiting beacons. |
 | Three.js | Cycle the prism glow and explore orbiting satellites. |
 | WebXR | Adjust the color-field animation speed in the preview and immersive session. |
+| Multiplayer VR | Join a room, see remote participants, and place or grab shared waterworks parts. |
+| Multiplayer AR | Calibrate a shared board origin using hit testing, then edit the shared layout. |
+
+The multiplayer examples require the separate Node.js relay described in [`multi-player/`](multi-player/); they do not work as static pages alone.
 
 ## Platform notes
 
