@@ -24,3 +24,9 @@ From this folder, run `python -m http.server 8003` and open <http://localhost:80
 - [Babylon.js documentation](https://doc.babylonjs.com/)
 - [Babylon.js WebXR documentation](https://doc.babylonjs.com/features/featuresDeepDive/webXR/)
 - [Babylon.js repository](https://github.com/BabylonJS/Babylon.js)
+
+## Screenshot
+
+![Luminous Totem running in a desktop browser with orbiting beacons](screenshots/babylonjs-luminous-totem.png)
+
+Captured from the running example in a desktop browser after pressing **Change totem hue**. This is the desktop fallback, not a headset recording.

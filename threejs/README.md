@@ -24,3 +24,9 @@ From this folder, run `python -m http.server 8002` and open <http://localhost:80
 - [Three.js documentation](https://threejs.org/docs/)
 - [Three.js WebXR guide](https://threejs.org/manual/#en/webxr-basics)
 - [Three.js repository](https://github.com/mrdoob/three.js)
+
+## Screenshot
+
+![Prism Bloom running in a desktop browser with the Change prism glow button and ENTER VR control](screenshots/threejs-prism-bloom.png)
+
+Captured from the running example in a desktop browser after pressing **Change prism glow**. Immersive VR was not available in the capture environment, so this is the desktop fallback, not a headset recording.

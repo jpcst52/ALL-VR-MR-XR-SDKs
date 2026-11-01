@@ -5,7 +5,11 @@ Two browser-first examples share one lightweight WebSocket relay:
 - [`vr/`](./vr/): a collaborative VR waterworks builder with a desktop fallback.
 - [`ar/`](./ar/): the same shared waterworks layout in immersive AR, with hit-test placement and a calibrated local reference frame.
 
-The [combined slide deck](./Multiplayer-WebXR-Examples.pptx) explains how to run both examples and what they demonstrate. The [screenshot index](./screenshots/README.md) includes captures of the VR desktop fallback and AR desktop preview.
+The [combined slide deck](./Multiplayer-WebXR-Examples.pptx) explains how to run both examples and what they demonstrate. The [screenshot index](./screenshots/README.md) includes captures of the VR and AR desktop fallbacks.
+
+![Multiplayer VR desktop fallback](./screenshots/multiplayer-vr.png)
+
+![Multiplayer AR desktop fallback](./screenshots/multiplayer-ar.png)
 
 The examples follow the interaction pattern in [Week-08-WebXR-WaterWorks](https://github.com/jcallinan/CIST1423-Fall2026-Examples/tree/master/Week-08-WebXR-WaterWorks): participants join a named room, see the same shared parts and other participants, and only one person can hold a part at a time. Both clients use the same room and server, so a VR builder and an AR builder can collaborate with laptop/desktop browser builders at the same time.
 
@@ -82,7 +86,7 @@ This requires both devices to agree on the same physical points and remain in th
 
 `npm test` runs six tests covering mixed VR/AR WebSocket clients, room snapshots and isolation, exclusive object ownership, disconnect cleanup, invalid room rejection/transforms, and the HTTP example routes/path traversal guard. The headset session and AR camera/hit-test itself still need supported physical hardware for end-to-end testing.
 
-The AR screenshot is explicitly a desktop fallback capture with an annotated view of the live AR page's scene. It is not a recording of camera passthrough or a physical AR session.
+The AR screenshot is explicitly a desktop fallback capture of the live AR page's scene. It is not a recording of camera passthrough or a physical AR session.
 
 ## Project layout
 

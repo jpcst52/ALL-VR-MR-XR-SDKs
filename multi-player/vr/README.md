@@ -44,3 +44,9 @@ WebXR availability depends on the browser, headset, runtime, operating system, a
 See the parent [README](../README.md) for the shared relay protocol, room behavior, tests, security scope, and references.
 
 The [combined slide deck](../Multiplayer-WebXR-Examples.pptx) walks through both modes. The [VR screenshot](../screenshots/multiplayer-vr.png) shows the desktop fallback with shared parts; it is not a headset capture.
+
+## Screenshot
+
+![Multiplayer VR Waterworks Workshop with two participants in room "showcase" and a tank, pipe, valve, and pumps on the shared work surface](../screenshots/multiplayer-vr.png)
+
+Captured from two desktop browser clients joined to the same room, one of whom added a tank, pipe, valve, and pump. This is the desktop fallback; it is not a headset recording.

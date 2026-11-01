@@ -20,6 +20,8 @@ Small, separate examples that highlight a distinctive capability of each technol
 | `multi-player/ar/` | Three.js + WebXR | Multiplayer shared AR layout with hit-test alignment |
 | `training-simulations/` | Three.js + WebXR | Six short small-business and research practice scenarios |
 
+Each browser-based example's README includes a screenshot of it running. The Unity, Android, and Apple examples need their native toolchains and devices, so they have no screenshots here.
+
 Each folder has its own README with setup instructions, prerequisites, and platform limitations. Unity examples are Unity-ready source folders rather than full Unity projects: copy the scripts into a compatible Unity project and follow that example's setup instructions.
 
 ## Getting started
@@ -47,7 +49,7 @@ npm start
 
 Open `http://localhost:8443/multi-player/vr/` and `http://localhost:8443/multi-player/ar/`; clients who join the same room see and edit shared parts. Network-connected headsets/phones require HTTPS with a trusted certificate. See the [multiplayer setup guide](multi-player/README.md) for detailed run steps, AR alignment, relay behavior, and limitations.
 
-The [run guide slide deck](Run-the-XR-Examples.pptx) walks through the launch steps and learning goal for the original ten examples. The [multiplayer deck](multi-player/Multiplayer-WebXR-Examples.pptx) covers the shared VR and AR experiences. Browse the [multiplayer screenshots](multi-player/screenshots/README.md) for desktop captures and the AR fallback preview; the [original screenshots](screenshots/) cover the other interactive browser scenes.
+The [run guide slide deck](Run-the-XR-Examples.pptx) walks through the launch steps and learning goal for the original ten examples. The [multiplayer deck](multi-player/Multiplayer-WebXR-Examples.pptx) covers the shared VR and AR experiences. Browse the [multiplayer screenshots](multi-player/screenshots/README.md) for desktop captures of both multiplayer examples; the [original screenshots](screenshots/) cover the other interactive browser scenes, and each browser example's folder README embeds its own capture, including the [Practice Lab screenshots](training-simulations/README.md#screenshots).
 
 ## Browser examples
 

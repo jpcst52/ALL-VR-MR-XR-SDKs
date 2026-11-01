@@ -47,3 +47,25 @@ The tests verify that there are exactly three scenarios in each category and tha
 This is a non-certified learning prototype—not an employer's safety policy, professional qualification, research-ethics approval, laboratory procedure, or substitute for an approved study protocol. Employers and research teams should review and adapt examples to their jurisdiction, workplace, institution, and current procedures. The research examples teach process habits; they do not collect real participants' data or handle real samples.
 
 The application has no login, analytics, backend, persistence, or export. Names and scores are kept in page memory only. Only a compatible WebXR browser, secure context, VR runtime, and headset can start immersive VR; headset testing has not been performed as part of this example.
+
+## Screenshots
+
+All captures are from the running example in a desktop browser at the default (non-headset) view. WebXR VR was unavailable in the capture environment, so the page shows **VR NOT SUPPORTED**; these are not headset recordings.
+
+| Step | Capture |
+|---|---|
+| Welcome and name entry | ![Welcome screen](screenshots/01-welcome.png) |
+| Scenario catalog | ![Six-scenario catalog](screenshots/02-catalog.png) |
+| Decision feedback | ![Feedback after a choice](screenshots/04-feedback.png) |
+| Scenario complete | ![Completion and score](screenshots/05-complete.png) |
+
+### The six scenarios
+
+| Scenario | Capture |
+|---|---|
+| Welcome a walk-in | ![Welcome a walk-in](screenshots/03-scenario-1-welcome-a-walk-in.png) |
+| Make a safe work area | ![Make a safe work area](screenshots/03-scenario-2-make-a-safe-work-area.png) |
+| Check an incoming delivery | ![Check an incoming delivery](screenshots/03-scenario-3-check-an-incoming-delivery.png) |
+| Invite a participant | ![Invite a participant](screenshots/03-scenario-4-invite-a-participant.png) |
+| Track a research sample | ![Track a research sample](screenshots/03-scenario-5-track-a-research-sample.png) |
+| Record a field observation | ![Record a field observation](screenshots/03-scenario-6-record-a-field-observation.png) |

@@ -24,3 +24,9 @@ From this folder, run `python -m http.server 8001` and open <http://localhost:80
 - [A-Frame documentation](https://aframe.io/docs/1.6.0/introduction/)
 - [A-Frame repository](https://github.com/aframevr/aframe)
 - [WebXR Device API](https://developer.mozilla.org/docs/Web/API/WebXR_Device_API)
+
+## Screenshot
+
+![Orbit Garden running in a desktop browser: floating lanterns above a dark circular ground](screenshots/a-frame-orbit-garden.png)
+
+Captured from the running example in a desktop browser. The headset icon starts a VR session where supported; this image is not a headset recording.

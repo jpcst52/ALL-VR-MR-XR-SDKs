@@ -22,3 +22,9 @@ From the repository root, run `python -m http.server 8000`, then open <http://lo
 
 - [WebXR Device API specification](https://immersive-web.github.io/webxr/)
 - [MDN: WebXR Device API](https://developer.mozilla.org/docs/Web/API/WebXR_Device_API)
+
+## Screenshot
+
+![WebXR color field preview with the Enter VR button, speed slider, and status message](screenshots/webxr-color-field.png)
+
+Captured from the running example in a desktop browser. The immersive session was not available in the capture environment, so this shows the preview and unsupported-browser state, not a headset recording.

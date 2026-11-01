@@ -41,4 +41,10 @@ WebXR `immersive-ar` and hit testing require a compatible mobile browser, device
 
 See the [parent README](../README.md) for the server, room model, test coverage, secure hosting, and project references.
 
-See the [AR screenshot](../screenshots/multiplayer-ar.png) for an annotated desktop fallback preview, and the [combined slide deck](../Multiplayer-WebXR-Examples.pptx) for the shared setup and AR calibration walkthrough. The screenshot is not an immersive camera-passthrough capture.
+See the [AR screenshot](../screenshots/multiplayer-ar.png) for a desktop fallback capture, and the [combined slide deck](../Multiplayer-WebXR-Examples.pptx) for the shared setup and AR calibration walkthrough. The screenshot is not an immersive camera-passthrough capture.
+
+## Screenshot
+
+![Multiplayer AR Waterworks Workshop with the Align origin & enter AR button, roster of two participants, and shared parts on the board](../screenshots/multiplayer-ar.png)
+
+Captured from two desktop browser clients in the same room, showing the AR page's shared board, roster, and a remote participant marker. It is the desktop fallback, not camera passthrough or a physical AR session.
