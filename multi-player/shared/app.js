@@ -1,8 +1,11 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { themes } from "./themes.js";
 
 const mode = document.body.dataset.mode === "ar" ? "ar" : "vr";
 const params = new URLSearchParams(location.search);
+const themeId = themes[params.get("theme")] ? params.get("theme") : document.body.dataset.theme;
+const theme = themes[themeId] ?? themes.circuits;
 const nameInput = document.querySelector("#name");
 const roomInput = document.querySelector("#room");
 const joinButton = document.querySelector("#join");
@@ -12,6 +15,11 @@ const workspace = document.querySelector("#workspace");
 const roster = document.querySelector("#roster");
 const deleteButton = document.querySelector("#delete-selected");
 const alignmentStatus = document.querySelector("#alignment");
+const summary = document.querySelector("#summary");
+const partPalette = document.querySelector("#parts");
+const toggleButton = document.querySelector("#toggle-selected");
+const rotateButton = document.querySelector("#rotate-selected");
+const demoButton = document.querySelector("#load-demo");
 const xrHint = document.querySelector("#xr-hint");
 const roomPattern = /^[a-z0-9][a-z0-9-]{0,23}$/i;
 
@@ -27,7 +35,7 @@ const scene = new THREE.Scene();
 scene.background = mode === "ar" ? null : new THREE.Color("#101723");
 scene.fog = new THREE.Fog("#101723", 10, 28);
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 80);
-camera.position.set(4.4, 4.1, 6.8);
+camera.position.set(2.8, 2.9, 4.4);
 camera.lookAt(0, 0.5, 0);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: mode === "ar" });
@@ -36,7 +44,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.xr.enabled = true;
 if (mode === "ar") renderer.setClearColor(0x000000, 0);
 renderer.domElement.className = "scene";
-renderer.domElement.setAttribute("aria-label", "Shared XR waterworks scene");
+renderer.domElement.setAttribute("aria-label", theme.sceneLabel);
 document.body.appendChild(renderer.domElement);
 
 const orbit = new OrbitControls(camera, renderer.domElement);
@@ -78,22 +86,19 @@ const up = new THREE.Vector3(0, 1, 0);
 const cursorFloor = new THREE.Plane(up, -0.08);
 const tempVector = new THREE.Vector3();
 const tempVector2 = new THREE.Vector3();
-const partNames = {
-  tank: "Storage tank",
-  valve: "Gate valve",
-  pipe: "Pipe",
-  pump: "Centrifugal pump",
-};
-const partColors = {
-  tank: 0x91b5ff,
-  valve: 0xffb36b,
-  pipe: 0x73e7d4,
-  pump: 0xb8a5ff,
-};
+const partName = (part) => theme.parts.find((item) => item.id === part)?.name ?? part;
+const pendingToggles = [];
+const selectionRing = new THREE.Mesh(
+  new THREE.TorusGeometry(0.5, 0.018, 8, 48),
+  new THREE.MeshBasicMaterial({ color: "#73e7d4" }),
+);
+selectionRing.rotation.x = Math.PI / 2;
+selectionRing.visible = false;
+board.add(selectionRing);
 
 let socket = null;
 let selfId = null;
-let selectedPart = "valve";
+let selectedPart = theme.parts[0].id;
 let selectedObjectId = null;
 let drag = null;
 let pointerStart = null;
@@ -159,82 +164,11 @@ function makePeer(peer) {
   return group;
 }
 
-function makePart(part, valveOpen = false) {
-  const group = new THREE.Group();
-  const base = partColors[part];
-  const material = new THREE.MeshStandardMaterial({
-    color: base,
-    roughness: 0.34,
-    metalness: 0.24,
-  });
-  const trim = new THREE.MeshStandardMaterial({
-    color: "#d8edf3",
-    metalness: 0.72,
-    roughness: 0.24,
-  });
-  const dark = new THREE.MeshStandardMaterial({
-    color: valveOpen ? "#73e7d4" : "#a74345",
-    emissive: valveOpen ? "#174a3f" : "#431619",
-    roughness: 0.4,
-  });
-
-  if (part === "tank") {
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.8, 24), material);
-    body.position.y = 0.48;
-    group.add(body);
-    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.08, 24), trim);
-    cap.position.y = 0.9;
-    group.add(cap);
-  } else if (part === "valve") {
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.29, 0.29, 0.36, 16), trim);
-    body.position.y = 0.24;
-    body.rotation.z = Math.PI / 2;
-    group.add(body);
-    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.36, 12), material);
-    hub.position.y = 0.48;
-    group.add(hub);
-    const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.035, 8, 24), dark);
-    wheel.position.y = 0.68;
-    group.add(wheel);
-    for (let index = 0; index < 4; index += 1) {
-      const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.46, 0.035), dark);
-      spoke.position.y = 0.68;
-      spoke.rotation.z = (Math.PI / 4) + index * (Math.PI / 2);
-      group.add(spoke);
-    }
-    group.userData.wheel = wheel;
-  } else if (part === "pipe") {
-    const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.115, 0.115, 1.45, 18), material);
-    tube.position.y = 0.2;
-    tube.rotation.z = Math.PI / 2;
-    group.add(tube);
-    for (const x of [-0.62, 0.62]) {
-      const flange = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.07, 20), trim);
-      flange.position.set(x, 0.2, 0);
-      flange.rotation.z = Math.PI / 2;
-      group.add(flange);
-    }
-  } else if (part === "pump") {
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.42, 24, 18), material);
-    body.scale.set(1.05, 0.74, 0.9);
-    body.position.y = 0.43;
-    group.add(body);
-    const motor = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.21, 0.48, 16), trim);
-    motor.position.set(-0.4, 0.52, 0);
-    motor.rotation.z = Math.PI / 2;
-    group.add(motor);
-    const outlet = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.14, 0.3, 14), trim);
-    outlet.position.set(0.13, 0.78, 0);
-    group.add(outlet);
-  }
-
+function makePart(part) {
+  const group = theme.build(part);
   group.userData.part = part;
   group.traverse((child) => {
-    if (child.isMesh) {
-      child.castShadow = true;
-      child.receiveShadow = true;
-      child.userData.sharedObject = group;
-    }
+    if (child.isMesh) child.userData.sharedObject = group;
   });
   return group;
 }
@@ -248,11 +182,11 @@ function setObjectPosition(object, position, rotation) {
 
 function addSharedObject(data) {
   if (objects.has(data.id)) return;
-  const group = makePart(data.part, data.valveOpen);
+  const group = makePart(data.part);
   group.userData.sharedId = data.id;
-  group.userData.wheel?.rotation.set(0, 0, data.valveOpen ? Math.PI / 5 : 0);
   const object = { id: data.id, group, data, heldBy: data.heldBy ?? null };
   setObjectPosition(object, data.position, data.rotation);
+  theme.applyState(object);
   objects.set(data.id, object);
   board.add(group);
 }
@@ -280,6 +214,10 @@ function replaceSharedObject(data) {
 function selectObject(id) {
   selectedObjectId = id;
   deleteButton.disabled = !id || !isConnected();
+  rotateButton.disabled = !id || !isConnected();
+  const part = theme.parts.find((item) => item.id === objects.get(id)?.data.part);
+  toggleButton.disabled = !part?.toggles || !isConnected();
+  selectionRing.visible = Boolean(objects.get(id));
 }
 
 function isConnected() {
@@ -350,7 +288,7 @@ function receive(message) {
       for (const object of message.objects) addSharedObject(object);
       for (const peer of message.peers) updatePeer(peer);
       updateRoster();
-      updateStatus(`Connected to room "${message.room}". Add a part to start building.`);
+      updateStatus(`Connected to room "${message.room}" (${theme.title}). Add a part to start building.`);
       break;
     case "peer-join":
       updatePeer(message.peer);
@@ -370,7 +308,14 @@ function receive(message) {
       break;
     case "object-added":
       addSharedObject(message.object);
-      updateStatus(`${partNames[message.object.part]} added to the shared work surface.`);
+      updateStatus(`${partName(message.object.part)} added to the shared board.`);
+      if (message.object.createdBy === selfId) {
+        const wanted = pendingToggles.findIndex((item) => item === message.object.part);
+        if (wanted >= 0) {
+          pendingToggles.splice(wanted, 1);
+          send({ type: "toggle", id: message.object.id, on: true });
+        }
+      }
       break;
     case "object-grabbed": {
       const object = objects.get(message.id);
@@ -404,12 +349,17 @@ function receive(message) {
       removeSharedObject(message.id);
       updateStatus("Part removed from the room.");
       break;
-    case "valve-state": {
+    case "toggle-state": {
       const object = objects.get(message.id);
-      const wasSelected = selectedObjectId === message.id;
-      if (object) replaceSharedObject({ ...object.data, valveOpen: message.open });
-      if (wasSelected) selectObject(message.id);
-      updateStatus(`Valve ${message.open ? "opened" : "closed"} for everyone.`);
+      if (!object) break;
+      object.data.on = message.on;
+      theme.applyState(object);
+      updateStatus(`${partName(object.data.part)} turned ${message.on ? "on" : "off"} for everyone.`);
+      break;
+    }
+    case "object-rotated": {
+      const object = objects.get(message.id);
+      if (object) setObjectPosition(object, object.data.position, message.rotation);
       break;
     }
     case "room-limit":
@@ -435,6 +385,7 @@ function joinRoom() {
     socket.send(JSON.stringify({
       type: "join",
       room,
+      theme: theme.id,
       name: nameInput.value.trim() || "Guest",
       mode,
     }));
@@ -458,6 +409,7 @@ function joinRoom() {
     workspace.hidden = true;
     for (const id of [...objects.keys()]) removeSharedObject(id);
     for (const id of [...peers.keys()]) removePeer(id);
+    selectObject(null);
     updateStatus(event.reason || "Disconnected from the room. Rejoin to continue.");
   });
 }
@@ -470,8 +422,9 @@ function spawnPart(part, position = [0, 0.08, 0]) {
   const index = objectSerial++;
   const offset = index % 4;
   const spread = Math.floor(index / 4);
+  const gap = theme.spawnSpacing;
   const spawnPosition = position[0] === 0 && position[2] === 0
-    ? [position[0] + (offset - 1.5) * 0.65, position[1], position[2] + spread * 0.65]
+    ? [position[0] + (offset - 1.5) * gap, position[1], position[2] + (spread - 1) * gap * 0.8]
     : position;
   return send({
     type: "place",
@@ -621,15 +574,49 @@ renderer.domElement.addEventListener("pointercancel", () => {
   orbit.enabled = true;
 });
 
-document.querySelectorAll("[data-part]").forEach((button) => {
+for (const item of theme.parts) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.part = item.id;
+  button.textContent = `+ ${item.label}`;
   button.addEventListener("click", () => {
-    selectedPart = button.dataset.part;
-    document.querySelectorAll("[data-part]").forEach((item) => {
-      item.setAttribute("aria-pressed", String(item === button));
-    });
+    selectedPart = item.id;
+    partPalette.querySelectorAll("button").forEach((other) => other.setAttribute("aria-pressed", String(other === button)));
     spawnPart(selectedPart);
   });
-});
+  partPalette.append(button);
+}
+
+function toggleSelected() {
+  const object = objects.get(selectedObjectId);
+  if (theme.parts.find((item) => item.id === object?.data.part)?.toggles) {
+    send({ type: "toggle", id: object.id, on: !object.data.on });
+  }
+}
+
+function rotateSelected() {
+  const object = objects.get(selectedObjectId);
+  if (!object) return;
+  const rotation = [object.group.rotation.x, object.group.rotation.y + Math.PI / 4, object.group.rotation.z];
+  send({ type: "rotate", id: object.id, rotation });
+}
+
+function loadDemo() {
+  for (const item of theme.demo) {
+    if (item.on) pendingToggles.push(item.part);
+    send({ type: "place", part: item.part, position: item.position, rotation: item.rotation });
+  }
+}
+
+toggleButton.addEventListener("click", toggleSelected);
+rotateButton.addEventListener("click", rotateSelected);
+demoButton.addEventListener("click", loadDemo);
+demoButton.textContent = theme.demoLabel;
+toggleButton.textContent = theme.toggleLabel;
+document.title = `${document.title.split("—")[0]}— ${theme.title}`;
+document.querySelector("h1").textContent = theme.title;
+document.querySelector(".heading > p:last-child").textContent = theme.pitch;
+document.querySelector("#controls").textContent = theme.controls;
 
 joinButton.addEventListener("click", joinRoom);
 roomInput.addEventListener("keydown", (event) => {
@@ -645,10 +632,8 @@ deleteButton.addEventListener("click", () => {
 
 document.addEventListener("keydown", (event) => {
   if (event.target instanceof HTMLInputElement) return;
-  if (event.key.toLowerCase() === "v") {
-    const object = objects.get(selectedObjectId);
-    if (object?.data.part === "valve") send({ type: "valve", id: object.id, open: !object.data.valveOpen });
-  }
+  if (event.key.toLowerCase() === "t") toggleSelected();
+  if (event.key.toLowerCase() === "r") rotateSelected();
   if (event.key === "Delete" && selectedObjectId) send({ type: "delete", id: selectedObjectId });
   if (event.key === "Escape") selectObject(null);
 });
@@ -821,7 +806,32 @@ function onXrSessionEnd() {
 
 enterXrButton.addEventListener("click", enterXr);
 
-function onMessageFrame(_time, frame) {
+// In VR the board becomes a table-height model in front of the player instead of a floor they stand inside.
+renderer.xr.addEventListener("sessionstart", () => {
+  if (mode !== "vr") return;
+  board.position.set(0, 0.85, -1.15);
+  board.scale.setScalar(0.4);
+});
+renderer.xr.addEventListener("sessionend", () => {
+  if (mode !== "vr") return;
+  board.position.set(0, 0, 0);
+  board.scale.setScalar(1);
+});
+
+let lastSummary = "";
+
+function onMessageFrame(time, frame) {
+  const text = theme.update(objects, time / 1000);
+  if (text !== lastSummary) {
+    summary.textContent = text;
+    lastSummary = text;
+  }
+  const chosen = objects.get(selectedObjectId);
+  if (chosen) {
+    selectionRing.position.copy(chosen.group.position).setY(0.1);
+    selectionRing.scale.setScalar(1 + 0.06 * Math.sin(time / 180));
+  }
+
   if (mode === "ar" && renderer.xr.isPresenting && frame) updateArHitTest(frame);
   if (renderer.xr.isPresenting) updateControllerGrab();
   orbit.update();
@@ -830,9 +840,20 @@ function onMessageFrame(_time, frame) {
 
 renderer.setAnimationLoop(onMessageFrame);
 
-window.addEventListener("resize", () => {
+// On wide screens the control panel covers the left side, so shift the board to the right.
+function frameScene() {
   camera.aspect = window.innerWidth / window.innerHeight;
+  if (window.innerWidth > 900) {
+    camera.setViewOffset(window.innerWidth, window.innerHeight, -window.innerWidth * 0.14, 0, window.innerWidth, window.innerHeight);
+  } else {
+    camera.clearViewOffset();
+  }
   camera.updateProjectionMatrix();
+}
+frameScene();
+
+window.addEventListener("resize", () => {
+  frameScene();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 

@@ -2,8 +2,8 @@
 
 Two browser-first examples share one lightweight WebSocket relay:
 
-- [`vr/`](./vr/): a collaborative VR waterworks builder with a desktop fallback.
-- [`ar/`](./ar/): the same shared waterworks layout in immersive AR, with hit-test placement and a calibrated local reference frame.
+- [`vr/`](./vr/): **Circuit Lab**, a collaborative electronics bench where participants snap together batteries, switches, bulbs, resistors, motors, and wires and see a live circuit result, with a desktop fallback.
+- [`ar/`](./ar/): **Site Safety Layout**, a shared work-area safety planner (exits, extinguishers, first aid, muster point, hazard beacons, barriers) in immersive AR, with hit-test placement, a calibrated local reference frame, and a live checklist.
 
 The [combined slide deck](./Multiplayer-WebXR-Examples.pptx) explains how to run both examples and what they demonstrate. The [screenshot index](./screenshots/README.md) includes captures of the VR and AR desktop fallbacks.
 
@@ -11,9 +11,9 @@ The [combined slide deck](./Multiplayer-WebXR-Examples.pptx) explains how to run
 
 ![Multiplayer AR desktop fallback](./screenshots/multiplayer-ar.png)
 
-The examples follow the interaction pattern in [Week-08-WebXR-WaterWorks](https://github.com/jcallinan/CIST1423-Fall2026-Examples/tree/master/Week-08-WebXR-WaterWorks): participants join a named room, see the same shared parts and other participants, and only one person can hold a part at a time. Both clients use the same room and server, so a VR builder and an AR builder can collaborate with laptop/desktop browser builders at the same time.
+Participants join a named room, see the same shared parts and other participants, and only one person can hold a part at a time. Both pages use the same relay and protocol, but each example is a *theme* with its own part catalog. Rooms are namespaced by theme, so a room called `lab` in Circuit Lab is separate from a room called `lab` in Site Safety Layout. Both pages accept `?theme=circuits` or `?theme=safety`, so a headset or phone can join either theme alongside laptop/desktop browser builders.
 
-This repository implements a new, compact demonstration rather than copying the referenced project or its assets. Parts are generated from Three.js primitives, room state is relayed by this project's server, and this is not a production-hosted multiplayer service.
+Parts are generated from Three.js primitives, room state is relayed by this project's server, and this is not a production-hosted multiplayer service.
 
 ## Requirements
 
@@ -61,8 +61,8 @@ The room field accepts an optional `?room=lab` query parameter. There are no acc
 1. Start the server once. Keep its terminal open while anyone is using the room.
 2. Open the VR page on a headset or desktop and the AR page on a supported phone, or open either example in two desktop browser tabs.
 3. Join the same room from each page. The roster should show each connected participant and whether they joined from VR, AR, or the web.
-4. Add a valve, tank, pipe, or pump from either participant. The part should appear on all clients. Later joiners receive the existing room snapshot.
-5. Drag a part in the desktop view, or aim/select with an XR controller. Another participant's grab is denied while the part is held. Valve changes and deletion are also shared.
+4. Add a battery, switch, bulb, or wire (or load the demo) from either participant. The part should appear on all clients. Later joiners receive the existing room snapshot.
+5. Drag a part in the desktop view, or aim/select with an XR controller. Another participant's grab is denied while the part is held. Switch and beacon toggles, rotation, and deletion are also shared.
 6. To place the AR board in a real shared space, follow the two-point alignment step on each AR device before building. Keep both devices at the same site and use the same physical alignment markers.
 
 ## What this illustrates
@@ -71,7 +71,8 @@ The room field accepts an optional `?room=lab` query parameter. There are no acc
 - **Multimodal browser clients:** the VR and AR pages use the same part IDs and room protocol; desktop web clients can join either room.
 - **Presence:** names, connection counts, and remote participant positions/modes are visible to everyone.
 - **Ownership:** the server grants a single grab owner, rejects competing grabs, accepts transforms only from the current owner, and releases a part if its owner disconnects.
-- **Shared state:** part placement, transforms, valve state, and removal are broadcast across clients.
+- **Shared state:** part placement, transforms, rotation, toggle state (switches and hazard beacons), and removal are broadcast across clients. The circuit result and safety checklist are computed locally from that shared state, so every client agrees.
+- **Themes:** the relay validates part names per theme and keeps each theme's rooms separate; client-side theme modules decide how parts look and what the room-level summary says.
 - **XR-specific setup:** VR requests an `immersive-vr` session; AR requests `immersive-ar` and hit testing.
 
 This is a teaching sample, not a production networking stack. It has no login, moderation, persistence, reconnecting snapshot client, voice chat, lag compensation, or deployment automation. Anyone who can reach the server can join a room. Rooms and objects are kept in process memory and reset when everyone leaves or the server restarts.
@@ -84,7 +85,7 @@ This requires both devices to agree on the same physical points and remain in th
 
 ## Tests
 
-`npm test` runs six tests covering mixed VR/AR WebSocket clients, room snapshots and isolation, exclusive object ownership, disconnect cleanup, invalid room rejection/transforms, and the HTTP example routes/path traversal guard. The headset session and AR camera/hit-test itself still need supported physical hardware for end-to-end testing.
+`npm test` runs eight tests covering mixed VR/AR WebSocket clients, room snapshots and isolation, theme separation, toggle and rotate rules, exclusive object ownership, disconnect cleanup, invalid room rejection/transforms, and the HTTP example routes/path traversal guard. The headset session and AR camera/hit-test itself still need supported physical hardware for end-to-end testing.
 
 The AR screenshot is explicitly a desktop fallback capture of the live AR page's scene. It is not a recording of camera passthrough or a physical AR session.
 
@@ -98,6 +99,7 @@ multi-player/
     server.test.mjs   room, ownership, snapshot, and validation tests
   shared/
     app.js            collaborative 3D scene, room protocol client, VR and AR
+    themes.js         Circuit Lab and Site Safety Layout parts, models, and live summaries
     style.css         browser panel and responsive layout
   vr/
     index.html        WebXR immersive-vr entry point
@@ -107,13 +109,12 @@ multi-player/
     README.md         AR calibration, device, and hit-test guidance
   screenshots/
     README.md           screenshot index and capture notes
-    multiplayer-vr.png  VR example desktop fallback
-    multiplayer-ar.png AR example desktop fallback preview
+    multiplayer-vr.png  Circuit Lab desktop fallback
+    multiplayer-ar.png  Site Safety Layout desktop fallback
   Multiplayer-WebXR-Examples.pptx combined run and learning-objective deck
 ```
 
 ## References
 
-- [Reference WaterWorks multiplayer example](https://github.com/jcallinan/CIST1423-Fall2026-Examples/tree/master/Week-08-WebXR-WaterWorks)
-- [WebXR Device API](https://developer.mozilla.org/docs/Web/API/WebXR_Device_API)
+- - [WebXR Device API](https://developer.mozilla.org/docs/Web/API/WebXR_Device_API)
 - [Three.js WebXR manual](https://threejs.org/manual/#en/webxr-basics)

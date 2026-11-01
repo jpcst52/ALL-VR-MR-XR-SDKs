@@ -16,7 +16,7 @@ after(async () => {
   await relay.close();
 });
 
-function connect(room = "test-room", { name = "Guest", mode = "web" } = {}) {
+function connect(room = "test-room", { name = "Guest", mode = "web", theme } = {}) {
   return new Promise((resolve, reject) => {
     const socket = new WebSocket(`${baseUrl}/ws`);
     const messages = [];
@@ -26,7 +26,7 @@ function connect(room = "test-room", { name = "Guest", mode = "web" } = {}) {
       if (message.type === "welcome") resolve({ socket, messages, selfId: message.selfId });
     });
     socket.on("error", reject);
-    socket.on("open", () => socket.send(JSON.stringify({ type: "join", room, name, mode })));
+    socket.on("open", () => socket.send(JSON.stringify({ type: "join", room, name, mode, ...(theme ? { theme } : {}) })));
     socket.on("close", (code, reason) => {
       if (code !== 1000 && messages.length === 0) {
         reject(new Error(`WebSocket closed (${code}): ${reason.toString()}`));
@@ -68,7 +68,7 @@ function close(client) {
   });
 }
 
-test("VR and AR clients in the same room receive a shared object", async () => {
+test("VR and AR clients in the same circuit room receive a shared object", async () => {
   const vr = await connect("mixed-room", { name: "VR Builder", mode: "vr" });
   const ar = await connect("mixed-room", { name: "AR Builder", mode: "ar" });
   try {
@@ -76,9 +76,9 @@ test("VR and AR clients in the same room receive a shared object", async () => {
     assert.equal(peer.peer.name, "AR Builder");
     assert.equal(peer.peer.mode, "ar");
 
-    send(vr, { type: "place", part: "pump", position: [1, 0.2, -1], rotation: [0, 0, 0] });
+    send(vr, { type: "place", part: "bulb", position: [1, 0.2, -1], rotation: [0, 0, 0] });
     const added = await waitFor(ar, "object-added");
-    assert.equal(added.object.part, "pump");
+    assert.equal(added.object.part, "bulb");
     assert.deepEqual(added.object.position, [1, 0.2, -1]);
   } finally {
     await close(vr);
@@ -90,14 +90,14 @@ test("late joiners receive room objects and rooms remain isolated", async () => 
   const host = await connect("snapshot-room");
   const otherRoom = await connect("separate-room");
   try {
-    send(host, { type: "place", part: "tank", position: [0, 0, 0], rotation: [0, 0, 0] });
+    send(host, { type: "place", part: "battery", position: [0, 0, 0], rotation: [0, 0, 0] });
     await waitFor(host, "object-added");
     const lateJoiner = await connect("snapshot-room", { name: "Late Builder" });
     try {
       const welcome = lateJoiner.messages[0];
       assert.equal(welcome.type, "welcome");
       assert.equal(welcome.objects.length, 1);
-      assert.equal(welcome.objects[0].part, "tank");
+      assert.equal(welcome.objects[0].part, "battery");
       assert.equal(welcome.peers.length, 1);
     } finally {
       await close(lateJoiner);
@@ -113,7 +113,7 @@ test("only the holder can move a shared object", async () => {
   const owner = await connect("ownership-room");
   const other = await connect("ownership-room");
   try {
-    send(owner, { type: "place", part: "valve", position: [0, 0, 0], rotation: [0, 0, 0] });
+    send(owner, { type: "place", part: "switch", position: [0, 0, 0], rotation: [0, 0, 0] });
     const { object } = await waitFor(other, "object-added");
 
     send(owner, { type: "grab", id: object.id });
@@ -143,14 +143,14 @@ test("disconnect releases held objects and invalid room names are rejected", asy
   const owner = await connect("disconnect-room");
   const observer = await connect("disconnect-room");
   try {
-    send(owner, { type: "place", part: "pipe", position: [0, 0, 0], rotation: [0, 0, 0] });
+    send(owner, { type: "place", part: "wire", position: [0, 0, 0], rotation: [0, 0, 0] });
     const { object } = await waitFor(observer, "object-added");
     send(owner, { type: "grab", id: object.id });
     await waitFor(observer, "object-grabbed");
     await close(owner);
     await waitFor(observer, "object-released");
     await waitFor(observer, "peer-leave");
-    assert.equal(relay.rooms.get("disconnect-room").objects.get(object.id).heldBy, null);
+    assert.equal(relay.rooms.get("circuits:disconnect-room").objects.get(object.id).heldBy, null);
     assert.equal(WebSocket.CLOSED, 3);
     const invalid = new WebSocket(`${baseUrl}/ws`);
     invalid.on("open", () => {
@@ -182,12 +182,60 @@ test("invalid part types and unbounded transforms are ignored", async () => {
   const observer = await connect("validation-room");
   try {
     send(host, { type: "place", part: "secrets", position: [0, 0, 0], rotation: [0, 0, 0] });
-    send(host, { type: "place", part: "pump", position: [999, 0, 0], rotation: [0, 0, 0] });
+    send(host, { type: "place", part: "pump", position: [0, 0, 0], rotation: [0, 0, 0] });
+    send(host, { type: "place", part: "bulb", position: [999, 0, 0], rotation: [0, 0, 0] });
     await new Promise((resolve) => setTimeout(resolve, 80));
     assert.equal(host.messages.some((message) => message.type === "object-added"), false);
     assert.equal(observer.messages.some((message) => message.type === "object-added"), false);
   } finally {
     await close(host);
     await close(observer);
+  }
+});
+
+test("themes keep rooms and part catalogs separate", async () => {
+  const circuits = await connect("shared-name", { theme: "circuits" });
+  const safety = await connect("shared-name", { theme: "safety" });
+  try {
+    assert.equal(circuits.messages[0].theme, "circuits");
+    assert.equal(safety.messages[0].theme, "safety");
+    send(safety, { type: "place", part: "bulb", position: [0, 0, 0], rotation: [0, 0, 0] });
+    send(safety, { type: "place", part: "extinguisher", position: [0, 0, 0], rotation: [0, 0, 0] });
+    const added = await waitFor(safety, "object-added");
+    assert.equal(added.object.part, "extinguisher");
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    assert.equal(circuits.messages.some((message) => message.type === "object-added"), false);
+    const rejected = new WebSocket(`${baseUrl}/ws`);
+    rejected.on("open", () => rejected.send(JSON.stringify({ type: "join", room: "x", theme: "water" })));
+    assert.equal(await new Promise((resolve) => rejected.once("close", resolve)), 1008);
+  } finally {
+    await close(circuits);
+    await close(safety);
+  }
+});
+
+test("toggle works only on toggleable parts and rotate respects ownership", async () => {
+  const builder = await connect("toggle-room");
+  const guest = await connect("toggle-room");
+  try {
+    send(builder, { type: "place", part: "switch", position: [0, 0, 0], rotation: [0, 0, 0] });
+    send(builder, { type: "place", part: "bulb", position: [1, 0, 0], rotation: [0, 0, 0] });
+    const first = await waitFor(guest, "object-added", (message) => message.object.part === "switch");
+    const second = await waitFor(guest, "object-added", (message) => message.object.part === "bulb");
+    send(guest, { type: "toggle", id: second.object.id, on: true });
+    send(guest, { type: "toggle", id: first.object.id, on: true });
+    const toggled = await waitFor(builder, "toggle-state");
+    assert.equal(toggled.id, first.object.id);
+    assert.equal(toggled.on, true);
+
+    send(builder, { type: "grab", id: first.object.id });
+    await waitFor(guest, "object-grabbed");
+    send(guest, { type: "rotate", id: first.object.id, rotation: [0, 1, 0] });
+    send(builder, { type: "rotate", id: first.object.id, rotation: [0, 0.5, 0] });
+    const rotated = await waitFor(guest, "object-rotated");
+    assert.deepEqual(rotated.rotation, [0, 0.5, 0]);
+  } finally {
+    await close(builder);
+    await close(guest);
   }
 });

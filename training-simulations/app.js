@@ -1,7 +1,12 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { VRButton } from "three/addons/webxr/VRButton.js";
-import { scenarios } from "./scenarios.js";
+import { scenarios, categories } from "./scenarios.js";
+import {
+  createHeightStation, createControlRoomStation, createBatteryStation,
+  createFacadeStation, createWeldingStation, createElectricalStation,
+} from "./industrial-stations.js";
+import { decorateCoreStation } from "./core-stations.js";
 
 const canvas = document.querySelector("#scene");
 const profile = document.querySelector("#profile");
@@ -10,8 +15,14 @@ const welcome = document.querySelector("#welcome");
 const catalog = document.querySelector("#catalog");
 const simulation = document.querySelector("#simulation");
 const progress = document.querySelector("#progress");
-const businessList = document.querySelector("#business-list");
-const researchList = document.querySelector("#research-list");
+const categoryList = document.querySelector("#category-list");
+const briefing = document.querySelector("#briefing");
+const review = document.querySelector("#review");
+const reviewList = document.querySelector("#review-list");
+const taskHint = document.querySelector("#task-hint");
+const taskLog = document.querySelector("#task-log");
+const taskActionsWrap = document.querySelector("#task-actions-wrap");
+const taskActions = document.querySelector("#task-actions");
 const simulationCategory = document.querySelector("#simulation-category");
 const simulationTitle = document.querySelector("#simulation-title");
 const simulationBrief = document.querySelector("#simulation-brief");
@@ -36,12 +47,16 @@ const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 const choiceTargets = [];
 const catalogTargets = [];
+const taskTargets = [];
+let task = null;
 const completed = new Map();
 let activeScenario = null;
 let currentStep = 0;
 let totalScore = 0;
 let answered = false;
 let learnerName = "";
+let criticalMisses = 0;
+let missedPrinciples = [];
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color("#0c131d");
@@ -68,7 +83,7 @@ const immersiveVrSupport = immersiveVrSupportCheck.catch((error) => {
 });
 immersiveVrSupport.then((supported) => {
   if (!supported) {
-    xrNote.textContent = "WebXR VR is unavailable in this browser. You can still complete all six simulations in desktop mode.";
+    xrNote.textContent = "WebXR VR is unavailable in this browser. You can still complete all twelve simulations in desktop mode.";
   } else if (learnerName && xrButton) {
     xrButton.disabled = false;
   }
@@ -82,20 +97,26 @@ const keyLight = new THREE.DirectionalLight(0xffdfb3, 3.2);
 keyLight.position.set(-4, 7, 5);
 scene.add(keyLight);
 
+// All training content lives in `world`. In VR the player starts at the origin, so the world is moved in front of them.
+const world = new THREE.Group();
+scene.add(world);
+const vrWorldOffset = new THREE.Vector3(0, 0, -2.4);
+const vrWorldScale = 1.25;
+
 const floor = new THREE.Mesh(
   new THREE.CircleGeometry(7, 64),
   new THREE.MeshStandardMaterial({ color: "#152433", roughness: 0.88, metalness: 0.08 }),
 );
 floor.rotation.x = -Math.PI / 2;
 floor.position.y = -0.02;
-scene.add(floor);
+world.add(floor);
 
 const platform = new THREE.Mesh(
   new THREE.CylinderGeometry(2.4, 2.55, 0.14, 64),
   new THREE.MeshStandardMaterial({ color: "#20374a", roughness: 0.58, metalness: 0.14 }),
 );
 platform.position.y = 0.12;
-scene.add(platform);
+world.add(platform);
 
 const platformRing = new THREE.Mesh(
   new THREE.TorusGeometry(2.08, 0.022, 8, 100),
@@ -103,10 +124,10 @@ const platformRing = new THREE.Mesh(
 );
 platformRing.rotation.x = Math.PI / 2;
 platformRing.position.y = 0.205;
-scene.add(platformRing);
+world.add(platformRing);
 
 const station = new THREE.Group();
-scene.add(station);
+world.add(station);
 let questionPanel = null;
 let scenarioModel = null;
 
@@ -358,11 +379,27 @@ const stationBuilders = {
   consent: createConsentStation,
   sample: createSampleStation,
   field: createFieldStation,
+  height: createHeightStation,
+  control: createControlRoomStation,
+  battery: createBatteryStation,
+  facade: createFacadeStation,
+  welding: createWeldingStation,
+  electrical: createElectricalStation,
 };
 
 function clearObject(group) {
   if (!group) return;
   group.traverse((child) => {
+    if (child.isSprite) {
+      child.material.map?.dispose();
+      child.material.dispose();
+      return;
+    }
+    if (child.isLine) {
+      child.geometry.dispose();
+      child.material.dispose();
+      return;
+    }
     if (!child.isMesh) return;
     child.geometry.dispose();
     if (Array.isArray(child.material)) child.material.forEach((material) => material.dispose());
@@ -371,60 +408,83 @@ function clearObject(group) {
       child.material.dispose();
     }
   });
-  scene.remove(group);
+  group.parent?.remove(group);
 }
 
 function setTrainingScene(scenario, stepIndex = 0) {
   clearObject(scenarioModel);
   scenarioModel = stationBuilders[scenario?.object]?.() ?? createCounter();
+  decorateCoreStation(scenarioModel, scenario?.object);
   scenarioModel.position.set(0, 0.2, -0.28);
-  scene.add(scenarioModel);
+  world.add(scenarioModel);
+  updateSign(scenario, stepIndex);
+}
 
+function updateSign(scenario, stepIndex = 0, text) {
   clearObject(questionPanel);
   questionPanel = null;
-  const signColor = scenario?.category === "research" ? "#73e7d4" : "#ffb36b";
-  if (scenario) {
-    questionPanel = makeSign(
-      [`${scenario.category} practice`, scenario.steps[stepIndex]?.prompt ?? scenario.description],
-      [0, 2.35, -1.0],
-      [3.1, 0.8],
-      signColor,
-      384,
-    );
-    scene.add(questionPanel);
-  }
+  if (!scenario) return;
+  questionPanel = makeSign(
+    [`${scenario.category} practice`, text ?? scenario.steps[stepIndex]?.prompt ?? scenario.description],
+    [0, 2.6, -1.0],
+    [3.1, 0.8],
+    categoryOf(scenario)?.accent ?? "#ffb36b",
+    384,
+  );
+  world.add(questionPanel);
+}
+
+function categoryOf(scenario) {
+  return categories.find((category) => category.id === scenario?.category);
 }
 
 function renderCatalog() {
-  businessList.replaceChildren();
-  researchList.replaceChildren();
+  categoryList.replaceChildren();
   const learner = learnerName || "Learner";
-  for (const scenario of scenarios) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `scenario-card${completed.has(scenario.id) ? " completed" : ""}`;
-    button.dataset.scenario = scenario.id;
-    const title = document.createElement("span");
-    title.className = "scenario-title";
-    title.textContent = scenario.title;
-    const description = document.createElement("span");
-    description.className = "scenario-description";
-    description.textContent = scenario.description;
-    const meta = document.createElement("span");
-    meta.className = "scenario-meta";
-    const result = completed.get(scenario.id);
-    meta.textContent = result
-      ? `Completed by ${learner} · ${result.score}/${result.maxScore}`
-      : `${scenario.setting} · ${scenario.duration}`;
-    button.append(title, description, meta);
-    button.addEventListener("click", () => startScenario(scenario));
-    (scenario.category === "business" ? businessList : researchList).append(button);
+  for (const category of categories) {
+    const section = document.createElement("div");
+    section.className = "category";
+    const heading = document.createElement("h3");
+    const mark = document.createElement("span");
+    mark.className = `category-mark ${category.id}-mark`;
+    heading.append(mark, category.label);
+    const note = document.createElement("p");
+    note.className = "category-note";
+    note.textContent = category.note;
+    const list = document.createElement("div");
+    list.className = "scenario-list";
+    for (const scenario of scenarios.filter((item) => item.category === category.id)) {
+      const button = document.createElement("button");
+      button.type = "button";
+      const result = completed.get(scenario.id);
+      button.className = `scenario-card${result ? " completed" : ""}${result?.critical ? " critical-flag" : ""}`;
+      button.dataset.scenario = scenario.id;
+      const title = document.createElement("span");
+      title.className = "scenario-title";
+      title.textContent = scenario.title;
+      const description = document.createElement("span");
+      description.className = "scenario-description";
+      description.textContent = scenario.description;
+      const meta = document.createElement("span");
+      meta.className = "scenario-meta";
+      meta.textContent = result
+        ? `Completed by ${learner} · ${result.score}/${result.maxScore}`
+        : `${scenario.setting} · ${scenario.duration}`;
+      button.append(title, description, meta);
+      button.addEventListener("click", () => startScenario(scenario));
+      list.append(button);
+    }
+    section.append(heading, note, list);
+    categoryList.append(section);
   }
   progress.textContent = `${completed.size} / ${scenarios.length} complete`;
 }
 
 function showCatalog() {
   activeScenario = null;
+  task = null;
+  taskTargets.length = 0;
+  setCameraMode("overview");
   simulation.hidden = true;
   catalog.hidden = false;
   renderCatalog();
@@ -432,8 +492,236 @@ function showCatalog() {
   updateChoiceCards();
 }
 
+// ---------------------------------------------------------------- hands-on tasks
+// A task is a set of hotspots placed on the 3D work area. The learner carries the task out by selecting them
+// (mouse click, or a VR controller trigger). Wrong actions show their consequence; some actions change the scene.
+
+const overviewView = { position: [0, 2.4, 8.5], target: [0, 1.2, 0] };
+const taskView = { position: [0.1, 1.5, 6.0], target: [0, 0.95, -0.2] };
+let cameraMode = "overview";
+let flashUntil = 0;
+
+function setCameraMode(mode) {
+  if (cameraMode === mode) return;
+  cameraMode = mode;
+  const view = mode === "task" ? taskView : overviewView;
+  camera.position.set(...view.position);
+  controls.target.set(...view.target);
+  controls.update();
+}
+
+const hotspotColors = { idle: "#73e7d4", done: "#4be3a0", wrong: "#ff6b6b" };
+
+function labelSprite(text, color) {
+  const drawing = document.createElement("canvas");
+  drawing.width = 512;
+  drawing.height = 112;
+  const context = drawing.getContext("2d");
+  context.fillStyle = "#0e1824ee";
+  roundedRect(context, 3, 3, 506, 106, 22);
+  context.fill();
+  context.strokeStyle = color;
+  context.lineWidth = 5;
+  context.stroke();
+  context.fillStyle = "#f2f6fc";
+  context.font = "700 44px system-ui, sans-serif";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText(text, 256, 58, 480);
+  const texture = new THREE.CanvasTexture(drawing);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
+  sprite.scale.set(1.2, 0.262, 1);
+  sprite.renderOrder = 12;
+  return sprite;
+}
+
+function setHotspotStatus(state, status) {
+  state.status = status;
+  const color = hotspotColors[status];
+  state.core.material.color.set(color);
+  state.halo.material.color.set(color);
+  state.halo.material.opacity = status === "idle" ? 0.3 : 0.15;
+  state.group.remove(state.label);
+  state.label.material.map.dispose();
+  state.label.material.dispose();
+  const mark = status === "done" ? "✓ " : status === "wrong" ? "✗ " : "";
+  state.label = labelSprite(`${mark}${state.def.label}`, color);
+  state.label.position.set(...(state.labelOffset ?? [0, 0.24, 0]));
+  state.group.add(state.label);
+  if (state.button) state.button.disabled = status !== "idle";
+}
+
+function createHotspot(def) {
+  const group = new THREE.Group();
+  group.position.set(...def.at);
+  const core = new THREE.Mesh(
+    new THREE.SphereGeometry(0.07, 16, 12),
+    new THREE.MeshBasicMaterial({ color: hotspotColors.idle, depthTest: false }),
+  );
+  const halo = new THREE.Mesh(
+    new THREE.SphereGeometry(0.15, 16, 12),
+    new THREE.MeshBasicMaterial({ color: hotspotColors.idle, transparent: true, opacity: 0.3, depthTest: false }),
+  );
+  core.renderOrder = 10;
+  halo.renderOrder = 9;
+  const state = { def, group, core, halo, label: new THREE.Group(), status: "idle", button: null };
+  state.label.material = { map: { dispose() {} }, dispose() {} };
+  halo.userData.hotspot = state;
+  core.userData.hotspot = state;
+  group.add(core, halo);
+  setHotspotStatus(state, "idle");
+  return state;
+}
+
+// Spread labels to the sides and stack them so neighbouring hotspots stay readable; leader lines tie each label back.
+function layoutLabels(states) {
+  const placed = [];
+  for (const state of [...states].sort((a, b) => b.def.at[1] - a.def.at[1])) {
+    const [x, y] = state.def.at;
+    const dx = x > 0.55 || (x < -0.25) ? -0.7 : 0;
+    let dy = 0.25;
+    for (let guard = 0; guard < 14 && placed.some((p) => Math.abs(p.x - (x + dx)) < 1.15 && Math.abs(p.y - (y + dy)) < 0.27); guard += 1) dy += 0.28;
+    placed.push({ x: x + dx, y: y + dy });
+    state.labelOffset = [dx, dy, 0];
+    state.label.position.set(dx, dy, 0);
+    const leader = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(dx, dy - 0.13, 0)]),
+      new THREE.LineBasicMaterial({ color: "#73e7d4", transparent: true, opacity: 0.55, depthTest: false }),
+    );
+    leader.renderOrder = 8;
+    state.group.add(leader);
+  }
+}
+
+function addLine(parent, from, to, color) {
+  const start = new THREE.Vector3(...from);
+  const end = new THREE.Vector3(...to);
+  const line = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.014, 0.014, start.distanceTo(end), 8),
+    new THREE.MeshBasicMaterial({ color }),
+  );
+  line.position.copy(start).lerp(end, 0.5);
+  line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), end.clone().sub(start).normalize());
+  parent.add(line);
+}
+
+function logTask(text, kind) {
+  const entry = document.createElement("li");
+  entry.className = kind;
+  entry.textContent = text;
+  taskLog.append(entry);
+  taskLog.scrollTop = taskLog.scrollHeight;
+}
+
+function renderTask(step) {
+  stepCount.textContent = `Task ${currentStep + 1} of ${activeScenario.steps.length}`;
+  decisionKicker.textContent = `${learnerName.toUpperCase()} · TASK ${currentStep + 1}`;
+  decisionPrompt.textContent = step.prompt;
+  choices.hidden = true;
+  taskHint.hidden = false;
+  taskLog.hidden = false;
+  taskLog.replaceChildren();
+  taskActionsWrap.hidden = false;
+  taskActionsWrap.open = false;
+  taskActions.replaceChildren();
+  taskTargets.length = 0;
+  setTrainingScene(activeScenario, currentStep);
+  scenarioModel.userData.setState?.(step.onStart ?? "");
+  setCameraMode("task");
+  const states = step.hotspots.map(createHotspot);
+  layoutLabels(states);
+  for (const state of states) {
+    scenarioModel.add(state.group);
+    taskTargets.push(state.halo);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "choice";
+    button.dataset.hotspot = state.def.id;
+    button.textContent = state.def.label;
+    button.addEventListener("click", () => performHotspot(state));
+    state.button = button;
+    taskActions.append(button);
+  }
+  task = {
+    step,
+    states,
+    done: new Set(),
+    required: step.hotspots.filter((item) => item.correct).map((item) => item.id),
+    mistakes: 0,
+    critical: false,
+    finished: false,
+  };
+  updateChoiceCards();
+}
+
+function performHotspot(state) {
+  if (!task || task.finished || state.status !== "idle") return;
+  const def = state.def;
+  const missing = (def.after ?? []).filter((id) => !task.done.has(id));
+  if (def.correct && missing.length === 0) {
+    task.done.add(def.id);
+    setHotspotStatus(state, "done");
+    logTask(`✓ ${def.label}: ${def.say}`, "good");
+    const parts = scenarioModel.userData.reveal ?? {};
+    if (def.reveal && parts[def.reveal]) parts[def.reveal].visible = true;
+    if (def.hide && parts[def.hide]) parts[def.hide].visible = false;
+    if (def.tether && scenarioModel.userData.worker) addLine(scenarioModel, scenarioModel.userData.worker, def.at, "#ff9d59");
+    updateSign(activeScenario, currentStep, def.say);
+    if (task.required.every((id) => task.done.has(id))) finishTask();
+    return;
+  }
+  task.mistakes += 1;
+  const message = def.correct ? (def.early ?? "Not yet. Finish the earlier steps first.") : def.say;
+  if (def.critical) {
+    task.critical = true;
+    flashUntil = performance.now() + 350;
+  }
+  if (!def.correct) setHotspotStatus(state, "wrong");
+  logTask(`${def.critical ? "✗ CRITICAL" : "✗"} ${def.label}: ${message}`, def.critical ? "critical" : "bad");
+  updateSign(activeScenario, currentStep, message);
+}
+
+function finishTask() {
+  task.finished = true;
+  const points = task.critical ? 0 : task.mistakes === 0 ? 2 : task.mistakes === 1 ? 1 : 0;
+  totalScore += points;
+  if (points < 2) missedPrinciples.push(task.step.principle);
+  if (task.critical) criticalMisses += 1;
+  for (const state of task.states) {
+    if (state.status === "idle") {
+      state.group.visible = false;
+      if (state.button) state.button.disabled = true;
+    }
+  }
+  answered = true;
+  feedback.classList.toggle("critical", task.critical);
+  feedbackLabel.textContent = task.critical ? (activeScenario.category === "industrial" ? "CRITICAL SAFETY MISS" : "CRITICAL MISS") : points === 2 ? "STRONG PRACTICE" : "PAUSE AND REFLECT";
+  feedbackCopy.textContent = task.critical
+    ? `Task complete, but with a critical mistake (${task.mistakes} mistake${task.mistakes === 1 ? "" : "s"} in total). In real practice that could seriously harm someone or invalidate the work.`
+    : task.mistakes === 0
+      ? "Task complete with no mistakes."
+      : `Task complete with ${task.mistakes} mistake${task.mistakes === 1 ? "" : "s"}.`;
+  principle.textContent = `Remember: ${task.step.principle}`;
+  continueButton.textContent = currentStep === activeScenario.steps.length - 1 ? "See your result" : "Next task";
+  feedback.hidden = false;
+  updateSign(activeScenario, currentStep, task.step.principle);
+  updateChoiceCards();
+}
+
 function renderQuestion() {
   const step = activeScenario.steps[currentStep];
+  if (step.hotspots) {
+    renderTask(step);
+    return;
+  }
+  task = null;
+  taskTargets.length = 0;
+  choices.hidden = false;
+  taskHint.hidden = true;
+  taskLog.hidden = true;
+  taskActionsWrap.hidden = true;
+  setCameraMode("overview");
   stepCount.textContent = `Decision ${currentStep + 1} of ${activeScenario.steps.length}`;
   decisionKicker.textContent = `${learnerName.toUpperCase()} · DECISION ${currentStep + 1}`;
   decisionPrompt.textContent = step.prompt;
@@ -458,11 +746,19 @@ function startScenario(scenario) {
   answered = false;
   catalog.hidden = true;
   simulation.hidden = false;
-  simulationCategory.textContent = scenario.category === "business"
-    ? "LOCAL BUSINESS ESSENTIALS"
-    : "RESEARCH PRACTICE";
+  simulationCategory.textContent = categoryOf(scenario).heading;
+  briefing.replaceChildren(...(scenario.briefing ?? []).map((item) => {
+    const entry = document.createElement("li");
+    entry.textContent = item;
+    return entry;
+  }));
+  briefing.hidden = !scenario.briefing?.length;
+  criticalMisses = 0;
+  missedPrinciples = [];
+  review.hidden = true;
   simulationTitle.textContent = scenario.title;
   simulationBrief.textContent = scenario.description;
+  task = null;
   decisionCard.hidden = false;
   feedback.hidden = true;
   completion.hidden = true;
@@ -476,7 +772,11 @@ function chooseAnswer(index) {
   answered = true;
   totalScore += choice.score;
   for (const button of choices.querySelectorAll("button")) button.disabled = true;
-  feedbackLabel.textContent = choice.score === 2 ? "STRONG PRACTICE" : "PAUSE AND REFLECT";
+  const principleText = activeScenario.steps[currentStep].principle;
+  if (choice.score < 2) missedPrinciples.push(principleText);
+  if (choice.critical) criticalMisses += 1;
+  feedback.classList.toggle("critical", Boolean(choice.critical));
+  feedbackLabel.textContent = choice.critical ? "CRITICAL SAFETY MISS" : choice.score === 2 ? "STRONG PRACTICE" : "PAUSE AND REFLECT";
   feedbackCopy.textContent = choice.feedback;
   principle.textContent = `Remember: ${activeScenario.steps[currentStep].principle}`;
   continueButton.textContent = currentStep === activeScenario.steps.length - 1 ? "See your result" : "Next decision";
@@ -487,12 +787,21 @@ function chooseAnswer(index) {
 
 function finishScenario() {
   const maximum = activeScenario.steps.length * 2;
-  completed.set(activeScenario.id, { score: totalScore, maxScore: maximum });
+  completed.set(activeScenario.id, { score: totalScore, maxScore: maximum, critical: criticalMisses > 0 });
   decisionCard.hidden = true;
   feedback.hidden = true;
   completion.hidden = false;
   completionTitle.textContent = `Nice work, ${learnerName}.`;
-  completionCopy.textContent = `You scored ${totalScore} of ${maximum} points across ${activeScenario.steps.length} decisions. Review the principles, then try another scenario or replay this one.`;
+  const criticalNote = criticalMisses
+    ? ` ${criticalMisses} decision${criticalMisses === 1 ? " was a critical miss" : "s were critical misses"}; in real practice that could seriously harm someone or invalidate the work.`
+    : "";
+  completionCopy.textContent = `You scored ${totalScore} of ${maximum} points across ${activeScenario.steps.length} decisions.${criticalNote} Review the principles, then try another scenario or replay this one.`;
+  reviewList.replaceChildren(...missedPrinciples.map((item) => {
+    const entry = document.createElement("li");
+    entry.textContent = item;
+    return entry;
+  }));
+  review.hidden = !missedPrinciples.length;
   renderCatalog();
   setTrainingScene(activeScenario);
   updateChoiceCards();
@@ -554,13 +863,13 @@ function createChoiceCard(index) {
   return card;
 }
 
-function replaceCardTexture(card, lines, accent = "#73e7d4") {
+function replaceCardTexture(card, lines, accent = "#73e7d4", size = 30, height = 384) {
   card.material.map?.dispose();
   card.material.map = textTexture(lines, {
     accent,
     width: 768,
-    height: 384,
-    size: 30,
+    height,
+    size,
   });
   card.material.needsUpdate = true;
 }
@@ -583,8 +892,8 @@ for (let index = 0; index < scenarios.length; index += 1) {
   const scenario = scenarios[index];
   const card = createChoiceCard(index);
   card.geometry.dispose();
-  card.geometry = new THREE.PlaneGeometry(1.12, 0.68);
-  card.position.set((index % 3 - 1) * 1.23, index < 3 ? 1.72 : 0.88, -1.36);
+  card.geometry = new THREE.PlaneGeometry(0.9, 0.52);
+  card.position.set((index % 4 - 1.5) * 0.98, 2.0 - Math.floor(index / 4) * 0.6, -1.36);
   card.visible = false;
   card.userData.scenarioIndex = index;
   station.add(card);
@@ -592,16 +901,18 @@ for (let index = 0; index < scenarios.length; index += 1) {
 }
 
 function updateChoiceCards() {
+  // In VR the scenario cards need a clear view, so the idle demo counter is hidden until a scenario starts.
+  if (scenarioModel && !activeScenario) scenarioModel.visible = !renderer.xr.isPresenting;
   const step = activeScenario?.steps[currentStep];
   choiceTargets.forEach((card, index) => {
-    const choice = step?.choices[index];
-    card.visible = Boolean(activeScenario && !answered);
+    const choice = step?.choices?.[index];
+    card.visible = Boolean(activeScenario && !answered && !task);
     replaceCardTexture(card, [
       `${learnerName || "Learner"} · CHOICE ${index + 1}`,
       choice?.text ?? "Start a practice scenario to load your decisions.",
     ], index === 1 ? "#ffb36b" : "#73e7d4");
   });
-  advanceTarget.visible = Boolean(activeScenario && answered);
+  advanceTarget.visible = Boolean(activeScenario && answered && (!task || renderer.xr.isPresenting));
   if (advanceTarget.visible) {
     const text = completion.hidden ? "Continue to the next decision" : "Return to scenario selection";
     replaceCardTexture(advanceTarget, ["PRACTICE", text], "#ffb36b");
@@ -610,11 +921,22 @@ function updateChoiceCards() {
     const scenario = scenarios[index];
     card.visible = !activeScenario;
     replaceCardTexture(card, [
-      `${scenario.category === "business" ? "BUSINESS" : "RESEARCH"} · ${scenario.duration}`,
+      `${scenario.category} · ${scenario.duration}`,
       scenario.title,
-    ], scenario.category === "business" ? "#ffb36b" : "#73e7d4");
+    ], categoryOf(scenario).accent, 52, 444);
   });
 }
+
+renderer.xr.addEventListener("sessionstart", () => {
+  world.position.copy(vrWorldOffset);
+  world.scale.setScalar(vrWorldScale);
+  updateChoiceCards();
+});
+renderer.xr.addEventListener("sessionend", () => {
+  world.position.set(0, 0, 0);
+  world.scale.setScalar(1);
+  updateChoiceCards();
+});
 
 const controllers = [];
 for (let index = 0; index < 2; index += 1) {
@@ -629,13 +951,16 @@ for (let index = 0; index < 2; index += 1) {
   controller.addEventListener("select", () => {
     raycaster.setFromXRController(controller);
     const targets = [
+      ...taskTargets,
       ...choiceTargets.filter((card) => card.visible),
       ...catalogTargets.filter((card) => card.visible),
       ...(advanceTarget.visible ? [advanceTarget] : []),
     ];
     const hit = raycaster.intersectObjects(targets, false)[0];
     if (!hit) return;
-    if (hit.object === advanceTarget) {
+    if (hit.object.userData.hotspot) {
+      performHotspot(hit.object.userData.hotspot);
+    } else if (hit.object === advanceTarget) {
       if (completion.hidden) advanceStep();
       else showCatalog();
     } else if (hit.object.userData.scenarioIndex !== undefined) {
@@ -647,19 +972,52 @@ for (let index = 0; index < 2; index += 1) {
   controllers.push(controller);
 }
 
-renderer.domElement.addEventListener("click", (event) => {
-  if (renderer.xr.isPresenting || !activeScenario || answered) return;
+let pointerDown = null;
+renderer.domElement.addEventListener("pointerdown", (event) => {
+  pointerDown = { x: event.clientX, y: event.clientY };
+});
+
+function pointerRay(event) {
   const rect = renderer.domElement.getBoundingClientRect();
   pointer.set(
     ((event.clientX - rect.left) / rect.width) * 2 - 1,
     -((event.clientY - rect.top) / rect.height) * 2 + 1,
   );
   raycaster.setFromCamera(pointer, camera);
+}
+
+renderer.domElement.addEventListener("click", (event) => {
+  if (renderer.xr.isPresenting || !activeScenario) return;
+  if (pointerDown && Math.hypot(event.clientX - pointerDown.x, event.clientY - pointerDown.y) > 6) return;
+  pointerRay(event);
+  if (task) {
+    const hit = raycaster.intersectObjects(taskTargets, false)[0];
+    if (hit) performHotspot(hit.object.userData.hotspot);
+    return;
+  }
+  if (answered) return;
   const hit = raycaster.intersectObjects(choiceTargets, false)[0];
   if (hit) chooseAnswer(hit.object.userData.choiceIndex);
 });
 
-function animate() {
+renderer.domElement.addEventListener("pointermove", (event) => {
+  if (!task || renderer.xr.isPresenting) {
+    canvas.style.cursor = "";
+    return;
+  }
+  pointerRay(event);
+  const over = raycaster.intersectObjects(taskTargets, false)[0]?.object.userData.hotspot;
+  canvas.style.cursor = over && over.status === "idle" ? "pointer" : "";
+});
+
+function animate(time) {
+  scenarioModel?.userData.tick?.(time / 1000);
+  scene.background.set(performance.now() < flashUntil ? "#3a1218" : "#0c131d");
+  if (task) {
+    task.states.forEach((state, index) => {
+      state.halo.scale.setScalar(state.status === "idle" ? 1 + 0.14 * Math.sin(time / 280 + index) : 1);
+    });
+  }
   platformRing.rotation.z += renderer.xr.isPresenting ? 0.0015 : 0.0007;
   controls.update();
   renderer.render(scene, camera);
@@ -669,9 +1027,20 @@ setTrainingScene(null);
 updateChoiceCards();
 renderer.setAnimationLoop(animate);
 
-window.addEventListener("resize", () => {
+// On wide screens the control panel covers the right side, so shift the scene toward the left.
+function frameScene() {
   camera.aspect = window.innerWidth / window.innerHeight;
+  if (window.innerWidth > 900) {
+    camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * 0.23, 0, window.innerWidth, window.innerHeight);
+  } else {
+    camera.clearViewOffset();
+  }
   camera.updateProjectionMatrix();
+}
+frameScene();
+
+window.addEventListener("resize", () => {
+  frameScene();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 

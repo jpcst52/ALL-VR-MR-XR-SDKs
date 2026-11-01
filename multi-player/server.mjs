@@ -8,7 +8,13 @@ import { WebSocket, WebSocketServer } from "ws";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const ROOM_PATTERN = /^[a-z0-9][a-z0-9-]{0,23}$/i;
-const PART_TYPES = new Set(["tank", "valve", "pipe", "pump"]);
+// Each example theme has its own part catalog; a room only exists inside one theme.
+const THEMES = new Map([
+  ["circuits", new Set(["battery", "switch", "bulb", "resistor", "motor", "wire"])],
+  ["safety", new Set(["exit", "extinguisher", "firstaid", "barrier", "beacon", "muster"])],
+]);
+const TOGGLE_PARTS = new Set(["switch", "beacon"]);
+const DEFAULT_THEME = "circuits";
 const MAX_CLIENTS = 24;
 const MAX_ROOMS = 64;
 const MAX_OBJECTS = 250;
@@ -104,14 +110,20 @@ export function createRelay() {
           return;
         }
 
-        const roomName = message.room.toLowerCase();
+        const theme = message.theme === undefined ? DEFAULT_THEME : message.theme;
+        if (!THEMES.has(theme)) {
+          socket.close(1008, "Unknown example theme.");
+          return;
+        }
+        const displayName = message.room.toLowerCase();
+        const roomName = `${theme}:${displayName}`;
         let room = rooms.get(roomName);
         if (!room) {
           if (rooms.size >= MAX_ROOMS) {
             socket.close(1013, "The relay is at room capacity.");
             return;
           }
-          room = { peers: new Map(), objects: new Map() };
+          room = { theme, peers: new Map(), objects: new Map() };
           rooms.set(roomName, room);
         }
         if (room.peers.size >= MAX_CLIENTS) {
@@ -128,7 +140,8 @@ export function createRelay() {
         send(peer, {
           type: "welcome",
           selfId: peer.id,
-          room: peer.roomName,
+          room: displayName,
+          theme,
           peers: [...room.peers.values()].filter((item) => item !== peer).map(clientProfile),
           objects: [...room.objects.values()],
         });
@@ -159,7 +172,7 @@ export function createRelay() {
             send(peer, { type: "room-limit", message: "This room has reached its shared-part limit." });
             return;
           }
-          if (!PART_TYPES.has(message.part) || !isVector(message.position, 8)
+          if (!THEMES.get(room.theme).has(message.part) || !isVector(message.position, 8)
             || !isVector(message.rotation, Math.PI * 4)) return;
           const object = {
             id: randomUUID(),
@@ -168,7 +181,7 @@ export function createRelay() {
             rotation: message.rotation,
             createdBy: peer.id,
             heldBy: null,
-            valveOpen: false,
+            on: false,
           };
           room.objects.set(object.id, object);
           broadcast(room, { type: "object-added", object });
@@ -222,11 +235,19 @@ export function createRelay() {
           broadcast(room, { type: "object-removed", id: object.id });
           break;
         }
-        case "valve": {
+        case "toggle": {
           const object = getObject(room, message.id);
-          if (!object || object.part !== "valve") return;
-          object.valveOpen = Boolean(message.open);
-          broadcast(room, { type: "valve-state", id: object.id, open: object.valveOpen });
+          if (!object || !TOGGLE_PARTS.has(object.part)) return;
+          object.on = Boolean(message.on);
+          broadcast(room, { type: "toggle-state", id: object.id, on: object.on });
+          break;
+        }
+        case "rotate": {
+          const object = getObject(room, message.id);
+          if (!object || (object.heldBy && object.heldBy !== peer.id)
+            || !isVector(message.rotation, Math.PI * 4)) return;
+          object.rotation = message.rotation;
+          broadcast(room, { type: "object-rotated", id: object.id, rotation: object.rotation });
           break;
         }
         default:

@@ -196,3 +196,22 @@ input:focus-visible, button:focus-visible {
   .scenario-card { min-height: 82px; }
   .xr-button { left: 10px; bottom: 10px; }
 }
+
+.industrial-mark { background: #f2c94c; box-shadow: 0 0 12px #f2c94c80; }
+.category:first-child { margin-top: 0; }
+.briefing { margin: -8px 0 16px; padding: 10px 12px 10px 28px; border: 1px solid #5b5230; border-radius: 10px; background: #f2c94c14; color: #e9dfb4; font-size: 12px; }
+.briefing li + li { margin-top: 3px; }
+.review { margin: 4px 0 12px; padding: 10px 12px; border: 1px solid #5b5230; border-radius: 10px; background: #f2c94c10; font-size: 12px; }
+.review ul { margin: 6px 0 0; padding-left: 18px; color: #d1dce8; }
+.feedback.critical { border-color: #a84c4c; }
+.feedback.critical .decision-kicker { color: #ff9b9b; }
+.scenario-card.critical-flag .scenario-meta::after { content: " \00b7  critical misses"; color: #ff9b9b; }
+
+[hidden] { display: none !important; }
+.task-hint { margin: -4px 0 10px; color: #cfe7e2; font-size: 12.5px; }
+.task-log { margin: 0 0 10px; padding: 0; list-style: none; max-height: 190px; overflow: auto; font-size: 12.5px; }
+.task-log li { margin-top: 6px; padding: 7px 10px; border-left: 3px solid #4be3a0; border-radius: 6px; background: #4be3a014; color: #d8efe6; }
+.task-log li.bad { border-color: #ffb36b; background: #ffb36b14; color: #f4e3d0; }
+.task-log li.critical { border-color: #ff6b6b; background: #ff6b6b1c; color: #ffd9d9; }
+.task-actions-wrap { font-size: 12px; color: var(--muted, #a9b8c9); }
+.task-actions-wrap summary { cursor: pointer; margin-bottom: 6px; }

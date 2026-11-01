@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Build a shared WebXR waterworks layout in augmented reality.">
-    <title>Multiplayer AR — Waterworks Workshop</title>
+    <meta name="description" content="A shared WebXR site safety layout you can join from a phone in AR or a desktop browser.">
+    <title>Multiplayer AR — Site Safety Layout</title>
     <link rel="stylesheet" href="../shared/style.css">
     <script type="importmap">
       {
@@ -15,11 +15,11 @@
       }
     </script>
   </head>
-  <body data-mode="ar">
+  <body data-mode="ar" data-theme="safety">
     <main id="panel" class="panel">
       <header class="heading">
         <p class="eyebrow">MULTIPLAYER WEBXR / AR</p>
-        <h1>Waterworks Workshop</h1>
+        <h1>Site Safety Layout</h1>
         <p>Share one board across AR and desktop browsers. Calibrate a common origin before placing parts.</p>
       </header>
       <section class="connection" aria-label="Room connection">
@@ -32,16 +32,17 @@
       </section>
       <section id="workspace" class="workspace" hidden>
         <p id="roster" class="roster">Participants: 0</p>
-        <div class="parts" aria-label="Shared waterworks parts">
-          <button type="button" data-part="tank">+ Tank</button>
-          <button type="button" data-part="valve">+ Valve</button>
-          <button type="button" data-part="pipe">+ Pipe</button>
-          <button type="button" data-part="pump">+ Pump</button>
+        <div id="parts" class="parts" aria-label="Shared parts"></div>
+        <p id="summary" class="summary" role="status" aria-live="polite"></p>
+        <button id="load-demo" type="button" class="wide"></button>
+        <div class="actions">
+          <button id="toggle-selected" type="button" disabled>Toggle</button>
+          <button id="rotate-selected" type="button" disabled>Rotate 45°</button>
         </div>
         <button id="enter-xr" class="primary" type="button">Align origin &amp; enter AR</button>
         <button id="delete-selected" type="button" disabled>Delete selected</button>
         <p id="alignment" class="alignment">In AR, tap the shared physical origin, then tap a second marker along +Z.</p>
-        <p class="controls">Desktop: drag parts on the shared board. In AR: use the screen reticle and tap surfaces to align, add, grab, and place.</p>
+        <p id="controls" class="controls"></p>
       </section>
     </main>
     <p id="xr-hint" class="xr-hint" hidden></p>

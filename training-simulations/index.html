@@ -21,7 +21,7 @@
       <header class="brand">
         <p class="eyebrow">FIELDWORK XR · PRACTICE LAB</p>
         <h1>Small scenarios.<br>Better decisions.</h1>
-        <p class="intro">Choose a three-minute practice run for everyday business work or responsible research.</p>
+        <p class="intro">Choose a short practice run for everyday business work, responsible research, or high-risk industrial tasks.</p>
       </header>
 
       <form id="profile" class="profile">
@@ -41,16 +41,7 @@
           </div>
           <p id="progress" class="progress">0 / 6 complete</p>
         </div>
-        <div class="category">
-          <h3><span class="category-mark business-mark"></span>Local business essentials</h3>
-          <p class="category-note">Practical skills for shops, service teams, and small workplaces.</p>
-          <div id="business-list" class="scenario-list"></div>
-        </div>
-        <div class="category">
-          <h3><span class="category-mark research-mark"></span>Research practice</h3>
-          <p class="category-note">Ethical, careful habits for community and field research.</p>
-          <div id="research-list" class="scenario-list"></div>
-        </div>
+        <div id="category-list"></div>
       </section>
 
       <section id="simulation" class="simulation" aria-live="polite" hidden>
@@ -61,10 +52,17 @@
         <p id="simulation-category" class="eyebrow"></p>
         <h2 id="simulation-title"></h2>
         <p id="simulation-brief" class="brief"></p>
+        <ul id="briefing" class="briefing" aria-label="Before you start" hidden></ul>
         <div id="decision-card" class="decision-card">
           <p id="decision-kicker" class="decision-kicker"></p>
           <h3 id="decision-prompt"></h3>
+          <p id="task-hint" class="task-hint" hidden>Hands-on task: click the glowing points in the 3D scene to carry out each step. Drag to look around.</p>
           <div id="choices" class="choices"></div>
+          <ol id="task-log" class="task-log" aria-live="polite" hidden></ol>
+          <details id="task-actions-wrap" class="task-actions-wrap" hidden>
+            <summary>Keyboard / list controls</summary>
+            <div id="task-actions" class="choices"></div>
+          </details>
         </div>
         <div id="feedback" class="feedback" role="status" aria-live="polite" hidden>
           <p id="feedback-label" class="decision-kicker"></p>
@@ -76,6 +74,10 @@
           <p class="decision-kicker">PRACTICE COMPLETE</p>
           <h3 id="completion-title"></h3>
           <p id="completion-copy"></p>
+          <div id="review" class="review" hidden>
+            <p class="decision-kicker">REVIEW THESE PRINCIPLES</p>
+            <ul id="review-list"></ul>
+          </div>
           <button id="retry" class="button button-primary" type="button">Try again</button>
           <button id="finish" class="button button-quiet" type="button">Choose another scenario</button>
         </div>
