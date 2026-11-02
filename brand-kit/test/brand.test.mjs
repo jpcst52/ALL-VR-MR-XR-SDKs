@@ -27,12 +27,14 @@ test("every page carries the Pitt-Bradford + CIST brand bar and loads the shared
   assert.match(kit, /onerror = \(\) => resolve\(null\)/, "a missing logo falls back to the wordmark");
 });
 
-test("the logo is only referenced, never tracked: branding/ stays git-ignored and out of the index", () => {
-  const ignored = execFileSync("git", ["check-ignore", "branding/logo.png"], { cwd: repo, encoding: "utf8" }).trim();
-  assert.equal(ignored, "branding/logo.png");
-  const tracked = execFileSync("git", ["ls-files", "branding", "brand-kit"], { cwd: repo, encoding: "utf8" });
-  assert.doesNotMatch(tracked, /^branding\//m, "nothing under branding/ is tracked");
-  assert.doesNotMatch(tracked, /\.(png|jpe?g|svg|eps)$/im, "brand-kit holds no copied logo files");
+test("only the approved logo file is tracked: the rest of branding/ stays git-ignored, brand-kit holds no copied images", () => {
+  const tracked = execFileSync("git", ["ls-files", "branding", "brand-kit"], { cwd: repo, encoding: "utf8" }).trim().split(/\r?\n/).filter(Boolean);
+  const branding = tracked.filter((f) => f.startsWith("branding/"));
+  assert.deepEqual(branding, ["branding/logo.png"], "only branding/logo.png (approved 2026-11-02) is tracked under branding/");
+  const ignored = execFileSync("git", ["check-ignore", "branding/University_of_Pittsburgh_Brand_Guidelines.pdf", "branding/Shield_Bradford/Horizontal/PNG/x.png"], { cwd: repo, encoding: "utf8" });
+  assert.match(ignored, /Brand_Guidelines\.pdf/, "the brand guidelines PDF stays ignored");
+  assert.match(ignored, /Shield_Bradford/, "other logo variants stay ignored");
+  assert.equal(tracked.filter((f) => f.startsWith("brand-kit/") && /\.(png|jpe?g|svg|eps)$/i.test(f)).length, 0, "brand-kit holds no copied logo files");
   for (const file of readdirSync(join(repo, "brand-kit"))) assert.doesNotMatch(file, /\.(png|jpe?g|svg|eps)$/i, `brand-kit/${file} is not an image`);
 });
 

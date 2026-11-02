@@ -22,7 +22,7 @@ Read this at the start of a session. It records how the project owner likes to w
 ## Repository conventions
 
 - Browser examples must run **offline**: libraries live in `vendor/`, no CDN. Verify with `node tools/vr-capture/offline-check.mjs`.
-- Do not commit `branding/` (university branding) or `assets-private/` (licensed assets). They are in `.gitignore`.
+- Do not commit `branding/` (university branding) or `assets-private/` (licensed assets). They are in `.gitignore`. The one exception: the owner approved publishing the logo on 2026-11-02, so `branding/logo.png` and the Unity shield `vive-steamvr/packages/com.pittbradford.xrtraining/Runtime/Resources/Branding/pitt-bradford.png` are tracked; the brand guidelines PDF and the other variants stay ignored.
 - Web demos use CC0 assets only. Unity Asset Store packs may be used in local Unity builds, never committed.
 - VR screenshots from the emulator are labelled "emulated Quest 3", never presented as a real headset.
 - Scenario content is general safety awareness, not a procedure or certification; say so in READMEs.

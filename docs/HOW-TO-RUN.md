@@ -8,7 +8,7 @@ One page for running every part of this repository. Pick the row that matches wh
 | Try the Unity training projects at a desk or on the Vive | [2. Unity projects](#2-unity-projects-01-04) |
 | Walk through the lobby with portals | [3. The hub lobby](#3-the-hub-lobby-local-only) |
 | Use a headset (Vive Pro 2 or Quest) | [4. Headsets](#4-headsets) |
-| Check that nothing broke | [5. Tests](#5-tests-and-checks) |
+| Check that nothing broke | [5. Tests](#5-tests-and-checks) and the full [TESTING.md](TESTING.md) checklist |
 | Make screenshots, rebuild decks, see project status | [6. Screenshots, decks, dashboard](#6-screenshots-decks-and-the-status-dashboard) |
 | Something is not working | [7. Troubleshooting](#7-troubleshooting) |
 
@@ -85,7 +85,7 @@ The hub project `vive-steamvr/hub` dresses the scenarios with Asset Store art an
 
 **In the lobby:** step onto a portal's pad and wait about 1.4 seconds, or press 1 to 4 on the keyboard. **In a scenario:** hold both grips for 1.5 seconds or press Backspace to return. In the Hydrostatic Test Bay scene, **P** toggles post-processing.
 
-**Logo.** The university logo is not in the repository. To see it locally copy the logo to `vive-steamvr/hub/Assets/Resources/Branding/pitt-bradford.png` (git-ignored) and `branding/logo.png` at the repository root (also git-ignored); without them the plates show a text wordmark. Never commit either file.
+**Logo.** The owner approved publishing the university logo on November 2, 2026. The web pages use `branding/logo.png` and the Unity plates use `vive-steamvr/packages/com.pittbradford.xrtraining/Runtime/Resources/Branding/pitt-bradford.png`; both are tracked. The rest of `branding/` (brand guidelines PDF and other variants) is git-ignored. Delete the logo file to get the text wordmark.
 
 **Seasonal skies and thumbnails.** The lobby is an open roof terrace under a 360 photo sky that changes season every 30 seconds with a short pixelate and scan-line glitch; each portal shows a thumbnail of its scenario; a chip on the welcome board names the season. Refinery Rounds uses the photo of today's season without rotating. The four photos are CC0 stand-ins from Poly Haven, **not photos of Bradford** (credits: `assets/skies/CREDITS.md`). Screenshots and details: [../vive-steamvr/hub/README.md](../vive-steamvr/hub/README.md).
 

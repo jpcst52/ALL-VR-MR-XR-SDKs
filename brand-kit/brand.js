@@ -1,8 +1,8 @@
 // University of Pittsburgh at Bradford + CIST brand lock-up for every web page in this repository.
 //
-// The official logo lives in branding/logo.png, which is git-ignored (public repository, permission not yet
-// confirmed) and must never be copied into a tracked folder. This module only *references* it: if the file is
-// present on the lab PC it is shown; otherwise a text wordmark is shown. The <img> is inserted only after the
+// The official logo lives in branding/logo.png (the owner approved publishing this one file on 2026-11-02; the rest
+// of branding/ stays git-ignored). It is not copied into brand-kit/: this module only *references* the single file.
+// If the file is present it is shown; otherwise a text wordmark is shown. The <img> is inserted only after the
 // file has loaded, so a missing logo can never appear as a broken image.
 //
 // Usage: <div data-pitt-brand></div> (add data-pitt-brand="compact" for a smaller bar), plus

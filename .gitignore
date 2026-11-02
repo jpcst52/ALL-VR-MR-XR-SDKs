@@ -28,8 +28,10 @@ xcuserdata/
 # JavaScript dependencies
 **/node_modules/
 
-# University branding: not for the public repo unless permission is confirmed
-branding/
+# University branding: the owner approved publishing the logo only (2026-11-02). The rest of branding/
+# (brand guidelines PDF, EPS and other variants) stays out of the public repo.
+branding/*
+!branding/logo.png
 
 # Third-party licensed assets (Unity Asset Store etc.) must never be committed
 assets-private/

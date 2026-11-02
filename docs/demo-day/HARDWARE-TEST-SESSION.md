@@ -27,6 +27,9 @@ Open the project in Unity 6000.3.20f1 with the headset on and SteamVR running, p
 | A9 | P2 | Resistor Bench (04): pick up a part, use the meter, answer | as above | skip | |
 | A10 | P2 | Frame rate in the hub scenes (SteamVR frame-time graph) | steady, no reprojection warnings | press P to switch off post-processing; note the result | |
 | A11 | P2 | Room tone and pump hum audible, spatial | heard, not harsh | note | |
+| A12 | P1 | Answer a "Why this matters" question with the trigger (Hydrostatic Test Bay or Refinery Rounds) | The three answer panels can be pointed at and pressed; feedback shows; the board adds a separate Reasoning line | use keys 1, 2, 3 or the mouse; note which is hard to point at | |
+| A13 | P2 | Warehouse (03): the co-worker hazard and the pause-and-ask check | Co-worker appears and walks past; the view blanks and asks three questions; you can answer with the controller; no discomfort from the freeze | untick `CoworkerHazard` for the demo | |
+| A14 | P1 | Lobby sky: watch two season changes (about 30 s each) | The pixelate and scan-line glitch is comfortable, not nauseating, and both eyes agree | set Interval to 0 on the SeasonSky component to stop rotation; note the discomfort | |
 
 ## B. Vive Pro 2 with the web Practice Lab (browser, WebXR)
 

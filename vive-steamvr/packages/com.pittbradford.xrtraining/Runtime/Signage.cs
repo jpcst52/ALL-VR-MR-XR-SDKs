@@ -94,7 +94,7 @@ namespace PittBradford.XR
 
         /// <summary>
         /// University and department plate: the Pitt-Bradford logo when the file is present at Resources/Branding/pitt-bradford
-        /// (the logo is kept out of the public repo, so it is only in local builds), otherwise a text wordmark; plus the CIST line.
+        /// (the kit ships the approved shield logo there; remove it to get the text wordmark), otherwise a text wordmark; plus the CIST line.
         /// </summary>
         public static Transform BrandPlate(Transform parent, Vector3 localPos, float width = 1.6f)
         {
