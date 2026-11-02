@@ -1,6 +1,6 @@
 {
   "title": "Pitt-Bradford XR Training: project status",
-  "port": 5210,
+  "port": "auto",
   "heartbeatSeconds": 60,
   "quietAgentSeconds": 600,
   "ownerName": "Jeremy",

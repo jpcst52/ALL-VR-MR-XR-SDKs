@@ -5,16 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Project status</title>
 <style>
-  :root { --bg:#f5f4fb; --card:#ffffff; --ink:#1e1b4b; --mute:#5f6368; --line:#e3e1f2; --brand:#5b4fa8; --ok:#2e7d32; --warn:#b26a00; --bad:#b3261e; --prog:#1a73e8; --track:#e8e6f5; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#14122b; --card:#1d1a3d; --ink:#ecebfa; --mute:#a9a6c8; --line:#2f2b5c; --brand:#9a8fe8; --ok:#66bb6a; --warn:#ffb74d; --bad:#ef9a9a; --prog:#64b5f6; --track:#2b2757; } }
+  :root { --bg:#eef6fd; --card:#ffffff; --ink:#00205b; --mute:#4a6286; --line:#c9dff3; --brand:#003594; --gold:#ffb81c; --ok:#003594; --warn:#a87400; --bad:#b3261e; --prog:#ffb81c; --track:#dbeeff; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#00153d; --card:#00205b; --ink:#e8f3ff; --mute:#a9c4e6; --line:#1a3f86; --brand:#ffb81c; --gold:#ffb81c; --ok:#6f9bff; --warn:#ffb81c; --bad:#ff8a80; --prog:#ffb81c; --track:#0a2f75; } }
   * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 "Segoe UI", Arial, sans-serif; }
-  header { background:#1e1b4b; color:#fff; padding:14px 24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
-  header h1 { margin:0; font-size:18px; letter-spacing:.3px; }
-  header .meta { font-size:12px; color:#c9c3f0; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 Roboto, "Segoe UI", Arial, sans-serif; }
+  header { background:#fff; color:#003594; border-bottom:4px solid #ffb81c; padding:14px 24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+  header h1 { margin:0; font-size:18px; letter-spacing:.3px; font-family:"League Gothic", Impact, "Arial Narrow", sans-serif; font-weight:400; font-size:28px; letter-spacing:.5px; }
+  header .meta { font-size:12px; color:#4a6286; }
   main { max-width:1280px; margin:0 auto; padding:18px 16px 40px; display:grid; gap:16px; }
   .row { display:grid; gap:16px; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); }
   .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  /* the progress card stands out: a blue border and shadow in light mode, a lighter navy panel with a gold border in dark mode */
+  .progress-card { border:2px solid #003594; box-shadow:0 2px 10px rgba(0,32,91,.25); }
+  @media (prefers-color-scheme: dark) { .progress-card { background:#0a2f75; border-color:#ffb81c; --track:#1a4a9c; --card:#0a2f75; box-shadow:0 2px 12px rgba(0,0,0,.5); } }
   .card h2 { margin:0 0 10px; font-size:12px; letter-spacing:.8px; text-transform:uppercase; color:var(--brand); }
   .gauges { display:flex; flex-wrap:wrap; gap:18px; justify-content:space-around; }
   .gauge { text-align:center; width:130px; }
@@ -29,7 +32,9 @@
   td, th { text-align:left; padding:5px 6px; border-bottom:1px solid var(--line); vertical-align:top; font-size:13px; }
   th { font-size:11px; color:var(--mute); text-transform:uppercase; letter-spacing:.5px; }
   .pill { display:inline-block; padding:1px 8px; border-radius:10px; font-size:11px; font-weight:600; color:#fff; white-space:nowrap; }
-  .done{background:var(--ok)} .progress{background:var(--prog)} .waiting{background:#8d8aa8} .you{background:var(--warn)} .ask{background:var(--brand)} .open{background:#8d8aa8}
+  .done{background:var(--ok)} .progress{background:var(--prog)} .waiting{background:#6f86a8} .you{background:#a87400} .ask{background:#00205b} .open{background:#6f86a8}
+  .progress{color:#00205b}
+  @media (prefers-color-scheme: dark) { .ask{background:#2f5fc4} }
   .light { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; background:var(--bad); }
   .light.up { background:var(--ok); }
   .agent { padding:8px 0; border-bottom:1px solid var(--line); }
@@ -57,7 +62,7 @@
   <div class="meta" id="meta">loading…</div>
 </header>
 <main>
-  <section class="card"><h2>Progress</h2><div class="gauges" id="gauges"></div></section>
+  <section class="card progress-card"><h2>Progress</h2><div class="gauges" id="gauges"></div></section>
 
   <div class="row">
     <section class="card"><h2>What needs you</h2><div id="needs"></div></section>
@@ -77,7 +82,7 @@
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const css = n => getComputedStyle(document.getElementById('gauges')).getPropertyValue(n).trim();   // read from the progress card, which keeps its own light palette
 
 function ring(pct, color, big, label, sub) {
   const r = 46, c = 2 * Math.PI * r, off = c * (1 - Math.max(0, Math.min(100, pct)) / 100);

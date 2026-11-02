@@ -15,6 +15,14 @@ Participants join a named room, see the same shared parts and other participants
 
 Parts are generated from Three.js primitives, room state is relayed by this project's server, and this is not a production-hosted multiplayer service.
 
+## Hydrostatic Test Rig (third theme)
+
+- Page: `http://localhost:8443/multi-player/hydrotest/` (theme `hydrotest`; `?theme=hydrotest` also works on the other pages). Rooms are separate from the Circuit Lab and Site Safety rooms.
+- A shared builder for a hydrostatic test rig on a shell-and-tube heat exchanger: tank, pump, valve and vent valve (both toggle open/closed with T), gauge, exchanger, blind flange, pipe. Touch the grey port dots to connect parts; put a gold blind flange over each top nozzle. One holder per part, and a live checklist (`shared/hydro-eval.mjs`, pure and unit-tested) ends in "Ready to fill" or names the next problem (for example "Vent is closed: air will be trapped"). **Load demo rig** builds a complete rig.
+- It is the web counterpart of the Unity Hydrostatic Test Bay. General safety awareness practice, not a test procedure or certification; inspired by heat-exchanger and filter-housing makers, with generic parts.
+- VR here is emulator and desktop only; it has not been tried on a real headset.
+- Screenshots: [empty room](./screenshots/hydrotest-empty.png), [completed rig](./screenshots/hydrotest-rig.png), [second client](./screenshots/hydrotest-rig-client2.png).
+
 ## Requirements
 
 - Node.js 20 or newer and npm.

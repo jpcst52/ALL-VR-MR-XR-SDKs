@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { evaluateHydro, summaryText, PORTS, NOZZLES } from "./hydro-eval.mjs";
 
 // A theme describes one shared-building example: its parts, how to draw them, and how to
 // summarize/animate the shared scene. The relay only knows part names and toggle state.
@@ -407,4 +408,169 @@ export const safety = {
   },
 };
 
-export const themes = { circuits, safety };
+// ---------------------------------------------------------------- hydrotest
+
+const steel = "#9fb0c2";
+
+function hydroHandle(group, y) {
+  const material = matte("#d33a2c", { roughness: 0.45 });
+  const handle = new THREE.Group();
+  handle.position.set(0, y, 0);
+  handle.add(mesh(new THREE.BoxGeometry(0.32, 0.03, 0.06), material));
+  handle.add(mesh(cylinder(0.04, 0.04, 0.05, 12), metal("#d8edf3"), [0, 0.02, 0]));
+  group.add(handle);
+  group.userData.handle = handle;
+  group.userData.handleMaterial = material;
+}
+
+const hydroParts = {
+  tank(group) {
+    group.add(mesh(cylinder(0.34, 0.34, 0.7, 28), metal("#6f8fb0"), [0, 0.4, 0]));
+    group.add(mesh(new THREE.SphereGeometry(0.34, 24, 10, 0, Math.PI * 2, 0, Math.PI / 2), metal("#6f8fb0"), [0, 0.75, 0]));
+    group.add(mesh(cylinder(0.38, 0.38, 0.05, 28), matte("#3a4a5a"), [0, 0.025, 0]));
+    group.add(mesh(cylinder(0.05, 0.05, 0.1, 12), metal(steel), [0.4, 0.25, 0], [0, 0, along]));
+    const label = textSprite("WATER", "#dbeeff", "#00205bdd", 0.5);
+    label.position.set(0, 1.15, 0);
+    group.add(label);
+  },
+  pump(group) {
+    group.add(mesh(new THREE.BoxGeometry(0.62, 0.05, 0.34), matte("#3a4a5a"), [0, 0.025, 0]));
+    group.add(mesh(cylinder(0.14, 0.14, 0.34, 20), matte("#2f6fb5", { roughness: 0.4 }), [-0.14, 0.24, 0], [0, 0, along]));
+    group.add(mesh(cylinder(0.17, 0.17, 0.16, 24), metal("#c9d3de"), [0.14, 0.24, 0], [along, 0, 0]));
+    group.add(mesh(cylinder(0.05, 0.05, 0.8, 12), metal(steel), [0, 0.25, 0], [0, 0, along]));
+    const label = textSprite("PUMP", "#ffffff", "#00205bdd", 0.4);
+    label.position.set(0, 0.62, 0);
+    group.add(label);
+  },
+  valve(group) {
+    group.add(mesh(cylinder(0.05, 0.05, 0.6, 12), metal(steel), [0, 0.25, 0], [0, 0, along]));
+    group.add(mesh(new THREE.SphereGeometry(0.13, 16, 12), metal("#c9a14a"), [0, 0.25, 0]));
+    group.add(mesh(cylinder(0.025, 0.025, 0.2, 8), metal("#d8edf3"), [0, 0.42, 0]));
+    hydroHandle(group, 0.52);
+  },
+  vent(group) {
+    group.add(mesh(cylinder(0.12, 0.14, 0.04, 18), matte("#3a4a5a"), [0, 0.02, 0]));
+    group.add(mesh(cylinder(0.03, 0.03, 0.7, 10), metal(steel), [0, 0.37, 0]));
+    group.add(mesh(new THREE.SphereGeometry(0.09, 14, 10), metal("#c9a14a"), [0, 0.72, 0]));
+    hydroHandle(group, 0.84);
+    const label = textSprite("VENT", "#dbeeff", "#00205bdd", 0.34);
+    label.position.set(0, 1.05, 0);
+    group.add(label);
+  },
+  gauge(group) {
+    group.add(mesh(cylinder(0.12, 0.14, 0.04, 18), matte("#3a4a5a"), [0, 0.02, 0]));
+    group.add(mesh(cylinder(0.025, 0.025, 0.55, 8), metal(steel), [0, 0.3, 0]));
+    group.add(mesh(cylinder(0.17, 0.17, 0.06, 28), metal("#8c9aa8"), [0, 0.68, 0], [along, 0, 0]));
+    group.add(mesh(cylinder(0.145, 0.145, 0.065, 28), matte("#f4f7fa"), [0, 0.68, 0], [along, 0, 0]));
+    const needle = new THREE.Group();
+    needle.position.set(0, 0.68, 0.04);
+    needle.add(mesh(new THREE.BoxGeometry(0.02, 0.12, 0.01), matte("#c0392b"), [0, 0.06, 0]));
+    group.add(needle);
+    group.userData.needle = needle;
+  },
+  exchanger(group) {
+    const shell = metal("#aebdcb");
+    group.add(mesh(cylinder(0.26, 0.26, 1.5, 32), shell, [0, 0.3, 0], [0, 0, along]));
+    for (const x of [-0.8, 0.8]) {
+      group.add(mesh(cylinder(0.3, 0.3, 0.1, 32), metal("#00205b"), [x, 0.3, 0], [0, 0, along]));
+      group.add(mesh(cylinder(0.06, 0.06, 0.12, 12), metal(steel), [x * 1.1, 0.3, 0], [0, 0, along]));
+    }
+    for (const x of [-0.45, 0.45]) group.add(mesh(new THREE.BoxGeometry(0.14, 0.2, 0.4), matte("#3a4a5a"), [x, 0.1, 0]));
+    for (const [x] of NOZZLES) {
+      group.add(mesh(cylinder(0.09, 0.09, 0.2, 14), metal(steel), [x, 0.57, 0]));
+      group.add(mesh(cylinder(0.13, 0.13, 0.03, 20), metal("#c9d3de"), [x, 0.675, 0]));
+    }
+    const label = textSprite("EXCH.", "#ffffff", "#00205bdd", 0.45);
+    label.position.set(0, 0.95, -0.4);
+    group.add(label);
+    group.userData.shell = shell;
+  },
+  blind(group) {
+    group.add(mesh(cylinder(0.12, 0.14, 0.04, 18), matte("#3a4a5a"), [0, 0.02, 0]));
+    group.add(mesh(cylinder(0.02, 0.02, 0.68, 8), metal("#8c9aa8", { transparent: true, opacity: 0.55 }), [0, 0.38, 0]));
+    group.add(mesh(cylinder(0.15, 0.15, 0.05, 24), metal("#ffb81c"), [0, 0.72, 0]));
+    for (let bolt = 0; bolt < 6; bolt += 1) {
+      const angle = (bolt * Math.PI) / 3;
+      group.add(mesh(cylinder(0.018, 0.018, 0.03, 6), metal("#6b5a1a"), [Math.cos(angle) * 0.105, 0.75, Math.sin(angle) * 0.105]));
+    }
+  },
+  pipe(group) {
+    group.add(mesh(cylinder(0.06, 0.06, 0.8, 14), metal(steel), [0, 0.25, 0], [0, 0, along]));
+    for (const x of [-0.4, 0.4]) group.add(mesh(cylinder(0.1, 0.1, 0.04, 16), metal("#c9d3de"), [x, 0.25, 0], [0, 0, along]));
+  },
+};
+
+function buildHydroPart(part) {
+  const group = new THREE.Group();
+  hydroParts[part](group);
+  const mark = (x, y, z) => {
+    const item = mesh(new THREE.SphereGeometry(0.05, 10, 8), new THREE.MeshBasicMaterial({ color: "#8a97a8" }), [x, y, z]);
+    group.add(item);
+    return item;
+  };
+  group.userData.portMarks = (PORTS[part] ?? []).map(([x, z, y]) => mark(x, y, z));
+  if (part === "exchanger") group.userData.nozzleMarks = NOZZLES.map(([x, z, y]) => mark(x, y + 0.08, z));
+  return group;
+}
+
+export const hydrotest = {
+  id: "hydrotest",
+  title: "Hydrostatic Test Rig",
+  pitch: "Together, assemble a water-filled test rig for a shell-and-tube heat exchanger: cap the nozzles, vent the air, and plumb a fill line. Safety awareness practice, not a test procedure.",
+  sceneLabel: "Shared hydrostatic test rig board",
+  controls: "Click a part to add it. Drag to move; rotate with R. Touch the grey port dots so parts connect, put a gold blind flange over each top nozzle, set the vent and valve open (T), then watch the checklist.",
+  spawnSpacing: 0.95,
+  toggleLabel: "Open / close valve",
+  parts: [
+    { id: "tank", label: "Tank", name: "Water tank" },
+    { id: "pump", label: "Pump", name: "Pump" },
+    { id: "valve", label: "Valve", name: "Valve", toggles: true },
+    { id: "vent", label: "Vent valve", name: "Vent valve", toggles: true },
+    { id: "gauge", label: "Gauge", name: "Pressure gauge" },
+    { id: "exchanger", label: "Exchanger", name: "Heat exchanger" },
+    { id: "blind", label: "Blind flange", name: "Blind flange" },
+    { id: "pipe", label: "Pipe", name: "Pipe" },
+  ],
+  demoLabel: "Load demo rig",
+  demo: [
+    { part: "tank", position: [-2.35, 0.08, 0.3], rotation: [0, 0, 0] },
+    { part: "pump", position: [-1.6, 0.08, 0.3], rotation: [0, 0, 0] },
+    { part: "pipe", position: [-0.8, 0.08, 0.3], rotation: [0, 0, 0] },
+    { part: "valve", position: [-0.1, 0.08, 0.3], rotation: [0, 0, 0], on: true },
+    { part: "exchanger", position: [1.1, 0.08, 0.3], rotation: [0, 0, 0] },
+    { part: "blind", position: [0.6, 0.08, 0.3], rotation: [0, 0, 0] },
+    { part: "blind", position: [1.6, 0.08, 0.3], rotation: [0, 0, 0] },
+    { part: "vent", position: [1.1, 0.08, 0.85], rotation: [0, 0, 0], on: true },
+    { part: "gauge", position: [-0.6, 0.08, 0.7], rotation: [0, 0, 0] },
+  ],
+  build: buildHydroPart,
+  applyState(object) {
+    const { handle, handleMaterial } = object.group.userData;
+    if (!handle) return;
+    handle.rotation.y = object.data.on ? 0 : Math.PI / 2;
+    handleMaterial.color.set(object.data.on ? "#1fa564" : "#d33a2c");
+  },
+  update(objects, time) {
+    const list = [...objects.values()];
+    if (!list.length) return "Place the heat exchanger, or load the demo rig.";
+    const items = list.map((object) => ({
+      part: object.data.part,
+      position: object.group.position.toArray(),
+      rotation: [object.group.rotation.x, object.group.rotation.y, object.group.rotation.z],
+      on: object.data.on,
+    }));
+    const result = evaluateHydro(items);
+    list.forEach((object, index) => {
+      const data = object.group.userData;
+      data.portMarks?.forEach((mark, side) => mark.material.color.set(result.touching[index][side] ? "#4be3a0" : "#8a97a8"));
+      if (index === result.exchangerIndex) {
+        data.nozzleMarks.forEach((mark, side) => mark.material.color.set(result.nozzleCapped[side] ? "#4be3a0" : "#ffb81c"));
+        data.shell.emissive.set(result.ready ? "#1d6a8c" : "#000000");
+      }
+      if (data.needle) data.needle.rotation.z = result.ready ? -0.2 + 0.03 * Math.sin(time * 3) : 1.2;
+    });
+    return summaryText(result);
+  },
+};
+
+export const themes = { circuits, safety, hydrotest };

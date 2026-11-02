@@ -8,6 +8,7 @@
     "relay": "node server.mjs"
   },
   "dependencies": {
+    "selfsigned": "^5.5.0",
     "ws": "^8.18.3"
   }
 }

@@ -1,8 +1,17 @@
 # Fieldwork XR Practice Lab
 
-A browser-based XR training example with a learner name field and twelve short, decision-driven practice scenarios in three groups: everyday small-business work, responsible community and field research, and six high-risk industrial tasks. Every activity has immediate feedback, a takeaway principle, and a session score. All twelve scenarios are **hands-on**: the six industrial scenarios have four tasks each and the six business and research scenarios have three, and in every one that you carry out yourself by selecting labelled hotspots on an animated 3D work area (inspect the scaffold tag, clip your lanyard to an anchor, apply your lock and tag, close a cylinder valve), rather than choosing from a list of answers. Wrong actions show their consequence, steps have to be done in a safe order, and dangerous mistakes are flagged as **critical safety misses**.
+A browser-based XR training example with a learner name field and sixteen short, decision-driven practice scenarios in four groups: everyday small-business work, responsible community and field research, six high-risk industrial tasks, and four manufacturing-quality exercises. Every activity has immediate feedback, a takeaway principle, and a session score. All sixteen scenarios are **hands-on**: the six industrial and four manufacturing-quality scenarios have four tasks each and the six business and research scenarios have three, and in every one that you carry out yourself by selecting labelled hotspots on an animated 3D work area (inspect the scaffold tag, clip your lanyard to an anchor, apply your lock and tag, close a cylinder valve), rather than choosing from a list of answers. Wrong actions show their consequence, steps have to be done in a safe order, and dangerous mistakes are flagged as **critical safety misses**.
 
-The business scenarios are broadly useful to neighborhood shops, service teams, and small workplaces: welcoming a customer while protecting privacy, responding safely to an unknown spill, and checking an incoming delivery. Research scenarios cover voluntary informed consent, sample identity and custody, and consistent field observations. The industrial scenarios cover work at height, running a refinery unit from a control room, outdoor rounds at refinery battery limits (the edge of a process unit), window cleaning from a suspended platform on a skyscraper, welding and hot work, and electrical isolation. They are general awareness practice built around widely taught controls (permits, fall arrest, lockout/tag/test, gas alarms, fire watch) and do not replace site procedures. All scenarios are intentionally general rather than tied to one assumed town, employer, or research institution.
+The business scenarios are broadly useful to neighborhood shops, service teams, and small workplaces: welcoming a customer while protecting privacy, responding safely to an unknown spill, and checking an incoming delivery. Research scenarios cover voluntary informed consent, sample identity and custody, and consistent field observations. The industrial scenarios cover work at height, running a refinery unit from a control room, outdoor rounds at refinery battery limits (the edge of a process unit), window cleaning from a suspended platform on a skyscraper, welding and hot work, and electrical isolation. They are general awareness practice built around widely taught controls (permits, fall arrest, lockout/tag/test, gas alarms, fire watch) and do not replace site procedures. 
+
+The **Manufacturing quality** group (accent `#66B2E3`, heading MANUFACTURING QUALITY PRACTICE) is shaped around the kinds of work done at local manufacturers, and is **inspired by those kinds of work only**. It does not describe any real company's process, product, or procedure:
+
+- **Sample and test a lighter lot** (`lighter-lot-sampling`): draw a random sample from a large lot and label it with the lot ID, check the fill in a ventilated hood away from ignition sources, flame-test one unit at a time with a fire extinguisher and blanket at hand, then record the result and quarantine a failed lot.
+- **Hydrostatic test of a heat exchanger** (`heat-exchanger-hydrotest`): fit blind flanges, open the vent and fill, close the vent when full, raise to the test pressure without exceeding it and hold from a safe position, then stop the pump, drain, and vent.
+- **Weld a refinery pipe spool** (`pipe-spool-welding`): verify the welding procedure, welder qualification, and heat numbers; clean, fit up, preheat, and tack; set up hot-work controls (permit, isolation, gas test, fire watch); then inspect, request NDE, mark, and record.
+- **Select and check a resistor** (`resistor-selection`): ESD strap first, read the color code and measure out of circuit, choose 150 ohm (5 V supply, 20 mA, 2 V LED drop) with a 1/4 W rating and 5% tolerance, then choose an anti-sulfur type for a sulfur-rich place and check derating before installing.
+
+All scenarios are intentionally general rather than tied to one assumed town, employer, or research institution.
 
 ## Run it
 
@@ -12,13 +21,13 @@ From this directory, start a local static server:
 python -m http.server 8003
 ```
 
-Open <http://localhost:8003>. The app uses Three.js 0.169.0 from a pinned CDN, so the browser needs internet access to load the 3D scene.
+Open <http://localhost:8003>. Three.js is vendored in `../vendor/three`, so it runs offline (serve from the repository root or keep `vendor/` reachable one level up).
 
 ## Try a session
 
 1. Enter a display name. It is held in page memory for the current browser session and is not sent to a server or saved to local storage.
-2. Select one of the twelve simulations.
-3. Read the short situation and choose one of three responses for each decision. Industrial scenarios show a pre-task checklist first, then four hands-on tasks (see below).
+2. Select one of the sixteen simulations.
+3. Read the short situation and choose one of three responses for each decision. Industrial and manufacturing-quality scenarios show a pre-task checklist first, then four hands-on tasks (see below).
 4. Review the immediate feedback and principle, then continue to the next decision.
 5. View the score, retry the scenario, or choose another. Completion marks and scores remain in memory until the page is closed or refreshed.
 
@@ -43,16 +52,20 @@ From this directory, run the scenario-catalog checks with:
 node --test .\test\scenarios.test.mjs
 ```
 
-The tests verify the catalog (three business, three research, six industrial), that every task in every scenario is completable: unique hotspot ids, positions and results, valid prerequisites, at least two required actions, and a critical mistake. Hands-on interactions were also exercised in a desktop browser (hotspot clicks on the canvas, the list controls, out-of-order and critical mistakes, scoring); VR controller selection uses the same code path but needs a headset to confirm. Browser interaction was also checked in desktop mode; physical headset behavior still requires compatible WebXR hardware.
+The tests verify the catalog (16 scenarios in 4 categories: three business, three research, six industrial, four manufacturing quality), that every task in every scenario is completable: unique hotspot ids, positions and results, valid prerequisites, at least two required actions, and a critical mistake. Hands-on interactions were also exercised in a desktop browser (hotspot clicks on the canvas, the list controls, out-of-order and critical mistakes, scoring); VR controller selection uses the same code path but needs a headset to confirm. Browser interaction was also checked in desktop mode; physical headset behavior still requires compatible WebXR hardware.
 
 ## What it demonstrates
 
-- A complete, twelve-scenario browser learning flow with lightweight name entry and session-only progress.
+- A complete, sixteen-scenario browser learning flow with lightweight name entry and session-only progress.
 - Local small-business decisions around customer service and privacy, basic hazard response, and inventory receiving.
 - Research habits around informed consent, confidentiality, traceable sample handling, and faithful data recording.
 - Immediate, consequence-based feedback, a principle recap at each step, and a short score without collecting or transmitting learner data.
 - High-risk industrial practice with animated 3D work areas (scaffold, control room, outdoor process unit, suspended platform, welding bay, electrical panel) and critical-miss feedback.
 - One scenario catalog and scene presented in desktop mode and in a WebXR immersive VR view where supported.
+
+## Rendering notes
+
+The shared scene uses sRGB output, ACES filmic tone mapping, a hemisphere light plus a soft-shadow key light (one 1024 shadow map), a low-intensity room environment for metal reflections, and procedurally generated canvas textures for the floor and platform. No image assets are loaded, so there is nothing to license. VR frame rate with these settings has not been measured on a headset.
 
 ## Research background
 
@@ -71,11 +84,11 @@ All captures are from the running example in a desktop browser at the default (n
 | Step | Capture |
 |---|---|
 | Welcome and name entry | ![Welcome screen](screenshots/01-welcome.png) |
-| Scenario catalog | ![Twelve-scenario catalog](screenshots/02-catalog.png) |
+| Scenario catalog | ![Sixteen-scenario catalog](screenshots/02-catalog.png) |
 | Task feedback | ![Feedback after finishing a task](screenshots/04-feedback.png) |
 | Scenario complete | ![Completion and score](screenshots/05-complete.png) |
 
-### The twelve scenarios
+### The sixteen scenarios
 
 | Scenario | Capture |
 |---|---|
@@ -91,12 +104,16 @@ All captures are from the running example in a desktop browser at the default (n
 | Clean windows on a skyscraper | ![Skyscraper window cleaning](screenshots/03-scenario-10-clean-windows-on-a-skyscraper.png) |
 | Weld safely | ![Welding](screenshots/03-scenario-11-weld-safely.png) |
 | Electrical isolation and work | ![Electrical isolation](screenshots/03-scenario-12-electrical-isolation-and-work.png) |
+| Sample and test a lighter lot (task 3) | ![Lighter lot sampling](screenshots/03-scenario-13-sample-and-test-a-lighter-lot.png) |
+| Hydrostatic test of a heat exchanger (task 3) | ![Hydrostatic test](screenshots/03-scenario-14-hydrostatic-test-of-a-heat-exchanger.png) |
+| Weld a refinery pipe spool (task 3) | ![Pipe spool welding](screenshots/03-scenario-15-weld-a-refinery-pipe-spool.png) |
+| Select and check a resistor (task 2) | ![Resistor selection](screenshots/03-scenario-16-select-and-check-a-resistor.png) |
 | Critical safety miss | ![Critical safety miss feedback](screenshots/06-critical-miss.png) |
 | Industrial result and review list | ![Industrial result with review list](screenshots/07-industrial-result.png) |
 
 ## In VR (emulated headset)
 
-These captures come from an **emulated Meta Quest 3** (Meta's IWER runtime in Chrome), using the page's real WebXR session and a scripted controller. They show layout, scale, and interaction in a headset-style view; they are not recordings from a physical headset. The controller appears as its pointer ray. See [tools/vr-capture](../tools/vr-capture/README.md) for how they are made and what the emulation does not cover.
+These captures come from an **emulated Meta Quest 3** (taken before the four manufacturing-quality scenarios were added, so the catalog card grid is the earlier 12-card layout; the 16-card 4 x 4 layout was checked in desktop mode only, not re-captured in the emulator) (Meta's IWER runtime in Chrome), using the page's real WebXR session and a scripted controller. They show layout, scale, and interaction in a headset-style view; they are not recordings from a physical headset. The controller appears as its pointer ray. See [tools/vr-capture](../tools/vr-capture/README.md) for how they are made and what the emulation does not cover.
 
 In VR the training world is placed about 2.4 m in front of you and scaled up slightly. The scenario cards float above the platform; point a controller at a card and pull the trigger to start. In a task, point at a glowing hotspot and pull the trigger to carry out that step; the floating sign above the scene shows each result, and a "continue" card appears when the task is done.
 

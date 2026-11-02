@@ -23,30 +23,31 @@ namespace PittBradford.XR
         static readonly Color Active = Color.white;
         static readonly Color Done = new Color(0.3f, 0.9f, 0.62f);
 
-        public static TaskBoard Create(Transform parent, Vector3 position, Quaternion rotation, string title, string subtitle, string[] steps, float width = 1.9f)
+        public static TaskBoard Create(Transform parent, Vector3 position, Quaternion rotation, string title, string subtitle, string[] steps, float width = 1.9f, float textScale = 1f)
         {
             var go = new GameObject("Task Board");
             go.transform.SetParent(parent, false);
             go.transform.SetPositionAndRotation(position, rotation);
             var board = go.AddComponent<TaskBoard>();
 
-            float lineHeight = 0.095f;
-            float height = 0.7f + steps.Length * lineHeight + 0.35f;
+            float k = textScale;
+            float lineHeight = 0.095f * k;
+            float height = (0.7f + 0.35f) * k + steps.Length * lineHeight;
             var frame = P.Box(go.transform, "Frame", new Vector3(0, -height / 2f + 0.25f, 0.02f), new Vector3(width + 0.08f, height + 0.08f, 0.03f), P.Mat(P.Gold, 0.3f, 0.5f), false);
             P.Box(go.transform, "Panel", new Vector3(0, -height / 2f + 0.25f, 0.0f), new Vector3(width, height, 0.03f), P.Mat(new Color(0.03f, 0.08f, 0.2f), 0f, 0.3f), false);
 
-            P.Text(go.transform, title.ToUpperInvariant(), new Vector3(-width / 2f + 0.1f, 0.12f, -0.02f), 0.085f, P.Gold, TextAnchor.MiddleLeft, true);
-            P.Text(go.transform, subtitle, new Vector3(-width / 2f + 0.1f, 0.0f, -0.02f), 0.05f, P.Sky, TextAnchor.MiddleLeft);
+            P.Text(go.transform, title.ToUpperInvariant(), new Vector3(-width / 2f + 0.1f, 0.12f * k, -0.02f), 0.085f * k, P.Gold, TextAnchor.MiddleLeft, true);
+            P.Text(go.transform, subtitle, new Vector3(-width / 2f + 0.1f, 0.0f, -0.02f), 0.05f * k, P.Sky, TextAnchor.MiddleLeft);
 
             for (int i = 0; i < steps.Length; i++)
             {
-                var tm = P.Text(go.transform, $"{i + 1}.  {steps[i]}", new Vector3(-width / 2f + 0.1f, -0.15f - i * lineHeight, -0.02f), 0.058f, Pending);
+                var tm = P.Text(go.transform, $"{i + 1}.  {steps[i]}", new Vector3(-width / 2f + 0.1f, -0.15f * k - i * lineHeight, -0.02f), 0.058f * k, Pending);
                 board.lines.Add(tm);
                 board.done.Add(false);
             }
-            float y = -0.15f - steps.Length * lineHeight - 0.1f;
-            board.status = P.Text(go.transform, "", new Vector3(-width / 2f + 0.1f, y, -0.02f), 0.058f, Color.white, TextAnchor.MiddleLeft, true);
-            board.footer = P.Text(go.transform, "", new Vector3(-width / 2f + 0.1f, y - 0.13f, -0.02f), 0.048f, P.Sky);
+            float y = -0.15f * k - steps.Length * lineHeight - 0.1f * k;
+            board.status = P.Text(go.transform, "", new Vector3(-width / 2f + 0.1f, y, -0.02f), 0.058f * k, Color.white, TextAnchor.MiddleLeft, true);
+            board.footer = P.Text(go.transform, "", new Vector3(-width / 2f + 0.1f, y - 0.13f * k, -0.02f), 0.048f * k, P.Sky);
             board.SetCurrent(0);
             return board;
         }

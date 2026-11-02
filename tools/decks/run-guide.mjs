@@ -1,3 +1,4 @@
+import { demoDaySlide, launcherSlide, verifiedSlide, viveProjectsSlide, viveSetupSlide } from "./newslides.mjs";
 import { applyDeckTheme, bullets, callout, card, chip, code, contentSlide, entries, img, label, newDeck, section, shot, steps, text } from "./lib.mjs";
 
 const WEB = [
@@ -81,7 +82,7 @@ export async function buildRunGuide(file) {
     chip(slide, C, "4 browser demos", { x: 0.7, y: 5.4, w: 1.9, name: "Chip browser" });
     chip(slide, C, "Practice Lab", { x: 2.75, y: 5.4, w: 1.6, color: C.accent4, name: "Chip lab" });
     chip(slide, C, "Multiplayer", { x: 4.5, y: 5.4, w: 1.6, color: C.accent5, name: "Chip multiplayer" });
-    chip(slide, C, "4 Unity", { x: 6.25, y: 5.4, w: 1.3, color: C.accent2, name: "Chip Unity" });
+    chip(slide, C, "Unity", { x: 6.25, y: 5.4, w: 1.3, color: C.accent2, name: "Chip Unity" });
     chip(slide, C, "Android + visionOS", { x: 0.7, y: 6.0, w: 2.3, color: C.accent3, name: "Chip native" });
     text(slide, "Separate samples. Real SDKs. Hardware where required.", { x: 3.2, y: 6.0, w: 4.4, h: 0.42, fontSize: 13, bold: true, color: C.background1, valign: "middle", objectName: "Tagline" });
     await shot(slide, C, img("screenshots/threejs-prism-bloom.png"), { x: 7.9, y: 0.6, w: 4.85, h: 3.2, caption: "Three.js · Prism Bloom", name: "Title web screenshot" });
@@ -93,7 +94,7 @@ export async function buildRunGuide(file) {
   {
     const slide = contentSlide(pres, { section: "Choose and set up", eyebrow: "01 / CHOOSE A ROUTE", title: "Start with the platform you can run today" });
     const cards = [
-      ["BROWSER", "Fastest start", ["Python static server", "Current browser with WebGL", "Network access for CDN libraries"], C.accent1],
+      ["BROWSER", "Fastest start", ["Python static server", "Current browser with WebGL", "Libraries are vendored: runs offline"], C.accent1],
       ["MULTIPLAYER", "Shared rooms", ["Node.js 20+ and npm", "Run the relay: npm start", "Two tabs, a phone, or a headset"], C.accent5],
       ["UNITY", "Headset examples", ["Unity Editor + package versions", "Copy scripts into a Unity project", "Compatible runtime or device"], C.accent2],
       ["ANDROID", "ARCore placement", ["Android Studio, SDK 35, JDK 17", "ARCore-supported device", "Camera permission"], C.accent3],
@@ -106,7 +107,7 @@ export async function buildRunGuide(file) {
       text(slide, head, { x: x + 0.2, y: 2.3, w: 1.95, h: 0.8, fontSize: 18, bold: true, color: C.background1, objectName: `Route title ${i + 1}` });
       bullets(slide, C, points, { x: x + 0.2, y: 3.2, w: 1.95, h: 2.6, size: 13, gap: 6, name: `Route points ${i + 1}` });
     });
-    text(slide, "Tip: the Unity folders contain scripts and setup notes, not full Unity projects.", { x: 0.6, y: 6.2, w: 12, h: 0.4, fontSize: 13, color: C.accent4, objectName: "Route tip" });
+    text(slide, "Tip: the four Vive/SteamVR folders are full Unity projects; the older Unity folders are scripts to copy in.", { x: 0.6, y: 6.2, w: 12, h: 0.4, fontSize: 13, color: C.accent4, objectName: "Route tip" });
   }
 
   // 3 static server
@@ -122,7 +123,7 @@ export async function buildRunGuide(file) {
     label(slide, C, "DEMO URLS", { x: 7.05, y: 2.25, w: 5, color: C.accent3, name: "URL label" });
     const urls = ["http://localhost:8000/webxr/", "http://localhost:8000/a-frame/", "http://localhost:8000/threejs/", "http://localhost:8000/babylonjs/", "http://localhost:8000/training-simulations/"];
     urls.forEach((url, i) => text(slide, url, { x: 7.05, y: 2.7 + i * 0.5, w: 5.5, h: 0.4, fontSize: 15, fontFace: "Courier New", color: C.accent1, objectName: `URL ${i + 1}` }));
-    text(slide, "WebGL and internet access are needed for the CDN-hosted libraries. A desktop fallback is not the same as a headset session.", { x: 0.6, y: 6.0, w: 12.1, h: 0.6, fontSize: 13, color: C.background2, objectName: "Server caveat" });
+    text(slide, "WebGL is needed; libraries are vendored so no internet is required. A desktop fallback is not the same as a headset session.", { x: 0.6, y: 6.0, w: 12.1, h: 0.6, fontSize: 13, color: C.background2, objectName: "Server caveat" });
   }
 
   // 4-7 web examples
@@ -144,8 +145,8 @@ export async function buildRunGuide(file) {
   // 8-9 Practice lab
   section(pres, "Practice Lab");
   {
-    const slide = contentSlide(pres, { section: "Practice Lab", eyebrow: "BROWSER / TRAINING", title: "Fieldwork XR Practice Lab | 12 hands-on scenarios" });
-    text(slide, "Business, research, and industrial practice runs. Enter a name, pick a scenario, and carry out each task in the 3D scene.", { x: 0.6, y: 1.4, w: 12, h: 0.35, fontSize: 14, color: C.background2, objectName: "Subtitle" });
+    const slide = contentSlide(pres, { section: "Practice Lab", eyebrow: "BROWSER / TRAINING", title: "Fieldwork XR Practice Lab | 16 hands-on scenarios" });
+    text(slide, "Business, research, industrial, and manufacturing-quality runs. Enter a name, pick a scenario, and carry out each task in the 3D scene.", { x: 0.6, y: 1.4, w: 12, h: 0.35, fontSize: 14, color: C.background2, objectName: "Subtitle" });
     card(slide, C, { x: 0.6, y: 1.95, w: 4.6, h: 4.75, name: "Lab instructions card" });
     label(slide, C, "RUN FROM THE REPOSITORY ROOT", { x: 0.85, y: 2.15, w: 4, color: C.accent2, name: "Lab run label" });
     code(slide, C, "python -m http.server 8000\nhttp://localhost:8000/\n  training-simulations/", { x: 0.85, y: 2.5, w: 4.1, h: 1.1, size: 12, name: "Lab command" });
@@ -222,6 +223,12 @@ export async function buildRunGuide(file) {
     callout(slide, C, `CHECK: ${ex.check}`, { x: 5.55, y: 5.95, w: 6.9, h: 0.58, color: C.accent4, name: "Check" });
   }
 
+  section(pres, "Vive, launcher, and demo day");
+  await viveProjectsSlide(pres, C, { section: "Vive, launcher, and demo day", eyebrow: "UNITY / VIVE PRO 2 + STEAMVR" });
+  await viveSetupSlide(pres, C, { section: "Vive, launcher, and demo day", eyebrow: "UNITY / RUN A PROJECT" });
+  await launcherSlide(pres, C, { section: "Vive, launcher, and demo day", eyebrow: "LAUNCHER" });
+  await demoDaySlide(pres, C, { section: "Vive, launcher, and demo day", eyebrow: "DEMO DAY / ONE-COMMAND START" });
+
   // 19 VR without a headset
   section(pres, "Verify");
   {
@@ -234,13 +241,15 @@ export async function buildRunGuide(file) {
     await shot(slide, C, img("training-simulations/screenshots/vr/07-electrical-lockout.png"), { x: 6.05, y: 4.3, w: 6.7, h: 2.4, caption: "Lock and tag applied in the electrical scenario", name: "VR electrical" });
   }
 
+  await verifiedSlide(pres, C, { section: "Verify", eyebrow: "VERIFIED STATUS" });
+
   // 20 validate
   {
     const slide = contentSlide(pres, { section: "Verify", eyebrow: "VALIDATE & CONTINUE", title: "Know what was tested and what needs a device" });
     text(slide, "Use the captured screenshots as references; always verify immersive behavior on the target runtime.", { x: 0.6, y: 1.4, w: 12, h: 0.35, fontSize: 14, color: C.background2, objectName: "Subtitle" });
     card(slide, C, { x: 0.6, y: 1.95, w: 6.0, h: 4.0, name: "Tested card" });
     label(slide, C, "TESTED ON DESKTOP / EMULATOR", { x: 0.9, y: 2.15, w: 5.4, color: C.accent5, name: "Tested label" });
-    bullets(slide, C, ["Four browser demos served and rendered; controls exercised", "Practice Lab: all 12 scenarios played through, scoring and critical mistakes checked", "Multiplayer relay: 8 automated tests; two-client rooms in both themes", "VR sessions in an emulated Quest 3 with a scripted controller"], { x: 0.9, y: 2.55, w: 5.4, h: 3.2, size: 13.5, gap: 8, name: "Tested points" });
+    bullets(slide, C, ["Four browser demos served and rendered; controls exercised", "Practice Lab: 16 scenarios on desktop (VR captures not refreshed for the 4 newest); scenario tests pass", "Multiplayer relay: automated tests (npm test); two-client rooms", "VR sessions in an emulated Quest 3 with a scripted controller"], { x: 0.9, y: 2.55, w: 5.4, h: 3.2, size: 13.5, gap: 8, name: "Tested points" });
     card(slide, C, { x: 6.75, y: 1.95, w: 6.0, h: 4.0, name: "Needs device card" });
     label(slide, C, "NEEDS HARDWARE / A TOOLCHAIN", { x: 7.05, y: 2.15, w: 5.4, color: C.accent3, name: "Device label" });
     bullets(slide, C, ["Headset VR/AR sessions need supported devices and runtimes", "Real controller input in the Practice Lab and Circuit Lab", "Quest camera needs permission and physical hardware", "ARCore needs a supported Android camera device", "visionOS builds need macOS + Xcode; Unity examples need package setup"], { x: 7.05, y: 2.55, w: 5.4, h: 3.2, size: 13.5, gap: 8, name: "Device points" });

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo QR codes</title>
+<style>
+  :root { --royal:#003594; --gold:#FFB81C; --blue:#00205B; --sky:#DBEEFF; }
+  body { margin:0; font-family: Roboto, system-ui, sans-serif; background:var(--sky); color:var(--blue); }
+  header { background:var(--royal); color:#fff; padding:16px 24px; border-bottom:4px solid var(--gold); }
+  h1 { margin:0; font-size:1.6rem; }
+  main { padding:16px 24px; }
+  .host { margin:0 0 24px; }
+  .host h2 { margin:0 0 8px; font-size:1.1rem; }
+  .cards { display:flex; flex-wrap:wrap; gap:16px; }
+  .card { background:#fff; border-radius:8px; padding:12px; width:240px; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+  .card svg, .card img { width:100%; height:auto; display:block; }
+  .card b { display:block; margin-top:8px; }
+  .card code { word-break:break-all; font-size:.8rem; }
+  .note { max-width:60ch; }
+</style>
+</head>
+<body>
+<header><h1>Scan to open on a headset or phone</h1></header>
+<main>
+  <p class="note">Each code opens a page on this PC over the local network. The first time, the browser warns that the certificate is self-signed: choose Advanced, then Proceed. Headset and phone must be on the same Wi-Fi as this PC. Verify at rehearsal.</p>
+  <div id="out">Loading addresses...</div>
+</main>
+<script src="/vendor/qrcode/qrcode.js"></script>
+<script>
+(async () => {
+  const out = document.getElementById("out");
+  try {
+    const data = await (await fetch("/api/urls", { cache: "no-store" })).json();
+    out.textContent = "";
+    for (const group of data.hosts) {
+      if (group.host === "localhost") continue; // not reachable from another device
+      const section = document.createElement("section");
+      section.className = "host";
+      const h = document.createElement("h2");
+      h.textContent = `${group.adapter} (${group.host})`;
+      const cards = document.createElement("div");
+      cards.className = "cards";
+      for (const page of group.pages) {
+        const qr = qrcode(0, "M");
+        qr.addData(page.url);
+        qr.make();
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 4, scalable: true });
+        const label = document.createElement("b");
+        label.textContent = page.label;
+        const code = document.createElement("code");
+        code.textContent = page.url;
+        card.append(label, code);
+        cards.append(card);
+      }
+      section.append(h, cards);
+      out.append(section);
+    }
+    if (!out.children.length) out.textContent = "No network adapter with an IPv4 address was found. Connect to Wi-Fi or Ethernet and restart the server.";
+  } catch (error) {
+    out.textContent = "Could not load /api/urls. Open this page from the demo server, not from a file.";
+  }
+})();
+</script>
+</body>
+</html>

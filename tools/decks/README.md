@@ -6,7 +6,7 @@ Rebuilds the project's PowerPoint decks from code, using the current screenshots
 - `Run-the-XR-Examples.pptx`
 - `multi-player/Multiplayer-WebXR-Examples.pptx`
 
-The decks use one theme (dark navy with teal, purple, orange, and yellow accents), two layouts (title and content), named placeholders, and sections, so they restyle and edit cleanly in PowerPoint.
+The decks use one theme (University of Pittsburgh palette: Medium Blue background, Royal cards, Gold and light-blue accents), two layouts (title and content), named placeholders, and sections, so they restyle and edit cleanly in PowerPoint.
 
 ## Build
 
@@ -23,4 +23,4 @@ Screenshots are read from the paths in the deck sources (`overview.mjs`, `run-gu
 
 ## Editing content
 
-Slide text lives in the three `.mjs` files next to the helper library `lib.mjs`. Change the text or the screenshot path, rebuild, and check the result in PowerPoint.
+Slide text lives in the three deck `.mjs` files, the shared slides in `newslides.mjs`, and the helpers in `lib.mjs`. Change the text or the screenshot path, rebuild, and check the result in PowerPoint.

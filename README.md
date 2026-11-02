@@ -132,7 +132,7 @@ The decks are generated from the READMEs and screenshots by [tools/decks](tools/
 |---|---|
 | [tools/vr-capture](tools/vr-capture/README.md) | Screenshots of the browser examples in an emulated Quest 3 VR session. |
 | [tools/decks](tools/decks/README.md) | Rebuilds the three PowerPoint decks. |
-| [tools/status](tools/status/README.md) | Local live status dashboard (`npm run status`, http://localhost:5210) fed by [docs/Task-Status.md](docs/Task-Status.md). |
+| [tools/status](tools/status/README.md) | Local live status dashboard (`npm run status`, the address it prints (a free port is chosen automatically)) fed by [docs/Task-Status.md](docs/Task-Status.md). |
 
 ## Platform notes
 
@@ -140,3 +140,11 @@ The decks are generated from the READMEs and screenshots by [tools/decks](tools/
 - Unity and mobile examples may require the relevant SDK packages, a supported runtime, and compatible hardware.
 - The Apple example requires macOS and Xcode to build or test. It cannot be built from Windows.
 - Do not commit private signing keys, access tokens, or app credentials. Check third-party SDK terms before publishing.
+
+## Project status dashboard
+
+A local, live page (`npm run status`, then open the address it prints) shows progress by section, what needs the owner, running and finished agents, test results, servers and uncommitted work, and an activity log. It reads [docs/Task-Status.md](docs/Task-Status.md). Details and the full guide: [tools/status/README.md](tools/status/README.md).
+
+![Status dashboard, light theme](docs/images/status-dashboard.png)
+
+![Status dashboard, dark theme](docs/images/status-dashboard-dark.png)

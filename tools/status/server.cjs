@@ -12,10 +12,18 @@ const { execFileSync } = require('child_process');
 const DIR = __dirname;
 const CONFIG_FILE = process.env.STATUS_CONFIG || path.join(DIR, 'status.config.json');
 const cfg = Object.assign({
-  title: 'Project status', port: 5200, heartbeatSeconds: 60, taskFile: '', repos: [], servers: [], excludeFromDirty: [], quietAgentSeconds: 600,
+  title: 'Project status', port: 'auto', heartbeatSeconds: 60, taskFile: '', repos: [], servers: [], excludeFromDirty: [], quietAgentSeconds: 600,
 }, (() => { try { return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')); } catch { return {}; } })());
 const rel = p => path.resolve(path.dirname(CONFIG_FILE), p);
-const PORT = Number(process.env.STATUS_PORT || cfg.port);
+// Port: "auto" (default) derives a stable preferred port from this project's folder (5200-5299) so each project usually gets the same
+// one, and moves to the next free port if it is taken. A number in the config or STATUS_PORT is used as the preferred port instead.
+const URL_FILE = path.join(DIR, '.dashboard-url');
+function preferredPort() {
+  const want = process.env.STATUS_PORT || cfg.port;
+  if (want && want !== 'auto' && Number(want)) return Number(want);
+  let h = 0; for (const ch of path.resolve(DIR, '..', '..').toLowerCase()) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return 5200 + (h % 100);
+}
 const TASK_FILE = process.env.STATUS_TASKS || (cfg.taskFile ? rel(cfg.taskFile) : '');
 const AGENTS_FILE = path.join(DIR, 'agents.json');
 const TESTS_FILE = path.join(DIR, 'test-results.json');
@@ -168,7 +176,7 @@ async function beat(heartbeat) {
   try { const s = await snapshot(); detectEvents(s); if (heartbeat) addLog('heartbeat', heartbeatText(s)); } catch (e) { addLog('warn', 'Status check failed: ' + e.message); }
 }
 
-http.createServer(async (req, res) => {
+const server = http.createServer(async (req, res) => {
   try {
     if (req.url.startsWith('/api/status')) {
       res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
@@ -178,11 +186,27 @@ http.createServer(async (req, res) => {
     } else if (req.url === '/' || req.url.startsWith('/index')) {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
       res.end(fs.readFileSync(path.join(DIR, 'index.html')));
+    } else if (/^\/fonts\/[\w.-]+\.woff2$/.test(req.url)) {   // optional brand fonts from the repo's vendor/fonts (falls back to system fonts)
+      const f = path.join(DIR, '..', '..', 'vendor', 'fonts', path.basename(req.url));
+      if (fs.existsSync(f)) { res.writeHead(200, { 'Content-Type': 'font/woff2' }); res.end(fs.readFileSync(f)); } else { res.writeHead(404); res.end(); }
     } else { res.writeHead(404); res.end('not found'); }
   } catch (e) { res.writeHead(500); res.end(String(e)); }
-}).listen(PORT, '127.0.0.1', () => {
-  console.log(`Status dashboard: http://localhost:${PORT}   (Ctrl+C to stop)`);
+});
+function onListening() {
+  const port = server.address().port, url = 'http://localhost:' + port;
+  console.log(`Status dashboard: ${url}   (Ctrl+C to stop)`);
+  try { fs.writeFileSync(URL_FILE, url + '\n'); } catch {}
+  process.on('exit', () => { try { if (fs.readFileSync(URL_FILE, 'utf8').trim() === url) fs.unlinkSync(URL_FILE); } catch {} });
+  process.on('SIGINT', () => process.exit(0));
   beat(true);
   setInterval(() => beat(true), Math.max(10, cfg.heartbeatSeconds) * 1000);
   setInterval(() => beat(false), 15000);   // detect events between heartbeats
+}
+let tries = 0, port = preferredPort();
+server.on('error', e => {
+  if (e.code !== 'EADDRINUSE') throw e;
+  port = ++tries < 50 ? port + 1 : 0;      // next port, then any free port the OS picks
+  server.listen(port, '127.0.0.1');
 });
+server.on('listening', onListening);
+server.listen(port, '127.0.0.1');

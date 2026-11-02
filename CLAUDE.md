@@ -31,7 +31,7 @@ Read this at the start of a session. It records how the project owner likes to w
 
 ## Status dashboard: keep it current (standing instruction)
 
-The owner uses a local status dashboard as the standard for every project (guide: [docs/status-dashboard-guide.md](docs/status-dashboard-guide.md)). Start it with `npm run status` and open http://localhost:5210. The task list it reads is [docs/Task-Status.md](docs/Task-Status.md).
+The owner uses a local status dashboard as the standard for every project (guide: [docs/status-dashboard-guide.md](docs/status-dashboard-guide.md)). Start it with `npm run status` and read the address it prints (the port is chosen automatically, so several projects can run dashboards at once; it is also saved in `tools/status/.dashboard-url`). The task list it reads is [docs/Task-Status.md](docs/Task-Status.md).
 
 - When a task **starts, finishes, or becomes blocked**, edit its row in `docs/Task-Status.md` in the same turn (✅ done, 🔄 in progress, ⏳ waiting on something earlier, 👤 needs the owner, ❓ needs partners or faculty). Keep Notes short and factual.
 - When you **launch an agent or subagent**: `node tools/status/agent.cjs start <id> "<name>" "<task>" <watch paths>`. When it finishes: `node tools/status/agent.cjs done <id> "<result>"`.

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>XR Training Launcher</title>
+  <meta name="description" content="Launch the Pitt-Bradford XR training examples: browser demos, multiplayer, Vive and Quest.">
+  <link rel="stylesheet" href="launcher/launcher.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to the examples</a>
+
+  <header class="top">
+    <div class="wrap top-inner">
+      <div class="brand" aria-label="University of Pittsburgh at Bradford">
+        <img id="logo" class="logo" src="branding/logo.png" alt="University of Pittsburgh at Bradford" hidden>
+        <span id="wordmark" class="wordmark">University of Pittsburgh at Bradford</span>
+      </div>
+      <h1>XR Training Launcher</h1>
+      <p class="lede" id="subtitle">Pitt-Bradford XR training examples. Pick a tile to launch it.</p>
+      <nav class="jump" aria-label="Sections" id="jump"></nav>
+    </div>
+  </header>
+
+  <div id="relay-note" class="wrap relay-note" hidden role="note"></div>
+
+  <main id="main" class="wrap">
+    <noscript><p class="noscript">This launcher needs JavaScript to list the examples. The folders a-frame, threejs, babylonjs, webxr, training-simulations and multi-player can still be opened directly.</p></noscript>
+    <section id="path" class="block" aria-labelledby="path-h"></section>
+    <div id="sections"></div>
+    <section id="tools" class="block tools" aria-labelledby="tools-h"></section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap">
+      <p>Non-certified learning prototypes. They are general safety awareness practice and do not replace site procedures, permits or certified training.</p>
+      <p>VR screenshots are from an emulated Quest 3 unless stated. Nothing here has been verified on a physical headset.</p>
+    </div>
+  </footer>
+
+  <script src="launcher/launcher.js"></script>
+</body>
+</html>

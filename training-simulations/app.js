@@ -1,12 +1,14 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { VRButton } from "three/addons/webxr/VRButton.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { scenarios, categories } from "./scenarios.js";
 import {
   createHeightStation, createControlRoomStation, createBatteryStation,
   createFacadeStation, createWeldingStation, createElectricalStation,
 } from "./industrial-stations.js";
 import { decorateCoreStation } from "./core-stations.js";
+import { createLightersStation, createHydrotestStation, createSpoolStation, createResistorBench } from "./partner-stations.js";
 
 const canvas = document.querySelector("#scene");
 const profile = document.querySelector("#profile");
@@ -68,6 +70,12 @@ camera.lookAt(0, 1.3, 0);
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
+// Realism pass: sRGB output, filmic tone mapping, one soft 1024 shadow map (cheap enough for a Quest browser; untested on a headset).
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.xr.enabled = true;
 document.body.appendChild(VRButton.createButton(renderer, { optionalFeatures: ["local-floor"] }));
 const xrButton = document.querySelector("body > button");
@@ -83,7 +91,7 @@ const immersiveVrSupport = immersiveVrSupportCheck.catch((error) => {
 });
 immersiveVrSupport.then((supported) => {
   if (!supported) {
-    xrNote.textContent = "WebXR VR is unavailable in this browser. You can still complete all twelve simulations in desktop mode.";
+    xrNote.textContent = "WebXR VR is unavailable in this browser. You can still complete all sixteen simulations in desktop mode.";
   } else if (learnerName && xrButton) {
     xrButton.disabled = false;
   }
@@ -95,7 +103,91 @@ controls.target.set(0, 1.2, 0);
 scene.add(new THREE.HemisphereLight(0xc8e8ff, 0x253241, 2.0));
 const keyLight = new THREE.DirectionalLight(0xffdfb3, 3.2);
 keyLight.position.set(-4, 7, 5);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(1024, 1024);
+keyLight.shadow.camera.left = -5;
+keyLight.shadow.camera.right = 5;
+keyLight.shadow.camera.top = 5;
+keyLight.shadow.camera.bottom = -5;
+keyLight.shadow.camera.near = 2;
+keyLight.shadow.camera.far = 20;
+keyLight.shadow.bias = -0.0004;
+keyLight.shadow.normalBias = 0.02;
+keyLight.shadow.radius = 3;
 scene.add(keyLight);
+scene.add(new THREE.DirectionalLight(0x7fb4ff, 0.7).translateX(5).translateY(3).translateZ(-4));
+
+// Soft image-based light from a built-in room, generated once on the GPU. Gives metal something to reflect.
+{
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environmentIntensity = 0.4;
+  pmrem.dispose();
+}
+
+// Procedural canvas textures (no downloads, no licensing): concrete speckle and diamond plate.
+function noiseTexture(size, base, spread, { repeat = 4, streaks = false } = {}) {
+  const art = document.createElement("canvas");
+  art.width = art.height = size;
+  const ctx = art.getContext("2d");
+  const image = ctx.createImageData(size, size);
+  let seed = 1337;
+  const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+  for (let i = 0; i < size * size; i++) {
+    const v = Math.max(0, Math.min(255, base + (rand() - 0.5) * spread));
+    image.data.set([v, v, v, 255], i * 4);
+  }
+  ctx.putImageData(image, 0, 0);
+  if (streaks) {
+    ctx.globalAlpha = 0.07;
+    for (let i = 0; i < 40; i++) {
+      ctx.fillStyle = rand() > 0.5 ? "#fff" : "#000";
+      ctx.fillRect(0, rand() * size, size, 1 + rand() * 3);
+    }
+  }
+  const texture = new THREE.CanvasTexture(art);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(repeat, repeat);
+  texture.anisotropy = 4;
+  return texture;
+}
+
+function plateTexture(repeat) {
+  const size = 128;
+  const art = document.createElement("canvas");
+  art.width = art.height = size;
+  const ctx = art.getContext("2d");
+  ctx.fillStyle = "#d9d9d9";
+  ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = "#f4f4f4";
+  for (let y = 0; y < 4; y++) {
+    for (let x = 0; x < 4; x++) {
+      const cx = x * 32 + (y % 2 ? 24 : 8);
+      const cy = y * 32 + 16;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 9, 3.5, (y % 2 ? 1 : -1) * 0.7, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  const texture = new THREE.CanvasTexture(art);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(repeat, repeat);
+  texture.anisotropy = 4;
+  return texture;
+}
+
+// Shared shadow setup: every lit mesh casts and receives; unlit UI signs, hotspots, and glass are skipped.
+function enableShadows(root) {
+  root.traverse((node) => {
+    if (!node.isMesh || node.userData.isTrainingUi) return;
+    const material = Array.isArray(node.material) ? node.material[0] : node.material;
+    if (!material?.isMeshStandardMaterial || material.transparent) return;
+    node.castShadow = true;
+    node.receiveShadow = true;
+  });
+}
 
 // All training content lives in `world`. In VR the player starts at the origin, so the world is moved in front of them.
 const world = new THREE.Group();
@@ -105,22 +197,25 @@ const vrWorldScale = 1.25;
 
 const floor = new THREE.Mesh(
   new THREE.CircleGeometry(7, 64),
-  new THREE.MeshStandardMaterial({ color: "#152433", roughness: 0.88, metalness: 0.08 }),
+  new THREE.MeshStandardMaterial({ color: "#1a2d40", roughness: 0.82, metalness: 0.08, map: noiseTexture(256, 215, 70, { repeat: 6, streaks: true }) }),
 );
+floor.receiveShadow = true;
 floor.rotation.x = -Math.PI / 2;
 floor.position.y = -0.02;
 world.add(floor);
 
 const platform = new THREE.Mesh(
   new THREE.CylinderGeometry(2.4, 2.55, 0.14, 64),
-  new THREE.MeshStandardMaterial({ color: "#20374a", roughness: 0.58, metalness: 0.14 }),
+  new THREE.MeshStandardMaterial({ color: "#2a4a63", roughness: 0.5, metalness: 0.3, map: plateTexture(10) }),
 );
+platform.receiveShadow = true;
+platform.castShadow = true;
 platform.position.y = 0.12;
 world.add(platform);
 
 const platformRing = new THREE.Mesh(
   new THREE.TorusGeometry(2.08, 0.022, 8, 100),
-  new THREE.MeshBasicMaterial({ color: "#73e7d4" }),
+  new THREE.MeshBasicMaterial({ color: "#73e7d4", toneMapped: false }),
 );
 platformRing.rotation.x = Math.PI / 2;
 platformRing.position.y = 0.205;
@@ -178,6 +273,7 @@ function makeSign(lines, position, scale, accent = "#73e7d4", height = 512) {
   const material = new THREE.MeshBasicMaterial({
     map: textTexture(lines, { accent, height }),
     transparent: true,
+    toneMapped: false,
     side: THREE.DoubleSide,
   });
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(...scale), material);
@@ -385,6 +481,10 @@ const stationBuilders = {
   facade: createFacadeStation,
   welding: createWeldingStation,
   electrical: createElectricalStation,
+  lighters: createLightersStation,
+  hydrotest: createHydrotestStation,
+  spool: createSpoolStation,
+  bench: createResistorBench,
 };
 
 function clearObject(group) {
@@ -416,6 +516,7 @@ function setTrainingScene(scenario, stepIndex = 0) {
   scenarioModel = stationBuilders[scenario?.object]?.() ?? createCounter();
   decorateCoreStation(scenarioModel, scenario?.object);
   scenarioModel.position.set(0, 0.2, -0.28);
+  enableShadows(scenarioModel);
   world.add(scenarioModel);
   updateSign(scenario, stepIndex);
 }
@@ -579,7 +680,7 @@ function layoutLabels(states) {
   const placed = [];
   for (const state of [...states].sort((a, b) => b.def.at[1] - a.def.at[1])) {
     const [x, y] = state.def.at;
-    const dx = x > 0.55 || (x < -0.25) ? -0.7 : 0;
+    const dx = Math.max(x > 0.55 || (x < -0.25) ? -0.7 : 0, -1.3 - x); // keep labels on screen at the left edge
     let dy = 0.25;
     for (let guard = 0; guard < 14 && placed.some((p) => Math.abs(p.x - (x + dx)) < 1.15 && Math.abs(p.y - (y + dy)) < 0.27); guard += 1) dy += 0.28;
     placed.push({ x: x + dx, y: y + dy });
@@ -632,6 +733,7 @@ function renderTask(step) {
   const states = step.hotspots.map(createHotspot);
   layoutLabels(states);
   for (const state of states) {
+    enableShadows(state.group);
     scenarioModel.add(state.group);
     taskTargets.push(state.halo);
     const button = document.createElement("button");
@@ -696,7 +798,7 @@ function finishTask() {
   }
   answered = true;
   feedback.classList.toggle("critical", task.critical);
-  feedbackLabel.textContent = task.critical ? (activeScenario.category === "industrial" ? "CRITICAL SAFETY MISS" : "CRITICAL MISS") : points === 2 ? "STRONG PRACTICE" : "PAUSE AND REFLECT";
+  feedbackLabel.textContent = task.critical ? (activeScenario.category === "industrial" || activeScenario.category === "manufacturing" ? "CRITICAL SAFETY MISS" : "CRITICAL MISS") : points === 2 ? "STRONG PRACTICE" : "PAUSE AND REFLECT";
   feedbackCopy.textContent = task.critical
     ? `Task complete, but with a critical mistake (${task.mistakes} mistake${task.mistakes === 1 ? "" : "s"} in total). In real practice that could seriously harm someone or invalidate the work.`
     : task.mistakes === 0
@@ -892,8 +994,8 @@ for (let index = 0; index < scenarios.length; index += 1) {
   const scenario = scenarios[index];
   const card = createChoiceCard(index);
   card.geometry.dispose();
-  card.geometry = new THREE.PlaneGeometry(0.9, 0.52);
-  card.position.set((index % 4 - 1.5) * 0.98, 2.0 - Math.floor(index / 4) * 0.6, -1.36);
+  card.geometry = new THREE.PlaneGeometry(0.9, 0.44);
+  card.position.set((index % 4 - 1.5) * 0.98, 2.3 - Math.floor(index / 4) * 0.48, -1.36);
   card.visible = false;
   card.userData.scenarioIndex = index;
   station.add(card);

@@ -1,5 +1,5 @@
 // Shared theme, layouts, and drawing helpers for the project's decks. The look follows the original decks:
-// dark navy background, rounded cards, and teal / purple / orange / yellow accents.
+// Pitt Medium Blue background, Royal rounded cards, and gold / light blue / orange accents.
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,9 +15,10 @@ export const THEME = {
   headFontFace: "Calibri",
   bodyFontFace: "Calibri",
   colors: {
-    dk1: "0B1420", lt1: "F2F6FC", dk2: "14233A", lt2: "A9B8CC",
-    accent1: "5EEAD4", accent2: "A78BFA", accent3: "FF9D6B", accent4: "F5C451", accent5: "4BE3A0", accent6: "FF6B6B",
-    hlink: "5EEAD4", folHlink: "A78BFA",
+    // University of Pittsburgh palette: Medium Blue background, Royal cards, New Sky muted text, Gold lead accent.
+    dk1: "00205B", lt1: "FFFFFF", dk2: "003594", lt2: "DBEEFF",
+    accent1: "FFB81C", accent2: "8DB9F2", accent3: "F58A4B", accent4: "DBEEFF", accent5: "6CCBA5", accent6: "E8636B",
+    hlink: "FFB81C", folHlink: "8DB9F2",
   },
 };
 

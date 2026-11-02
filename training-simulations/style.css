@@ -197,6 +197,7 @@ input:focus-visible, button:focus-visible {
   .xr-button { left: 10px; bottom: 10px; }
 }
 
+.manufacturing-mark { background: #66B2E3; box-shadow: 0 0 12px #66B2E380; }
 .industrial-mark { background: #f2c94c; box-shadow: 0 0 12px #f2c94c80; }
 .category:first-child { margin-top: 0; }
 .briefing { margin: -8px 0 16px; padding: 10px 12px 10px 28px; border: 1px solid #5b5230; border-radius: 10px; background: #f2c94c14; color: #e9dfb4; font-size: 12px; }

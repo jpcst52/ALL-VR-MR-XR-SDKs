@@ -36,3 +36,8 @@ assets-private/
 
 # Local status dashboard activity log
 tools/status/activity-log.jsonl
+
+# Self-signed demo certificates (private key)
+multi-player/.certs/
+tools/status/.dashboard-url
+tools/status/.server.out

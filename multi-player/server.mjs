@@ -12,8 +12,9 @@ const ROOM_PATTERN = /^[a-z0-9][a-z0-9-]{0,23}$/i;
 const THEMES = new Map([
   ["circuits", new Set(["battery", "switch", "bulb", "resistor", "motor", "wire"])],
   ["safety", new Set(["exit", "extinguisher", "firstaid", "barrier", "beacon", "muster"])],
+  ["hydrotest", new Set(["tank", "pump", "valve", "vent", "gauge", "exchanger", "blind", "pipe"])],
 ]);
-const TOGGLE_PARTS = new Set(["switch", "beacon"]);
+const TOGGLE_PARTS = new Set(["switch", "beacon", "valve", "vent"]);
 const DEFAULT_THEME = "circuits";
 const MAX_CLIENTS = 24;
 const MAX_ROOMS = 64;
@@ -25,6 +26,7 @@ const CONTENT_TYPES = new Map([
   [".html", "text/html; charset=utf-8"],
   [".js", "text/javascript; charset=utf-8"],
   [".json", "application/json; charset=utf-8"],
+  [".mjs", "text/javascript; charset=utf-8"],
   [".md", "text/markdown; charset=utf-8"],
   [".png", "image/png"],
   [".svg", "image/svg+xml"],
@@ -292,7 +294,8 @@ export function createRelay() {
     server,
     rooms,
     clients,
-    async listen({ port = Number(process.env.PORT ?? 8443), host = process.env.HOST ?? "0.0.0.0" } = {}) {
+    // autoTls (CLI only): with no TLS_KEY/TLS_CERT and no INSECURE_HTTP=1, use a cached self-signed certificate.
+    async listen({ port = Number(process.env.PORT ?? 8443), host = process.env.HOST ?? "0.0.0.0", autoTls = false } = {}) {
       const keyPath = process.env.TLS_KEY;
       const certPath = process.env.TLS_CERT;
       const httpsRequested = keyPath || certPath;
@@ -303,12 +306,17 @@ export function createRelay() {
         throw new Error("TLS_KEY or TLS_CERT does not point to an existing file.");
       }
 
+      let tlsOptions = httpsRequested ? { key: readFileSync(keyPath), cert: readFileSync(certPath) } : null;
+      if (!tlsOptions && autoTls && process.env.INSECURE_HTTP !== "1") {
+        const { ensureCertificate } = await import("./tls.mjs");
+        const { key, cert, created } = await ensureCertificate();
+        tlsOptions = { key, cert };
+        this.generatedCertificate = created;
+      }
+
       let activeServer = server;
-      if (httpsRequested) {
-        activeServer = createHttpsServer({
-          key: readFileSync(keyPath),
-          cert: readFileSync(certPath),
-        }, (request, response) => serveStatic(request, response));
+      if (tlsOptions) {
+        activeServer = createHttpsServer(tlsOptions, (request, response) => serveStatic(request, response));
         activeServer.on("upgrade", server.listeners("upgrade")[0]);
         this.server = activeServer;
       }
@@ -317,7 +325,7 @@ export function createRelay() {
         activeServer.once("error", rejectListen);
         activeServer.listen(port, host, resolveListen);
       });
-      return activeServer.address();
+      return { ...activeServer.address(), protocol: tlsOptions ? "https" : "http" };
     },
     async close() {
       for (const peer of clients) peer.socket.close();
@@ -365,6 +373,17 @@ function serveStatic(request, response) {
     return;
   }
 
+  if (pathname === "/api/urls") {
+    // Read-only list of this machine's LAN URLs, used by multi-player/qr.html.
+    import("./tls.mjs").then(({ demoUrls }) => {
+      const protocol = request.socket.encrypted ? "https" : "http";
+      const body = JSON.stringify({ protocol, port: request.socket.localPort, hosts: demoUrls({ protocol, port: request.socket.localPort }) });
+      response.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
+      response.end(request.method === "HEAD" ? undefined : body);
+    }).catch(() => response.writeHead(500).end("Unavailable."));
+    return;
+  }
+
   const requestedPath = resolve(SITE_ROOT, `.${pathname}`);
   const relativePath = relative(SITE_ROOT, requestedPath);
   if (relativePath.startsWith(`..${sep}`) || relativePath === ".." || relativePath.startsWith("..")) {
@@ -396,10 +415,20 @@ function serveStatic(request, response) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const relay = createRelay();
-  relay.listen().then(({ address, port }) => {
-    const protocol = process.env.TLS_KEY ? "https" : "http";
-    console.log(`XR multiplayer examples available at ${protocol}://${address}:${port}`);
-    console.log("Add /multi-player/vr/ or /multi-player/ar/ and use the same room name on both clients.");
+  relay.listen({ autoTls: true }).then(async ({ port, protocol }) => {
+    const { demoUrls } = await import("./tls.mjs");
+    console.log(`XR training demo is running (${protocol.toUpperCase()}, port ${port}). Open these from a browser:`);
+    for (const group of demoUrls({ protocol, port })) {
+      console.log(`\n  ${group.adapter} (${group.host})`);
+      for (const page of group.pages) console.log(`    ${page.label.padEnd(26)} ${page.url}`);
+    }
+    console.log(`\n  QR codes for headsets: ${protocol}://localhost:${port}/multi-player/qr.html`);
+    if (protocol === "https") {
+      console.log("\nFirst visit on each device: the browser warns about the self-signed certificate. Choose Advanced, then Proceed/Continue once.");
+    } else {
+      console.log("\nPlain HTTP: WebXR on a headset needs HTTPS, so only localhost will enter VR/AR.");
+    }
+    console.log("Use the same room name on every client. Press Ctrl+C to stop.");
   }).catch((error) => {
     console.error("Could not start the XR multiplayer server.", error);
     process.exitCode = 1;

@@ -1,3 +1,4 @@
+import { dashboardSlide, demoDaySlide, launcherSlide, researchSlide, verifiedSlide, viveProjectsSlide, viveSetupSlide } from "./newslides.mjs";
 import { applyDeckTheme, bullets, callout, card, chip, contentSlide, entries, img, label, newDeck, numberDot, section, shot, steps, text } from "./lib.mjs";
 
 export async function buildOverview(file) {
@@ -9,9 +10,9 @@ export async function buildOverview(file) {
     const slide = pres.addSlide({ masterName: "TITLE", sectionTitle: "Introduction" });
     slide.addText("PROJECT OVERVIEW  /  2026", { placeholder: "eyebrow" });
     slide.addText("VR · MR · AR\nSDK examples", { placeholder: "title" });
-    text(slide, "A practical tour of immersive technology through small, focused examples: ten SDK and framework demos, two multiplayer WebXR examples, and a hands-on training lab.", { x: 0.7, y: 3.8, w: 6.2, h: 1.3, fontSize: 18, color: C.background2, objectName: "Subtitle" });
+    text(slide, "A practical tour of immersive technology through small, focused examples: ten SDK and framework demos, three multiplayer WebXR themes, four Unity training projects, and a hands-on training lab.", { x: 0.7, y: 3.8, w: 6.2, h: 1.3, fontSize: 18, color: C.background2, objectName: "Subtitle" });
     chip(slide, C, "13 examples", { x: 0.7, y: 5.55, w: 1.7, name: "Chip examples" });
-    chip(slide, C, "12 hands-on scenarios", { x: 2.55, y: 5.55, w: 2.5, color: C.accent3, name: "Chip scenarios" });
+    chip(slide, C, "16 hands-on scenarios", { x: 2.55, y: 5.55, w: 2.5, color: C.accent3, name: "Chip scenarios" });
     chip(slide, C, "VR emulator captures", { x: 5.2, y: 5.55, w: 2.3, color: C.accent2, name: "Chip VR" });
     await shot(slide, C, img("training-simulations/screenshots/vr/03-hands-on-task.png"), { x: 7.9, y: 0.6, w: 4.85, h: 3.2, caption: "Practice Lab task in an emulated Quest 3 session", name: "Title VR task" });
     await shot(slide, C, img("multi-player/screenshots/vr/01-circuit-lab-in-vr.png"), { x: 7.9, y: 3.95, w: 4.85, h: 3.2, caption: "Multiplayer Circuit Lab in an emulated VR session", name: "Title VR circuit" });
@@ -47,7 +48,7 @@ export async function buildOverview(file) {
       ["WEB 3D & IMMERSION", C.accent2, [["WebXR", "Immersive color field"], ["A-Frame", "Animated Orbit Garden"], ["Three.js", "Prism Bloom + VR entry"], ["Babylon.js", "Luminous Totem + XR"]]],
       ["MOBILE & SPATIAL", C.accent3, [["Google ARCore", "Plane detection + cube placement"], ["Apple · visionOS", "SwiftUI spatial atlas"]]],
       ["ENGINE TOOLING", C.accent4, [["Unity XRI", "Grab selection color feedback"]]],
-      ["MULTIPLAYER & TRAINING", C.accent5, [["Circuit Lab", "Shared VR circuit builder"], ["Site Safety Layout", "Shared AR safety plan"], ["Practice Lab", "12 hands-on scenarios"]]],
+      ["MULTIPLAYER & TRAINING", C.accent5, [["Circuit Lab", "Shared VR circuit builder"], ["Site Safety Layout", "Shared AR safety plan"], ["Practice Lab", "16 hands-on scenarios"]]],
     ];
     columns.forEach(([head, color, items], i) => {
       const x = 0.6 + i * 2.45;
@@ -116,30 +117,39 @@ export async function buildOverview(file) {
   // 7 ---------------------------------------------------------------- multiplayer
   section(pres, "Multiplayer and training");
   {
-    const slide = contentSlide(pres, { section: "Multiplayer and training", eyebrow: "06 / MULTIPLAYER WEBXR", title: "Two themes, one relay: build together in VR and AR" });
+    const slide = contentSlide(pres, { section: "Multiplayer and training", eyebrow: "06 / MULTIPLAYER WEBXR", title: "Three themes, one relay: build together in VR and AR" });
     bullets(slide, C, [
       "One small WebSocket relay shares parts, presence, and ownership. Rooms are separated by theme.",
       "Circuit Lab (VR): snap batteries, switches, bulbs, resistors, motors, and wires together. A closed loop lights the bulb and spins the motor.",
       "Site Safety Layout (AR): place exits, extinguishers, first aid, a muster point, hazard beacons, and barriers; a live checklist flags gaps.",
       "Only one person can hold a part; the server rejects competing grabs and frees parts when an owner leaves.",
-      "AR uses a two-point calibration, not a shared cloud anchor.",
-    ], { x: 0.6, y: 1.8, w: 5.3, h: 4.7, size: 14, gap: 9, name: "Multiplayer points" });
+      "Hydrostatic Test Rig (new): build a heat-exchanger test rig together. AR uses a two-point calibration, not a shared cloud anchor.",
+    ], { x: 0.6, y: 1.8, w: 5.3, h: 4.9, size: 13, gap: 7, name: "Multiplayer points" });
     await shot(slide, C, img("multi-player/screenshots/multiplayer-vr.png"), { x: 6.2, y: 1.75, w: 6.55, h: 2.55, caption: "Circuit Lab · two participants, closed loop, bulb lit", name: "Circuit Lab screenshot" });
     await shot(slide, C, img("multi-player/screenshots/multiplayer-ar.png"), { x: 6.2, y: 4.4, w: 6.55, h: 2.55, caption: "Site Safety Layout · sample layout with a passing checklist", name: "Safety Layout screenshot" });
   }
 
   // 8 ---------------------------------------------------------------- practice lab
   {
-    const slide = contentSlide(pres, { section: "Multiplayer and training", eyebrow: "07 / FIELDWORK XR PRACTICE LAB", title: "Twelve scenarios, every one hands-on" });
+    const slide = contentSlide(pres, { section: "Multiplayer and training", eyebrow: "07 / FIELDWORK XR PRACTICE LAB", title: "Sixteen scenarios, every one hands-on" });
     await shot(slide, C, img("training-simulations/screenshots/02-catalog.png"), { x: 0.6, y: 1.75, w: 3.9, h: 4.9, caption: "Scenario catalog", name: "Catalog screenshot" });
     await shot(slide, C, img("training-simulations/screenshots/03-scenario-7-work-at-height.png"), { x: 4.7, y: 1.75, w: 3.9, h: 4.9, caption: "Work at height · hands-on task", name: "Task screenshot", crop: { left: 0, top: 130, width: 620, height: 780 } });
     entries(slide, C, [
       ["3 business", "Welcome a walk-in, make a safe work area, check a delivery."],
       ["3 research", "Informed consent, sample custody, field observation."],
-      ["6 industrial", "Work at height, refinery control room, refinery battery limits, skyscraper window cleaning, welding, electrical isolation."],
-    ], { x: 8.9, y: 1.8, w: 3.85, h: 3.0, nameSize: 16, descSize: 12.5, gap: 10, name: "Lab groups" });
-    callout(slide, C, "You carry out each task yourself by selecting hotspots in a 3D work area. Wrong actions show consequences; critical mistakes are flagged.", { x: 8.9, y: 4.95, w: 3.85, h: 1.7, color: C.accent4, name: "Lab callout" });
+      ["6 industrial", "Work at height, control room, battery limits, window cleaning, welding, electrical isolation."],
+      ["4 manufacturing quality", "Lighter-lot sampling, hydrostatic test, pipe-spool welding, resistor selection. Inspired by local manufacturers."],
+    ], { x: 8.9, y: 1.8, w: 3.85, h: 3.4, nameSize: 15, descSize: 12, gap: 6, name: "Lab groups" });
+    callout(slide, C, "You do each task by selecting hotspots in a 3D work area. Wrong actions show consequences.", { x: 8.9, y: 5.4, w: 3.85, h: 1.3, color: C.accent4, name: "Lab callout" });
   }
+
+  section(pres, "Unity, demo day, and research");
+  await viveProjectsSlide(pres, C, { section: "Unity, demo day, and research", eyebrow: "UNITY / VIVE PRO 2 + STEAMVR" });
+  await viveSetupSlide(pres, C, { section: "Unity, demo day, and research", eyebrow: "UNITY / SETUP AND CONTROLS" });
+  await launcherSlide(pres, C, { section: "Unity, demo day, and research", eyebrow: "PITT-BRADFORD LAUNCHER" });
+  await demoDaySlide(pres, C, { section: "Unity, demo day, and research", eyebrow: "DEMO DAY / NOV 13, 2026" });
+  await researchSlide(pres, C, { section: "Unity, demo day, and research", eyebrow: "RESEARCH" });
+  await dashboardSlide(pres, C, { section: "Unity, demo day, and research", eyebrow: "PROJECT TOOLING" });
 
   // 9 ---------------------------------------------------------------- VR emulator
   {
@@ -179,6 +189,8 @@ export async function buildOverview(file) {
     });
     callout(slide, C, "Before committing to a platform: verify current device support, vendor terms, and distribution requirements.", { x: 0.6, y: 5.65, w: 12.15, name: "Start note" });
   }
+
+  await verifiedSlide(pres, C, { section: "Getting started", eyebrow: "VERIFIED STATUS" });
 
   // 11 --------------------------------------------------------------- reality check
   {

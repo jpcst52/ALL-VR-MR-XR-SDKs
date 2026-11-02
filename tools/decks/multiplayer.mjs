@@ -1,3 +1,4 @@
+import { demoDaySlide, hydrotestSlide } from "./newslides.mjs";
 import { applyDeckTheme, bullets, callout, card, chip, code, contentSlide, entries, img, label, newDeck, numberDot, section, shot, steps, text } from "./lib.mjs";
 
 export async function buildMultiplayer(file) {
@@ -9,7 +10,7 @@ export async function buildMultiplayer(file) {
     const slide = pres.addSlide({ masterName: "TITLE", sectionTitle: "Introduction" });
     slide.addText("MULTIPLAYER WEBXR  /  VR + AR", { placeholder: "eyebrow" });
     slide.addText("Build together\nin VR and AR", { placeholder: "title" });
-    text(slide, "Two compact WebXR examples share one WebSocket relay: Circuit Lab for VR and Site Safety Layout for AR.", { x: 0.7, y: 3.8, w: 6.2, h: 1.2, fontSize: 18, color: C.background2, objectName: "Subtitle" });
+    text(slide, "Three compact WebXR themes share one WebSocket relay: Circuit Lab (VR), Site Safety Layout (AR), and a Hydrostatic Test Rig.", { x: 0.7, y: 3.8, w: 6.2, h: 1.2, fontSize: 18, color: C.background2, objectName: "Subtitle" });
     chip(slide, C, "Circuit Lab · VR", { x: 0.7, y: 5.4, w: 2.2, name: "Chip VR" });
     chip(slide, C, "Site Safety Layout · AR", { x: 3.05, y: 5.4, w: 2.8, color: C.accent3, name: "Chip AR" });
     chip(slide, C, "Desktop fallback", { x: 6.0, y: 5.4, w: 1.9, color: C.accent2, name: "Chip desktop" });
@@ -133,12 +134,16 @@ export async function buildMultiplayer(file) {
     text(slide, "Limits protect the relay: 24 clients per room, 64 rooms, 250 parts per room, 16 KB messages, validated coordinates.", { x: 0.6, y: 6.5, w: 12.15, h: 0.4, fontSize: 13, color: C.background2, objectName: "Protocol note" });
   }
 
+  section(pres, "Hydrostatic Test Rig");
+  await hydrotestSlide(pres, C, { section: "Hydrostatic Test Rig", eyebrow: "NEW / THIRD THEME" });
+  await demoDaySlide(pres, C, { section: "Hydrostatic Test Rig", eyebrow: "DEMO DAY / HTTPS START" });
+
   // 9 VR + tests
   section(pres, "Verify");
   {
     const slide = contentSlide(pres, { section: "Verify", eyebrow: "08 / TESTS AND VR CHECKS", title: "What is tested, and what still needs a headset" });
     card(slide, C, { x: 0.6, y: 1.75, w: 5.6, h: 4.95, name: "Tests card" });
-    label(slide, C, "AUTOMATED: 8 RELAY TESTS (npm test)", { x: 0.85, y: 1.95, w: 5.1, color: C.accent5, name: "Tests label" });
+    label(slide, C, "AUTOMATED RELAY TESTS (npm test)", { x: 0.85, y: 1.95, w: 5.1, color: C.accent5, name: "Tests label" });
     bullets(slide, C, ["Mixed VR and AR clients share a room", "Snapshots for late joiners; rooms stay isolated", "Theme separation and part catalogs", "Single-owner grabs; disconnect cleanup", "Toggle and rotate rules", "Invalid input and path traversal are rejected"], { x: 0.85, y: 2.4, w: 5.1, h: 3.0, size: 13.5, gap: 6, name: "Tests points" });
     text(slide, "Headset sessions and AR camera hit testing still need physical hardware.", { x: 0.85, y: 5.65, w: 5.1, h: 0.9, fontSize: 13, color: C.accent3, objectName: "Hardware note" });
     await shot(slide, C, img("multi-player/screenshots/vr/01-circuit-lab-in-vr.png"), { x: 6.45, y: 1.75, w: 6.3, h: 4.0, caption: "Emulated Quest 3 (Meta IWER) with a scripted session", name: "Emulated VR screenshot" });

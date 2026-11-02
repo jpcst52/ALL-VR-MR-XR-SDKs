@@ -1,4 +1,4 @@
 @echo off
 cd /d "%~dp0\..\.."
-start "" http://localhost:5210
+start "" /b node tools\status\open-when-ready.cjs
 node tools\status\server.cjs

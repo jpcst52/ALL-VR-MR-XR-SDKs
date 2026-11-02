@@ -1,16 +1,24 @@
 # Status dashboard — how it works and how to reuse it on any project
 
-A small **local, live status page** for work that is done by several people and AI agents at once. It answers "where are we?" without anyone having to ask. It was built for the EVE Residential review package (Nov 2026) and is designed to be copied into future projects.
+A small **local, live status page** for work that is done by several people and AI agents at once. It answers "where are we?" without anyone having to ask. It was first built for another project (EVE Residential, Nov 2026) and is designed to be copied into future projects.
 
 - **No installs** (Node.js only), **no cloud** (runs on your PC, binds to 127.0.0.1), **no database** (a few small files).
-- Lives in `EVE-Residental/tools/status/`. Open it at **http://localhost:5200**.
+- Lives in `/tools/status/`. The port is chosen automatically (see section 1), so several projects can run their own dashboards on one machine at the same time.
 
 ## 1. Quick start
 1. In the project folder run `npm run status` (or double-click `tools\status\start-status.cmd`, or `node tools/status/server.cjs`).
-2. Open http://localhost:5200. It refreshes every 10 seconds on its own.
+2. Open the address the server prints, for example `Status dashboard: http://localhost:5285`. `start-status.cmd` opens it for you. The address is also saved in `tools/status/.dashboard-url` (git-ignored, removed when the server stops). The page refreshes every 10 seconds on its own.
 3. Stop it with Ctrl+C (or kill the node process). Restart it after editing `server.cjs` or `status.config.json`.
 
+### Dynamic ports
+More than one project on a machine can run this dashboard at once without any setup. Each project hashes its own folder path to a preferred port, falls forward to the next free port if that one is busy, and writes the final address to `.dashboard-url`. Scripts and agents that need the address (screenshot tools, launchers) should read that file rather than hard-code a port. Use `STATUS_PORT=5300` only if you want a specific port.
+
 ## 2. What you see
+
+![Light theme](images/status-dashboard.png)
+
+![Dark theme](images/status-dashboard-dark.png)
+
 | Panel | What it shows | Where the data comes from |
 |---|---|---|
 | **Progress** | An overall ring plus one ring per section (done / total, blue while something in it is running) | The task list markdown |
@@ -74,7 +82,7 @@ Run it after each full test run. Re-running with the same suite name replaces it
 | Key | Meaning |
 |---|---|
 | `title` | Page heading and browser tab |
-| `port` | Local port (default 5200); `STATUS_PORT` env var overrides |
+| `port` | `"auto"` (default) or a number. Auto derives a stable preferred port (5200 to 5299) from the project folder's path, so a project normally gets the same port every time. A number is used as the preferred port. `STATUS_PORT` overrides both. Either way, if the preferred port is taken the server tries the next ports (up to 50), then lets the OS pick any free one |
 | `heartbeatSeconds` | Heartbeat interval (default 60) |
 | `quietAgentSeconds` | Seconds without activity before an agent is flagged (default 600) |
 | `ownerName`, `customerName` | Labels for 👤 and ❓ items |
@@ -105,7 +113,8 @@ Run it after each full test run. Re-running with the same suite name replaces it
 |---|---|
 | "Cannot reach the status server" on the page | The node process stopped; start it again |
 | Page shows old numbers after you changed the server code or config | The old process is still running: stop all `node` processes whose command line contains `status\server` (PowerShell: `Get-CimInstance Win32_Process -Filter "Name='node.exe'" \| ? { $_.CommandLine -match 'status[\\/]server' } \| % { Stop-Process -Id $_.ProcessId -Force }`) and start again |
-| `EADDRINUSE` | Port 5200 is taken: stop the old one or set `STATUS_PORT` |
+| Not sure which port | Read the line the server printed, or `tools/status/.dashboard-url`. Ports are automatic, so never assume 5200 |
+| Two dashboards for one project | You started it twice; the second took the next free port. Stop one (Ctrl+C, or end the node process) |
 | Agent shows "last activity —" | It has no `watch` paths (or they do not exist); pass them to `agent.cjs start` |
 | Everything shows "no agents running" although agents are working | `agents.json` was not updated when they were launched |
 | Task rings are all 0 | The task file path is wrong, or headings are not like `## A. Title`, or rows are not in the 4-column table form |

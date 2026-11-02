@@ -10,6 +10,9 @@ using PittBradford.XR;
 /// </summary>
 public class HydroTest : MonoBehaviour, IShotScript
 {
+    /// <summary>When true the scenario skips its own walls, ceiling, and floor art so a scene can supply a real building around it.</summary>
+    public bool ExternalShell;
+
     const float TestPsi = 150f, MaxPsi = 165f, HoldSeconds = 15f, LineZ = 0.6f;
 
     // simulation state
@@ -70,8 +73,11 @@ public class HydroTest : MonoBehaviour, IShotScript
     {
         var root = new GameObject("Bay").transform;
         var concrete = P.Concrete();
-        P.Box(root, "Floor", new Vector3(0, -0.1f, 0), new Vector3(14, 0.2f, 12), concrete);
+        var floor = P.Box(root, "Floor", new Vector3(0, -0.1f, 0), new Vector3(14, 0.2f, 12), concrete);
+        if (ExternalShell) floor.GetComponent<Renderer>().enabled = false; // keep the collider, show the building's floor instead
         var wall = P.Mat(new Color(0.78f, 0.79f, 0.8f), 0f, 0.2f);
+        if (!ExternalShell)
+        {
         P.Box(root, "Back wall", new Vector3(0, 3, 6.1f), new Vector3(14, 6, 0.3f), wall);
         P.Box(root, "Front wall", new Vector3(0, 3, -6.1f), new Vector3(14, 6, 0.3f), wall);
         P.Box(root, "Left wall", new Vector3(-7.1f, 3, 0), new Vector3(0.3f, 6, 12.4f), wall);
@@ -80,9 +86,10 @@ public class HydroTest : MonoBehaviour, IShotScript
         // Wainscot stripe in Pitt blue for a clean, branded look
         P.Box(root, "Blue band back", new Vector3(0, 0.9f, 5.93f), new Vector3(13.9f, 1.8f, 0.05f), P.Mat(P.Royal, 0.1f, 0.4f), false);
         P.Box(root, "Gold band back", new Vector3(0, 1.85f, 5.93f), new Vector3(13.9f, 0.08f, 0.05f), P.Mat(P.Gold, 0.3f, 0.5f), false);
+        }
         // Roof beams and light panels
         var beam = P.DarkSteel();
-        for (int i = -3; i <= 3; i++) P.Box(root, "Beam", new Vector3(i * 2f, 5.8f, 0), new Vector3(0.18f, 0.4f, 11.8f), beam, false);
+        if (!ExternalShell) for (int i = -3; i <= 3; i++) P.Box(root, "Beam", new Vector3(i * 2f, 5.8f, 0), new Vector3(0.18f, 0.4f, 11.8f), beam, false);
         for (int ix = -1; ix <= 1; ix += 2)
         for (int iz = -1; iz <= 1; iz++)
         {
@@ -100,12 +107,12 @@ public class HydroTest : MonoBehaviour, IShotScript
 
         // Floor markings: the stay-clear line and the exclusion zone around the vessel
         P.Box(root, "Safety line", new Vector3(0, 0.006f, LineZ), new Vector3(12.8f, 0.012f, 0.14f), P.Hazard(), false);
-        var t = P.Text(root, "STAY BEHIND THIS LINE DURING THE PRESSURE HOLD", new Vector3(0, 0.014f, LineZ - 0.45f), 0.34f, P.Gold, TextAnchor.MiddleCenter, true);
+        var t = P.Text(root, "STAY BEHIND THIS LINE DURING THE PRESSURE HOLD", new Vector3(0, 0.014f, LineZ - 0.4f), 0.16f, P.Gold, TextAnchor.MiddleCenter, true);
         t.transform.rotation = Quaternion.Euler(90, 0, 0);
         // Rolling door on the front wall for scale
-        P.Box(root, "Door", new Vector3(-3.6f, 1.6f, -5.93f), new Vector3(3.2f, 3.2f, 0.06f), P.Mat(new Color(0.45f, 0.47f, 0.5f), 0.6f, 0.5f), false);
+        if (!ExternalShell) P.Box(root, "Door", new Vector3(-3.6f, 1.6f, -5.93f), new Vector3(3.2f, 3.2f, 0.06f), P.Mat(new Color(0.45f, 0.47f, 0.5f), 0.6f, 0.5f), false);
         // Columns
-        for (int i = -1; i <= 1; i += 2) P.Box(root, "Column", new Vector3(i * 6.7f, 3, -3.5f), new Vector3(0.5f, 6, 0.5f), P.Mat(new Color(0.62f, 0.63f, 0.65f)));
+        if (!ExternalShell) for (int i = -1; i <= 1; i += 2) P.Box(root, "Column", new Vector3(i * 6.7f, 3, -3.5f), new Vector3(0.5f, 6, 0.5f), P.Mat(new Color(0.62f, 0.63f, 0.65f)));
         // Floor drain grate
         P.Box(root, "Drain grate", new Vector3(-1.5f, 0.01f, 2.5f), new Vector3(0.7f, 0.02f, 0.7f), P.DarkSteel(), false);
     }
@@ -234,7 +241,7 @@ public class HydroTest : MonoBehaviour, IShotScript
 
     void BuildBoardAndSigns()
     {
-        var boardPos = new Vector3(-4.2f, 2.3f, 0.2f);
+        var boardPos = new Vector3(-2.3f, 2.05f, -0.4f);
         var look = Quaternion.LookRotation(boardPos - new Vector3(0, 1.6f, -3.6f));
         board = TaskBoard.Create(transform, boardPos, look, "Hydrostatic test", "Shell-and-tube heat exchanger HX-101  |  150 psi test", new[]
         {
@@ -244,7 +251,7 @@ public class HydroTest : MonoBehaviour, IShotScript
             "Start the pump; raise to 150 psi (no more)",
             "Hold 15 s from behind the yellow line",
             "Stop pump, open DRAIN, then open VENT",
-        }, 3.0f);
+        }, 3.9f, 1.4f);
         board.SetFooter("Point at valves and buttons and press the trigger. Grab blind flanges with the grip.");
         // Conditions board on the right wall
         var wp = new Vector3(5.6f, 2.4f, -1.0f);

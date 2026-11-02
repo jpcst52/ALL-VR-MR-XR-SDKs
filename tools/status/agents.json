@@ -13,6 +13,145 @@
       ],
       "ended": "2026-11-02T00:15:41.443Z",
       "note": "Dashboard running at :5210, 38 tasks parsed"
+    },
+    {
+      "id": "launcher",
+      "name": "Launcher UI",
+      "task": "Pitt-Bradford launcher home page with tiles, demo path, link checker (port 8101)",
+      "state": "done",
+      "started": "2026-11-02T00:30:56.129Z",
+      "watch": [
+        "../../index.html",
+        "../../launcher",
+        "../../docs/images"
+      ],
+      "ended": "2026-11-02T00:37:49.167Z",
+      "note": "Launcher built (index.html, launcher/), check passes on :8101; Unity READMEs for 01 and hub still missing"
+    },
+    {
+      "id": "scenarios",
+      "name": "Practice Lab: 4 partner scenarios",
+      "task": "Lighter sampling, hydrotest, pipe-spool welding, resistor selection (port 8102)",
+      "state": "done",
+      "started": "2026-11-02T00:30:56.185Z",
+      "watch": [
+        "../../training-simulations"
+      ],
+      "ended": "2026-11-02T00:53:29.983Z",
+      "note": "Practice Lab now 16 scenarios; 5/5 tests pass; desktop play-through only"
+    },
+    {
+      "id": "demokit",
+      "name": "Demo-day kit + HTTPS",
+      "task": "Self-signed HTTPS start, QR page, start script, demo-day docs",
+      "state": "done",
+      "started": "2026-11-02T00:30:56.235Z",
+      "watch": [
+        "../../multi-player/tls.mjs",
+        "../../scripts",
+        "../../docs/demo-day",
+        "../../vendor/qrcode"
+      ],
+      "ended": "2026-11-02T00:37:49.222Z",
+      "note": "start-demo script, HTTPS auto-cert, QR page, docs/demo-day; 18 relay tests pass; not run on hardware"
+    },
+    {
+      "id": "hydro-web",
+      "name": "Web Hydrotest Builder (multi-user)",
+      "task": "New hydrotest theme for the multiplayer relay and page (port 8453)",
+      "state": "done",
+      "started": "2026-11-02T00:30:56.286Z",
+      "watch": [
+        "../../multi-player/hydrotest",
+        "../../multi-player/shared/themes.js",
+        "../../multi-player/test"
+      ],
+      "ended": "2026-11-02T00:37:49.283Z",
+      "note": "hydrotest multiplayer theme, 6 tests, desktop only"
+    },
+    {
+      "id": "research",
+      "name": "Research expansion",
+      "task": "More verified references and study designs",
+      "state": "done",
+      "started": "2026-11-02T00:30:56.347Z",
+      "watch": [
+        "../../docs/research"
+      ],
+      "ended": "2026-11-02T00:39:47.452Z",
+      "note": "36 bib entries, STUDY-DESIGNS.md; several 'to confirm' items flagged"
+    },
+    {
+      "id": "vive-refinery",
+      "name": "Vive 02 Refinery rounds",
+      "task": "Unity project 02-refinery-rounds (uncompiled draft)",
+      "state": "done",
+      "started": "2026-11-02T00:30:56.404Z",
+      "watch": [
+        "../../vive-steamvr/02-refinery-rounds"
+      ],
+      "ended": "2026-11-02T00:47:49.306Z",
+      "note": "02 refinery rounds written; uncompiled, untested"
+    },
+    {
+      "id": "vive-warehouse",
+      "name": "Vive 03 Warehouse forklift",
+      "task": "Unity project 03-warehouse-forklift (uncompiled draft)",
+      "state": "done",
+      "started": "2026-11-02T00:30:56.454Z",
+      "watch": [
+        "../../vive-steamvr/03-warehouse-forklift"
+      ],
+      "ended": "2026-11-02T00:46:29.079Z",
+      "note": "03 warehouse forklift written; uncompiled, untested"
+    },
+    {
+      "id": "vive-koa",
+      "name": "Vive 04 Resistor bench",
+      "task": "Unity project 04-resistor-bench (uncompiled draft)",
+      "state": "done",
+      "started": "2026-11-02T00:30:56.504Z",
+      "watch": [
+        "../../vive-steamvr/04-resistor-bench"
+      ],
+      "ended": "2026-11-02T00:44:38.315Z",
+      "note": "04 resistor bench written; uncompiled, untested"
+    },
+    {
+      "id": "b5",
+      "name": "Courtyard copy",
+      "task": "Copying 5 prop folders into hub",
+      "state": "done",
+      "started": "2026-11-02T00:46:41.464Z",
+      "watch": [
+        "vive-steamvr/hub/Assets/Courtyard"
+      ],
+      "ended": "2026-11-02T00:53:30.044Z",
+      "note": "5 Courtyard prop folders copied into hub (233 MB, git-ignored)"
+    },
+    {
+      "id": "decks",
+      "name": "Update decks (E5)",
+      "task": "Update the three decks for Vive, Quest, hub and launcher work",
+      "state": "done",
+      "started": "2026-11-02T02:08:46.065Z",
+      "watch": [
+        "tools/decks"
+      ],
+      "ended": "2026-11-02T02:13:00.380Z",
+      "note": "3 decks rebuilt in Pitt palette; validated; 38 of 56 slides viewed; hardware unverified"
+    },
+    {
+      "id": "webreal",
+      "name": "Web realism pass (D2)",
+      "task": "CC0 textures and lighting on hero Practice Lab scenes",
+      "state": "done",
+      "started": "2026-11-02T02:08:46.127Z",
+      "watch": [
+        "training-simulations"
+      ],
+      "ended": "2026-11-02T02:12:09.892Z",
+      "note": "Lighting, shadows, tone mapping, procedural textures in app.js; 5/5 tests; 3 of 16 shots re-shot; headset FPS untested"
     }
   ]
 }
