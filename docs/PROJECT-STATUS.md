@@ -2,7 +2,7 @@
 
 Target: advisory-board demonstration at Pitt-Bradford on **November 13, 2026**. Update this file whenever a task changes state. Status values: **Done**, **In progress**, **Blocked**, **Not started**.
 
-Last updated: November 1, 2026.
+Last updated: November 1, 2026 (evening).
 
 ## Demo hardware and environment (confirmed by the project owner)
 
@@ -20,56 +20,70 @@ Last updated: November 1, 2026.
 |---|---|
 | Ten SDK/framework examples with READMEs | OpenXR, Meta XR, SteamVR (Unity scripts), WebXR, A-Frame, Three.js, Babylon.js, ARCore, Apple spatial, Unity XRI |
 | Browser example screenshots in each README | Four browser demos; Unity/Android/Apple cannot be screenshotted here |
-| Fieldwork XR Practice Lab: 12 hands-on scenarios | 3 business, 3 research, 6 industrial (height, control room, refinery battery limits, skyscraper window cleaning, welding, electrical isolation). Desktop-tested; VR only in an emulator |
+| Fieldwork XR Practice Lab: 12 hands-on scenarios | 3 business, 3 research, 6 industrial. Desktop-tested; VR only in an emulator |
 | Multiplayer Circuit Lab (VR) and Site Safety Layout (AR) | Relay with theme-separated rooms; 8 automated tests; desktop-tested |
 | VR emulator capture tool (`tools/vr-capture`) | Emulated Quest 3 via Meta IWER; not a physical headset |
 | Offline vendoring (`vendor/`) | Three.js, Babylon.js, A-Frame, fonts; all 7 browser pages pass `offline-check.mjs` |
 | Three PowerPoint decks rebuilt (`tools/decks`) | Need updating again for the Vive/Quest work |
 | Overall README with screenshot gallery | Needs updating as new projects land |
-| ARCore Gradle wrapper and build fix | APK builds; commit 2f5c37f |
+| ARCore Gradle wrapper and build fix | APK builds; does not run on the emulator image used |
 | Research bibliography (`docs/research`) | 11 sources, each checked against a bibliographic record; BibTeX included |
-| Branding collected | `branding/` (logo, guidelines PDF, shield EPS/PNG); kept out of git because the repo is public |
+| Branding collected | `branding/` kept out of git (public repo) |
+| Shared Unity kit `com.pittbradford.xrtraining` | Compiles cleanly under Unity 6000.3.20f1; materials work in both URP and the built-in pipeline |
+| Vive project 01: Hydrostatic Test Bay | Compiles and **runs in the editor in desktop mode** (owner screenshot, Nov 1). Not yet tried in a headset |
+| Hub project created (`vive-steamvr/hub`) | Whitelist `.gitignore`: only our code is committed, never asset-pack files |
+| Asset packs imported into the hub (5 of 6) | Big Warehouse Pack (IGBlocks), Sci-Fi Warehouse Kit, ShippingContainer, Modular Warehouse, Modern Office |
+| Courtyard imported as its own project | `C:\UnityProjects\Courtyard\The Courtyard` (a "complete project" cannot be imported into another project without overwriting its settings) |
+| Render-pipeline check of the packs | All 242 hub-pack materials, and the Courtyard, use the built-in pipeline (Standard shader). Decision: the hub uses the built-in pipeline, not URP |
 
 ## In progress
 
 | Task | State |
 |---|---|
-| Vive / SteamVR Unity projects (`vive-steamvr/`) | Shared kit package written (rig with desktop fallback, grabbing, text panels, screenshot runner, OpenXR setup). Project 1 (Hydrostatic Test Bay) code written but **never compiled or run**. First Unity run failed: batch mode reports "No valid Unity Editor license ... com.unity.editor.headless". Plan: run the editor with a window (signed-in Hub license) instead of `-batchmode` |
+| Choose and copy Courtyard pieces into the hub | The Courtyard compiles (the 37 errors were a missing `com.unity.ugui` package, now fixed). Scanning its prefabs to select lobby architecture |
+| Hub reconfigure for the built-in pipeline | `HubSetup.cs` and `manifest.json` updated (URP removed; UI and post-processing added). Owner must run **Pitt-Bradford > Set up hub project** once so the pipeline setting is cleared |
+| Choose and copy Courtyard pieces into the hub | Needs the Courtyard compiling; then inspect its prefabs and select architecture for the lobby |
+| Vive projects (`vive-steamvr/`) | Project 01 done in code; projects 02-04 not started; hub scenes not started |
 
 ## Not started
 
 | Task | Notes |
 |---|---|
-| Vive project 2: Refinery battery-limits rounds (live weather API) | Online API is acceptable here because the Vive PCs have internet |
-| Vive project 3: Warehouse / forklift safety | Build from primitives so it works from a clean clone; Asset Store packs are local-only |
-| Vive project 4: KOA resistor selection bench | Based on KOA Speer's product range (resistors, anti-sulfur, derating, ESD) |
-| Quest projects | Options: Unity Android builds of the same projects; a Quest-specific web multiplayer "Hydrotest Builder"; MR Site Safety Layout. Needs a decision after the Vive projects compile |
+| Hub scenes: Courtyard lobby with portals to each scenario | Local-only scenes (gitignored) that use the asset packs; committed "lite" projects stay primitive-only |
+| Realism pass on Hydrostatic Test Bay using the packs | Real wall/floor/steel materials, office furniture for a supervisor corner, lighting, post-processing, audio; legible task board; smaller floor text |
+| Vive project 02: Refinery battery-limits rounds (live weather API) | Online API is acceptable on the Vive PCs |
+| Vive project 03: Warehouse / forklift safety | Uses the warehouse, construction, and container packs in the hub; lite version from primitives |
+| Vive project 04: KOA resistor selection bench | Based on KOA Speer's product range |
+| README and screenshots for each Vive project | Screenshots via the windowed Unity capture runner after the editor is closed |
+| Quest projects | Options: Unity Android builds of the lite projects; Quest web multiplayer "Hydrotest Builder"; MR Site Safety Layout. Asset-pack scenes are too heavy for a Quest without optimisation |
 | Pitt-Bradford launcher UI | One home page with tiles per example and a recommended demo path; one-command start for the lab PC |
-| Realism pass on "hero" scenes | Refinery battery limits, electrical lockout, pipe-spool welding, hydrostatic test, control room: CC0 PBR textures/HDRIs, shadows, glTF models, quality switch, attribution file |
+| Realism pass on web "hero" scenes | CC0 PBR textures/HDRIs, glTF models, quality switch, attribution file |
 | New Practice Lab scenarios | Lighter lot sampling, heat-exchanger hydrostatic test, refinery pipe-spool welding, KOA resistor selection |
-| Circulation Builder for Orin James's anatomy courses | Waiting on his description of what he is building |
-| Multi-user training in the style of WaterWorks | Approach to decide; WaterWorks does not work on the Vive (owner-confirmed), so do not build on it |
-| Self-signed HTTPS start script for the lab PC | `npm start` style, as in the owner's WaterWorks project |
+| Circulation Builder for Orin James | Waiting on his description |
+| Multi-user training in the style of WaterWorks | Approach to decide; WaterWorks does not work on the Vive (owner-confirmed) |
+| Self-signed HTTPS start script for the lab PC | As in the owner's WaterWorks project |
 | Advanced README and board-facing deck | After the projects exist |
 | Demo-day kit | Start script, QR codes, rehearsal checklist, backup recordings |
-| Update decks and README gallery for new projects | After each milestone |
+| Update decks, README gallery, and research notes | After each milestone |
 
 ## Blocked on the project owner
 
 | Item | Needed |
 |---|---|
-| Vive WebXR check | Try `http://localhost:8000/training-simulations/` in Chrome/Edge with SteamVR running and report what happens (and set SteamVR as the OpenXR runtime). Tells us whether web examples can run on the Vive |
+| Courtyard errors | Confirm in the Courtyard Unity window that the 37 errors cleared after the `ugui` fix |
+| Hub setup | Run **Pitt-Bradford > Set up hub project** in the hub editor (after it recompiles), then restart if asked |
+| Vive WebXR check | Try `http://localhost:8000/training-simulations/` in Chrome/Edge with SteamVR running and report what happens |
 | Orin James's project | A few lines on what he is building for his students |
-| Zippo process | A line on how lighters are tested, or a page that loads; the scenario stays generic until then |
+| Zippo process | A line on how lighters are tested, or a page that loads |
 | Hardware testing time | A slot on the real Vive Pro 2 and Quest before Nov 13 |
-| Naming companies on slides | Confirm comfort naming Zippo, Allegheny Bradford, and KOA Speer, or keep it "inspired by" |
-| Publishing | Decide whether to push commits; decide whether branding/logo may appear in the public repo |
+| Naming companies on slides | Comfort naming Zippo, Allegheny Bradford, and KOA Speer, or keep it "inspired by" |
+| Publishing | Whether to push commits; whether the logo may appear in the public repo |
 
 ## Known limitations and honest caveats
 
 - Nothing has been run on a physical Vive or Quest. VR screenshots come from an emulated Quest 3 (Meta IWER) and are labelled as such.
 - ARCore does not start a session on the Android emulator image used; build is verified, runtime is not.
-- The Hydrostatic Test C# code has not been compiled.
+- The Hydrostatic Test Bay compiles and runs in the editor in desktop mode, but has not been run in a headset.
 - Scenario content is general safety-awareness practice, not a procedure; companies' real processes have not been verified.
 - GitHub Models was retired on July 30, 2026 (per GitHub's docs); there is no Copilot-backed AI coach. The AI coach was cut from scope.
 
@@ -81,4 +95,6 @@ Last updated: November 1, 2026.
 | Drop the AI coach and local-model setup | Owner wants simple training and has no time for local AI setup; GitHub Models retired |
 | Vive gets native Unity/OpenXR projects (several, separate) | WaterWorks (WebXR) does not work on the Vive; multiple projects as fallbacks |
 | Keep `branding/` and `assets-private/` out of git | Public repo; university branding and Asset Store licenses |
+| Hub project uses the built-in render pipeline, not URP | All imported packs use Standard-shader materials; URP would render them pink |
+| Import the Courtyard as its own project | Unity warns that a complete project overwrites project settings |
 | Web demos use CC0 assets only; Asset Store assets only in local Unity builds | License terms |

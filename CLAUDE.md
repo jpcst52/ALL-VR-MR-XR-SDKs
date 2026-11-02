@@ -29,6 +29,16 @@ Read this at the start of a session. It records how the project owner likes to w
 - Brand palette (University of Pittsburgh): Royal `#003594`, Gold `#FFB81C`, Medium Blue `#00205B`, New Sky `#DBEEFF`. Fonts: League Gothic, Merriweather, Roboto (bundled).
 - Shell notes (Windows): heredocs containing backticks or certain quote patterns can break in the Bash tool; write files with the Write tool and run helper scripts. A stray background server may hold ports 8000/8443; stop it by PID.
 
+## Status dashboard: keep it current (standing instruction)
+
+The owner uses a local status dashboard as the standard for every project (guide: [docs/status-dashboard-guide.md](docs/status-dashboard-guide.md)). Start it with `npm run status` and open http://localhost:5210. The task list it reads is [docs/Task-Status.md](docs/Task-Status.md).
+
+- When a task **starts, finishes, or becomes blocked**, edit its row in `docs/Task-Status.md` in the same turn (✅ done, 🔄 in progress, ⏳ waiting on something earlier, 👤 needs the owner, ❓ needs partners or faculty). Keep Notes short and factual.
+- When you **launch an agent or subagent**: `node tools/status/agent.cjs start <id> "<name>" "<task>" <watch paths>`. When it finishes: `node tools/status/agent.cjs done <id> "<result>"`.
+- After each **full test run**: `node tools/status/record-results.cjs "<suite>" <passed> <failed> <skipped>`.
+- The owner should not have to ask for routine status. Still summarize at milestones in chat. Never put secrets in these files.
+- Keep `docs/PROJECT-STATUS.md` for narrative detail (decisions, caveats); the dashboard task list is the source for done/not done.
+
 ## Where things are
 
 | Path | Contents |
@@ -36,7 +46,7 @@ Read this at the start of a session. It records how the project owner likes to w
 | `training-simulations/` | Fieldwork XR Practice Lab (Three.js, 12 hands-on scenarios) |
 | `multi-player/` | Relay and the Circuit Lab / Site Safety Layout WebXR examples |
 | `vive-steamvr/` | Unity (OpenXR/SteamVR) projects and the shared `com.pittbradford.xrtraining` kit |
-| `tools/vr-capture`, `tools/decks` | Emulated-VR screenshots; PowerPoint deck builder |
+| `tools/vr-capture`, `tools/decks`, `tools/status` | Emulated-VR screenshots; PowerPoint deck builder; local status dashboard |
 | `docs/research/` | Annotated bibliography and study ideas |
-| `docs/PROJECT-STATUS.md` | Task list and decisions |
+| `docs/Task-Status.md`, `docs/PROJECT-STATUS.md` | Dashboard task list; narrative status and decisions |
 | `vendor/` | Offline copies of Three.js, Babylon.js, A-Frame, fonts |

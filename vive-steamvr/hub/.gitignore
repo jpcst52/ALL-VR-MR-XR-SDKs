@@ -1,0 +1,14 @@
+# The hub project imports third-party Asset Store packs (Courtyard, Modern Office, warehouse kits).
+# Their license does not allow redistributing the files, so ONLY our own code and settings are committed.
+# Everything under Assets/ is ignored except the folders listed below.
+/Assets/*
+!/Assets/Editor/
+!/Assets/Editor.meta
+!/Assets/Scripts/
+!/Assets/Scripts.meta
+!/Assets/Settings/
+!/Assets/Settings.meta
+!/Assets/XR/
+!/Assets/XR.meta
+# Local scenes that reference third-party assets must never be committed
+/Assets/Scenes/Local/

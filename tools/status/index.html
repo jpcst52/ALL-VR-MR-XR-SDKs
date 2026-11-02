@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project status</title>
+<style>
+  :root { --bg:#f5f4fb; --card:#ffffff; --ink:#1e1b4b; --mute:#5f6368; --line:#e3e1f2; --brand:#5b4fa8; --ok:#2e7d32; --warn:#b26a00; --bad:#b3261e; --prog:#1a73e8; --track:#e8e6f5; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14122b; --card:#1d1a3d; --ink:#ecebfa; --mute:#a9a6c8; --line:#2f2b5c; --brand:#9a8fe8; --ok:#66bb6a; --warn:#ffb74d; --bad:#ef9a9a; --prog:#64b5f6; --track:#2b2757; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 "Segoe UI", Arial, sans-serif; }
+  header { background:#1e1b4b; color:#fff; padding:14px 24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+  header h1 { margin:0; font-size:18px; letter-spacing:.3px; }
+  header .meta { font-size:12px; color:#c9c3f0; }
+  main { max-width:1280px; margin:0 auto; padding:18px 16px 40px; display:grid; gap:16px; }
+  .row { display:grid; gap:16px; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .card h2 { margin:0 0 10px; font-size:12px; letter-spacing:.8px; text-transform:uppercase; color:var(--brand); }
+  .gauges { display:flex; flex-wrap:wrap; gap:18px; justify-content:space-around; }
+  .gauge { text-align:center; width:130px; }
+  .gauge svg { width:110px; height:110px; }
+  .gauge .num { font-size:22px; font-weight:700; }
+  .gauge .lbl { font-size:12px; color:var(--mute); margin-top:2px; }
+  .gauge .sub { font-size:11px; color:var(--mute); }
+  .bar { height:10px; background:var(--track); border-radius:6px; overflow:hidden; display:flex; }
+  .bar i { display:block; height:100%; }
+  .legend { font-size:11px; color:var(--mute); margin-top:4px; }
+  table { width:100%; border-collapse:collapse; }
+  td, th { text-align:left; padding:5px 6px; border-bottom:1px solid var(--line); vertical-align:top; font-size:13px; }
+  th { font-size:11px; color:var(--mute); text-transform:uppercase; letter-spacing:.5px; }
+  .pill { display:inline-block; padding:1px 8px; border-radius:10px; font-size:11px; font-weight:600; color:#fff; white-space:nowrap; }
+  .done{background:var(--ok)} .progress{background:var(--prog)} .waiting{background:#8d8aa8} .you{background:var(--warn)} .ask{background:var(--brand)} .open{background:#8d8aa8}
+  .light { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; background:var(--bad); }
+  .light.up { background:var(--ok); }
+  .agent { padding:8px 0; border-bottom:1px solid var(--line); }
+  .agent:last-child { border:0; }
+  .agent b { font-size:13px; }
+  .small { font-size:12px; color:var(--mute); }
+  .stale { color:var(--warn); font-weight:600; }
+  .need { padding:6px 0; border-bottom:1px solid var(--line); }
+  .need:last-child { border:0; }
+  details > summary { cursor:pointer; font-weight:600; margin:6px 0; }
+  .commit { font-size:12px; padding:2px 0; }
+  .commit code { color:var(--brand); }
+  .empty { color:var(--mute); font-style:italic; }
+  .logbox { max-height:340px; overflow:auto; font:12px/1.5 Consolas, 'Courier New', monospace; }
+  .ll { padding:2px 0; border-bottom:1px dotted var(--line); }
+  .ll .t { color:var(--mute); margin-right:8px; }
+  .ll.heartbeat { color:var(--mute); }
+  .ll.event { color:var(--ink); }
+  .ll.warn { color:var(--warn); font-weight:600; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">Project status</h1>
+  <div class="meta" id="meta">loading…</div>
+</header>
+<main>
+  <section class="card"><h2>Progress</h2><div class="gauges" id="gauges"></div></section>
+
+  <div class="row">
+    <section class="card"><h2>What needs you</h2><div id="needs"></div></section>
+    <section class="card"><h2>Agents</h2><div id="agents"></div></section>
+  </div>
+
+  <div class="row">
+    <section class="card"><h2>Test health</h2><div id="tests"></div></section>
+    <section class="card"><h2>Servers and repos</h2><div id="servers"></div><div id="repos"></div></section>
+  </div>
+
+  <section class="card"><h2>Activity log <label class="small" style="float:right;text-transform:none;letter-spacing:0"><input type="checkbox" id="hideBeats"> hide heartbeats</label></h2><div id="log" class="logbox"></div></section>
+
+  <section class="card"><h2>All tasks</h2><div id="tasks"></div></section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function ring(pct, color, big, label, sub) {
+  const r = 46, c = 2 * Math.PI * r, off = c * (1 - Math.max(0, Math.min(100, pct)) / 100);
+  return `<div class="gauge"><svg viewBox="0 0 110 110" role="img" aria-label="${esc(label)} ${Math.round(pct)} percent">
+    <circle cx="55" cy="55" r="${r}" fill="none" stroke="${css('--track')}" stroke-width="10"/>
+    <circle cx="55" cy="55" r="${r}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 55 55)"/>
+    <text x="55" y="61" text-anchor="middle" font-size="22" font-weight="700" fill="${css('--ink')}">${esc(big)}</text></svg>
+    <div class="lbl"><b>${esc(label)}</b></div><div class="sub">${esc(sub)}</div></div>`;
+}
+const ago = s => s == null ? '—' : s < 90 ? `${s}s ago` : s < 5400 ? `${Math.round(s/60)} min ago` : `${(s/3600).toFixed(1)} h ago`;
+const stateLabel = {done:'done', progress:'in progress', waiting:'waiting', you:'needs the owner', ask:'needs the customer', open:'open'};
+
+function render(d) {
+  stateLabel.you = 'needs ' + (d.ownerName || 'the owner'); stateLabel.ask = d.customerName || 'the customer';
+  const t = d.tasks, secs = t.sections;
+  const tot = secs.reduce((a, s) => a + s.total, 0), done = secs.reduce((a, s) => a + s.done, 0), prog = secs.reduce((a, s) => a + s.progress, 0);
+  const pct = tot ? done * 100 / tot : 0;
+  $('title').textContent = d.title || 'Project status'; document.title = d.title || 'Status';
+  $('meta').textContent = `Updated ${new Date(d.now).toLocaleTimeString()} · task list saved ${t.updated ? new Date(t.updated).toLocaleString() : '—'} · refreshes every 10 s · heartbeat every ${d.heartbeatSeconds || 60} s`;
+  let g = ring(pct, css('--ok'), Math.round(pct) + '%', 'Overall', `${done} of ${tot} done${prog ? `, ${prog} running` : ''}`);
+  for (const s of secs) g += ring(s.total ? s.done * 100 / s.total : 0, s.progress ? css('--prog') : css('--ok'), `${s.done}/${s.total}`, s.title, s.progress ? `${s.progress} in progress` : (s.done === s.total ? 'complete' : 'waiting'));
+  $('gauges').innerHTML = g;
+
+  $('needs').innerHTML = t.needsMe.length ? t.needsMe.map(n => `<div class="need"><span class="pill ${n.owner ? 'you' : 'ask'}">${esc(n.who)}</span>${n.later ? ' <span class="pill waiting">later</span>' : ''} <b>${esc(n.id)}</b> ${esc(n.task)}<div class="small">${esc(n.notes)}</div></div>`).join('') : '<div class="empty">Nothing is waiting on you right now.</div>';
+
+  const run = d.agents.filter(a => a.state === 'running'), rest = d.agents.filter(a => a.state !== 'running').slice(0, 6);
+  let a = run.length ? '' : '<div class="empty">No agents are running.</div>';
+  for (const x of run) {
+    const stale = x.secondsSinceActivity != null && x.secondsSinceActivity > 600;
+    a += `<div class="agent"><b>${esc(x.name)}</b> <span class="pill progress">running ${x.runningMinutes ?? '?'} min</span><div class="small">${esc(x.task || '')}</div>
+      <div class="small ${stale ? 'stale' : ''}">last activity: ${ago(x.secondsSinceActivity)}${stale ? ' — quiet for a while, may be in a long test run' : ''}</div></div>`;
+  }
+  if (rest.length) a += `<details><summary>Finished (${rest.length})</summary>${rest.map(x => `<div class="agent"><b>${esc(x.name)}</b> <span class="pill done">done</span> <span class="small">${x.runningMinutes ?? '?'} min · ${esc(x.note || '')}</span></div>`).join('')}</details>`;
+  $('agents').innerHTML = a;
+
+  const suites = d.tests.suites || [];
+  $('tests').innerHTML = (suites.length ? suites.map(s => {
+    const total = (s.passed || 0) + (s.failed || 0) + (s.skipped || 0) || 1;
+    return `<div style="margin-bottom:10px"><div><b>${esc(s.name)}</b> <span class="small">${s.passed} passed${s.failed ? `, <b class="stale">${s.failed} failed</b>` : ', 0 failed'}${s.skipped ? `, ${s.skipped} skipped` : ''} · ${esc(s.when || '')}</span></div>
+      <div class="bar"><i style="width:${s.passed * 100 / total}%;background:${css('--ok')}"></i><i style="width:${s.skipped * 100 / total}%;background:${css('--track')}"></i><i style="width:${s.failed * 100 / total}%;background:${css('--bad')}"></i></div>
+      ${s.note ? `<div class="small">${esc(s.note)}</div>` : ''}</div>`;
+  }).join('') : '<div class="empty">No results recorded yet.</div>') + `<div class="legend">green = passed · grey = skipped · red = failed. Updated ${esc(d.tests.updated || '—')} (recorded after each full run)</div>`;
+
+  $('servers').innerHTML = d.servers.map(s => `<div><span class="light ${s.up ? 'up' : ''}"></span>${esc(s.name)} — ${s.up ? 'up' : 'down'}</div>`).join('');
+  $('repos').innerHTML = d.repos.map(r => `<details open><summary>${esc(r.name)} <span class="small">· ${esc(r.branch)} · ${r.changed} changed, ${r.untracked} new, uncommitted</span></summary>${r.commits.map(c => `<div class="commit"><code>${esc(c.hash)}</code> ${esc(c.subject)} <span class="small">${esc(c.when)}</span></div>`).join('')}</details>`).join('');
+
+  $('tasks').innerHTML = secs.map(s => `<details ${s.progress || s.done < s.total ? 'open' : ''}><summary>${esc(s.key)}. ${esc(s.title)} <span class="small">· ${s.done}/${s.total} done</span></summary>
+    <table><tr><th style="width:44px">#</th><th>Task</th><th style="width:120px">Status</th><th>Notes</th></tr>${s.rows.map(r => `<tr><td>${esc(r.id)}</td><td>${esc(r.task)}</td><td><span class="pill ${r.state}">${stateLabel[r.state]}</span></td><td class="small">${esc(r.notes)}</td></tr>`).join('')}</table></details>`).join('');
+  window.__log = d.log || [];
+  renderLog();
+}
+function renderLog() {
+  const hide = $('hideBeats').checked, items = (window.__log || []).filter(e => !(hide && e.kind === 'heartbeat'));
+  $('log').innerHTML = items.length ? items.map(e => `<div class="ll ${esc(e.kind)}"><span class="t">${new Date(e.t).toLocaleTimeString()}</span>${esc(e.msg)}</div>`).join('') : '<div class="empty">No log entries yet.</div>';
+}
+$('hideBeats').addEventListener('change', renderLog);
+
+async function tick() {
+  try { const r = await fetch('/api/status', { cache: 'no-store' }); render(await r.json()); }
+  catch (e) { $('meta').textContent = 'Cannot reach the status server — is "npm run status" still running?'; }
+}
+tick(); setInterval(tick, 10000);
+</script>
+</body>
+</html>

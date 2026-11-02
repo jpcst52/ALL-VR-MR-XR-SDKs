@@ -132,6 +132,7 @@ The decks are generated from the READMEs and screenshots by [tools/decks](tools/
 |---|---|
 | [tools/vr-capture](tools/vr-capture/README.md) | Screenshots of the browser examples in an emulated Quest 3 VR session. |
 | [tools/decks](tools/decks/README.md) | Rebuilds the three PowerPoint decks. |
+| [tools/status](tools/status/README.md) | Local live status dashboard (`npm run status`, http://localhost:5210) fed by [docs/Task-Status.md](docs/Task-Status.md). |
 
 ## Platform notes
 

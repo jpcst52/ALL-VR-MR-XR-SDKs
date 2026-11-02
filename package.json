@@ -1,0 +1,8 @@
+{
+  "name": "all-vr-mr-xr-sdks",
+  "private": true,
+  "description": "Repository-level scripts. Each example has its own package.json.",
+  "scripts": {
+    "status": "node tools/status/server.cjs"
+  }
+}

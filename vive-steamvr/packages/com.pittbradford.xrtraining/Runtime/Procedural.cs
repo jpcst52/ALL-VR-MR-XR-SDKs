@@ -18,14 +18,18 @@ namespace PittBradford.XR
         static readonly Dictionary<string, Material> Cache = new Dictionary<string, Material>();
         static Font font;
 
+        /// <summary>True when a Scriptable Render Pipeline (URP) is active; materials then use the URP Lit shader.</summary>
+        public static bool Urp => UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline != null;
+        static Shader LitShader => (Urp ? Shader.Find("Universal Render Pipeline/Lit") : null) ?? Shader.Find("Standard");
+        static string SmoothnessProperty => Urp ? "_Smoothness" : "_Glossiness";
+
         public static Material Mat(Color color, float metallic = 0f, float smoothness = 0.35f, Texture tex = null, float tiling = 1f)
         {
             string key = $"{color}{metallic}{smoothness}{(tex ? tex.name : "")}{tiling}";
             if (Cache.TryGetValue(key, out var cached) && cached) return cached;
-            var shader = Shader.Find("Standard") ?? Shader.Find("Universal Render Pipeline/Lit");
-            var m = new Material(shader) { color = color };
+            var m = new Material(LitShader) { color = color };
             m.SetFloat("_Metallic", metallic);
-            m.SetFloat("_Glossiness", smoothness);
+            m.SetFloat(SmoothnessProperty, smoothness);
             if (tex)
             {
                 m.mainTexture = tex;
@@ -37,7 +41,7 @@ namespace PittBradford.XR
 
         public static Material Glow(Color color, float intensity = 1.6f)
         {
-            var m = new Material(Shader.Find("Standard")) { color = color * 0.25f };
+            var m = new Material(LitShader) { color = color * 0.25f };
             m.EnableKeyword("_EMISSION");
             m.SetColor("_EmissionColor", color * intensity);
             m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
@@ -46,15 +50,25 @@ namespace PittBradford.XR
 
         public static Material Transparent(Color color)
         {
-            var m = new Material(Shader.Find("Standard")) { color = color };
-            m.SetFloat("_Mode", 3);
+            var m = new Material(LitShader) { color = color };
+            if (Urp)
+            {
+                m.SetFloat("_Surface", 1f);
+                m.SetFloat("_Blend", 0f);
+                m.SetOverrideTag("RenderType", "Transparent");
+                m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            }
+            else
+            {
+                m.SetFloat("_Mode", 3);
+                m.DisableKeyword("_ALPHATEST_ON");
+                m.EnableKeyword("_ALPHABLEND_ON");
+            }
             m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
             m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
             m.SetInt("_ZWrite", 0);
-            m.DisableKeyword("_ALPHATEST_ON");
-            m.EnableKeyword("_ALPHABLEND_ON");
             m.renderQueue = 3000;
-            m.SetFloat("_Glossiness", 0.8f);
+            m.SetFloat(SmoothnessProperty, 0.8f);
             return m;
         }
 

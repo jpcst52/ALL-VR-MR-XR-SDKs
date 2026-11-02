@@ -1,0 +1,18 @@
+{
+  "outputDir": "",
+  "agents": [
+    {
+      "id": "dash1",
+      "name": "Status dashboard setup",
+      "task": "Copy and generalise the EVE dashboard for this repo",
+      "state": "done",
+      "started": "2026-11-02T00:15:41.392Z",
+      "watch": [
+        "tools/status",
+        "docs/Task-Status.md"
+      ],
+      "ended": "2026-11-02T00:15:41.443Z",
+      "note": "Dashboard running at :5210, 38 tasks parsed"
+    }
+  ]
+}

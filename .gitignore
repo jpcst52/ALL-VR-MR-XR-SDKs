@@ -33,3 +33,6 @@ branding/
 
 # Third-party licensed assets (Unity Asset Store etc.) must never be committed
 assets-private/
+
+# Local status dashboard activity log
+tools/status/activity-log.jsonl

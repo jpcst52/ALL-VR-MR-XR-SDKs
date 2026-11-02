@@ -1,0 +1,28 @@
+{
+  "title": "Pitt-Bradford XR Training: project status",
+  "port": 5210,
+  "heartbeatSeconds": 60,
+  "quietAgentSeconds": 600,
+  "ownerName": "Jeremy",
+  "customerName": "Partners and faculty",
+  "taskFile": "../../docs/Task-Status.md",
+  "repos": [
+    {
+      "name": "ALL-VR-MR-XR-SDKs",
+      "path": "../.."
+    }
+  ],
+  "servers": [
+    {
+      "name": "Static demos (:8000)",
+      "url": "http://localhost:8000/"
+    },
+    {
+      "name": "Multiplayer relay (:8443)",
+      "url": "http://localhost:8443/"
+    }
+  ],
+  "excludeFromDirty": [
+    "screenshots/"
+  ]
+}
