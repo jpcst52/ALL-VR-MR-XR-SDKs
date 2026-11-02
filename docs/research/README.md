@@ -4,6 +4,8 @@ This folder connects the examples in this repository to the published research o
 
 **How the references were checked.** Each entry below was confirmed against at least one bibliographic source (publisher, DOI, library, or index page). Summaries describe only what those sources showed, which was usually the abstract. Before citing any of them in a paper, read the full text, and add or confirm the DOI where one is not shown here. [`references.bib`](references.bib) holds the same entries for LaTeX or Zotero.
 
+**University and lab landscape.** [UNIVERSITY-VR-AR-LANDSCAPE.md](UNIVERSITY-VR-AR-LANDSCAPE.md) surveys VR/AR research and programs at other universities (industrial safety, forklift, process industry, circuits, cardiovascular, multi-user/WebXR, measurement, open material), with build-on ideas mapped to our scenarios and study designs, collaboration leads, and its own verification notes. Its 40 entries are appended to `references.bib`.
+
 Entries added on 2026-11-01 were checked against Crossref records (title, authors, venue, volume, pages, DOI) or a publisher or PubMed Central page. Where a record had no abstract, the entry says so and no findings are claimed. Anything marked "to confirm" could not be verified and is left out of the citation until it is.
 
 ## 1. What the evidence says about immersive training

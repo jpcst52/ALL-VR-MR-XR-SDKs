@@ -23,9 +23,9 @@ export async function viveProjectsSlide(pres, C, { section, eyebrow }) {
   callout(slide, C, "Verified: compiles and plays in the Unity 6000.3.20f1 editor, desktop mode. Not tested on a Vive Pro 2 or any headset.", { x: 0.6, y: 5.75, w: 4.9, h: 1.0, color: C.accent3, name: "Unity honesty" });
   const cap = "Unity editor Game view (desktop, not a headset)";
   await maybeShot(slide, C, "docs/images/hub-play.png", { x: 5.75, y: 1.75, w: 3.45, h: 2.4, caption: "01 in the hub project. " + "Desktop editor", name: "Hub screenshot" });
-  await maybeShot(slide, C, "vive-steamvr/02-refinery-rounds/screenshots/01-desktop-editor-view.png", { x: 9.3, y: 1.75, w: 3.45, h: 2.4, caption: "02 Refinery Rounds. Desktop editor", name: "Refinery screenshot" });
-  await maybeShot(slide, C, "vive-steamvr/03-warehouse-forklift/screenshots/01-desktop-editor-view.png", { x: 5.75, y: 4.3, w: 3.45, h: 2.4, caption: "03 Warehouse. Desktop editor", name: "Warehouse screenshot" });
-  await maybeShot(slide, C, "vive-steamvr/04-resistor-bench/screenshots/01-desktop-editor-view.png", { x: 9.3, y: 4.3, w: 3.45, h: 2.4, caption: "04 Resistor bench. Desktop editor", name: "Resistor screenshot" });
+  await maybeShot(slide, C, "vive-steamvr/02-refinery-rounds/screenshots/07-start-view.png", { x: 9.3, y: 1.75, w: 3.45, h: 2.4, caption: "02 Refinery Rounds. Desktop editor render", name: "Refinery screenshot" });
+  await maybeShot(slide, C, "vive-steamvr/03-warehouse-forklift/screenshots/07-start-view.png", { x: 5.75, y: 4.3, w: 3.45, h: 2.4, caption: "03 Warehouse. Desktop editor render", name: "Warehouse screenshot" });
+  await maybeShot(slide, C, "vive-steamvr/04-resistor-bench/screenshots/01-bench-overview.png", { x: 9.3, y: 4.3, w: 3.45, h: 2.4, caption: "04 Resistor bench. Desktop editor", name: "Resistor screenshot" });
   slide.addNotes(`${cap}. Projects 02 to 04 were not played through to the end. General safety-awareness practice, not a procedure or certification.`);
 }
 
@@ -47,8 +47,8 @@ export async function viveSetupSlide(pres, C, { section, eyebrow }) {
 
 export async function launcherSlide(pres, C, { section, eyebrow }) {
   const slide = contentSlide(pres, { section, eyebrow, title: "One launcher page for every example" });
-  await maybeShot(slide, C, "docs/images/launcher.png", { x: 0.6, y: 1.75, w: 7.0, h: 4.95, caption: "Launcher, wide layout (top of page)", name: "Launcher screenshot", crop: { left: 0, top: 0, width: 1600, height: 1060 } });
-  await maybeShot(slide, C, "docs/images/launcher-narrow.png", { x: 7.85, y: 1.75, w: 2.2, h: 4.95, caption: "Narrow (phone)", name: "Launcher narrow screenshot", crop: { left: 0, top: 0, width: 420, height: 1000 } });
+  await maybeShot(slide, C, "docs/images/launcher.png", { x: 0.6, y: 1.75, w: 7.0, h: 4.95, caption: "Launcher, wide layout (top of page)", name: "Launcher screenshot", crop: { left: 0, top: 0, width: 1440, height: 990 } });
+  await maybeShot(slide, C, "docs/images/launcher-narrow.png", { x: 7.85, y: 1.75, w: 2.2, h: 4.95, caption: "Narrow (phone)", name: "Launcher narrow screenshot", crop: { left: 0, top: 0, width: 390, height: 880 } });
   bullets(slide, C, [
     "Tiles for browser demos, multiplayer, Vive/SteamVR, and the Practice Lab, built from launcher/examples.json.",
     "Open it from the relay (port 8443) so the multiplayer links reach it.",
@@ -75,7 +75,7 @@ export async function demoDaySlide(pres, C, { section, eyebrow }) {
 }
 
 export async function researchSlide(pres, C, { section, eyebrow }) {
-  const slide = contentSlide(pres, { section, eyebrow, title: "Research basis: 36 references, checked against records" });
+  const slide = contentSlide(pres, { section, eyebrow, title: "Research basis: 76 references, checked against records" });
   const cols = [
     ["WHAT THE REVIEWS SUGGEST", C.accent1, [
       "Kaplan et al. (2021): XR training performs about as well as common methods overall, with a likely edge where danger or cost limits conventional training.",
@@ -95,7 +95,7 @@ export async function researchSlide(pres, C, { section, eyebrow }) {
     label(slide, C, head, { x: x + 0.25, y: 1.95, w: 5.5, color, name: `Research label ${i + 1}` });
     bullets(slide, C, items, { x: x + 0.25, y: 2.35, w: 5.5, h: 3.3, size: 13, gap: 8, name: `Research points ${i + 1}` });
   });
-  callout(slide, C, "A working bibliography, not a literature review. Records were checked (mostly Crossref); several entries are flagged to confirm. Read the full text before citing.", { x: 0.6, y: 5.95, w: 12.15, h: 0.8, color: C.accent3, name: "Research honesty" });
+  callout(slide, C, "A working bibliography, not a literature review. Records were checked (mostly Crossref); 40 newer entries come from a survey of other universities and were read at abstract level only. Read the full text before citing.", { x: 0.6, y: 5.95, w: 12.15, h: 0.8, color: C.accent3, name: "Research honesty" });
 }
 
 export async function dashboardSlide(pres, C, { section, eyebrow }) {
@@ -148,4 +148,38 @@ export async function verifiedSlide(pres, C, { section, eyebrow, title = "What i
     "Safety content against any real site procedure",
   ], { x: 7.0, y: 2.35, w: 5.5, h: 3.4, size: 13, gap: 6, name: "Unverified list" });
   callout(slide, C, "Scenarios are general safety awareness, not a procedure or certification. Company names appear only as inspired by.", { x: 0.6, y: 6.05, w: 12.15, h: 0.7, color: C.accent4, name: "Scope callout" });
+}
+
+export async function forkliftDesignSlide(pres, C, { section, eyebrow }) {
+  const slide = contentSlide(pres, { section, eyebrow, title: "Design choice: drive the forklift with the controllers" });
+  card(slide, C, { x: 0.6, y: 1.75, w: 6.0, h: 4.0, name: "Evidence card" });
+  label(slide, C, "WHAT PUBLISHED STUDIES REPORT (ABSTRACT LEVEL)", { x: 0.85, y: 1.95, w: 5.5, color: C.accent1, name: "Evidence label" });
+  bullets(slide, C, [
+    "Luo et al. (2023, Hong Kong PolyU and partners): in a 2 x 2 forklift safety experiment with 120 participants, richer scenario detail raised presence and usability; wheel and pedals versus a keyboard made no difference.",
+    "Abbas et al. (2023): in a 60-participant forklift study, system features such as usability and fidelity shaped knowledge, intention and satisfaction through enjoyment; presence did not strongly drive behavior.",
+    "Learning outcomes were not the measured outcome in Luo et al.",
+  ], { x: 0.85, y: 2.35, w: 5.5, h: 3.3, size: 12.5, gap: 8, name: "Evidence points" });
+  card(slide, C, { x: 6.75, y: 1.75, w: 6.0, h: 4.0, name: "Choice card" });
+  label(slide, C, "WHAT WE DO WITH IT", { x: 7.0, y: 1.95, w: 5.5, color: C.accent2, name: "Choice label" });
+  bullets(slide, C, [
+    "Drive with the ordinary controllers; no wheel or pedal hardware to buy, set up or break on demo day.",
+    "Spend the effort on scene detail, signs, and the pedestrian awareness check instead.",
+    "Treat this as a reasoned design choice, not a finding about our own app: those studies used a keyboard as the comparison, not controllers.",
+    "Testing it ourselves belongs in Study B (realism) and Study C (platform).",
+  ], { x: 7.0, y: 2.35, w: 5.5, h: 3.3, size: 12.5, gap: 8, name: "Choice points" });
+  callout(slide, C, "Sources are in docs/research/UNIVERSITY-VR-AR-LANDSCAPE.md with verification links. Abstract-level reading only; read the full texts before citing numbers.", { x: 0.6, y: 5.95, w: 12.15, h: 0.8, color: C.accent3, name: "Forklift honesty" });
+}
+
+export async function researchFeaturesSlide(pres, C, { section, eyebrow }) {
+  const slide = contentSlide(pres, { section, eyebrow, title: "New: features that come from the research" });
+  entries(slide, C, [
+    ["Why this matters", "After each step a short reason appears; one question at the end checks the reason, logged apart from the procedure score. Web (16 of 17 scenarios), Hydrostatic Test Bay, Refinery Rounds."],
+    ["Pedestrian awareness check", "Warehouse and forklift: a co-worker walks past the forklift, the scene freezes and asks where they were and which way they walked. Adapted from the pause-and-ask idea, not a validated test."],
+    ["Menu with thumbnails and seasonal skies", "Scenario thumbnails on the menu cards and portals; a sky that changes season every 30 seconds with a pixelate and scan-line transition. Skies are regional-style stand-ins, not photos of Bradford."],
+  ], { x: 0.6, y: 1.75, w: 5.6, h: 3.9, nameColor: C.accent1, nameSize: 15, descSize: 12, gap: 10, name: "Research features" });
+  await maybeShot(slide, C, "docs/images/hub-sky-lobby.png", { x: 6.4, y: 1.75, w: 3.1, h: 2.2, caption: "Unity lobby, desktop editor render", name: "Lobby sky" });
+  await maybeShot(slide, C, "vive-steamvr/03-warehouse-forklift/screenshots/11-awareness-check.png", { x: 9.65, y: 1.75, w: 3.1, h: 2.2, caption: "Awareness check, desktop render", name: "Awareness" });
+  await maybeShot(slide, C, "training-simulations/screenshots/10-reasoning-question.png", { x: 6.4, y: 4.05, w: 3.1, h: 2.2, caption: "Reasoning question, web, desktop", name: "Reasoning" });
+  await maybeShot(slide, C, "training-simulations/screenshots/vr/11-menu-sky-transition.png", { x: 9.65, y: 4.05, w: 3.1, h: 2.2, caption: "Menu sky transition, emulated Quest 3", name: "Menu transition" });
+  callout(slide, C, "Verified: desktop browsers, the Unity editor in desktop mode, and an emulated Quest 3. Not hand-played end to end, nothing run on a Vive or Quest. Reasons and questions still need review by the owner or a partner.", { x: 0.6, y: 6.3, w: 12.15, h: 0.75, color: C.accent3, name: "Features honesty" });
 }

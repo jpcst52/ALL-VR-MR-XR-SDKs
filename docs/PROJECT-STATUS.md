@@ -35,6 +35,7 @@ Last updated: November 1, 2026 (evening).
 | Asset packs imported into the hub (5 of 6) | Big Warehouse Pack (IGBlocks), Sci-Fi Warehouse Kit, ShippingContainer, Modular Warehouse, Modern Office |
 | Courtyard imported as its own project | `C:\UnityProjects\Courtyard\The Courtyard` (a "complete project" cannot be imported into another project without overwriting its settings) |
 | Render-pipeline check of the packs | All 242 hub-pack materials, and the Courtyard, use the built-in pipeline (Standard shader). Decision: the hub uses the built-in pipeline, not URP |
+| Web professional-look pass (Nov 1) | Shared `brand-kit/`: Pitt-Bradford + CIST brand bar on the launcher, Practice Lab and the three multiplayer pages (logo from the git-ignored `branding/logo.png` if present, text wordmark otherwise, never a broken image); every in-world label is a backed panel or tag in the bundled fonts; brand plaque in each 3D scene; phone layout is a bottom sheet. `tools/vr-capture/ui-check.mjs` (desktop + emulated phone, logo blocked and allowed) and `brand-kit/test`. README screenshots re-shot with the logo blocked. Not tried on a real phone or headset |
 
 ## In progress
 
@@ -49,7 +50,7 @@ Last updated: November 1, 2026 (evening).
 
 | Task | Notes |
 |---|---|
-| Hub scenes: Courtyard lobby with portals to each scenario | Local-only scenes (gitignored) that use the asset packs; committed "lite" projects stay primitive-only |
+| Hub scenes: lobby with portals to each scenario | Built (B6): `LobbyHub` primitive hall, 4 portals, `ReturnToLobby`, scenes in git-ignored `Assets/Scenes/Local`. Hall uses its own walls because the IGBlocks shell (39 x 37 m) is far too large. Desktop editor only |
 | Realism pass on Hydrostatic Test Bay using the packs | Real wall/floor/steel materials, office furniture for a supervisor corner, lighting, post-processing, audio; legible task board; smaller floor text |
 | Vive project 02: Refinery battery-limits rounds (live weather API) | Online API is acceptable on the Vive PCs |
 | Vive project 03: Warehouse / forklift safety | Uses the warehouse, construction, and container packs in the hub; lite version from primitives |
@@ -59,7 +60,7 @@ Last updated: November 1, 2026 (evening).
 | Pitt-Bradford launcher UI | One home page with tiles per example and a recommended demo path; one-command start for the lab PC |
 | Realism pass on web "hero" scenes | CC0 PBR textures/HDRIs, glTF models, quality switch, attribution file |
 | New Practice Lab scenarios | Lighter lot sampling, heat-exchanger hydrostatic test, refinery pipe-spool welding, KOA resistor selection |
-| Circulation Builder for Orin James | Waiting on his description |
+| Circulation Builder for Orin James | Draft built Nov 1 as Practice Lab scenario 17 (`biology-scenarios.js`, `biology-stations.js`, new "Life science (draft for faculty review)" group): place the four chambers, connect the pulmonary and systemic circuits in order, colour vessels oxygen-rich/poor. General biology only, no citations, labelled "Draft for faculty review" and "not clinical or medical guidance". 11/11 lab tests; desktop play-through only (no VR emulator or headset run). Needs his review of content and level |
 | Multi-user training in the style of WaterWorks | Approach to decide; WaterWorks does not work on the Vive (owner-confirmed) |
 | Self-signed HTTPS start script for the lab PC | As in the owner's WaterWorks project |
 | Advanced README and board-facing deck | After the projects exist |
@@ -98,3 +99,23 @@ Last updated: November 1, 2026 (evening).
 | Hub project uses the built-in render pipeline, not URP | All imported packs use Standard-shader materials; URP would render them pink |
 | Import the Courtyard as its own project | Unity warns that a complete project overwrites project settings |
 | Web demos use CC0 assets only; Asset Store assets only in local Unity builds | License terms |
+
+## Decisions of November 1, 2026 (owner)
+
+| Question | Decision |
+|---|---|
+| Name partner companies on slides | No; say "inspired by regional industry" |
+| Zippo lighter test | Stays generic; no process details |
+| Orin James's Circulation Builder | Build a draft from public general-biology knowledge, flagged for his review |
+| Unity multi-user and Unity Android builds | Future work; the demo uses the web multiplayer and the web Practice Lab in Quest Browser |
+| Lab time | Owner has Vive Pro 2 and Quest access this week |
+
+## Decisions of November 2, 2026 (owner)
+
+| Question | Decision |
+|---|---|
+| CIST wording on the plates | Confirmed: "CIST | Computer Information Systems & Technology" |
+| Reasons and rationale questions (`training-simulations/reasons.js` and the Unity scripts) | Owner reviewed and said they look fine. Not reviewed by an outside subject-matter expert |
+| Citations added to `references.bib` | Owner reviewed and said they look fine. Still read the full texts before citing any number in a paper |
+| University logo in the public repo | OK to go with: the old launcher image containing the logo in local commit 4915dd1 may stay. The `branding/` folder and the hub's `Assets/Resources/Branding/` are still git-ignored (no logo files are committed); say so if you want the logo file added so a fresh clone shows it |
+| Commit the work | Yes, committed locally on November 2, 2026; not pushed |

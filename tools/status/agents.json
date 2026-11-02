@@ -152,6 +152,145 @@
       ],
       "ended": "2026-11-02T02:12:09.892Z",
       "note": "Lighting, shadows, tone mapping, procedural textures in app.js; 5/5 tests; 3 of 16 shots re-shot; headset FPS untested"
+    },
+    {
+      "id": "circ-builder",
+      "name": "Circulation Builder",
+      "task": "Draft web circulation trainer for Orin James (D3)",
+      "state": "done",
+      "started": "2026-11-02T03:24:59.449Z",
+      "watch": [
+        "training-simulations",
+        "docs/Task-Status.md"
+      ],
+      "ended": "2026-11-02T03:35:27.271Z",
+      "note": "D3 built: scenario 17, 11 lab tests + 18 relay pass, desktop only; needs Orin James review"
+    },
+    {
+      "id": "ui-04",
+      "name": "UI pass: project 04",
+      "task": "Panels/tags/brand plate in Resistor Bench",
+      "state": "done",
+      "started": "2026-11-02T03:40:41.267Z",
+      "watch": [
+        "vive-steamvr/04-resistor-bench"
+      ],
+      "ended": "2026-11-02T03:55:28.469Z",
+      "note": "Project 04 converted to panels/tags, 7 shots, compiles; desktop only; kit fixes suggested"
+    },
+    {
+      "id": "ui-02-03",
+      "name": "UI pass: projects 02-03",
+      "task": "Panels/tags/brand plate in Refinery and Warehouse",
+      "state": "done",
+      "started": "2026-11-02T03:40:41.319Z",
+      "watch": [
+        "vive-steamvr/02-refinery-rounds",
+        "vive-steamvr/03-warehouse-forklift"
+      ],
+      "ended": "2026-11-02T04:00:33.135Z",
+      "note": "02 and 03 converted: panels/tags/plates, 9 shots each, compile; desktop only; not played through"
+    },
+    {
+      "id": "ui-web",
+      "name": "UI review: web",
+      "task": "Professional-look review of launcher and Practice Lab",
+      "state": "done",
+      "started": "2026-11-02T03:40:41.374Z",
+      "watch": [
+        "index.html",
+        "launcher",
+        "training-simulations",
+        "multi-player"
+      ],
+      "ended": "2026-11-02T05:02:42.402Z",
+      "note": "done"
+    },
+    {
+      "id": "research-uni",
+      "name": "Research: university VR/AR",
+      "task": "Survey other universities' VR/AR research, map to our work",
+      "state": "done",
+      "started": "2026-11-02T03:52:58.656Z",
+      "watch": [
+        "docs/research"
+      ],
+      "ended": "2026-11-02T04:07:58.818Z",
+      "note": "40 verified entries added (76 total), landscape doc written; abstracts only, no full texts; outreach leads need owner"
+    },
+    {
+      "id": "why-web",
+      "name": "Why-cues: web Practice Lab",
+      "task": "Why this step cues + rationale question in web hydro/refinery scenarios",
+      "state": "done",
+      "started": "2026-11-02T04:20:26.808Z",
+      "watch": [
+        "training-simulations"
+      ],
+      "ended": "2026-11-02T04:46:10.727Z",
+      "note": "Why-this-matters + rationale in web lab: 16 of 17 scenarios, 18 lab tests + ui-check pass; desktop/emulator only"
+    },
+    {
+      "id": "why-unity",
+      "name": "Why-cues: Unity 01 and 02",
+      "task": "Why this step cues + rationale question in HydroTest and RefineryRounds",
+      "state": "done",
+      "started": "2026-11-02T04:20:26.860Z",
+      "watch": [
+        "vive-steamvr/packages",
+        "vive-steamvr/02-refinery-rounds"
+      ],
+      "ended": "2026-11-02T04:38:29.845Z",
+      "note": "01 and 02: Why-this-matters + rationale; compiled, scripted capture pass; not hand-played"
+    },
+    {
+      "id": "ped-03",
+      "name": "Pedestrian hazard: project 03",
+      "task": "Walking pedestrian + pause-and-ask awareness check",
+      "state": "done",
+      "started": "2026-11-02T04:20:26.911Z",
+      "watch": [
+        "vive-steamvr/03-warehouse-forklift"
+      ],
+      "ended": "2026-11-02T04:43:20.651Z",
+      "note": "Pedestrian + awareness check in 03: compiled, scripted self-test PASS (2 of 3 as designed); not hand-played; no headset"
+    },
+    {
+      "id": "sky-assets",
+      "name": "Seasonal sky assets",
+      "task": "Pick and download 4 CC0 seasonal panoramas, credits, manifest",
+      "state": "done",
+      "started": "2026-11-02T04:31:19.034Z",
+      "watch": [
+        "assets"
+      ],
+      "ended": "2026-11-02T04:37:52.716Z",
+      "note": "4 CC0 Poly Haven skies + credits + manifest; no verified Bradford photo found; not loaded in apps yet"
+    },
+    {
+      "id": "menu-web",
+      "name": "Menu: thumbnails + skies (web)",
+      "task": "Thumbnails on cards and glitch-transition seasonal skies in web",
+      "state": "done",
+      "started": "2026-11-02T04:31:19.139Z",
+      "watch": [
+        "training-simulations"
+      ],
+      "ended": "2026-11-02T04:55:44.374Z",
+      "note": "Web menu: 17 thumbnails + seasonal glitch sky (shader, stereo-safe), tests 20/20, 16/16, ui 48/48, offline 9/9; emulator only"
+    },
+    {
+      "id": "menu-unity",
+      "name": "Menu: skies + thumbnails (Unity)",
+      "task": "Glitch-transition seasonal sky in kit + hub lobby thumbnails",
+      "state": "done",
+      "started": "2026-11-02T04:31:19.314Z",
+      "watch": [
+        "vive-steamvr/packages",
+        "vive-steamvr/hub"
+      ],
+      "ended": "2026-11-02T04:50:04.587Z",
+      "note": "Unity lobby: open terrace, seasonal glitch sky, portal thumbnails; editor-verified desktop; screenshots in docs/images/hub-sky-*"
     }
   ]
 }

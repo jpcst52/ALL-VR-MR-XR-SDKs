@@ -63,11 +63,13 @@ The Unity, Android, and Apple examples need their native toolchains and devices,
 | `unity-xri/` | Unity XR Interaction Toolkit | Grab selection color feedback |
 | `multi-player/vr/` | Three.js + WebXR | Circuit Lab: build and power electrical circuits together |
 | `multi-player/ar/` | Three.js + WebXR | Site Safety Layout: shared AR layout with hit-test alignment |
-| `training-simulations/` | Three.js + WebXR | Twelve hands-on business, research, and industrial safety practice scenarios |
+| `training-simulations/` | Three.js + WebXR | Seventeen hands-on business, research, industrial safety and life-science (draft) practice scenarios |
 
 Each folder has its own README with setup instructions, prerequisites, and platform limitations. Browser-based examples embed a screenshot of themselves running. Unity examples are Unity-ready source folders rather than full Unity projects: copy the scripts into a compatible Unity project and follow that example's setup instructions.
 
 ## Getting started
+
+**New here? Start with [docs/HOW-TO-RUN.md](docs/HOW-TO-RUN.md)**: one page for running the demo, the Unity projects, the hub lobby, the headsets, the tests and the status dashboard.
 
 For the browser demos, start a static server from the repository root with `python -m http.server 8000`, then open one of these pages:
 
@@ -77,7 +79,7 @@ For the browser demos, start a static server from the repository root with `pyth
 - `http://localhost:8000/webxr/`
 - `http://localhost:8000/training-simulations/`
 
-Use `Ctrl+C` to stop the server. Network access is needed for the pinned CDN libraries; immersive XR additionally requires a compatible device/browser and a secure context.
+Use `Ctrl+C` to stop the server. The libraries are bundled in `vendor/`, so the browser pages work offline; immersive XR additionally requires a compatible device/browser and a secure context.
 
 | Example | Desktop interaction |
 |---|---|
@@ -87,7 +89,7 @@ Use `Ctrl+C` to stop the server. Network access is needed for the pinned CDN lib
 | WebXR | Adjust the color-field animation speed in the preview and immersive session. |
 | Circuit Lab | Join a room, see remote participants, and build a shared circuit that lights a bulb when the loop is closed. |
 | Site Safety Layout | Calibrate a shared board origin using hit testing, then edit a shared safety layout with a live checklist. |
-| Fieldwork XR Practice Lab | Enter a name, pick one of twelve scenarios, and carry out each task by selecting hotspots in a 3D work area. |
+| Fieldwork XR Practice Lab | Enter a name, pick one of seventeen scenarios, and carry out each task by selecting hotspots in a 3D work area. |
 
 ## Multiplayer examples
 
@@ -104,7 +106,7 @@ Open `http://localhost:8443/multi-player/vr/` and `http://localhost:8443/multi-p
 
 ## Fieldwork XR Practice Lab
 
-The [Practice Lab](training-simulations/) has twelve scenarios in three groups: three local-business scenarios, three research-practice scenarios, and six industrial safety scenarios (work at height, a refinery control room, refinery battery limits, skyscraper window cleaning, welding, and electrical work). In every scenario you carry out the tasks yourself by selecting hotspots in a 3D work area. Wrong actions show consequences, some steps must be done in order, and dangerous mistakes are flagged as critical. Start it with `python -m http.server 8000` and open `http://localhost:8000/training-simulations/`; its README explains name handling, scoring, and WebXR limitations. It is a non-certified learning prototype and does not replace workplace procedures or professional training.
+The [Practice Lab](training-simulations/) has seventeen scenarios in five groups: local-business, research-practice, industrial safety (work at height, a refinery control room, refinery battery limits, skyscraper window cleaning, welding, and electrical work), manufacturing quality, and a draft life-science scenario (circulation) for faculty review. In every scenario you carry out the tasks yourself by selecting hotspots in a 3D work area. Wrong actions show consequences, some steps must be done in order, and dangerous mistakes are flagged as critical. Start it with `python -m http.server 8000` and open `http://localhost:8000/training-simulations/`; its README explains name handling, scoring, and WebXR limitations. It is a non-certified learning prototype and does not replace workplace procedures or professional training.
 
 ## VR emulator captures
 

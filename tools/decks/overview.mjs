@@ -1,4 +1,4 @@
-import { dashboardSlide, demoDaySlide, launcherSlide, researchSlide, verifiedSlide, viveProjectsSlide, viveSetupSlide } from "./newslides.mjs";
+import { dashboardSlide, demoDaySlide, forkliftDesignSlide, launcherSlide, researchFeaturesSlide, researchSlide, verifiedSlide, viveProjectsSlide, viveSetupSlide } from "./newslides.mjs";
 import { applyDeckTheme, bullets, callout, card, chip, contentSlide, entries, img, label, newDeck, numberDot, section, shot, steps, text } from "./lib.mjs";
 
 export async function buildOverview(file) {
@@ -149,6 +149,8 @@ export async function buildOverview(file) {
   await launcherSlide(pres, C, { section: "Unity, demo day, and research", eyebrow: "PITT-BRADFORD LAUNCHER" });
   await demoDaySlide(pres, C, { section: "Unity, demo day, and research", eyebrow: "DEMO DAY / NOV 13, 2026" });
   await researchSlide(pres, C, { section: "Unity, demo day, and research", eyebrow: "RESEARCH" });
+  await forkliftDesignSlide(pres, C, { section: "Unity, demo day, and research", eyebrow: "DESIGN CHOICE / FORKLIFT" });
+  await researchFeaturesSlide(pres, C, { section: "Unity, demo day, and research", eyebrow: "FEATURES FROM THE RESEARCH" });
   await dashboardSlide(pres, C, { section: "Unity, demo day, and research", eyebrow: "PROJECT TOOLING" });
 
   // 9 ---------------------------------------------------------------- VR emulator

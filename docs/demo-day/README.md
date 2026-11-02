@@ -29,6 +29,7 @@ Everyone in an activity uses the same **room name**. Rooms are separate for Circ
 
 ## Documents
 
+- [HARDWARE-TEST-SESSION.md](HARDWARE-TEST-SESSION.md) first real-headset run, with pass/fail rows
 - [CHECKLIST.md](CHECKLIST.md) day-before and day-of
 - [QUEST-SETUP.md](QUEST-SETUP.md), [VIVE-SETUP.md](VIVE-SETUP.md)
 - [BACKUP-PLAN.md](BACKUP-PLAN.md), [TROUBLESHOOTING.md](TROUBLESHOOTING.md)

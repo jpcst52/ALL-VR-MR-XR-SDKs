@@ -1,20 +1,132 @@
 {
-  "updated": "11/1/2026, 9:13:05 PM",
+  "updated": "11/2/2026, 12:02:42 AM",
   "suites": [
     {
       "name": "Practice Lab scenarios",
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/1/2026, 11:03:20 PM",
+      "note": ""
+    },
+    {
+      "name": "Brand kit (static)",
       "passed": 5,
       "failed": 0,
       "skipped": 0,
-      "when": "11/1/2026, 9:12:10 PM",
-      "note": "after realism pass"
+      "when": "11/1/2026, 11:03:23 PM",
+      "note": "brand bar on every page, logo untracked, no bare scene text, text fit"
+    },
+    {
+      "name": "Web UI check (ui-check.mjs)",
+      "passed": 40,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/1/2026, 11:18:45 PM",
+      "note": "10 pages x desktop/phone x logo blocked/allowed"
+    },
+    {
+      "name": "Offline check",
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/1/2026, 11:18:45 PM",
+      "note": ""
+    },
+    {
+      "name": "Launcher check",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/1/2026, 11:18:45 PM",
+      "note": "2 viewports + all paths 200"
+    },
+    {
+      "name": "Practice Lab unit tests (scenarios, biology, why)",
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/1/2026, 11:45:37 PM",
+      "note": ""
+    },
+    {
+      "name": "brand-kit tests",
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/1/2026, 11:45:37 PM",
+      "note": ""
+    },
+    {
+      "name": "ui-check (lab pages + mp-circuit-lab, desktop/phone, logo on/off)",
+      "passed": 36,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/1/2026, 11:45:37 PM",
+      "note": ""
+    },
+    {
+      "name": "Practice Lab unit tests (scenarios, biology, why, thumbs)",
+      "passed": 20,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/1/2026, 11:55:12 PM",
+      "note": ""
+    },
+    {
+      "name": "brand-kit tests (incl. season-sky)",
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/1/2026, 11:55:12 PM",
+      "note": ""
+    },
+    {
+      "name": "ui-check (desktop + emulated phone, logo blocked/allowed, sky + thumbnails)",
+      "passed": 48,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/1/2026, 11:55:12 PM",
+      "note": ""
+    },
+    {
+      "name": "offline-check",
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/1/2026, 11:55:12 PM",
+      "note": ""
+    },
+    {
+      "name": "Practice Lab (all test files)",
+      "passed": 20,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/2/2026, 12:02:42 AM",
+      "note": ""
+    },
+    {
+      "name": "Brand kit",
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/2/2026, 12:02:42 AM",
+      "note": ""
     },
     {
       "name": "Multiplayer relay",
       "passed": 18,
       "failed": 0,
       "skipped": 0,
-      "when": "11/1/2026, 9:13:05 PM",
+      "when": "11/2/2026, 12:02:42 AM",
+      "note": ""
+    },
+    {
+      "name": "Web UI check (ui-check)",
+      "passed": 48,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/2/2026, 12:02:42 AM",
       "note": ""
     }
   ]
