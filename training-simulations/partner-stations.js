@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { addPerson, ball, box, cyl, hiddenPart, part } from "./industrial-stations.js";
+import { drawSignLines, fontsReady } from "../brand-kit/panels.js";
 
 // Work-area models for the manufacturing-quality scenarios (see partner-scenarios.js). They follow
 // industrial-stations.js: each group stays under ~1.85 units tall, exposes userData.reveal parts for hotspots,
@@ -31,19 +32,12 @@ function textBoard(group, [w, h], [x, y, z], { rot = [0, 0, 0], bg = "#f2f6fc", 
     const context = canvas.getContext("2d");
     context.fillStyle = colors.bg ?? bg;
     context.fillRect(0, 0, canvas.width, canvas.height);
-    context.fillStyle = colors.fg ?? fg;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    let size = Math.min(54, (canvas.height / (lines.length + 0.6)) * 0.8);
-    context.font = `bold ${Math.round(size)}px Arial, sans-serif`;
-    const widest = Math.max(...lines.map((line) => context.measureText(line).width));
-    if (widest > canvas.width * 0.92) {
-      size *= (canvas.width * 0.92) / widest;
-      context.font = `bold ${Math.round(size)}px Arial, sans-serif`;
-    }
-    lines.forEach((line, index) => context.fillText(line, canvas.width / 2, (canvas.height / (lines.length + 1)) * (index + 1)));
+    drawSignLines(context, lines, { fg: colors.fg ?? fg });
     texture.needsUpdate = true;
+    last = [lines, colors];
   };
+  let last = null;
+  fontsReady.then(() => last && write(...last));
   write([""]);
   return { write, face, frame: frameMesh };
 }

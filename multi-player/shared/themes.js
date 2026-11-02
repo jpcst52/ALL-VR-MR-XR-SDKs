@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { PITT, tagSprite, drawSignLines, fontsReady } from "../../brand-kit/panels.js";
 import { evaluateHydro, summaryText, PORTS, NOZZLES } from "./hydro-eval.mjs";
 
 // A theme describes one shared-building example: its parts, how to draw them, and how to
@@ -15,23 +16,26 @@ const mesh = (geometry, material, [x, y, z] = [0, 0, 0], rot) => {
 const cylinder = (rt, rb, h, seg = 20) => new THREE.CylinderGeometry(rt, rb, h, seg);
 const along = Math.PI / 2; // lay a cylinder along the local x axis
 
-function textSprite(text, color = "#f2f6fc", background = "#101723dd", width = 0.7) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 256;
-  canvas.height = 96;
-  const context = canvas.getContext("2d");
-  context.fillStyle = background;
-  context.beginPath();
-  context.roundRect(2, 2, 252, 92, 18);
-  context.fill();
-  context.fillStyle = color;
-  context.font = "bold 46px system-ui, sans-serif";
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  context.fillText(text, 128, 50);
-  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true }));
-  sprite.scale.set(width, width * 0.375, 1);
-  return sprite;
+// Part labels go through the shared brand kit. A transparent background means text printed on a physical sign
+// (EXIT, MUSTER); otherwise the label is a backed pill (WATER, PUMP, polarity marks).
+function textSprite(text, color = "#f2f6fc", background = "#00205bdd", width = 0.7) {
+  if (/00$/.test(background)) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 256;
+    canvas.height = 96;
+    const draw = () => {
+      canvas.getContext("2d").clearRect(0, 0, 256, 96);
+      drawSignLines(canvas.getContext("2d"), [text], { fg: color, maxSize: 60 });
+    };
+    draw();
+    const map = new THREE.CanvasTexture(canvas);
+    fontsReady.then(() => { draw(); map.needsUpdate = true; });
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map, transparent: true }));
+    sprite.scale.set(width, width * 0.375, 1);
+    return sprite;
+  }
+  const accent = /^#(f2f6fc|ffffff|dbeeff)$/i.test(color) ? PITT.gold : color;
+  return tagSprite(text, { accent, status: null, worldHeight: Math.max(0.12, width * 0.44), depthTest: true });
 }
 
 // ---------------------------------------------------------------- circuits

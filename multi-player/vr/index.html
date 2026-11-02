@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="A shared WebXR circuit lab you can join from a headset or a desktop browser.">
     <title>Multiplayer VR — Circuit Lab</title>
+    <link rel="stylesheet" href="../../brand-kit/brand.css">
     <link rel="stylesheet" href="../shared/style.css">
     <script type="importmap">
       {
@@ -17,6 +18,10 @@
   </head>
   <body data-mode="vr" data-theme="circuits">
     <main id="panel" class="panel">
+      <div class="panel-brand">
+        <div data-pitt-brand="compact"></div>
+        <a class="home-link" href="../../">All examples</a>
+      </div>
       <header class="heading">
         <p class="eyebrow">MULTIPLAYER WEBXR / VR</p>
         <h1>Circuit Lab</h1>
@@ -45,6 +50,7 @@
       </section>
     </main>
     <p id="xr-hint" class="xr-hint" hidden></p>
+    <script type="module" src="../../brand-kit/brand.js"></script>
     <script type="module" src="../shared/app.js"></script>
   </body>
 </html>

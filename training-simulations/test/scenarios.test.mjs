@@ -4,14 +4,15 @@ import { scenarios, categories } from "../scenarios.js";
 
 const count = (id) => scenarios.filter((scenario) => scenario.category === id).length;
 
-test("the catalog has business, research, industrial, and manufacturing simulations", () => {
-  assert.equal(scenarios.length, 16);
-  assert.equal(categories.length, 4);
+test("the catalog has business, research, industrial, manufacturing, and draft biology simulations", () => {
+  assert.equal(scenarios.length, 17);
+  assert.equal(categories.length, 5);
   assert.equal(count("business"), 3);
   assert.equal(count("research"), 3);
   assert.equal(count("industrial"), 6);
   assert.equal(count("manufacturing"), 4);
-  assert.equal(new Set(scenarios.map((scenario) => scenario.id)).size, 16);
+  assert.equal(count("biology"), 1);
+  assert.equal(new Set(scenarios.map((scenario) => scenario.id)).size, 17);
   for (const scenario of scenarios) assert.ok(categories.some((category) => category.id === scenario.category));
 });
 
@@ -38,9 +39,9 @@ test("manufacturing quality scenarios cover the requested local-manufacturer exe
 test("every scenario is a set of hands-on tasks that can be completed", () => {
   for (const scenario of scenarios) {
     assert.ok(scenario.title && scenario.description && scenario.duration, `${scenario.id} has its details`);
-    const expected = scenario.category === "industrial" || scenario.category === "manufacturing" ? 4 : 3;
+    const expected = ["industrial", "manufacturing", "biology"].includes(scenario.category) ? 4 : 3;
     assert.equal(scenario.steps.length, expected, `${scenario.id} has ${expected} tasks`);
-    if (scenario.category === "industrial" || scenario.category === "manufacturing") assert.ok(scenario.briefing?.length >= 3, `${scenario.id} has a briefing`);
+    if (["industrial", "manufacturing", "biology"].includes(scenario.category)) assert.ok(scenario.briefing?.length >= 3, `${scenario.id} has a briefing`);
     for (const [index, step] of scenario.steps.entries()) {
       const where = `${scenario.id} task ${index + 1}`;
       assert.ok(step.prompt && step.principle, `${where} has a prompt and principle`);

@@ -1,6 +1,6 @@
 # Fieldwork XR Practice Lab
 
-A browser-based XR training example with a learner name field and sixteen short, decision-driven practice scenarios in four groups: everyday small-business work, responsible community and field research, six high-risk industrial tasks, and four manufacturing-quality exercises. Every activity has immediate feedback, a takeaway principle, and a session score. All sixteen scenarios are **hands-on**: the six industrial and four manufacturing-quality scenarios have four tasks each and the six business and research scenarios have three, and in every one that you carry out yourself by selecting labelled hotspots on an animated 3D work area (inspect the scaffold tag, clip your lanyard to an anchor, apply your lock and tag, close a cylinder valve), rather than choosing from a list of answers. Wrong actions show their consequence, steps have to be done in a safe order, and dangerous mistakes are flagged as **critical safety misses**.
+A browser-based XR training example with a learner name field and seventeen short, decision-driven practice scenarios in five groups: everyday small-business work, responsible community and field research, six high-risk industrial tasks, four manufacturing-quality exercises, and one **draft** life-science activity (Circulation Builder, see below). Every activity has immediate feedback, a takeaway principle, and a session score. All seventeen scenarios are **hands-on**: the six industrial, four manufacturing-quality, and one life-science scenarios have four tasks each and the six business and research scenarios have three, and in every one that you carry out yourself by selecting labelled hotspots on an animated 3D work area (inspect the scaffold tag, clip your lanyard to an anchor, apply your lock and tag, close a cylinder valve), rather than choosing from a list of answers. Wrong actions show their consequence, steps have to be done in a safe order, and dangerous mistakes are flagged as **critical safety misses**.
 
 The business scenarios are broadly useful to neighborhood shops, service teams, and small workplaces: welcoming a customer while protecting privacy, responding safely to an unknown spill, and checking an incoming delivery. Research scenarios cover voluntary informed consent, sample identity and custody, and consistent field observations. The industrial scenarios cover work at height, running a refinery unit from a control room, outdoor rounds at refinery battery limits (the edge of a process unit), window cleaning from a suspended platform on a skyscraper, welding and hot work, and electrical isolation. They are general awareness practice built around widely taught controls (permits, fall arrest, lockout/tag/test, gas alarms, fire watch) and do not replace site procedures. 
 
@@ -10,6 +10,12 @@ The **Manufacturing quality** group (accent `#66B2E3`, heading MANUFACTURING QUA
 - **Hydrostatic test of a heat exchanger** (`heat-exchanger-hydrotest`): fit blind flanges, open the vent and fill, close the vent when full, raise to the test pressure without exceeding it and hold from a safe position, then stop the pump, drain, and vent.
 - **Weld a refinery pipe spool** (`pipe-spool-welding`): verify the welding procedure, welder qualification, and heat numbers; clean, fit up, preheat, and tack; set up hot-work controls (permit, isolation, gas test, fire watch); then inspect, request NDE, mark, and record.
 - **Select and check a resistor** (`resistor-selection`): ESD strap first, read the color code and measure out of circuit, choose 150 ohm (5 V supply, 20 mA, 2 V LED drop) with a 1/4 W rating and 5% tolerance, then choose an anti-sulfur type for a sulfur-rich place and check derating before installing.
+
+The **Life science (draft for faculty review)** group (accent `#ff7b8a`, heading LIFE SCIENCE PRACTICE · DRAFT FOR FACULTY REVIEW) holds one scenario:
+
+- **Circulation Builder** (`circulation-builder`), **Draft for faculty review**: on a simplified front-view schematic (lungs on top, heart in the middle, body tissues below), place the four heart chambers; connect the pulmonary circuit in blood-flow order (venae cavae, tricuspid valve, pulmonary artery, lung capillaries); connect the systemic circuit in order (pulmonary veins, mitral valve, aorta, body capillaries); then colour each major vessel oxygen-rich (red) or oxygen-poor (blue). Out-of-order connections are explained, and four common misconceptions are flagged as **key misconceptions** rather than safety misses: mirroring left and right in a front view, sending the right ventricle to the aorta, routing blood from the lungs straight to the body, and "every artery is red".
+
+It was drafted before the biology faculty partner described his own project, so it uses only widely taught introductory (general) biology. It is **educational general biology, not clinical or medical guidance**; it is a schematic, not an anatomical model, and it cites no sources. The red/blue colours are the usual diagram convention (real blood is always red). Content, level, and wording are expected to change after faculty review. The page shows a "Draft for faculty review" badge on the card, a draft notice in the scenario panel, and "draft for faculty review" on the 3D sign. Code: `biology-scenarios.js` (tasks) and `biology-stations.js` (3D model).
 
 All scenarios are intentionally general rather than tied to one assumed town, employer, or research institution.
 
@@ -26,10 +32,11 @@ Open <http://localhost:8003>. Three.js is vendored in `../vendor/three`, so it r
 ## Try a session
 
 1. Enter a display name. It is held in page memory for the current browser session and is not sent to a server or saved to local storage.
-2. Select one of the sixteen simulations.
-3. Read the short situation and choose one of three responses for each decision. Industrial and manufacturing-quality scenarios show a pre-task checklist first, then four hands-on tasks (see below).
+2. Select one of the seventeen simulations.
+3. Read the short situation and choose one of three responses for each decision. Industrial, manufacturing-quality, and life-science scenarios show a pre-task checklist first, then four hands-on tasks (see below).
 4. Review the immediate feedback and principle, then continue to the next decision.
-5. View the score, retry the scenario, or choose another. Completion marks and scores remain in memory until the page is closed or refreshed.
+5. Answer the reasoning question (one "why" question; every scenario except the draft Circulation Builder has one). It is reported separately from the task score.
+6. View the score, retry the scenario, or choose another. Completion marks and scores remain in memory until the page is closed or refreshed.
 
 The simulation selection is available in the page UI. If the browser supports immersive WebXR VR, the **ENTER VR** control appears after the learner enters a name. In VR, point a controller at a floating choice card and use its select/trigger action. You can also use the desktop UI before or during a session.
 
@@ -42,6 +49,18 @@ In every scenario, each task puts glowing hotspots on the 3D work area. Use the 
 - **The scene responds:** your lanyard connects to the anchor you picked, a lock and tag appear on the breaker, barricades and a fire watch appear, the platform sways in wind, a gas monitor alarms, and a pedestrian walks toward the exclusion zone.
 - **Scoring:** a task earns 2 points with no mistakes, 1 with a single non-critical mistake, and 0 otherwise. A critical mistake always scores 0 for that task and is called out in the result along with the principles to review.
 
+## Why this matters, and a reasoning question
+
+A Penn State randomized study of a battery-storage procedure (Wang & Messner, 2026; see [docs/research/UNIVERSITY-VR-AR-LANDSCAPE.md](../docs/research/UNIVERSITY-VR-AR-LANDSCAPE.md)) found that VR beat video on procedural and spatial scores, but that neither one taught *why* the steps mattered. Every scenario except the draft Circulation Builder now covers that in two ways:
+
+- **"Why this matters" panel.** When you complete a key action, a short one-sentence reason appears for about nine seconds. Example from the hydrostatic test: "Trapped air stores far more energy than water, so venting it makes any failure much less violent." On desktop it is a panel at the lower left (on a phone, at the top) and **Esc** or **Got it** closes it. In VR it is a backed panel just below the scenario sign. It does not affect scoring.
+- **Reasoning question.** After the last task there is one multiple-choice question about a step whose purpose is easy to miss, for example "why is the vent opened BEFORE the drain?" (so air can get in and no vacuum forms). It has three options and one best answer. After you answer, all three options are explained. In VR the three options are the floating cards; after you answer they show the explanations.
+- **A separate result.** The result screen shows the task (procedure) score and, in its own box, a **Reasoning** result: which option you chose and the best answer. The reasoning answer is never added to the task score and is never called a pass or a fail. The catalog card shows both, for example "tasks 8/8 · reasoning: best answer". Keeping them apart lets a later study compare procedure and reasoning. The app still stores nothing beyond the page session.
+
+Data format: an optional `why` on a correct hotspot and an optional `rationale` on a scenario (`{ question, options: [{ text, best, feedback }] }`). All reasons and questions are in one file, [`reasons.js`](reasons.js), so the owner and partners can review them in one place. `scenarios.js` copies them onto the scenarios (a `why` written inline in a scenario file takes precedence). The hydrostatic test and the three refinery-style scenarios (control room, battery-limits rounds, refinery pipe spool) have a reason for every required action. The other eleven have reasons for the key actions in every task. The draft Circulation Builder has none until faculty review.
+
+The content is general safety and quality awareness written for this lab. It is not a procedure, permit, or certification, and it cites no standards or regulation numbers. It has **not** yet been reviewed by the owner, partners, or a subject-matter expert.
+
 Business and research tasks work the same way (greet the customer, move to a quiet room, label vials against the protocol, record an outlier as measured). In those, a critical mistake means a serious breach such as promising a benefit, writing a participant's name on a sample, or deleting an inconvenient reading.
 
 ## Tests
@@ -49,14 +68,20 @@ Business and research tasks work the same way (greet the customer, move to a qui
 From this directory, run the scenario-catalog checks with:
 
 ```powershell
-node --test .\test\scenarios.test.mjs
+node --test .\test\scenarios.test.mjs .\test\biology.test.mjs .\test\why.test.mjs .\test\thumbs.test.mjs
 ```
 
-The tests verify the catalog (16 scenarios in 4 categories: three business, three research, six industrial, four manufacturing quality), that every task in every scenario is completable: unique hotspot ids, positions and results, valid prerequisites, at least two required actions, and a critical mistake. Hands-on interactions were also exercised in a desktop browser (hotspot clicks on the canvas, the list controls, out-of-order and critical mistakes, scoring); VR controller selection uses the same code path but needs a headset to confirm. Browser interaction was also checked in desktop mode; physical headset behavior still requires compatible WebXR hardware.
+`thumbs.test.mjs` checks that every scenario has a 320 x 180 JPEG thumbnail under 40 KB keyed by its id and listed in `thumbs/index.json`, and that the catalog only requests listed thumbnails and falls back to a placeholder tile. The seasonal-sky logic is tested in the brand kit (`node --test` in `../brand-kit`, file `test/season-sky.test.mjs`): season by date, manifest ordering and bad-input fallbacks, 2k/4k choice, path resolution, the Bradford wording rule, the transition curve (and that reduced motion has no mosaic, scan lines, or flicker), and the 30-second clock (one swap per transition, no time passes while paused).
+
+`why.test.mjs` checks the "why this matters" content: every entry in `reasons.js` points at a real required action; every non-draft scenario has a reason in every task and one reasoning question; the hydrostatic test and the refinery-style scenarios explain every required action; reasons are single sentences of at most 110 characters with no standard numbers or citations; each question has three options of at most 64 characters, exactly one best answer, and feedback for each; the best answer is not always in the same position; the draft Circulation Builder has none; and the page has the panel and the separate reasoning result, which never touches the task score. `node tools/vr-capture/ui-check.mjs` also opens the "why" panel (and closes it with Esc) and answers the reasoning question at desktop and phone widths.
+
+The tests verify the catalog (17 scenarios in 5 categories: three business, three research, six industrial, four manufacturing quality, one draft life science), that every task in every scenario is completable: unique hotspot ids, positions and results, valid prerequisites, at least two required actions, and a critical mistake. Hands-on interactions were also exercised in a desktop browser (hotspot clicks on the canvas, the list controls, out-of-order and critical mistakes, scoring); VR controller selection uses the same code path but needs a headset to confirm. Browser interaction was also checked in desktop mode; physical headset behavior still requires compatible WebXR hardware.
+
+`biology.test.mjs` checks the draft Circulation Builder: it is labelled as a draft and as not clinical guidance, the station is registered in `app.js`, every revealed or hidden part exists in the model, the pulmonary and systemic circuits can only be completed in blood-flow order, chamber positions and vessel colours match introductory biology, every task has a key misconception, and the content names no partner companies and contains no citations or links. Circulation Builder was played through once in a desktop browser (Chrome via Playwright, using the list controls; one out-of-order action, one key misconception, score 5/8) with external network requests blocked and no page errors. Its hotspots were not clicked on the 3D canvas in that run (the list controls call the same handler). It has **not** been run in the VR emulator or on any headset.
 
 ## What it demonstrates
 
-- A complete, sixteen-scenario browser learning flow with lightweight name entry and session-only progress.
+- A complete, seventeen-scenario browser learning flow with lightweight name entry and session-only progress.
 - Local small-business decisions around customer service and privacy, basic hazard response, and inventory receiving.
 - Research habits around informed consent, confidentiality, traceable sample handling, and faithful data recording.
 - Immediate, consequence-based feedback, a principle recap at each step, and a short score without collecting or transmitting learner data.
@@ -65,7 +90,27 @@ The tests verify the catalog (16 scenarios in 4 categories: three business, thre
 
 ## Rendering notes
 
-The shared scene uses sRGB output, ACES filmic tone mapping, a hemisphere light plus a soft-shadow key light (one 1024 shadow map), a low-intensity room environment for metal reflections, and procedurally generated canvas textures for the floor and platform. No image assets are loaded, so there is nothing to license. VR frame rate with these settings has not been measured on a headset.
+The shared scene uses sRGB output, ACES filmic tone mapping, a hemisphere light plus a soft-shadow key light (one 1024 shadow map), a low-intensity room environment for metal reflections, and procedurally generated canvas textures for the floor and platform. The only image assets are the scenario thumbnails (made from this example's own screenshots) and the four CC0 sky panoramas described below. VR frame rate with these settings, and with the sky sphere, has not been measured on a headset.
+
+## Scenario thumbnails and seasonal skies
+
+**Thumbnails.** Every scenario card shows a small picture of its 3D work area: on top of the card in the page catalog (on a phone, to the left of the title), and on the left of each floating card in the VR menu, with the category, minutes, and title beside it. The images are `thumbs/<scenario id>.jpg` (320 x 180, about 10 KB each). Re-make them after re-shooting the README screenshots:
+
+```powershell
+node ..\tools\vr-capture\thumbs.mjs
+```
+
+It crops the work area from `screenshots/03-scenario-*.png` (left of the page panel, below the in-scene sign, so neither brand band is in a thumbnail; those screenshots were taken with the git-ignored logo blocked) and writes `thumbs/index.json`. The catalog only requests ids listed there and inserts an image only after it has loaded, so a missing thumbnail shows a plain tinted tile, never a broken image.
+
+**Seasonal skies.** Behind the scenario menu, one sky per season (spring, summer, autumn, winter) rotates every 30 seconds, starting with the current season. The change looks like an old monitor: the picture breaks into mosaic blocks that grow, scan lines and a slight red/blue flicker appear for about one second, the next season swaps in at the peak, and the blocks shrink away. With **prefers-reduced-motion** it is a plain cross-fade. A small "Autumn sky" chip next to the progress count (and a small tag beside the plaque in VR) names the current season.
+
+- The effect is drawn inside the sky sphere's own shader (`../brand-kit/season-sky.js`) in view-direction space, so it renders the same way in both eyes in WebXR; there is no screen-space post-processing.
+- The outdoor scenarios (work at height, outdoor rounds at the battery limits, skyscraper window cleaning, field observation) keep the sky behind their work area; indoor scenarios keep the navy room. The sky steps aside for the red critical-miss flash. Every scene label is already on a backed panel, so the photo does not reduce readability (checked in desktop screenshots only).
+- Images come from `../assets/skies/skies.json` (2k files; `?sky=4k` in the address uses the 4k files on a desktop). If the manifest or an image is missing, the scene keeps its navy background and nothing errors; a season whose image fails is skipped. Rotation pauses while the tab is hidden.
+- **Image credits** (a link at the foot of the page panel) lists each image's credit and source from the manifest. The current images are CC0 Poly Haven panoramas used as **regional-style stand-ins, not photos of Bradford, PA**; the page says "Seasonal skies, regional style (not photos of Bradford)" and only names Bradford for an image whose manifest entry has `isBradford: true`.
+- The page needs the repository root served (it loads `../vendor/`, `../brand-kit/` and `../assets/`); it makes no network requests outside the local server.
+
+`node ..\tools\vr-capture\sky-shots.mjs` re-shoots the desktop screenshots below; `CAPTURE_ONLY=menu` with `..\tools\vr-capture\capture.mjs` re-shoots the emulated Quest 3 menu.
 
 ## Research background
 
@@ -77,18 +122,28 @@ This is a non-certified learning prototype—not an employer's safety policy, a 
 
 The application has no login, analytics, backend, persistence, or export. Names and scores are kept in page memory only. Only a compatible WebXR browser, secure context, VR runtime, and headset can start immersive VR; headset testing has not been performed as part of this example.
 
+## Look and branding
+
+The page and the 3D scene use the University of Pittsburgh palette and bundled fonts (League Gothic headings, Roboto text) through the shared [brand kit](../brand-kit/README.md):
+
+- A Pitt-Bradford + **CIST** (Computer Information Systems & Technology) brand bar heads the panel, with a link back to the launcher. It shows the official logo when `branding/logo.png` is on the machine (that folder is git-ignored and never committed) and a text wordmark otherwise; a missing logo never shows as a broken image.
+- Every piece of text in the scene sits on a backed panel: the scenario sign (with a brand band), hotspot labels (pills with a status chip: gold dot to do, green check done, red cross wrong), choice and scenario cards, and the station plates. A Pitt-Bradford + CIST plaque floats above the scenario cards.
+- After you enter your name, the heading and name form collapse so the task has the room. On a phone the panel becomes a bottom sheet and the scene shows above it.
+
+Checked with `node tools/vr-capture/ui-check.mjs` at 1440 x 900 and 390 x 844 (desktop browser; phone width emulated, not a real phone).
+
 ## Screenshots
 
-All captures are from the running example in a desktop browser at the default (non-headset) view. WebXR VR was unavailable in the capture environment, so the page shows **VR NOT SUPPORTED**; these are not headset recordings.
+All captures are from the running example in a desktop browser at the default (non-headset) view. WebXR VR was unavailable in the capture environment, so the page shows **VR NOT SUPPORTED**; these are not headset recordings. They were re-shot on November 1, 2026 after the professional-look pass (`node tools/vr-capture/readme-shots.mjs lab`), with the git-ignored logo blocked, so the brand bar and the in-scene sign show the text wordmark.
 
 | Step | Capture |
 |---|---|
 | Welcome and name entry | ![Welcome screen](screenshots/01-welcome.png) |
-| Scenario catalog | ![Sixteen-scenario catalog](screenshots/02-catalog.png) |
+| Scenario catalog | ![Seventeen-scenario catalog](screenshots/02-catalog.png) |
 | Task feedback | ![Feedback after finishing a task](screenshots/04-feedback.png) |
 | Scenario complete | ![Completion and score](screenshots/05-complete.png) |
 
-### The sixteen scenarios
+### The seventeen scenarios
 
 | Scenario | Capture |
 |---|---|
@@ -108,12 +163,56 @@ All captures are from the running example in a desktop browser at the default (n
 | Hydrostatic test of a heat exchanger (task 3) | ![Hydrostatic test](screenshots/03-scenario-14-hydrostatic-test-of-a-heat-exchanger.png) |
 | Weld a refinery pipe spool (task 3) | ![Pipe spool welding](screenshots/03-scenario-15-weld-a-refinery-pipe-spool.png) |
 | Select and check a resistor (task 2) | ![Resistor selection](screenshots/03-scenario-16-select-and-check-a-resistor.png) |
+| Circulation Builder, draft (task 1) | ![Circulation Builder placing the heart chambers](screenshots/03-scenario-17-circulation-builder.png) |
 | Critical safety miss | ![Critical safety miss feedback](screenshots/06-critical-miss.png) |
 | Industrial result and review list | ![Industrial result with review list](screenshots/07-industrial-result.png) |
 
+### Scenario thumbnails and seasonal skies
+
+Desktop browser captures (1440 x 900, November 1, 2026, `node tools/vr-capture/sky-shots.mjs`, logo blocked), not headset recordings. The sky images are CC0 regional-style stand-ins, not photos of Bradford.
+
+| What | Capture |
+|---|---|
+| Catalog with thumbnails (page cards, and the floating thumbnail cards behind) | ![Catalog with thumbnails](screenshots/skies/menu-thumbnails.png) |
+| Catalog at phone width (390 x 844, emulated, not a real phone) | ![Phone catalog with thumbnails](screenshots/skies/menu-phone.png) |
+| Spring | ![Spring sky](screenshots/skies/season-spring.png) |
+| Summer | ![Summer sky](screenshots/skies/season-summer.png) |
+| Autumn | ![Autumn sky](screenshots/skies/season-autumn.png) |
+| Winter | ![Winter sky](screenshots/skies/season-winter.png) |
+| Transition, a quarter of the way: mosaic blocks growing, scan lines | ![Transition early](screenshots/skies/transition-early.png) |
+| Transition at its peak (swap point): largest blocks, scan lines, colour split | ![Transition at its peak](screenshots/skies/transition-mid.png) |
+| Reduced motion: plain cross-fade, half way | ![Reduced-motion cross-fade](screenshots/skies/reduced-motion-crossfade.png) |
+| Outdoor scenario (battery limits) with the sky behind | ![Outdoor scenario with sky](screenshots/skies/scenario-outdoor.png) |
+| Indoor scenario (electrical) keeps the navy room | ![Indoor scenario without sky](screenshots/skies/scenario-indoor.png) |
+
+### Why this matters and the reasoning question
+
+Desktop browser captures (1280 x 1100, November 1, 2026, `node tools/vr-capture/readme-shots.mjs why`), not headset recordings.
+
+| Step | Capture |
+|---|---|
+| "Why this matters" after opening the vent (hydrostatic test, task 2) | ![Why this matters panel](screenshots/09-why-this-matters.png) |
+| The reasoning question after the last task | ![Reasoning question](screenshots/10-reasoning-question.png) |
+| Feedback with each option explained (a not-best answer chosen) | ![Reasoning feedback](screenshots/11-reasoning-feedback.png) |
+| Result: task score, with the reasoning result in its own box | ![Result with separate reasoning](screenshots/12-result-with-reasoning.png) |
+
+### Circulation Builder (draft for faculty review)
+
+Desktop browser captures (1280 x 1100), not headset recordings.
+
+| Step | Capture |
+|---|---|
+| Life-science group in the catalog, with the draft badge | ![Catalog with the draft badge](screenshots/08-circulation-catalog.png) |
+| Task 2: pulmonary circuit, after an out-of-order valve | ![Pulmonary circuit](screenshots/08-circulation-task2-pulmonary.png) |
+| Task 3: a key misconception (lungs straight to the body) | ![Key misconception feedback](screenshots/08-circulation-misconception.png) |
+| Task 4: colouring vessels oxygen-rich or oxygen-poor | ![Colouring vessels](screenshots/08-circulation-task4-colouring.png) |
+| Result and review list | ![Circulation Builder result](screenshots/08-circulation-result.png) |
+
+In the desktop view the floating 3D card for Circulation Builder sits in a fifth column to the right of the 4 x 4 card grid, partly behind the page panel; in VR there is no panel. That VR card position has not been captured in the emulator.
+
 ## In VR (emulated headset)
 
-These captures come from an **emulated Meta Quest 3** (taken before the four manufacturing-quality scenarios were added, so the catalog card grid is the earlier 12-card layout; the 16-card 4 x 4 layout was checked in desktop mode only, not re-captured in the emulator) (Meta's IWER runtime in Chrome), using the page's real WebXR session and a scripted controller. They show layout, scale, and interaction in a headset-style view; they are not recordings from a physical headset. The controller appears as its pointer ray. See [tools/vr-capture](../tools/vr-capture/README.md) for how they are made and what the emulation does not cover.
+These captures come from an **emulated Meta Quest 3** (Meta's IWER runtime in Chrome; re-captured November 1, 2026 after the professional-look pass, with the 17-card catalog and the git-ignored logo blocked), using the page's real WebXR session and a scripted controller. They show layout, scale, and interaction in a headset-style view; they are not recordings from a physical headset. The controller appears as its pointer ray. See [tools/vr-capture](../tools/vr-capture/README.md) for how they are made and what the emulation does not cover.
 
 In VR the training world is placed about 2.4 m in front of you and scaled up slightly. The scenario cards float above the platform; point a controller at a card and pull the trigger to start. In a task, point at a glowing hotspot and pull the trigger to carry out that step; the floating sign above the scene shows each result, and a "continue" card appears when the task is done.
 
@@ -126,3 +225,12 @@ In VR the training world is placed about 2.4 m in front of you and scaled up sli
 | Task complete | ![Task complete in VR](screenshots/vr/05-task-complete.png) |
 | A wrong action | ![Wrong action marked in red](screenshots/vr/06-wrong-action.png) |
 | Electrical lockout | ![Lock and tag applied in VR](screenshots/vr/07-electrical-lockout.png) |
+| "Why this matters" panel below the sign (emulated Quest 3) | ![Why this matters in VR, emulated Quest 3](screenshots/vr/08-why-this-matters.png) |
+| Reasoning question on the three cards (emulated Quest 3) | ![Reasoning question in VR, emulated Quest 3](screenshots/vr/09-reasoning-question.png) |
+| Answered: each card explains its option (emulated Quest 3) | ![Reasoning feedback in VR, emulated Quest 3](screenshots/vr/10-reasoning-feedback.png) |
+
+| Season transition held at its peak behind the menu (emulated Quest 3) | ![Menu sky mid-transition in VR, emulated Quest 3](screenshots/vr/11-menu-sky-transition.png) |
+
+The catalog, pointing, and sky-transition captures (01, 02, 11) were re-taken on November 1, 2026 after the thumbnail and seasonal-sky change with `CAPTURE_ONLY=menu node capture.mjs` (emulated Quest 3; autumn sky, rotation held still for the capture). The hands-on captures 03-07 predate the sky: in the work-at-height scenario the sky now shows behind the scaffold, which these older frames do not show. Thumbnails in the VR cards are small at menu distance; they help recognition rather than show detail. Readability on a real headset has not been checked.
+
+The "why" captures (08-10) were captured on November 1, 2026 with `CAPTURE_ONLY=why node capture.mjs`, which plays the hydrostatic test through with the scripted controller. In the emulator the explanation text on the answered cards is small (it shrinks to fit), so the sign above repeats the key feedback. Readability at that size on a real headset has not been checked.

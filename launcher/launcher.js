@@ -107,11 +107,7 @@
     }
   }
 
-  // logo: show only if the (local, uncommitted) file exists; otherwise the text wordmark stays
-  var logo = document.getElementById("logo");
-  function showLogo() { logo.hidden = false; document.getElementById("wordmark").hidden = true; }
-  logo.addEventListener("load", showLogo);
-  if (logo.complete && logo.naturalWidth > 0) showLogo();
+  // The Pitt-Bradford + CIST brand bar is built by brand-kit/brand.js (logo if the local file exists, else a wordmark).
 
   fetch("launcher/examples.json").then(function (r) {
     if (!r.ok) throw new Error("HTTP " + r.status);

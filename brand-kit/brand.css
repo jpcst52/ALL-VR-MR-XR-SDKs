@@ -1,0 +1,47 @@
+/* Shared Pitt-Bradford + CIST brand tokens, bundled fonts, and the brand bar component.
+   Offline: fonts come from ../vendor/fonts. The logo is optional (see brand.js). */
+@font-face { font-family: "League Gothic"; font-weight: 400; font-display: swap; src: url("../vendor/fonts/league-gothic-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Merriweather"; font-weight: 400; font-display: swap; src: url("../vendor/fonts/merriweather-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Merriweather"; font-weight: 700; font-display: swap; src: url("../vendor/fonts/merriweather-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Roboto"; font-weight: 400; font-display: swap; src: url("../vendor/fonts/roboto-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Roboto"; font-weight: 500; font-display: swap; src: url("../vendor/fonts/roboto-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Roboto"; font-weight: 700; font-display: swap; src: url("../vendor/fonts/roboto-latin-700-normal.woff2") format("woff2"); }
+
+:root {
+  --pitt-royal: #003594;
+  --pitt-gold: #ffb81c;
+  --pitt-navy: #00205b;
+  --pitt-sky: #dbeeff;
+  --pitt-font: "Roboto", system-ui, "Segoe UI", sans-serif;
+  --pitt-serif: "Merriweather", Georgia, serif;
+  --pitt-display: "League Gothic", Impact, "Arial Narrow", sans-serif;
+}
+
+.pitt-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85em;
+  min-height: 2.9em;
+  color: #fff;
+  font-family: var(--pitt-font);
+  font-size: 16px;
+  line-height: 1.1;
+}
+.pitt-brand__mark { display: flex; align-items: center; flex: none; }
+.pitt-brand__logo { display: block; height: 2.9em; width: auto; border-radius: 0.3em; }
+.pitt-brand[data-logo="on"] .pitt-brand__wordmark { display: none; }
+.pitt-brand__wordmark { display: flex; flex-direction: column; font-family: var(--pitt-serif); white-space: nowrap; }
+.pitt-brand__univ { font-size: 0.78em; letter-spacing: 0.01em; }
+.pitt-brand__campus { font-size: 1.12em; font-weight: 700; }
+.pitt-brand__rule { width: 1px; align-self: stretch; margin: 0.25em 0; background: rgba(255, 255, 255, 0.5); flex: none; }
+.pitt-brand__dept { display: flex; flex-direction: column; min-width: 0; }
+.pitt-brand__cist { font-family: var(--pitt-display); font-size: 1.7em; line-height: 0.95; letter-spacing: 0.05em; color: var(--pitt-gold); }
+.pitt-brand__deptname { font-size: 0.72em; color: var(--pitt-sky); letter-spacing: 0.01em; }
+
+.pitt-brand--compact { font-size: 13px; min-height: 2.6em; }
+.pitt-brand--compact .pitt-brand__logo { height: 2.6em; }
+
+@media (max-width: 420px) {
+  .pitt-brand { font-size: 14px; gap: 0.65em; }
+  .pitt-brand__deptname { font-size: 0.68em; }
+}

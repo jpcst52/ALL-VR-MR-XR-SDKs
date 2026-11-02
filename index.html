@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>XR Training Launcher</title>
+  <title>XR Training Launcher · Pitt-Bradford CIST</title>
   <meta name="description" content="Launch the Pitt-Bradford XR training examples: browser demos, multiplayer, Vive and Quest.">
+  <link rel="stylesheet" href="brand-kit/brand.css">
   <link rel="stylesheet" href="launcher/launcher.css">
 </head>
 <body>
@@ -12,10 +13,7 @@
 
   <header class="top">
     <div class="wrap top-inner">
-      <div class="brand" aria-label="University of Pittsburgh at Bradford">
-        <img id="logo" class="logo" src="branding/logo.png" alt="University of Pittsburgh at Bradford" hidden>
-        <span id="wordmark" class="wordmark">University of Pittsburgh at Bradford</span>
-      </div>
+      <div class="brand" data-pitt-brand></div>
       <h1>XR Training Launcher</h1>
       <p class="lede" id="subtitle">Pitt-Bradford XR training examples. Pick a tile to launch it.</p>
       <nav class="jump" aria-label="Sections" id="jump"></nav>
@@ -38,6 +36,7 @@
     </div>
   </footer>
 
+  <script type="module" src="brand-kit/brand.js"></script>
   <script src="launcher/launcher.js"></script>
 </body>
 </html>

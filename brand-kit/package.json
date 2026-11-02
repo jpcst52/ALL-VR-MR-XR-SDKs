@@ -1,0 +1,9 @@
+{
+  "name": "pitt-brand-kit",
+  "private": true,
+  "type": "module",
+  "description": "Shared Pitt-Bradford + CIST brand bar and in-world panel kit for the web examples. No dependencies.",
+  "scripts": {
+    "test": "node --test"
+  }
+}

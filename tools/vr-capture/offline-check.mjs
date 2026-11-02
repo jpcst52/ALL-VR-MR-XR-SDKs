@@ -1,9 +1,14 @@
 // Loads each example with all non-local network access blocked and reports errors.
 import { chromium } from "playwright";
+// STATIC_BASE / RELAY_BASE override the default servers (e.g. both http://localhost:8132/ when the relay serves the site).
+const staticBase = (process.env.STATIC_BASE ?? "http://localhost:8000/").replace(/\/?$/, "/");
+const relayBase = (process.env.RELAY_BASE ?? "http://localhost:8443/").replace(/\/?$/, "/");
 const pages = [
-  "http://localhost:8000/a-frame/", "http://localhost:8000/threejs/", "http://localhost:8000/babylonjs/", "http://localhost:8000/webxr/",
-  "http://localhost:8000/training-simulations/", "http://localhost:8443/multi-player/vr/", "http://localhost:8443/multi-player/ar/",
+  ...["a-frame/", "threejs/", "babylonjs/", "webxr/", "training-simulations/", ""].map((path) => staticBase + path),
+  ...["multi-player/vr/", "multi-player/ar/", "multi-player/hydrotest/"].map((path) => relayBase + path),
 ];
+// branding/logo.png is git-ignored and optional: pages fall back to a text wordmark when it is missing.
+const optional = (url) => url.includes("favicon") || url.includes("/branding/");
 const browser = await chromium.launch({ channel: "chrome", args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 let failed = 0;
 for (const url of pages) {
@@ -17,8 +22,8 @@ for (const url of pages) {
     return route.abort();
   });
   page.on("pageerror", (error) => problems.push(`page error: ${error.message}`));
-  page.on("requestfailed", (request) => { if (!request.url().includes("favicon")) problems.push(`failed: ${request.url()}`); });
-  page.on("response", (response) => { if (response.status() >= 400 && !response.url().includes("favicon")) problems.push(`HTTP ${response.status()}: ${response.url()}`); });
+  page.on("requestfailed", (request) => { if (!optional(request.url())) problems.push(`failed: ${request.url()}`); });
+  page.on("response", (response) => { if (response.status() >= 400 && !optional(response.url())) problems.push(`HTTP ${response.status()}: ${response.url()}`); });
   await page.goto(url);
   await page.waitForTimeout(3500);
   const canvases = await page.locator("canvas").count();

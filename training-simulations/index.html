@@ -3,8 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Sixteen short browser-based business, research, industrial, and manufacturing-quality training simulations with an optional WebXR view.">
-    <title>Fieldwork XR — Practice Lab</title>
+    <meta name="description" content="Seventeen short browser-based business, research, industrial, manufacturing-quality, and draft life-science training simulations with an optional WebXR view.">
+    <title>Fieldwork XR Practice Lab · Pitt-Bradford CIST</title>
+    <link rel="stylesheet" href="../brand-kit/brand.css">
     <link rel="stylesheet" href="./style.css">
     <script type="importmap">
       {
@@ -17,11 +18,15 @@
   </head>
   <body>
     <canvas id="scene" aria-hidden="true"></canvas>
-    <main class="panel">
+    <main class="panel" id="panel">
+      <div class="panel-brand">
+        <div data-pitt-brand="compact"></div>
+        <a class="home-link" href="../">All examples</a>
+      </div>
       <header class="brand">
-        <p class="eyebrow">FIELDWORK XR · PRACTICE LAB</p>
-        <h1>Small scenarios.<br>Better decisions.</h1>
-        <p class="intro">Choose a short practice run for everyday business work, responsible research, or high-risk industrial tasks.</p>
+        <p class="eyebrow">FIELDWORK XR PRACTICE LAB</p>
+        <h1>Small scenarios. Better decisions.</h1>
+        <p class="intro">Choose a short practice run for everyday business work, responsible research, high-risk industrial tasks, manufacturing quality, or a draft life-science activity.</p>
       </header>
 
       <form id="profile" class="profile">
@@ -39,7 +44,10 @@
             <p class="eyebrow">PICK A SCENARIO</p>
             <h2>Choose your practice</h2>
           </div>
-          <p id="progress" class="progress">0 / 16 complete</p>
+          <div class="heading-chips">
+            <p id="season-chip" class="season-chip" hidden></p>
+            <p id="progress" class="progress">0 / 17 complete</p>
+          </div>
         </div>
         <div id="category-list"></div>
       </section>
@@ -52,6 +60,7 @@
         <p id="simulation-category" class="eyebrow"></p>
         <h2 id="simulation-title"></h2>
         <p id="simulation-brief" class="brief"></p>
+        <p id="draft-note" class="draft-note" hidden><strong>Draft for faculty review.</strong> Educational general biology only, built from widely taught introductory material; not clinical or medical guidance. A simplified schematic, not an anatomical model.</p>
         <ul id="briefing" class="briefing" aria-label="Before you start" hidden></ul>
         <div id="decision-card" class="decision-card">
           <p id="decision-kicker" class="decision-kicker"></p>
@@ -68,12 +77,17 @@
           <p id="feedback-label" class="decision-kicker"></p>
           <p id="feedback-copy"></p>
           <p id="principle" class="principle"></p>
+          <ul id="rationale-review" class="rationale-review" aria-label="Each option explained" hidden></ul>
           <button id="continue" class="button button-primary" type="button">Continue</button>
         </div>
         <div id="completion" class="completion" role="status" aria-live="polite" hidden>
           <p class="decision-kicker">PRACTICE COMPLETE</p>
           <h3 id="completion-title"></h3>
           <p id="completion-copy"></p>
+          <div id="reasoning-result" class="reasoning-result" hidden>
+            <p class="decision-kicker">REASONING · SEPARATE FROM THE PROCEDURE SCORE</p>
+            <p id="reasoning-copy"></p>
+          </div>
           <div id="review" class="review" hidden>
             <p class="decision-kicker">REVIEW THESE PRINCIPLES</p>
             <ul id="review-list"></ul>
@@ -84,7 +98,18 @@
         <p class="training-note">Practice example only—not a substitute for workplace procedures, research ethics review, or role-specific training.</p>
       </section>
       <p id="xr-note" class="xr-note">Desktop mode: choose answers here. On a WebXR-capable headset, enter VR and point a controller at a floating choice card.</p>
+      <details id="sky-credits" class="sky-credits" hidden>
+        <summary>Image credits</summary>
+        <p class="sky-caption"></p>
+        <ul></ul>
+      </details>
     </main>
+    <aside id="why-panel" class="why-panel" role="status" aria-live="polite" hidden>
+      <p class="why-kicker">Why this matters</p>
+      <p id="why-text" class="why-text"></p>
+      <button id="why-dismiss" class="why-dismiss" type="button">Got it <kbd>Esc</kbd></button>
+    </aside>
+    <script type="module" src="../brand-kit/brand.js"></script>
     <script type="module" src="./app.js"></script>
   </body>
 </html>

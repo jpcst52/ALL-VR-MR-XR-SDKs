@@ -31,6 +31,8 @@ const browser = await chromium.launch({
 async function newVrPage(width = 1600, height = 900) {
   const page = await (await browser.newContext({ viewport: { width, height } })).newPage();
   page.on("pageerror", (error) => console.log("PAGE ERROR", error.message));
+  // The logo in branding/ is git-ignored; keep it out of committed screenshots unless CAPTURE_LOGO=1.
+  if (process.env.CAPTURE_LOGO !== "1") await page.route("**/branding/**", (route) => route.fulfill({ status: 404, body: "" }));
   await page.addInitScript(iwerSource);
   await page.addInitScript(() => {
     const device = new window.IWER.XRDevice(window.IWER.metaQuest3);
@@ -47,7 +49,10 @@ function vrPoints(offset = [0, 0, -2.4], scale = 1.25) {
   const model = [0, 0.2, -0.28];
   return {
     hotspotPoint: (hotspot) => toWorld(hotspot.at.map((value, index) => value + model[index])),
-    cardPoint: (index) => toWorld([((index % 4) - 1.5) * 0.98, 2.0 - Math.floor(index / 4) * 0.6, -1.36]),
+    // Must match the catalog card grid in training-simulations/app.js (4 x 4, extra cards in a fifth column).
+    cardPoint: (index) => toWorld(index < 16
+      ? [((index % 4) - 1.5) * 0.98, 2.3 - Math.floor(index / 4) * 0.48, -1.36]
+      : [2.5 * 0.98, 2.3 - (index - 16) * 0.48, -1.36]),
     advancePoint: toWorld([0, 1.15, -1.32]),
   };
 }
@@ -77,8 +82,35 @@ async function aim(page, target, { trigger = false, from = [0.32, 1.1, -0.35] } 
   }
 }
 
+// CAPTURE_ONLY=why runs only the "Why this matters" / reasoning-question block below.
+const only = process.env.CAPTURE_ONLY ?? "";
+
+// CAPTURE_ONLY=menu: only the Practice Lab scenario menu (thumbnail cards, seasonal sky behind): 01-catalog.png,
+// 02-pointing-at-a-scenario.png, and 11-menu-sky-transition.png (the season transition held at its peak).
+if (only === "menu") {
+  const page = await newVrPage();
+  const shot = (name) => page.screenshot({ path: join(trainingOut, name) });
+  await page.goto(trainingUrl);
+  await page.waitForFunction(() => document.documentElement.dataset.seasonSky, null, { timeout: 20000 });
+  await page.fill("#learner-name", "Alex");
+  await page.click("#profile button[type=submit]");
+  await page.waitForTimeout(800);
+  await page.locator("body > button").click(); // ENTER VR
+  await page.waitForTimeout(2500);
+  await page.evaluate(() => window.__seasonSky?.stop());
+  await page.waitForTimeout(500);
+  const { cardPoint } = vrPoints();
+  await shot("01-catalog.png");
+  await aim(page, cardPoint(scenarios.findIndex((scenario) => scenario.id === "work-at-height")));
+  await shot("02-pointing-at-a-scenario.png");
+  await page.evaluate(() => window.__seasonSky?.preview(0.5));
+  await page.waitForTimeout(400);
+  await shot("11-menu-sky-transition.png");
+  await page.close();
+}
+
 // ----------------------------------------------------------------- Fieldwork XR Practice Lab
-{
+if (!only) {
   const page = await newVrPage();
   const shot = (name) => page.screenshot({ path: join(trainingOut, name) });
   await page.goto(trainingUrl);
@@ -118,7 +150,7 @@ async function aim(page, target, { trigger = false, from = [0.32, 1.1, -0.35] } 
 }
 
 // A second scenario in VR: electrical isolation, where the lock and tag appear on the breaker.
-{
+if (!only) {
   const page = await newVrPage();
   const shot = (name) => page.screenshot({ path: join(trainingOut, name) });
   await page.goto(trainingUrl);
@@ -146,8 +178,49 @@ async function aim(page, target, { trigger = false, from = [0.32, 1.1, -0.35] } 
   await page.close();
 }
 
+// "Why this matters" in VR: the in-world reason panel under the sign, then the reasoning question on the
+// three answer cards, answered with the controller (hydrostatic test).
+if (!only || only === "why") {
+  const page = await newVrPage();
+  const shot = (name) => page.screenshot({ path: join(trainingOut, name) });
+  await page.goto(trainingUrl);
+  await page.waitForTimeout(3000);
+  await page.fill("#learner-name", "Alex");
+  await page.click("#profile button[type=submit]");
+  await page.waitForTimeout(800);
+  await page.locator("body > button").click();
+  await page.waitForTimeout(2500);
+  const { hotspotPoint, cardPoint, advancePoint } = vrPoints();
+  const toWorld = (point) => point.map((value, index) => value * 1.25 + [0, 0, -2.4][index]);
+  const hydroIndex = scenarios.findIndex((scenario) => scenario.id === "heat-exchanger-hydrotest");
+  const hydro = scenarios[hydroIndex];
+  await aim(page, cardPoint(hydroIndex), { trigger: true });
+  await page.waitForTimeout(1000);
+  const order = (step) => {
+    const required = step.hotspots.filter((h) => h.correct);
+    const done = [];
+    while (done.length < required.length) done.push(required.find((h) => !done.includes(h.id) && (h.after ?? []).every((id) => done.includes(id))).id);
+    return done;
+  };
+  for (const [index, step] of hydro.steps.entries()) {
+    for (const id of order(step)) {
+      await aim(page, hotspotPoint(step.hotspots.find((hotspot) => hotspot.id === id)), { trigger: true });
+      if (index === 1 && id === "openvent") { await page.waitForTimeout(600); await shot("08-why-this-matters.png"); }
+    }
+    await aim(page, advancePoint, { trigger: true });
+    await page.waitForTimeout(800);
+  }
+  await page.waitForTimeout(600);
+  await shot("09-reasoning-question.png");
+  const best = hydro.rationale.options.findIndex((option) => option.best);
+  await aim(page, toWorld([(best - 1) * 1.28, 1.15, -1.32]), { trigger: true });
+  await page.waitForTimeout(800);
+  await shot("10-reasoning-feedback.png");
+  await page.close();
+}
+
 // ------------------------------------------------------------------ Multiplayer Circuit Lab (VR)
-{
+if (!only) {
   const vrPage = await newVrPage();
   const guest = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   for (const [page, name] of [[vrPage, "VR Builder"], [guest, "Desktop Guest"]]) {

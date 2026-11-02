@@ -1,10 +1,4 @@
-/* Pitt-Bradford XR launcher. Offline: fonts come from ../vendor/fonts. */
-@font-face { font-family: "League Gothic"; font-weight: 400; font-display: swap; src: url("../vendor/fonts/league-gothic-latin-400-normal.woff2") format("woff2"); }
-@font-face { font-family: "Merriweather"; font-weight: 400; font-display: swap; src: url("../vendor/fonts/merriweather-latin-400-normal.woff2") format("woff2"); }
-@font-face { font-family: "Merriweather"; font-weight: 700; font-display: swap; src: url("../vendor/fonts/merriweather-latin-700-normal.woff2") format("woff2"); }
-@font-face { font-family: "Roboto"; font-weight: 400; font-display: swap; src: url("../vendor/fonts/roboto-latin-400-normal.woff2") format("woff2"); }
-@font-face { font-family: "Roboto"; font-weight: 500; font-display: swap; src: url("../vendor/fonts/roboto-latin-500-normal.woff2") format("woff2"); }
-@font-face { font-family: "Roboto"; font-weight: 700; font-display: swap; src: url("../vendor/fonts/roboto-latin-700-normal.woff2") format("woff2"); }
+/* Pitt-Bradford XR launcher. Fonts and the brand bar come from ../brand-kit/brand.css (offline, ../vendor/fonts). */
 
 :root {
   --royal: #003594;
@@ -51,9 +45,7 @@ a:focus-visible, button:focus-visible {
 /* header */
 .top { background: var(--royal); color: #fff; border-bottom: 0.4rem solid var(--gold); }
 .top-inner { padding: 1.4rem 0 1.6rem; }
-.brand { min-height: 3.4rem; display: flex; align-items: center; }
-.logo { height: 3.4rem; width: auto; display: block; }
-.wordmark { font-family: "Merriweather", Georgia, serif; font-weight: 700; font-size: 1.05rem; letter-spacing: 0.01em; }
+.brand { font-size: 1.15rem; }
 .top h1 {
   font-family: "League Gothic", Impact, "Arial Narrow", sans-serif;
   font-weight: 400; text-transform: uppercase; letter-spacing: 0.02em;
@@ -74,7 +66,7 @@ a:focus-visible, button:focus-visible {
   background: var(--wait-bg); color: var(--wait); border: 2px solid var(--gold); font-weight: 500;
 }
 .relay-note a { color: var(--navy); font-weight: 700; }
-.relay-note[hidden], #logo[hidden], #wordmark[hidden] { display: none; }
+.relay-note[hidden] { display: none; }
 
 /* blocks */
 .block { margin: 2.6rem 0; }
@@ -113,9 +105,13 @@ a:focus-visible, button:focus-visible {
 .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .shot.ph {
   display: grid; place-items: center; text-align: center; padding: 1rem;
-  background: repeating-linear-gradient(135deg, var(--navy) 0 14px, #0a2d73 14px 28px);
-  color: var(--gold); font-family: "League Gothic", Impact, sans-serif; font-size: 2rem; letter-spacing: 0.04em; text-transform: uppercase;
+  background:
+    linear-gradient(rgba(219, 238, 255, 0.07) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(90deg, rgba(219, 238, 255, 0.07) 1px, transparent 1px) 0 0 / 28px 28px,
+    radial-gradient(circle at 30% 25%, #0a3f9e, var(--navy) 75%);
+  color: var(--sky); font-family: "League Gothic", Impact, sans-serif; font-size: 1.7rem; letter-spacing: 0.05em; text-transform: uppercase;
 }
+.shot.ph span { padding: 0.35rem 0.9rem; border: 2px solid var(--gold); border-radius: 999px; background: rgba(0, 32, 91, 0.75); }
 .shotnote { position: absolute; left: 0.5rem; bottom: 0.5rem; background: rgba(0, 32, 91, 0.9); color: #fff; font-size: 0.75rem; padding: 0.2rem 0.55rem; border-radius: 0.3rem; }
 .body { padding: 1rem 1.1rem 1.2rem; display: flex; flex-direction: column; gap: 0.55rem; flex: 1; }
 .tile h3 { margin: 0; font-size: 1.3rem; font-weight: 700; color: var(--navy); line-height: 1.2; }

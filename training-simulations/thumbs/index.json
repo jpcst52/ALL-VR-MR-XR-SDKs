@@ -1,0 +1,25 @@
+{
+  "size": [
+    320,
+    180
+  ],
+  "ids": [
+    "customer-welcome",
+    "workplace-spill",
+    "delivery-check",
+    "informed-consent",
+    "sample-custody",
+    "field-observation",
+    "work-at-height",
+    "control-room-unit",
+    "refinery-battery-area",
+    "skyscraper-window-cleaning",
+    "welding-hot-work",
+    "electrical-work",
+    "lighter-lot-sampling",
+    "heat-exchanger-hydrotest",
+    "pipe-spool-welding",
+    "resistor-selection",
+    "circulation-builder"
+  ]
+}

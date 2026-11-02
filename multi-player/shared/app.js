@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { themes } from "./themes.js";
+import { PITT, tagSprite, brandPlate } from "../../brand-kit/panels.js";
 
 const mode = document.body.dataset.mode === "ar" ? "ar" : "vr";
 const params = new URLSearchParams(location.search);
@@ -32,8 +33,9 @@ if (!("xr" in navigator)) {
 }
 
 const scene = new THREE.Scene();
-scene.background = mode === "ar" ? null : new THREE.Color("#101723");
-scene.fog = new THREE.Fog("#101723", 10, 28);
+const sceneColor = "#071433"; // deep Pitt navy
+scene.background = mode === "ar" ? null : new THREE.Color(sceneColor);
+scene.fog = new THREE.Fog(sceneColor, 10, 28);
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 80);
 camera.position.set(2.8, 2.9, 4.4);
 camera.lookAt(0, 0.5, 0);
@@ -61,18 +63,18 @@ scene.add(board);
 
 const workSurface = new THREE.Mesh(
   new THREE.CylinderGeometry(3.4, 3.4, 0.12, 72),
-  new THREE.MeshStandardMaterial({ color: "#243949", roughness: 0.82 }),
+  new THREE.MeshStandardMaterial({ color: "#1d3260", roughness: 0.82 }),
 );
 workSurface.position.y = -0.08;
 board.add(workSurface);
 
-const grid = new THREE.GridHelper(6.7, 28, "#73e7d4", "#446074");
+const grid = new THREE.GridHelper(6.7, 28, "#7fc4ff", "#36507f");
 grid.position.y = 0.0;
 board.add(grid);
 
 const boardGuide = new THREE.Mesh(
   new THREE.TorusGeometry(2.8, 0.018, 6, 96),
-  new THREE.MeshBasicMaterial({ color: "#73e7d4", transparent: true, opacity: 0.68 }),
+  new THREE.MeshBasicMaterial({ color: PITT.gold, transparent: true, opacity: 0.85 }),
 );
 boardGuide.rotation.x = Math.PI / 2;
 boardGuide.position.y = 0.015;
@@ -90,7 +92,7 @@ const partName = (part) => theme.parts.find((item) => item.id === part)?.name ??
 const pendingToggles = [];
 const selectionRing = new THREE.Mesh(
   new THREE.TorusGeometry(0.5, 0.018, 8, 48),
-  new THREE.MeshBasicMaterial({ color: "#73e7d4" }),
+  new THREE.MeshBasicMaterial({ color: PITT.gold }),
 );
 selectionRing.rotation.x = Math.PI / 2;
 selectionRing.visible = false;
@@ -122,29 +124,27 @@ reticle.rotation.x = -Math.PI / 2;
 reticle.visible = false;
 scene.add(reticle);
 
+// Name tags use the shared brand kit: a backed pill with a coloured chip, never bare floating text.
 function makeLabel(text, color) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 128;
-  const context = canvas.getContext("2d");
-  context.fillStyle = "#101723dd";
-  context.beginPath();
-  context.roundRect(2, 2, 508, 124, 26);
-  context.fill();
-  context.fillStyle = color;
-  context.font = "bold 42px system-ui, sans-serif";
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  context.fillText(text.slice(0, 18), 256, 65);
-  const texture = new THREE.CanvasTexture(canvas);
-  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true }));
-  sprite.scale.set(0.85, 0.22, 1);
-  return sprite;
+  return tagSprite(text, { accent: color, status: "idle", worldHeight: 0.2, depthTest: true, maxChars: 28 });
+}
+
+// Pitt-Bradford + CIST plaque standing at the back edge of the shared board.
+{
+  const plaque = brandPlate([1.7, 0.36]);
+  plaque.position.set(0, 0.42, -3.05);
+  board.add(plaque);
+  const post = new THREE.Mesh(
+    new THREE.BoxGeometry(1.74, 0.05, 0.08),
+    new THREE.MeshStandardMaterial({ color: "#0b1f4d", roughness: 0.6 }),
+  );
+  post.position.set(0, 0.2, -3.07);
+  board.add(post);
 }
 
 function makePeer(peer) {
   const group = new THREE.Group();
-  const color = peer.mode === "ar" ? "#ffb36b" : peer.mode === "vr" ? "#73e7d4" : "#b8a5ff";
+  const color = peer.mode === "ar" ? "#ffb36b" : peer.mode === "vr" ? "#7fc4ff" : "#b8a5ff";
   const head = new THREE.Mesh(
     new THREE.SphereGeometry(0.12, 18, 14),
     new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.18 }),
@@ -642,7 +642,7 @@ for (let index = 0; index < 2; index += 1) {
   const controller = renderer.xr.getController(index);
   const beam = new THREE.Line(
     new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -1)]),
-    new THREE.LineBasicMaterial({ color: index === 0 ? "#73e7d4" : "#ffb36b", transparent: true, opacity: 0.7 }),
+    new THREE.LineBasicMaterial({ color: index === 0 ? "#7fc4ff" : PITT.gold, transparent: true, opacity: 0.7 }),
   );
   controller.add(beam);
   scene.add(controller);
@@ -845,6 +845,9 @@ function frameScene() {
   camera.aspect = window.innerWidth / window.innerHeight;
   if (window.innerWidth > 900) {
     camera.setViewOffset(window.innerWidth, window.innerHeight, -window.innerWidth * 0.14, 0, window.innerWidth, window.innerHeight);
+  } else if (window.innerWidth <= 520) {
+    // Phones: the panel is a bottom sheet, so lift the board into the upper part of the screen.
+    camera.setViewOffset(window.innerWidth, window.innerHeight, 0, window.innerHeight * 0.24, window.innerWidth, window.innerHeight);
   } else {
     camera.clearViewOffset();
   }

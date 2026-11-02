@@ -23,7 +23,7 @@
     {
       "id": "training-lab",
       "title": "Fieldwork XR Practice Lab",
-      "summary": "Twelve hands-on safety awareness scenarios with consequences, feedback and a score.",
+      "summary": "Seventeen hands-on practice scenarios with consequences, feedback and a score.",
       "section": "browser",
       "badges": ["Browser"],
       "status": "Ready on desktop",
@@ -111,6 +111,8 @@
       "statusKind": "pending",
       "url": "vive-steamvr/01-hydrostatic-test/README.md",
       "webServed": false,
+      "screenshot": "vive-steamvr/01-hydrostatic-test/screenshots/01-test-bay.png",
+      "screenshotNote": "Unity editor, desktop mode",
       "note": "Runs on the Vive PC in Unity"
     },
     {
@@ -146,8 +148,8 @@
       "status": "Hardware test pending",
       "statusKind": "pending",
       "url": "training-simulations/",
-      "screenshot": "multi-player/screenshots/vr/01-circuit-lab-in-vr.png",
-      "screenshotNote": "Emulated Quest 3 (Circuit Lab)"
+      "screenshot": "training-simulations/screenshots/vr/03-hands-on-task.png",
+      "screenshotNote": "Emulated Quest 3"
     },
     {
       "id": "circuit-lab-quest",
@@ -158,6 +160,8 @@
       "status": "Hardware test pending",
       "statusKind": "pending",
       "url": "multi-player/vr/",
+      "screenshot": "multi-player/screenshots/vr/01-circuit-lab-in-vr.png",
+      "screenshotNote": "Emulated Quest 3",
       "relay": true
     },
     {

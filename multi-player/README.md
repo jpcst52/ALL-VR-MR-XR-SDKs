@@ -23,6 +23,10 @@ Parts are generated from Three.js primitives, room state is relayed by this proj
 - VR here is emulator and desktop only; it has not been tried on a real headset.
 - Screenshots: [empty room](./screenshots/hydrotest-empty.png), [completed rig](./screenshots/hydrotest-rig.png), [second client](./screenshots/hydrotest-rig-client2.png).
 
+## Look and branding
+
+The three pages share the Pitt palette, bundled fonts and the Pitt-Bradford + **CIST** brand bar from [brand-kit](../brand-kit/README.md) (logo when the git-ignored `branding/logo.png` is present, text wordmark otherwise). In the scene, name tags and part labels are backed pills, and a Pitt-Bradford + CIST plaque stands at the back edge of the shared board. On a phone the panel becomes a bottom sheet below the board. Checked with `node tools/vr-capture/ui-check.mjs` (desktop browser at 1440 x 900 and 390 x 844; no headset or real phone).
+
 ## Requirements
 
 - Node.js 20 or newer and npm.

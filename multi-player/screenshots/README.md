@@ -1,6 +1,6 @@
 # Multiplayer WebXR screenshots
 
-These captures show the running examples in desktop browser fallback mode. They document the browser experience and the shared Circuit Lab and Site Safety Layout scenes; neither image is a headset recording.
+These captures show the running examples in desktop browser fallback mode, re-shot on November 1, 2026 after the professional-look pass (`node tools/vr-capture/readme-shots.mjs mp`; the git-ignored logo is blocked, so the brand bar and the board plaque show the text wordmark). They document the browser experience and the shared Circuit Lab and Site Safety Layout scenes; neither image is a headset recording.
 
 | Example | Capture | Notes |
 |---|---|---|

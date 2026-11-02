@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="A shared WebXR builder for a hydrostatic test rig on a shell-and-tube heat exchanger. Safety awareness practice, desktop and emulated VR.">
     <title>Multiplayer VR — Hydrostatic Test Rig</title>
+    <link rel="stylesheet" href="../../brand-kit/brand.css">
     <link rel="stylesheet" href="../shared/style.css">
     <style>
       #summary { white-space: pre-line; }
-      .note { margin: 6px 0 0; font-size: 11.5px; color: #9bb0c8; line-height: 1.4; }
+      .note { margin: 10px 0 0; font-size: 11.5px; color: #93a8cf; line-height: 1.45; }
     </style>
     <script type="importmap">
       {
@@ -21,6 +22,10 @@
   </head>
   <body data-mode="vr" data-theme="hydrotest">
     <main id="panel" class="panel">
+      <div class="panel-brand">
+        <div data-pitt-brand="compact"></div>
+        <a class="home-link" href="../../">All examples</a>
+      </div>
       <header class="heading">
         <p class="eyebrow">MULTIPLAYER WEBXR / VR</p>
         <h1>Hydrostatic Test Rig</h1>
@@ -50,6 +55,7 @@
       </section>
     </main>
     <p id="xr-hint" class="xr-hint" hidden></p>
+    <script type="module" src="../../brand-kit/brand.js"></script>
     <script type="module" src="../shared/app.js"></script>
   </body>
 </html>
