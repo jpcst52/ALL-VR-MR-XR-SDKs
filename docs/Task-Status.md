@@ -64,4 +64,4 @@ Legend: ✅ done · 🔄 in progress · ⏳ waiting on a prerequisite · 👤 ne
 |---|---|---|---|
 | F1 | Demo-day kit (start script, QR codes, checklist, backups) | 🔄 | docs/demo-day written; hardware steps need a rehearsal |
 | F2 | Rehearsal | ⏳ 👤 | |
-| F3 | Decide whether to push to GitHub | 👤 | local commits not pushed |
+| F3 | Decide whether to push to GitHub | 👤 | local commits not pushed (6 ahead of origin) |
