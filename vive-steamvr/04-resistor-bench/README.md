@@ -1,8 +1,33 @@
 # Resistor Selection and Check Bench (Vive Pro 2 / SteamVR, with desktop fallback)
 
-**Status: compiles in Unity 6000.3.20f1 (checked inside the hub project) and plays in the editor in desktop mode with no console errors, November 1, 2026. Not played through to the end, and not tested on a Vive Pro 2.**
+**Status (November 1, 2026): set up and opened as its own project in Unity 6000.3.20f1; compiles with no errors; the scripted screenshot run plays the scenario in the editor (desktop, no headset) and stages each step with no scenario errors in the console. A person has not played it through by hand, and it has not been tested on a Vive Pro 2 or any headset.**
 
-![Desktop editor Game view at start (not a headset)](screenshots/01-desktop-editor-view.png)
+![Bench overview: desktop editor render, not a headset](screenshots/01-bench-overview.png)
+
+## Screenshots
+
+All pictures are **desktop editor renders** made by the scenario's scripted capture (`-pbCapture`), not headset captures. The scripted run places parts directly (it does not use the hands), so the pictures show the scene and its responses, not a hand-played session. Name tags turn to face the viewer, so they look slightly different from each viewpoint.
+
+| | |
+|---|---|
+| ![ESD strap clipped to the ground hook](screenshots/02-esd-station.png) | ![Tiered parts rack, answer panel and the unknown part](screenshots/03-color-code-reading.png) |
+| 2. ESD strap clipped to the ground hook (desktop editor render) | 3. Tiered parts rack with bin labels, answer panel, unknown part (desktop editor render) |
+| ![Both probes on the unknown part; the meter reads 4.7 k](screenshots/04-measuring.png) | ![Anti-sulfur 150 ohm part in R1, LED lit at 5 V](screenshots/05-led-lit.png) |
+| 4. Both probes on the unknown part; meter reads 4.7 k (desktop editor render) | 5. Anti-sulfur 150 ohm part in R1, LED lit (desktop editor render) |
+| ![47 ohm part powered: the LED burns out with a puff of smoke](screenshots/06-burnt-led-mistake.png) | ![Wall references and the university plate](screenshots/07-wall-references.png) |
+| 6. 47 ohm part powered: LED burned out, smoke puff (desktop editor render) | 7. Color-code poster, circuit / datasheet / environment cards, university plate (desktop editor render) |
+
+### Look and signage
+
+Signs and labels use the shared kit's signage helpers (`Ui.Panel`, `Ui.Tag`, `Ui.BrandPlate` in `Signage.cs`) instead of bare floating text:
+
+- **Rounded panels** with a border, accent bar and soft shadow for the answer panel, the CHECK PART sign (both on a thin steel backing), the color-code poster and the three wall cards.
+- **Name tags with leader lines** that turn to face the player for the ground hook, parts drawer, multimeter, LED test board and 5 V supply.
+- **Laminated labels lying flat on the mat** for the wrist strap, selection tray, meter probes, spare LEDs, the anti-sulfur legend and the ESD mat.
+- **Bin label cards** tipped back on the front of each bin; the back row of bins stands on a riser so its labels are not hidden.
+- A **university / CIST plate** on the wall above the cards. The Pitt-Bradford logo appears only in local builds that have the git-ignored file `Resources/Branding/pitt-bradford`; otherwise it shows a text wordmark (as in the screenshots).
+- Text printed on objects (meter and supply displays, button faces, breadboard silkscreen, the reading card) is left as it was.
+- Cheap realism: concrete floor, painted wall with a base trim, ceiling tiles and fixture frames, wood-grain bench top with an apron, foot rails and a lower shelf, textured ESD mat, a light under each ceiling fixture plus a fill and one shadow-casting key light, soft round smoke puffs.
 
 A Unity 6 (`6000.3.20f1`, built-in render pipeline) VR training example, inspired by the kind of work done by makers of passive electronic components (resistors including current-sense and anti-sulfur types, fuses, varistors, thermal sensors). It is **generic education only**: it makes no claims about any company's real processes, products, or datasheets. The derating curve, the pad size, and the LED limits are illustrative numbers invented for the exercise.
 
@@ -19,7 +44,7 @@ Everything is built from Unity primitives at run time (no imported art). It uses
 
 ## Scenario and steps
 
-You stand at an electronics bench. On it: an ESD mat with a wrist-strap hook, a parts drawer with six labelled bins, a color-code poster on the wall, an unknown resistor on a card, a multimeter with two probes, a small circuit board with places for one resistor and one LED, a 5 V supply, a selection tray with a CHECK PART button, and three wall cards (LED circuit, generic datasheet with a derating line, environment).
+You stand at an electronics bench. On it: an ESD mat with a wrist-strap hook, a two-tier parts rack ("parts drawer") with six labelled bins, a color-code poster on the wall, an unknown resistor on a card, a multimeter with two probes, a small circuit board with places for one resistor and one LED, a 5 V supply, a selection tray with a CHECK PART button, and three wall cards (LED circuit, generic datasheet with a derating line, environment).
 
 1. **ESD strap.** Grab the wrist strap and release it near the hook (it snaps on). Touching parts first is a mistake.
 2. **Read and measure.** Read the bands of the unknown resistor (poster), press the matching answer (470 ohm / 4.7 k ohm / 47 k ohm / 4.7 M ohm), then put both probes on its two leads. The meter shows a simulated reading within the part's tolerance. The step completes when the answer is right and the meter has read that part.
@@ -55,7 +80,9 @@ This is general awareness practice, not a procedure, qualification, or certifica
 3. Run the menu **Pitt-Bradford > Set up project** (configures OpenXR and the Input System, creates `Assets/Scenes/ResistorBench.unity`). Restart the editor once if it asks about the input handling change.
 4. Set **SteamVR as the OpenXR runtime** (SteamVR > Settings > Developer > Set SteamVR as OpenXR runtime), start SteamVR with the Vive Pro 2, then press **Play**. With no headset it runs on the desktop controls.
 5. Optional build: **Pitt-Bradford > Build Windows player** writes `Builds/ResistorBench/ResistorBench.exe`.
-6. Screenshots (optional): run the player/editor with `-pbCapture <folder>`; the scenario's six shots are `01-bench-overview`, `02-esd-station`, `03-color-code-reading`, `04-measuring`, `05-led-lit`, `06-burnt-led-mistake`.
+6. Screenshots (optional), with the project closed in the editor (do not pass `-batchmode`; it needs graphics):
+   `Unity.exe -projectPath <absolute path to 04-resistor-bench> -executeMethod PittBradford.XR.EditorTools.CaptureRunner.Run -pbCapture <absolute screenshots folder> -logFile <log>`.
+   It enters play mode, takes seven shots (`01-bench-overview`, `02-esd-station`, `03-color-code-reading`, `04-measuring`, `05-led-lit`, `06-burnt-led-mistake`, `07-wall-references`) and exits. For the capture only, the scenario stops any OpenXR session that started (the editor may start the OpenXR Mock runtime, which otherwise tilts the pictures and blocks the field of view), hides the desktop hands, and moves the hidden player to each camera position so the name tags face the picture.
 
 ## Code layout
 

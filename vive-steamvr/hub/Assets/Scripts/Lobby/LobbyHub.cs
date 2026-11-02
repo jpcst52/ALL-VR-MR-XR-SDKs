@@ -1,0 +1,258 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
+using PittBradford.XR;
+
+/// <summary>
+/// The hub lobby: a hall with one portal per training scenario. Walk onto a portal's pad and stay for a moment to load
+/// that scenario (desktop mode: number keys 1-4 also work). Built from primitives so it runs without the asset packs;
+/// the editor builder (HubLobbyBuilder) adds the warehouse shell and props when the packs are present.
+/// </summary>
+public class LobbyHub : MonoBehaviour, IShotScript
+{
+    public const string LobbyScene = "Lobby";
+
+    public class Entry
+    {
+        public string Title, Blurb, Scene;
+        /// <summary>Thumbnail image in Resources/Thumbnails (made by hub/tools/prepare_lobby_images.py).</summary>
+        public string Thumb;
+        public Color Color;
+    }
+
+    public static readonly Entry[] Entries =
+    {
+        new Entry { Title = "Hydrostatic Test Bay", Blurb = "Pressure-test a pipe spool\nfollowing the checklist", Scene = "HydrostaticTest_Hub", Thumb = "hydrostatic-test", Color = new Color32(0x00, 0x35, 0x94, 255) },
+        new Entry { Title = "Refinery Rounds", Blurb = "Battery-limits walk-round\nwith live weather", Scene = "RefineryRounds_Hub", Thumb = "refinery-rounds", Color = new Color32(0xC9, 0x6A, 0x00, 255) },
+        new Entry { Title = "Warehouse & Forklift", Blurb = "Spot hazards, drive and\nstack safely", Scene = "WarehouseForklift_Hub", Thumb = "warehouse-forklift", Color = new Color32(0x1F, 0x7A, 0x4D, 255) },
+        new Entry { Title = "Resistor Bench", Blurb = "Choose the right resistor\nfor the circuit", Scene = "ResistorBench_Hub", Thumb = "resistor-bench", Color = new Color32(0x7A, 0x2E, 0x8F, 255) },
+    };
+
+    const float HallWidth = 24f, HallDepth = 18f, ParapetHeight = 1.05f, FrameHeight = 7.6f;
+    const float PortalZ = 7.2f, PortalSpacing = 4.4f, TriggerRadius = 1.3f, DwellSeconds = 1.4f;
+
+    /// <summary>True when the editor builder supplies the building, so the primitive walls are skipped.</summary>
+    public bool ExternalShell;
+
+    XRRig rig;
+    readonly List<PortalState> portals = new List<PortalState>();
+    bool loading;
+
+    class PortalState
+    {
+        public Entry Entry;
+        public Transform Root;
+        public TextMesh Status;
+        public Material Gate;
+        public float Dwell;
+    }
+
+    void Start()
+    {
+        Build();
+        rig = XRRig.Create(new Vector3(0f, 0f, -6.5f), 0f);
+        rig.Camera.backgroundColor = P.MediumBlue;
+        rig.Camera.clearFlags = CameraClearFlags.SolidColor;
+        rig.Area = new Bounds(Vector3.zero, new Vector3(HallWidth - 1.5f, 1, HallDepth - 1.5f));
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+        RenderSettings.ambientLight = new Color(0.55f, 0.58f, 0.64f);
+
+        // Seasonal sky (SeasonSky, from the kit): show it through the open roof and name the season on the welcome board
+        sky = FindFirstObjectByType<SeasonSky>();
+        if (sky != null && sky.Active)
+        {
+            rig.Camera.clearFlags = CameraClearFlags.Skybox;
+            sky.SeasonChanged += ShowSeason;
+            ShowSeason(sky.Current);
+        }
+        else if (seasonChip != null) seasonChip.gameObject.SetActive(false);
+    }
+
+    SeasonSky sky;
+    Transform seasonChip;
+    TextMesh seasonText, seasonNote;
+
+    void ShowSeason(SeasonSky.Season s)
+    {
+        if (seasonText == null || s == null) return;
+        seasonText.text = s.label;
+        // Honest labelling: the pictures are stand-ins unless the manifest marks them as taken in Bradford
+        seasonNote.text = s.isBradford ? "Sky: Bradford, PA" : "Sky: stand-in photo";
+    }
+
+    void OnDestroy()
+    {
+        if (sky != null) sky.SeasonChanged -= ShowSeason;
+    }
+
+    // ------------------------------------------------------------------ build
+
+    void Build()
+    {
+        var root = new GameObject("Lobby").transform;
+        root.SetParent(transform, false);
+
+        var floor = P.Box(root, "Floor", new Vector3(0, -0.05f, 0), new Vector3(HallWidth, 0.1f, HallDepth), P.Concrete());
+        if (ExternalShell) floor.GetComponent<Renderer>().enabled = false; // keep the collider, show the building's floor
+        // Stripe guiding the visitor towards the portals
+        P.Box(root, "Guide stripe", new Vector3(0, 0.005f, -1.2f), new Vector3(0.18f, 0.01f, 12f), P.Mat(P.Gold, 0f, 0.3f), false);
+
+        if (!ExternalShell)
+        {
+            // An open roof terrace instead of a closed hall, so the seasonal sky is visible all around:
+            // a waist-high parapet with a gold rail, slim columns and an open ring beam overhead (no ceiling).
+            var wall = P.Mat(new Color(0.86f, 0.88f, 0.92f), 0f, 0.2f);
+            var rail = P.Mat(P.Gold, 0.3f, 0.5f);
+            var steel = P.Mat(new Color(0.16f, 0.17f, 0.2f), 0.7f, 0.5f);
+            P.Box(root, "Parapet N", new Vector3(0, ParapetHeight / 2, HallDepth / 2), new Vector3(HallWidth, ParapetHeight, 0.25f), wall);
+            P.Box(root, "Parapet S", new Vector3(0, ParapetHeight / 2, -HallDepth / 2), new Vector3(HallWidth, ParapetHeight, 0.25f), wall);
+            P.Box(root, "Parapet E", new Vector3(HallWidth / 2, ParapetHeight / 2, 0), new Vector3(0.25f, ParapetHeight, HallDepth), wall);
+            P.Box(root, "Parapet W", new Vector3(-HallWidth / 2, ParapetHeight / 2, 0), new Vector3(0.25f, ParapetHeight, HallDepth), wall);
+            P.Box(root, "Rail N", new Vector3(0, ParapetHeight + 0.03f, HallDepth / 2), new Vector3(HallWidth + 0.1f, 0.06f, 0.32f), rail, false);
+            P.Box(root, "Rail S", new Vector3(0, ParapetHeight + 0.03f, -HallDepth / 2), new Vector3(HallWidth + 0.1f, 0.06f, 0.32f), rail, false);
+            P.Box(root, "Rail E", new Vector3(HallWidth / 2, ParapetHeight + 0.03f, 0), new Vector3(0.32f, 0.06f, HallDepth + 0.1f), rail, false);
+            P.Box(root, "Rail W", new Vector3(-HallWidth / 2, ParapetHeight + 0.03f, 0), new Vector3(0.32f, 0.06f, HallDepth + 0.1f), rail, false);
+            foreach (var x in new[] { -HallWidth / 2, HallWidth / 2 })
+            foreach (var z in new[] { -HallDepth / 2, HallDepth / 2 })
+                P.Box(root, "Column", new Vector3(x, FrameHeight / 2, z), new Vector3(0.35f, FrameHeight, 0.35f), steel);
+            P.Box(root, "Beam N", new Vector3(0, FrameHeight, HallDepth / 2), new Vector3(HallWidth, 0.3f, 0.3f), steel, false);
+            P.Box(root, "Beam S", new Vector3(0, FrameHeight, -HallDepth / 2), new Vector3(HallWidth, 0.3f, 0.3f), steel, false);
+            P.Box(root, "Beam E", new Vector3(HallWidth / 2, FrameHeight, 0), new Vector3(0.3f, 0.3f, HallDepth), steel, false);
+            P.Box(root, "Beam W", new Vector3(-HallWidth / 2, FrameHeight, 0), new Vector3(0.3f, 0.3f, HallDepth), steel, false);
+            // Posts carrying the welcome board and the university plate (they used to hang on the north wall)
+            foreach (var x in new[] { -4.6f, 4.6f })
+                P.Box(root, "Board post", new Vector3(x, 2.8f, HallDepth / 2 - 0.2f), new Vector3(0.18f, 5.6f, 0.18f), steel);
+            P.Box(root, "Plate post", new Vector3(-10.1f, 1.4f, HallDepth / 2 - 0.2f), new Vector3(0.12f, 2.8f, 0.12f), steel);
+        }
+
+        var sun = new GameObject("Light").AddComponent<Light>();
+        sun.transform.SetParent(root, false);
+        sun.type = LightType.Directional;
+        sun.intensity = 0.9f;
+        sun.shadows = LightShadows.Soft;
+        sun.transform.rotation = Quaternion.Euler(55, -20, 0);
+
+        // Welcome board on the north wall
+        var board = new GameObject("Welcome board").transform;
+        board.SetParent(root, false);
+        board.localPosition = new Vector3(0, 6.6f, HallDepth / 2 - 0.3f);
+        Ui.Panel(board, "Panel", new Vector3(0, 0, 0.02f), new Vector2(11.2f, 2.0f), new Color(0f, 0.13f, 0.36f, 0.98f), P.Gold, 0.05f);
+        P.Text(board, "Pitt-Bradford XR Training Hub", new Vector3(0, 0.38f, -0.06f), 0.62f, Color.white, TextAnchor.MiddleCenter, true);
+        P.Text(board, "Step onto a portal's pad and wait a moment to start.   Desktop: keys 1-4.", new Vector3(0, -0.22f, -0.06f), 0.24f, P.Sky, TextAnchor.MiddleCenter);
+        P.Text(board, "General safety-awareness practice, not a procedure or certification.", new Vector3(0, -0.62f, -0.06f), 0.18f, P.Gold, TextAnchor.MiddleCenter);
+
+        // Season chip: a tab on top of the board's right-hand corner (filled in by ShowSeason; hidden without a season sky)
+        seasonChip = Ui.Panel(board, "Season chip", new Vector3(4.3f, 1.3f, 0.0f), new Vector2(2.1f, 0.72f), new Color(0.05f, 0.2f, 0.48f, 1f), P.Gold, 0.09f);
+        seasonText = P.Text(seasonChip, "", new Vector3(0, 0.06f, -0.012f), 0.3f, Color.white, TextAnchor.MiddleCenter, true);
+        seasonNote = P.Text(seasonChip, "", new Vector3(0, -0.21f, -0.012f), 0.12f, P.Sky, TextAnchor.MiddleCenter);
+
+        for (int i = 0; i < Entries.Length; i++)
+            BuildPortal(root, Entries[i], i, new Vector3((i - (Entries.Length - 1) / 2f) * PortalSpacing, 0f, PortalZ));
+
+        // Return hint on the south parapet, readable when you turn round
+        var hint = new GameObject("Hint").transform;
+        hint.SetParent(root, false);
+        hint.localPosition = new Vector3(0, 0.62f, -HallDepth / 2 + 0.16f);
+        hint.localRotation = Quaternion.Euler(0, 180, 0);
+        Ui.Panel(hint, "Panel", Vector3.zero, new Vector2(8.6f, 0.5f), new Color(0f, 0.13f, 0.36f, 0.97f), P.Gold, 0.08f);
+        P.Text(hint, "In any scenario: hold both grips (or press Backspace) to come back here.", new Vector3(0, -0.02f, -0.012f), 0.2f, Color.white, TextAnchor.MiddleCenter);
+    }
+
+    void BuildPortal(Transform parent, Entry e, int index, Vector3 pos)
+    {
+        var p = new GameObject("Portal " + (index + 1) + ": " + e.Title).transform;
+        p.SetParent(parent, false);
+        p.localPosition = pos;
+        var frameMat = P.Mat(new Color(0.16f, 0.17f, 0.2f), 0.7f, 0.5f);
+        var accent = P.Mat(e.Color, 0f, 0.4f);
+        const float w = 2.6f, h = 3.2f, t = 0.22f;
+
+        P.Box(p, "Post L", new Vector3(-w / 2, h / 2, 0), new Vector3(t, h, t), frameMat);
+        P.Box(p, "Post R", new Vector3(w / 2, h / 2, 0), new Vector3(t, h, t), frameMat);
+        P.Box(p, "Lintel", new Vector3(0, h + t / 2, 0), new Vector3(w + t, t, t), frameMat);
+        // The glowing doorway; its own material instance so the glow can pulse
+        var gate = P.Box(p, "Gate", new Vector3(0, h / 2, 0), new Vector3(w - t, h, 0.04f), P.Transparent(new Color(e.Color.r, e.Color.g, e.Color.b, 0.45f)), false);
+        var gateMat = gate.GetComponent<Renderer>().material;
+        // A pad on the floor marks where to stand
+        P.Cyl(p, "Pad", new Vector3(0, 0.01f, -1.5f), TriggerRadius, 0.02f, Vector3.up, accent, false);
+        P.Cyl(p, "Pad inner", new Vector3(0, 0.02f, -1.5f), TriggerRadius * 0.82f, 0.02f, Vector3.up, P.Mat(new Color(0.95f, 0.96f, 0.98f), 0f, 0.3f), false);
+
+        Ui.Panel(p, "Sign", new Vector3(0, h + 0.95f, 0.03f), new Vector2(w + 0.8f, 1.2f), Color.Lerp(e.Color, Color.black, 0.25f), Color.white, 0.04f);
+        P.Text(p, (index + 1) + "  " + e.Title, new Vector3(0, h + 1.12f, -0.05f), 0.3f, Color.white, TextAnchor.MiddleCenter, true);
+        P.Text(p, e.Blurb, new Vector3(0, h + 0.8f, -0.05f), 0.14f, Color.white, TextAnchor.MiddleCenter);
+
+        // Thumbnail of the scenario inside the doorway, on a rounded white frame (skipped if the image is missing)
+        var thumb = string.IsNullOrEmpty(e.Thumb) ? null : Resources.Load<Texture2D>("Thumbnails/" + e.Thumb);
+        if (thumb != null)
+        {
+            const float tw = 2.0f, th = tw * 9f / 16f;
+            var frame = Ui.Panel(p, "Thumbnail", new Vector3(0, 2.1f, -0.07f), new Vector2(tw + 0.12f, th + 0.12f), new Color(0.97f, 0.97f, 0.98f, 1f));
+            var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            q.name = "Picture";
+            Destroy(q.GetComponent<Collider>());
+            q.transform.SetParent(frame, false);
+            q.transform.localPosition = new Vector3(0, 0, -0.008f);
+            q.transform.localScale = new Vector3(tw, th, 1f);
+            var r = q.GetComponent<MeshRenderer>();
+            r.sharedMaterial = new Material(Shader.Find("Sprites/Default")) { mainTexture = thumb, name = "thumb-" + e.Thumb };
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.receiveShadows = false;
+        }
+
+        var status = P.Text(p, "Step on the pad", new Vector3(0, 0.04f, -1.5f), 0.14f, new Color(0.1f, 0.12f, 0.18f), TextAnchor.MiddleCenter, true);
+        status.transform.localRotation = Quaternion.Euler(90, 0, 0); // lies flat, readable from the south
+
+        var lamp = new GameObject("Lamp").AddComponent<Light>();
+        lamp.transform.SetParent(p, false);
+        lamp.transform.localPosition = new Vector3(0, 3.2f, -1.2f);
+        lamp.type = LightType.Point;
+        lamp.range = 6f;
+        lamp.intensity = 0.9f;
+        lamp.color = Color.Lerp(e.Color, Color.white, 0.65f);
+
+        portals.Add(new PortalState { Entry = e, Root = p, Status = status, Gate = gateMat });
+    }
+
+    // ------------------------------------------------------------------ play
+
+    void Update()
+    {
+        if (rig == null || loading) return;
+        Vector3 feet = rig.FeetPosition;
+        var kb = Keyboard.current;
+        for (int i = 0; i < portals.Count; i++)
+        {
+            var ps = portals[i];
+            var pad = ps.Root.position + new Vector3(0, 0, -1.5f);
+            bool on = Vector2.Distance(new Vector2(feet.x, feet.z), new Vector2(pad.x, pad.z)) < TriggerRadius;
+            ps.Dwell = on ? ps.Dwell + Time.deltaTime : Mathf.Max(0f, ps.Dwell - Time.deltaTime * 2f);
+            float f = Mathf.Clamp01(ps.Dwell / DwellSeconds);
+            ps.Status.text = on ? "Starting " + Mathf.RoundToInt(f * 100f) + "%" : "Step on the pad";
+            var c = ps.Entry.Color;
+            ps.Gate.color = new Color(c.r, c.g, c.b, Mathf.Lerp(0.35f, 0.9f, f));
+            if (f >= 1f) { Go(ps.Entry); return; }
+            if (kb != null && i < 9 && kb[(Key)((int)Key.Digit1 + i)].wasPressedThisFrame) { Go(ps.Entry); return; }
+        }
+    }
+
+    void Go(Entry e)
+    {
+        if (loading) return;
+        loading = true;
+        Debug.Log("[lobby] loading " + e.Scene);
+        rig.Left.Haptic(0.5f, 0.15f);
+        rig.Right.Haptic(0.5f, 0.15f);
+        SceneManager.LoadScene(e.Scene);
+    }
+
+    // ------------------------------------------------------------------ screenshots
+
+    public IEnumerator Shots(ShotApi api)
+    {
+        yield return api.Shot("lobby-1-entrance", new Vector3(0f, 1.7f, -7.5f), new Vector3(0f, 2.2f, 7f), 70f);
+        yield return api.Shot("lobby-2-portals", new Vector3(-3f, 1.7f, 0.5f), new Vector3(0f, 2.4f, 7.2f), 62f);
+        yield return api.Shot("lobby-3-pad", new Vector3(-1.6f, 1.7f, 3.0f), new Vector3(-2.2f, 0.4f, 5.7f), 62f);
+    }
+}

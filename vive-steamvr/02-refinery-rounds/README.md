@@ -2,9 +2,9 @@
 
 Outdoor rounds at the battery limits of a refinery unit. The scenario is inspired by the "Outdoor rounds at the battery limits" scenario in the web lab (`training-simulations/industrial-scenarios.js`, id `refinery-battery-area`) and uses the same four tasks, rebuilt as a walk-around 3D scene with real wind and drifting gas.
 
-**Status: compiles in Unity 6000.3.20f1 (checked inside the hub project) and plays in the editor in desktop mode with no console errors, November 1, 2026. Not played through to the end, and not tested on a Vive Pro 2.**
+**Status (November 1, 2026): compiles in Unity 6000.3.20f1 in this project. The scripted screenshot run (thirteen staged views, below) completes with no errors from the scenario or kit scripts, including the new "why this matters" panels and the reasoning question. After the signage and "why" updates the scenario has not been played through by hand, and it has not been tested on a Vive Pro 2.** (The hub keeps its own copy of this script; it is refreshed separately.)
 
-![Desktop editor Game view at start (not a headset)](screenshots/01-desktop-editor-view.png)
+![Start view: pre-entry station, conditions board, gate with the university plate, task board (desktop editor render, not a headset)](screenshots/07-start-view.png)
 
 This is general safety-awareness practice. It is not a site procedure, a permit, or a certification, and it does not replace training by your employer. Real sites have their own rules for gas monitors, radio calls, barricades, and emergency response.
 
@@ -25,6 +25,10 @@ An outdoor process-unit edge built from primitives and the shared kit's procedur
 
 **Muster point.** It is placed on the upwind side of the unit, so its position depends on the live wind (it moves when the live reading arrives). Real sites have designated muster points and alternates.
 
+**Signage.** Nothing is plain text floating in the air. Signs are rounded, shadowed panels with a metal back (the shared kit's `Ui.Panel`): the gate sign, the conditions board, the pre-entry instruction board, the control-room sign, the muster sign and the barricade-station sign. Equipment carries ID plates fixed to it (V-101, V-102, gauge G-1, the gas detector, the wind sock and the flare base). Things that need a label but have nowhere to mount one (flange F-12, the rag, the tool bag, the sample point, the gold objective marker) use name tags with a leader line that turn to face you (`Ui.Tag`). The University of Pittsburgh at Bradford / CIST plate (`Ui.BrandPlate`) stands on the gate lintel, in view from the start. It shows a text wordmark; the logo appears only in local builds that have the git-ignored logo file. Text on the face of a device (monitor screen, detector display, chest radio buttons, CHECK IN button) is unchanged.
+
+**Look.** Daylight ambient comes from sky, horizon and ground colours, and the sky is Unity's built-in procedural skybox when that shader is available (otherwise a flat sky colour). The task board floats a little further to the right than before so it does not cover the gate and its signs.
+
 ## Steps
 
 1. **Prepare to enter.** Look at the wind sock and at the muster flag (hold your gaze about a second). Grab the gas monitor, hold it at the station and press BUMP TEST. Release it to clip it to your chest. Press ENTERING on the chest radio, then walk through the gate.
@@ -34,6 +38,16 @@ An outdoor process-unit edge built from primitives and the shared kit's procedur
 
 Mistakes and critical misses are counted across all four tasks and shown on the task board footer.
 
+## Why this matters, and one reasoning question
+
+A Penn State study (Wang & Messner, 2026; see [../../docs/research/UNIVERSITY-VR-AR-LANDSCAPE.md](../../docs/research/UNIVERSITY-VR-AR-LANDSCAPE.md)) found that VR beat video on procedure and spatial scores, but neither conveyed *why* the steps mattered. This scenario uses the same design as the Hydrostatic Test Bay (the shared kit's `WhyCue`):
+
+- **After each of the 13 steps** a panel headed **WHY THIS MATTERS** shows one plain-language sentence for about seven seconds, a little below and left of your line of sight (the task board floats to the right), and follows your view gently. For example, after the bump test: *"A bump test shows the sensors and alarm respond to gas. A monitor can switch on fine and still miss gas."*
+- **After the check-in at the muster point** one multiple-choice question appears (three options, one best answer): *Your gas monitor switched on and read 0. Why bump-test it before you enter the unit?* Point at an option and pull the trigger (VR), or click it or press 1, 2 or 3 (desktop). Every option then shows a line of feedback, and the best answer is marked in green. The question is about the first task, so it checks whether the reason stuck, not whether you just read it.
+- **The result is kept apart from the procedure score.** The final task board shows the usual summary and, on its own line, "Reasoning: best answer ..." or "Reasoning: review ...". It is practice feedback, not pass/fail and not a certification.
+
+The reasons are general safety awareness written for this example. They are not taken from a standard or a site procedure and have not been reviewed by a partner yet.
+
 ## Controls
 
 | Action | Vive wands | Desktop |
@@ -42,6 +56,7 @@ Mistakes and critical misses are counted across all four tasks and shown on the 
 | Look / turn | Head; right stick snap-turn | Hold right mouse and move |
 | Press (buttons, radio, bolts) | Point + trigger | Crosshair + left click |
 | Grab (monitor, cones) | Grip near the object | Look at the object and press E (hold to carry, release to drop) |
+| Answer the reasoning question | Point + trigger | Crosshair + left click, or keys 1, 2, 3 |
 
 The chest radio (ENTERING, WARN, REPORT, PHONE OFF, and the live monitor readout) follows you at chest height. On desktop, look down to see it. The task board follows your view.
 
@@ -61,10 +76,34 @@ See [../../docs/research/README.md](../../docs/research/README.md).
 2. Run the menu **Pitt-Bradford > Set up project**. It configures OpenXR (Vive, Index, Touch profiles), the Input System, and creates `Assets/Scenes/RefineryRounds.unity`. Restart the editor if it asks for the input handling change.
 3. Set **SteamVR as the active OpenXR runtime** (SteamVR > Settings > Developer > Set SteamVR as OpenXR runtime), start SteamVR, then press Play. With no headset, it runs in desktop mode.
 4. Optional: **Pitt-Bradford > Build Windows player** builds to `Builds/RefineryRounds/`.
-5. Screenshots (to be generated): run the built player with `-pbCapture <folder>`; the scenario's `Shots` coroutine takes six pictures (overview, wind sock and board, gas alarm cloud, weep and barricade, muster point, critical miss).
+5. Screenshots: `Unity.exe -projectPath <this folder> -executeMethod PittBradford.XR.EditorTools.CaptureRunner.Run -pbCapture <folder> -logFile <log>` (no `-batchmode`; it needs graphics). The editor enters play mode, the scenario's `Shots` coroutine stages and photographs thirteen views, and the editor exits. A built player also accepts `-pbCapture <folder>`.
+
+## Screenshots
+
+Desktop editor renders made by the capture run above (November 1, 2026). They are not headset captures. Each view is staged by the script (for example the gas cloud and the barricade are placed, not played, and in 11 and 12 the script finishes the scenario and picks the answer), so they show what the scene looks like, not a recorded play-through.
+
+| | |
+|---|---|
+| ![Overview of the unit from above](screenshots/01-overview.png) | ![Wind sock, conditions board and gate from the walkway](screenshots/02-wind-sock-and-board.png) |
+| 01 Overview | 02 Wind sock, conditions board, gate |
+| ![Gas alarm: release, drifting cloud, sample-point tag](screenshots/03-gas-alarm-cloud.png) | ![Flange weep with three cones and tape](screenshots/04-weep-and-barricade.png) |
+| 03 Gas alarm cloud | 04 Weep and barricade |
+| ![Muster point sign with check-in button](screenshots/05-muster-point.png) | ![Critical miss: going back for the tool bag](screenshots/06-critical-miss.png) |
+| 05 Muster point | 06 Critical miss (tool bag) |
+| ![Start view](screenshots/07-start-view.png) | ![Gate sign and university plate close up](screenshots/08-gate-signage.png) |
+| 07 Start view | 08 Gate signage |
+| ![Equipment ID plates and the flange name tag](screenshots/09-equipment-labels.png) | ![Why this matters panel after the bump test](screenshots/10-why-this-matters.png) |
+| 09 Equipment labels | 10 Why this matters (after the bump test) |
+| ![The rationale question at the muster point](screenshots/11-rationale-question.png) | ![Feedback on every option, best answer in green](screenshots/12-rationale-feedback.png) |
+| 11 Rationale question | 12 Feedback on every option |
+| ![Final task board with the separate Reasoning line](screenshots/13-summary-with-reasoning.png) | |
+| 13 Summary with the separate Reasoning line | |
 
 ## Files
 
-- `Assets/Scripts/RefineryRounds.cs`: the whole scenario (`RefineryRounds : MonoBehaviour, IShotScript`).
+- `Assets/Scripts/RefineryRounds.cs`: the whole scenario (`RefineryRounds : MonoBehaviour, IShotScript`), including the step reasons (`StepWhy`) and the rationale question.
+- `../packages/com.pittbradford.xrtraining/Runtime/WhyCue.cs`: the shared "why this matters" panel and question used here and in the Hydrostatic Test Bay.
 - `Assets/Editor/ProjectSetup.cs`: the setup and build menu items.
+- `Assets/Scenes`, `Assets/XR`, `Assets/Resources`, `ProjectSettings`: created by **Set up project** (OpenXR settings, scene, shader keepers).
+- `screenshots/`: the thirteen desktop editor renders above.
 - `Packages/manifest.json`: same dependencies as project 01 (the kit by `file:` path).

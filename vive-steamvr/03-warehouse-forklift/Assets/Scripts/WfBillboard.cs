@@ -1,6 +1,6 @@
 using UnityEngine;
 
-/// <summary>Keeps a world-space text label facing the player's camera.</summary>
+/// <summary>Keeps a world-space label or sign (front face on local -Z) facing the player's camera.</summary>
 public class WfBillboard : MonoBehaviour
 {
     void LateUpdate()

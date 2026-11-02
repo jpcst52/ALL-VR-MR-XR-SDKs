@@ -8,8 +8,10 @@ using PittBradford.XR;
 /// mirror, signals the forklift driver and crosses at the marked crossing, then cones a spill and a damaged rack
 /// upright and radios the supervisor. Stepping into a forklift lane while the forklift is within about 6 m is a
 /// critical miss. General safety-awareness practice only: it is not a certification or a site procedure.
+/// Optional (inspector, on by default): a co-worker walks past the forklift while it puts a pallet away, with a
+/// pause-and-ask awareness check; see WarehouseForklift.Awareness.cs.
 /// </summary>
-public class WarehouseForklift : MonoBehaviour, IShotScript
+public partial class WarehouseForklift : MonoBehaviour, IShotScript
 {
     enum Zone { Entry, Walk, Crossing, Lane, Floor }
 
@@ -76,8 +78,11 @@ public class WarehouseForklift : MonoBehaviour, IShotScript
     void Start()
     {
         QualitySettings.shadows = ShadowQuality.All;
-        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-        RenderSettings.ambientLight = new Color(0.42f, 0.43f, 0.46f);
+        // ceiling / wall / floor ambient: brighter from the lit roof, darker bounce from the concrete
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+        RenderSettings.ambientSkyColor = new Color(0.5f, 0.5f, 0.52f);
+        RenderSettings.ambientEquatorColor = new Color(0.42f, 0.43f, 0.45f);
+        RenderSettings.ambientGroundColor = new Color(0.26f, 0.26f, 0.27f);
         RenderSettings.fog = true;
         RenderSettings.fogMode = FogMode.Linear;
         RenderSettings.fogColor = new Color(0.5f, 0.53f, 0.57f);
@@ -108,6 +113,7 @@ public class WarehouseForklift : MonoBehaviour, IShotScript
             new Vector3(-10f, 0f, 0f), new Vector3(10f, 0f, 0f), new Vector3(10f, 0f, 12f), new Vector3(-10f, 0f, 12f),
         };
         forklift = Forklift.Build(transform, route, new Vector3(-4f, 0f, 0f));
+        BuildCoworkerEvent(); // optional co-worker hazard and awareness check (WarehouseForklift.Awareness.cs)
 
         rig = XRRig.Create(new Vector3(-9f, 0f, -10.6f), 0f);
         rig.Area = new Bounds(new Vector3(0, 0, 2f), new Vector3(27.2f, 1f, 27.2f));
@@ -116,6 +122,7 @@ public class WarehouseForklift : MonoBehaviour, IShotScript
 
         BuildFlash();
         BuildBoard();
+        BuildBrand();
     }
 
     Transform NewRoot(string name)
@@ -123,6 +130,73 @@ public class WarehouseForklift : MonoBehaviour, IShotScript
         var t = new GameObject(name).transform;
         t.SetParent(transform, false);
         return t;
+    }
+
+    // ------------------------------------------------------------------------------------------------- signage helpers
+
+    static readonly Color Navy = new Color(0.03f, 0.08f, 0.2f, 0.96f);
+    static readonly Color SafetyYellow = new Color(0.98f, 0.78f, 0.1f);
+    static readonly Color Ink = new Color(0.08f, 0.08f, 0.08f);
+    static Material backMat;
+
+    /// <summary>
+    /// A rounded sign panel at a world position whose readable face points along <paramref name="faceDir"/> (toward
+    /// the viewer), with a metal back. Text added to the returned transform goes at local z = -0.015.
+    /// </summary>
+    Transform Sign(Transform parent, string name, Vector3 pos, Vector3 faceDir, Vector2 size, Color fill, Color? accent = null, float accentHeight = 0.08f)
+    {
+        var h = new GameObject(name).transform;
+        h.SetParent(parent, false);
+        h.position = pos;
+        faceDir.y = 0f;
+        h.rotation = Quaternion.LookRotation(-faceDir.normalized, Vector3.up);
+        Ui.Panel(h, "Panel", Vector3.zero, size, fill, accent, accentHeight);
+        SignBack(h, Vector3.zero, size);
+        return h;
+    }
+
+    static TextMesh SignText(Transform sign, string s, float y, float height, Color color, bool bold = true, float x = 0f, TextAnchor anchor = TextAnchor.MiddleCenter)
+    {
+        return P.Text(sign, s, new Vector3(x, y, -0.015f), height, color, anchor, bold);
+    }
+
+    /// <summary>
+    /// A solid back for a one-sided panel, so from behind you see a plain metal back and not reversed text.
+    /// Two crossed boxes stay inside the panel's rounded corners.
+    /// </summary>
+    static void SignBack(Transform parent, Vector3 center, Vector2 size)
+    {
+        if (backMat == null) backMat = P.Mat(new Color(0.42f, 0.44f, 0.47f), 0.6f, 0.45f);
+        float r = 0.12f * Mathf.Min(size.x, size.y);
+        const float d = 0.012f, z = 0.013f;
+        P.Box(parent, "Sign back", center + new Vector3(0f, 0f, z), new Vector3(size.x * 0.99f, size.y - 2f * r, d), backMat, false);
+        P.Box(parent, "Sign back", center + new Vector3(0f, 0f, z), new Vector3(size.x - 2f * r, size.y * 0.99f, d), backMat, false);
+    }
+
+    /// <summary>Shrinks any text under <paramref name="root"/> that is wider than <paramref name="maxWidth"/>.</summary>
+    static IEnumerator FitText(Transform root, float maxWidth)
+    {
+        yield return null; // text meshes are built by then
+        foreach (var tm in root.GetComponentsInChildren<TextMesh>())
+        {
+            float w = tm.GetComponent<MeshRenderer>().localBounds.size.x;
+            if (w > maxWidth) tm.characterSize *= maxWidth / w;
+        }
+    }
+
+    /// <summary>
+    /// University plate hung from the entry gantry, just right of the task board: in view from the start position,
+    /// above head height, and clear of the PPE sign in the middle of the header.
+    /// </summary>
+    void BuildBrand()
+    {
+        const float w = 1.6f; // plate is w x w/2
+        var pos = new Vector3(-5.85f, 3.86f, -6.3f);
+        var plate = Ui.BrandPlate(transform, pos, w);
+        SignBack(transform, pos, new Vector2(w, w / 2f));
+        P.Box(transform, "Plate hanger", pos + new Vector3(-0.55f, w / 4f + 0.03f, 0.04f), new Vector3(0.04f, 0.1f, 0.04f), darkSteel, false);
+        P.Box(transform, "Plate hanger", pos + new Vector3(0.55f, w / 4f + 0.03f, 0.04f), new Vector3(0.04f, 0.1f, 0.04f), darkSteel, false);
+        StartCoroutine(FitText(plate, w * 0.9f));
     }
 
     void LateUpdate()
@@ -186,15 +260,19 @@ public class WarehouseForklift : MonoBehaviour, IShotScript
         P.Box(root, "Gantry post W", new Vector3(-13.7f, 2.3f, -6.1f), new Vector3(0.3f, 4.6f, 0.3f), darkSteel, false);
         P.Box(root, "Gantry post E", new Vector3(13.7f, 2.3f, -6.1f), new Vector3(0.3f, 4.6f, 0.3f), darkSteel, false);
         P.Box(root, "Gantry header", new Vector3(0, 4.55f, -6.1f), new Vector3(27.4f, 0.45f, 0.3f), P.Mat(P.MediumBlue, 0.2f, 0.5f), false);
-        P.Text(root, "PPE REQUIRED BEYOND THIS POINT", new Vector3(0, 4.55f, -6.28f), 0.26f, P.Gold, TextAnchor.MiddleCenter, true);
+        var ppeHeader = Sign(root, "PPE header sign", new Vector3(0, 4.55f, -6.28f), Vector3.back, new Vector2(5.6f, 0.62f), SafetyYellow, Ink, 0.08f);
+        SignText(ppeHeader, "PPE REQUIRED BEYOND THIS POINT", -0.02f, 0.26f, Ink);
 
         // entry barrier rails with one gate opening at the walkway
         BuildRail(root, -13.6f, -5.2f);
         BuildRail(root, -2.8f, 13.6f);
 
         // wall signage
-        P.Text(root, "RECEIVING AND STORAGE", new Vector3(0, 3.2f, 15.9f), 0.5f, P.Gold, TextAnchor.MiddleCenter, true).transform.rotation = Quaternion.identity;
-        P.Text(root, "WATCH FOR FORKLIFTS", new Vector3(-13.9f, 2.6f, 6f), 0.4f, Color.white, TextAnchor.MiddleCenter, true).transform.rotation = Quaternion.Euler(0, -90, 0);
+        // wall signage on rounded panels; the west sign sits above the 4.2 m racking so it is not hidden
+        var recv = Sign(root, "Receiving sign", new Vector3(0, 3.3f, 15.96f), Vector3.back, new Vector2(7.6f, 1.0f), Navy, P.Gold, 0.07f);
+        SignText(recv, "RECEIVING AND STORAGE", -0.02f, 0.5f, P.Gold);
+        var watch = Sign(root, "Watch for forklifts sign", new Vector3(-13.96f, 5.1f, 6f), Vector3.right, new Vector2(6.4f, 0.9f), SafetyYellow, Ink, 0.08f);
+        SignText(watch, "WATCH FOR FORKLIFTS", -0.02f, 0.42f, Ink);
     }
 
     void BuildRail(Transform root, float x0, float x1)
@@ -379,7 +457,10 @@ public class WarehouseForklift : MonoBehaviour, IShotScript
             P.Box(root, "Cargo", new Vector3(x, y, z), new Vector3(1.1f, 1.2f, 1.5f), mats[rng.Next(0, 3)]);
         StaticBatchingUtility.Combine(root.gameObject);
         // the sign is created after combining and outside the batched root (TextMesh has no MeshFilter)
-        P.Text(transform, "BLIND CORNER\nCHECK THE MIRROR", new Vector3(-5.46f, 2.2f, -3.8f), 0.14f, P.Gold, TextAnchor.MiddleCenter, true).transform.rotation = Quaternion.Euler(0, 90, 0);
+        // Fixed to the stack's east face, readable from the walkway (+x). The old text faced -x, so it read mirrored.
+        var blind = Sign(transform, "Blind corner sign", new Vector3(-5.475f, 2.2f, -3.8f), Vector3.right, new Vector2(1.7f, 0.62f), SafetyYellow, Ink, 0.09f);
+        SignText(blind, "BLIND CORNER", 0.1f, 0.15f, Ink);
+        SignText(blind, "CHECK THE MIRROR", -0.12f, 0.1f, Ink);
     }
 
     void BuildDock()
@@ -393,7 +474,8 @@ public class WarehouseForklift : MonoBehaviour, IShotScript
         P.Cyl(root, "Door roll", new Vector3(x - 0.2f, 3.55f, 6f), 0.22f, 4.4f, Vector3.forward, steel, false);
         P.Box(root, "Bumper N", new Vector3(x - 0.1f, 0.5f, 8.1f), new Vector3(0.2f, 0.4f, 0.3f), P.Mat(new Color(0.08f, 0.08f, 0.08f)), false);
         P.Box(root, "Bumper S", new Vector3(x - 0.1f, 0.5f, 3.9f), new Vector3(0.2f, 0.4f, 0.3f), P.Mat(new Color(0.08f, 0.08f, 0.08f)), false);
-        P.Text(root, "DOCK 2  LOADING DOOR", new Vector3(x - 0.2f, 4.45f, 6f), 0.32f, P.Gold, TextAnchor.MiddleCenter, true).transform.rotation = Quaternion.Euler(0, 90, 0);
+        var dock = Sign(root, "Dock sign", new Vector3(13.94f, 4.5f, 6f), Vector3.left, new Vector2(4.6f, 0.62f), Navy, P.Gold, 0.08f);
+        SignText(dock, "DOCK 2   LOADING DOOR", -0.02f, 0.3f, P.Gold);
         Paint(root, "Dock apron", 11.7f, 3.4f, 12.0f, 8.6f, hazard, 0.009f);
     }
 
@@ -409,8 +491,8 @@ public class WarehouseForklift : MonoBehaviour, IShotScript
         t.SetPositionAndRotation(basePos, Quaternion.LookRotation(d.normalized, Vector3.up));
         P.Box(t, "Post L", new Vector3(-width / 2f + 0.08f, bottom / 2f, 0.05f), new Vector3(0.06f, bottom, 0.06f), steel);
         P.Box(t, "Post R", new Vector3(width / 2f - 0.08f, bottom / 2f, 0.05f), new Vector3(0.06f, bottom, 0.06f), steel);
-        P.Box(t, "Frame", new Vector3(0, bottom + height / 2f, 0.02f), new Vector3(width + 0.06f, height + 0.06f, 0.03f), P.Mat(P.Gold, 0.3f, 0.5f), false);
-        P.Box(t, "Panel", new Vector3(0, bottom + height / 2f, 0f), new Vector3(width, height, 0.03f), P.Mat(new Color(0.03f, 0.08f, 0.2f), 0f, 0.3f), false);
+        Ui.Panel(t, "Panel", new Vector3(0, bottom + height / 2f, 0f), new Vector2(width, height), Navy, P.Gold, 0.05f);
+        SignBack(t, new Vector3(0, bottom + height / 2f, 0f), new Vector2(width, height));
         return t;
     }
 
@@ -445,9 +527,9 @@ public class WarehouseForklift : MonoBehaviour, IShotScript
         MakeGlasses(new Vector3(tx + 0.6f, 0.88f, tz));
 
         var sign = Stand("PPE sign", new Vector3(-7.5f, 0f, -8.2f), new Vector3(-9f, 1.6f, -10.6f), 1.8f, 1.1f, 0.7f);
-        P.Text(sign, "PPE STATION", new Vector3(-0.85f, 1.7f, -0.03f), 0.09f, P.Gold, TextAnchor.MiddleLeft, true);
-        ppeText = P.Text(sign, "", new Vector3(-0.85f, 1.58f, -0.03f), 0.065f, Color.white, TextAnchor.UpperLeft, true);
-        P.Text(sign, "Grab each item (grip).\nVR: bring it to your head or chest.\nDesktop: hold it, then press WEAR.", new Vector3(-0.85f, 1.2f, -0.03f), 0.04f, P.Sky, TextAnchor.UpperLeft);
+        P.Text(sign, "PPE STATION", new Vector3(-0.8f, 1.67f, -0.015f), 0.09f, P.Gold, TextAnchor.MiddleLeft, true);
+        ppeText = P.Text(sign, "", new Vector3(-0.8f, 1.57f, -0.015f), 0.065f, Color.white, TextAnchor.UpperLeft, true);
+        P.Text(sign, "Grab each item (grip).\nVR: bring it to your head or chest.\nDesktop: hold it, then press WEAR.", new Vector3(-0.8f, 1.2f, -0.015f), 0.04f, P.Sky, TextAnchor.UpperLeft);
         MakeButton(sign, "WEAR", new Vector3(0.52f, 1.45f, -0.05f), new Vector3(0.5f, 0.22f, 0.07f), new Color(0.1f, 0.75f, 0.35f), WearHeld);
         P.Text(sign, "WEAR", new Vector3(0.52f, 1.45f, -0.1f), 0.08f, Color.white, TextAnchor.MiddleCenter, true);
         UpdatePpeText(true);
@@ -604,8 +686,8 @@ public class WarehouseForklift : MonoBehaviour, IShotScript
     void BuildSignalStation()
     {
         var sign = Stand("Signal station", new Vector3(-2.6f, 0f, -3.0f), new Vector3(-4f, 1.4f, -4.5f), 1.1f, 0.85f, 0.8f);
-        P.Text(sign, "SIGNAL THE DRIVER", new Vector3(0, 1.58f, -0.03f), 0.07f, P.Gold, TextAnchor.MiddleCenter, true);
-        P.Text(sign, "1  LOOK at the driver\n2  PRESS the button\n3  WAIT for the stop", new Vector3(-0.48f, 1.48f, -0.03f), 0.045f, P.Sky, TextAnchor.UpperLeft);
+        P.Text(sign, "SIGNAL THE DRIVER", new Vector3(0, 1.53f, -0.015f), 0.07f, P.Gold, TextAnchor.MiddleCenter, true);
+        P.Text(sign, "1  LOOK at the driver\n2  PRESS the button\n3  WAIT for the stop", new Vector3(-0.45f, 1.46f, -0.015f), 0.045f, P.Sky, TextAnchor.UpperLeft);
         MakeButton(sign, "SIGNAL", new Vector3(0, 1.08f, -0.05f), new Vector3(0.5f, 0.2f, 0.07f), new Color(1f, 0.62f, 0.05f), SignalPressed);
         P.Text(sign, "SIGNAL", new Vector3(0, 1.08f, -0.1f), 0.07f, Color.white, TextAnchor.MiddleCenter, true);
     }
@@ -623,8 +705,10 @@ public class WarehouseForklift : MonoBehaviour, IShotScript
     {
         var root = NewRoot("Cone station");
         P.Box(root, "Cone tray", new Vector3(-5.4f, 0.04f, 2.9f), new Vector3(0.9f, 0.08f, 0.9f), hazard);
-        P.Cyl(root, "Cone sign post", new Vector3(-5.9f, 0.6f, 2.4f), 0.03f, 1.2f, Vector3.up, steel, false);
-        P.Text(root, "SAFETY CONES", new Vector3(-5.9f, 1.3f, 2.4f), 0.1f, P.Gold, TextAnchor.MiddleCenter, true).transform.rotation = Quaternion.Euler(0, -90, 0);
+        P.Cyl(root, "Cone sign post", new Vector3(-5.9f, 0.72f, 2.4f), 0.03f, 1.44f, Vector3.up, steel, false);
+        // plate on the post, readable from the walkway to the east (+x)
+        var coneSign = Sign(root, "Cone sign", new Vector3(-5.86f, 1.3f, 2.4f), Vector3.right, new Vector2(0.95f, 0.26f), Navy, SafetyYellow, 0.1f);
+        SignText(coneSign, "SAFETY CONES", -0.01f, 0.09f, SafetyYellow);
         MakeCone(new Vector3(-5.6f, 0.36f, 2.7f));
         MakeCone(new Vector3(-5.2f, 0.36f, 2.7f));
         MakeCone(new Vector3(-5.6f, 0.36f, 3.1f));
@@ -655,8 +739,8 @@ public class WarehouseForklift : MonoBehaviour, IShotScript
     void BuildRadio()
     {
         var sign = Stand("Radio station", new Vector3(-5.9f, 0f, 8.4f), new Vector3(-4f, 1.4f, 8.4f), 1.2f, 0.95f, 0.8f);
-        P.Text(sign, "SUPERVISOR RADIO", new Vector3(0, 1.62f, -0.03f), 0.07f, P.Gold, TextAnchor.MiddleCenter, true);
-        radioText = P.Text(sign, "Cone both hazards, then\nreport them here.", new Vector3(-0.54f, 1.52f, -0.03f), 0.045f, P.Sky, TextAnchor.UpperLeft);
+        P.Text(sign, "SUPERVISOR RADIO", new Vector3(0, 1.61f, -0.015f), 0.07f, P.Gold, TextAnchor.MiddleCenter, true);
+        radioText = P.Text(sign, "Cone both hazards, then\nreport them here.", new Vector3(-0.5f, 1.52f, -0.015f), 0.045f, P.Sky, TextAnchor.UpperLeft);
         MakeButton(sign, "RADIO", new Vector3(0, 1.0f, -0.05f), new Vector3(0.6f, 0.2f, 0.07f), new Color(0.1f, 0.6f, 0.9f), RadioPressed);
         P.Text(sign, "RADIO", new Vector3(0, 1.0f, -0.1f), 0.07f, Color.white, TextAnchor.MiddleCenter, true);
     }
@@ -683,6 +767,11 @@ public class WarehouseForklift : MonoBehaviour, IShotScript
                 "Cone the spill and the bent rack upright, then radio",
             }, 4.0f, 1.35f);
         board.SetFooter("Trigger = press, grip = grab. Desktop: WASD, hold right mouse to look, click, E to grab.");
+        // The board hangs in a fixed spot, so players on the floor see its back: give it a solid one
+        // (same panel size as TaskBoard.Create uses for width 4.0, text scale 1.35, four steps).
+        const float k = 1.35f, bw = 4.0f;
+        float bh = 1.05f * k + 4 * 0.095f * k;
+        SignBack(board.transform, new Vector3(0, -bh / 2f + 0.25f, 0.02f), new Vector2(bw + 0.06f, bh + 0.06f));
     }
 
     // ------------------------------------------------------------------------------------------------- rules
@@ -763,6 +852,7 @@ public class WarehouseForklift : MonoBehaviour, IShotScript
     void Update()
     {
         if (rig == null || staging) return;
+        if (UpdateAwarenessPause()) return; // the scene is frozen for the awareness check
         float dt = Time.deltaTime;
         Vector3 feet = rig.FeetPosition;
         Zone zone = ZoneAt(feet);
@@ -777,12 +867,14 @@ public class WarehouseForklift : MonoBehaviour, IShotScript
         UpdateTraffic(zone, feet, dt);
         UpdateHazards(dt);
         UpdateFlash(dt);
+        UpdateCoworkerEvent(zone, feet, dt);
 
         prevZone = zone;
         if (board.AllDone && !finished)
         {
             finished = true;
             board.Say(board.Summary(), board.CriticalMisses > 0 ? new Color(1f, 0.38f, 0.38f) : new Color(0.3f, 0.9f, 0.62f));
+            ShowSummary();
         }
     }
 
@@ -959,21 +1051,79 @@ public class WarehouseForklift : MonoBehaviour, IShotScript
         flashRoot.SetActive(false);
     }
 
+    /// <summary>
+    /// Labels that turn toward Camera.main (the rig) are turned toward the shot position instead, because the
+    /// screenshots use a separate capture camera.
+    /// </summary>
+    static void AimLabelsAt(Vector3 camPos)
+    {
+        foreach (var tf in FindObjectsByType<TagFacing>(FindObjectsSortMode.None))
+        {
+            tf.enabled = false;
+            Vector3 away = tf.Tag.position - camPos;
+            away.y = 0f;
+            if (away.sqrMagnitude > 0.0001f) tf.Tag.rotation = Quaternion.LookRotation(away, Vector3.up);
+            tf.Line.SetPosition(0, tf.Tag.position - Vector3.up * 0.04f);
+            tf.Line.SetPosition(1, tf.Anchor.TransformPoint(tf.AnchorLocal));
+        }
+        foreach (var bb in FindObjectsByType<WfBillboard>(FindObjectsSortMode.None))
+        {
+            bb.enabled = false;
+            bb.transform.rotation = Quaternion.LookRotation(bb.transform.position - camPos);
+        }
+    }
+
+    /// <summary>
+    /// Takes one screenshot. When an XR runtime is active the capture camera (copied from the rig camera) would be
+    /// driven by the headset pose and refuse a field of view, so it is switched to a plain mono camera first. The view
+    /// is also pre-rendered until the editor has finished compiling shaders, so nothing shows the cyan placeholder.
+    /// </summary>
+    IEnumerator Snap(ShotApi api, string name, Vector3 pos, Vector3 look, float fov)
+    {
+        AimLabelsAt(pos);
+        var capGo = GameObject.Find("Capture Camera");
+        var cap = capGo ? capGo.GetComponent<Camera>() : null;
+        if (cap != null)
+        {
+            cap.stereoTargetEye = StereoTargetEyeMask.None;
+            cap.transform.SetPositionAndRotation(pos, Quaternion.LookRotation(look - pos, Vector3.up));
+            cap.fieldOfView = fov;
+            var rt = new RenderTexture(640, 360, 24);
+            cap.targetTexture = rt;
+            float t0 = Time.realtimeSinceStartup;
+            for (int i = 0; i < 400; i++)
+            {
+                cap.Render();
+                yield return null;
+#if UNITY_EDITOR
+                if (i >= 3 && !UnityEditor.ShaderUtil.anythingCompiling) break;
+#else
+                if (i >= 3) break;
+#endif
+                if (Time.realtimeSinceStartup - t0 > 20f) break;
+            }
+            cap.targetTexture = null;
+            Destroy(rt);
+        }
+        yield return api.Shot(name, pos, look, fov);
+    }
+
     public IEnumerator Shots(ShotApi api)
     {
         staging = true;
         forklift.Frozen = true;
         mirrorCam.enabled = true;
 
-        yield return api.Shot("01-warehouse-overview", new Vector3(12.8f, 6.3f, 14.8f), new Vector3(-3f, 0.4f, 1f), 70f);
+        yield return Snap(api, "01-warehouse-overview", new Vector3(12.8f, 6.3f, 14.8f), new Vector3(-3f, 0.4f, 1f), 70f);
 
-        yield return api.Shot("02-ppe-station", new Vector3(-11.2f, 1.9f, -10.9f), new Vector3(-9f, 0.9f, -8f), 60f);
+        yield return Snap(api, "02-ppe-station", new Vector3(-11.2f, 1.9f, -10.9f), new Vector3(-9f, 0.9f, -8f), 60f);
 
         forklift.Place(new Vector3(-8.5f, 0f, 0f), Vector3.right, 0f);
         forklift.Acknowledge(60f);
-        yield return api.Shot("03-crossing-forklift-stopped", new Vector3(-4f, 1.7f, -3.5f), new Vector3(-7.5f, 1.0f, 0.3f), 62f);
+        // from the crossing, looking west down the lane at the stopped forklift (the cargo stack hides it from the walkway)
+        yield return Snap(api, "03-crossing-forklift-stopped", new Vector3(-3.4f, 1.7f, -1.1f), new Vector3(-8.5f, 1.3f, 0.2f), 62f);
 
-        yield return api.Shot("04-corner-mirror", new Vector3(-4f, 1.7f, -4.2f), new Vector3(-5.15f, 1.9f, -2.25f), 40f);
+        yield return Snap(api, "04-corner-mirror", new Vector3(-4f, 1.7f, -4.2f), new Vector3(-5.15f, 1.9f, -2.25f), 40f);
 
         // hazard markers: drop two cones and let them settle
         cones[0].transform.position = SpillPos + new Vector3(0.9f, 0.4f, -0.5f);
@@ -981,14 +1131,26 @@ public class WarehouseForklift : MonoBehaviour, IShotScript
         cones[1].transform.position = UprightPos + new Vector3(-0.9f, 0.4f, -0.4f);
         cones[1].GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
         yield return api.Wait(1.5f);
-        yield return api.Shot("05-hazard-markers", new Vector3(-0.2f, 1.9f, 2.8f), new Vector3(0.2f, 0.5f, 5.8f), 70f);
+        // from the west end of the cross-aisle spur: the spill in front, the bent upright at the far end
+        yield return Snap(api, "05-hazard-markers", new Vector3(-4.3f, 1.8f, 5.5f), new Vector3(1.5f, 0.5f, 5.8f), 62f);
 
         // near miss: the forklift is close and the warning flash fills the view
         forklift.Place(new Vector3(-6.3f, 0f, 0f), Vector3.right, 1.8f);
         Vector3 nearCam = new Vector3(-3.9f, 1.7f, -1.9f);
         Vector3 nearLook = new Vector3(-6.3f, 1.2f, 0f);
         ShowFlashAt(nearCam, nearLook);
-        yield return api.Shot("06-near-miss", nearCam, nearLook, 60f);
+        yield return Snap(api, "06-near-miss", nearCam, nearLook, 60f);
         HideFlash();
+
+        // the player's view at the start: PPE table and sign, task board, university plate, PPE header
+        forklift.Place(new Vector3(4f, 0f, 12f), Vector3.left, 0f);
+        yield return Snap(api, "07-start-view", new Vector3(-9f, 1.7f, -10.6f), new Vector3(-7.6f, 2.2f, -5f), 72f);
+
+        // blind-corner sign on the cargo stack (seen from the entry walkway) and the cone station sign
+        yield return Snap(api, "08-blind-corner-sign", new Vector3(-3.4f, 1.7f, -5.8f), new Vector3(-5.4f, 1.9f, -3.2f), 55f);
+        yield return Snap(api, "09-cone-station", new Vector3(-3.5f, 1.7f, 0.9f), new Vector3(-5.6f, 1.0f, 2.7f), 55f);
+
+        // the co-worker event and awareness check, driven live by a scripted self-test (logs its score)
+        yield return CoworkerShots(api);
     }
 }

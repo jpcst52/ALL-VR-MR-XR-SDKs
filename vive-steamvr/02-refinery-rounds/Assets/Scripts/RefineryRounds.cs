@@ -27,6 +27,8 @@ public class RefineryRounds : MonoBehaviour, IShotScript
     const float PuffLife = 20f;
     const int MaxPuffs = 36;
     const float SockSeg = 0.55f;
+    // task board offset from the view: far enough right that the gate, its signs and the university plate stay clear
+    const float BoardAhead = 3.6f, BoardRight = 2.3f;
 
     static readonly Color Good = new Color(0.3f, 0.9f, 0.62f);
     static readonly Color Warn = new Color(1f, 0.72f, 0.3f);
@@ -91,7 +93,9 @@ public class RefineryRounds : MonoBehaviour, IShotScript
     Transform flameRoot;
     Light flameLight, cabinBeaconLight;
     Material cabinLampMat, detLampMat, monLampMat;
-    TextMesh weatherText, monScreen, monText, detText, phoneLabel, markerLabel;
+    TextMesh weatherText, monScreen, monText, detText, phoneLabel;
+    Transform markerTag;
+    string markerText;
     Rigidbody monitorRb;
     Grabbable monitorGrab;
     AudioSource monAudio, siren;
@@ -141,13 +145,69 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         },
     };
 
+    // "Why this matters": one plain-language reason per step, shown after the step is done (general safety awareness,
+    // not a procedure). The rationale question at the end checks a reason whose purpose is easy to miss.
+    static readonly string[][] StepWhy =
+    {
+        new[]
+        {
+            "Gas drifts with the wind. Knowing the wind tells you which way to move if there is a release.",
+            "In an alarm there is no time to search. Knowing your muster point first saves seconds.",
+            "A bump test shows the sensors and alarm respond to gas. A monitor can switch on fine and still miss gas.",
+            "The control room tracks who is inside, so everyone can be accounted for in an emergency.",
+            "The gate is the controlled way in, where entry is checked and others expect you to be.",
+        },
+        new[]
+        {
+            "Moving upwind or crosswind gets you out of the cloud fastest. Downwind keeps you in it.",
+            "Nearby workers may not know about the gas yet. A warning keeps them from walking into it.",
+            "The control room can isolate the release and start the response, but only once it knows.",
+        },
+        new[]
+        {
+            "Vapor near a leak can reach a flammable mix. Distance and no phone keep ignition sources away.",
+            "Cones and tape stop others from walking into the hazard without knowing it is there.",
+            "Leaks are repaired by authorized crews once the line is made safe. Your report starts that.",
+        },
+        new[]
+        {
+            "A route upwind of the release keeps you out of the gas on the way to safety.",
+            "The headcount tells responders who is safe, so no one goes into the gas searching for you.",
+        },
+    };
+
+    static readonly RationaleQuestion Question = new RationaleQuestion
+    {
+        Topic = "why the gas monitor is bump-tested",
+        Prompt = "Your gas monitor switched on and read 0. Why bump-test it before you enter the unit?",
+        Options = new[]
+        {
+            "To set the monitor for today's wind direction.",
+            "It is only paperwork for the site log.",
+            "To prove the sensors and alarm really respond to gas before you rely on them.",
+        },
+        Feedback = new[]
+        {
+            "A gas monitor does not measure wind. The wind sock and the conditions board tell you that.",
+            "A record may be kept, but the point is knowing the alarm will work when you need it.",
+            "A monitor can switch on and look normal yet miss gas. Test gas shows that it responds.",
+        },
+        Best = 2,
+    };
+
+    WhyCue why;
+    int boardTask;
+
     // ------------------------------------------------------------------------------------------------- setup
 
     void Start()
     {
         QualitySettings.shadows = ShadowQuality.All;
-        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-        RenderSettings.ambientLight = new Color(0.46f, 0.5f, 0.56f);
+        // sky / horizon / ground ambient reads more like daylight than one flat colour
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+        RenderSettings.ambientSkyColor = new Color(0.56f, 0.64f, 0.76f);
+        RenderSettings.ambientEquatorColor = new Color(0.5f, 0.52f, 0.54f);
+        RenderSettings.ambientGroundColor = new Color(0.3f, 0.28f, 0.25f);
         RenderSettings.fog = true;
         RenderSettings.fogMode = FogMode.Linear;
         RenderSettings.fogColor = new Color(0.66f, 0.76f, 0.86f);
@@ -181,13 +241,31 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         BuildPlaceables(root);
         BuildMarker(root);
         BuildAudio(root);
+        BuildBrand(root);
 
         rig = XRRig.Create(new Vector3(0f, 0f, -14f), 0f);
         rig.Area = new Bounds(new Vector3(0f, 0f, 4f), new Vector3(64f, 1f, 56f));
         rig.Camera.backgroundColor = new Color(0.62f, 0.76f, 0.9f);
         rig.Camera.clearFlags = CameraClearFlags.SolidColor;
+        // a procedural daytime sky when the built-in shader is available (falls back to the flat colour)
+        var skyShader = Shader.Find("Skybox/Procedural");
+        if (skyShader != null)
+        {
+            var sky = new Material(skyShader);
+            sky.SetFloat("_SunSize", 0.03f);
+            sky.SetFloat("_AtmosphereThickness", 0.85f);
+            sky.SetColor("_SkyTint", new Color(0.55f, 0.65f, 0.8f));
+            sky.SetColor("_GroundColor", new Color(0.42f, 0.42f, 0.4f));
+            sky.SetFloat("_Exposure", 1.15f);
+            RenderSettings.skybox = sky;
+            rig.Camera.clearFlags = CameraClearFlags.Skybox;
+        }
 
         BuildRadio();
+        why = WhyCue.Create(transform);
+        // a little left of centre: the task board floats to the right of the view
+        why.WhyOffset = new Vector2(-0.22f, -0.3f);
+        why.AskOffset = new Vector2(-0.4f, -0.08f);
         boardAnchor = new GameObject("Task board anchor").transform;
         SnapBoardToView();
         StartTask(0);
@@ -230,6 +308,58 @@ public class RefineryRounds : MonoBehaviour, IShotScript
     static float FlatDist(Vector3 a, Vector3 b) { a.y = 0f; b.y = 0f; return Vector3.Distance(a, b); }
     static bool Inside(Vector3 p) { return p.x > FenceMinX && p.x < FenceMaxX && p.z > FenceMinZ && p.z < FenceMaxZ; }
 
+    static readonly Color Navy = new Color(0.03f, 0.08f, 0.2f, 0.96f);
+    static readonly Color SafetyYellow = new Color(0.98f, 0.78f, 0.1f);
+    static readonly Color SafetyGreen = new Color(0.04f, 0.45f, 0.24f);
+
+    /// <summary>
+    /// A rounded sign panel at a world position whose readable face points along <paramref name="faceDir"/> (toward the
+    /// viewer). Text added to the returned transform goes at local z = -0.015.
+    /// </summary>
+    static Transform Sign(Transform parent, string name, Vector3 pos, Vector3 faceDir, Vector2 size, Color fill, Color? accent = null, float accentHeight = 0.08f)
+    {
+        var h = new GameObject(name).transform;
+        h.SetParent(parent, false);
+        h.position = pos;
+        faceDir.y = 0f;
+        h.rotation = Quaternion.LookRotation(-faceDir.normalized, Vector3.up);
+        Ui.Panel(h, "Panel", Vector3.zero, size, fill, accent, accentHeight);
+        SignBack(h, Vector3.zero, size);
+        return h;
+    }
+
+    static Material backMat;
+
+    /// <summary>
+    /// A solid metal back for a one-sided panel, so from behind you see the sign's back and not its text reversed.
+    /// Two crossed boxes stay inside the panel's rounded corners.
+    /// </summary>
+    static void SignBack(Transform parent, Vector3 center, Vector2 size)
+    {
+        if (backMat == null) backMat = P.Mat(new Color(0.42f, 0.44f, 0.47f), 0.6f, 0.45f);
+        float r = 0.12f * Mathf.Min(size.x, size.y);
+        const float d = 0.012f, z = 0.013f;
+        P.Box(parent, "Sign back", center + V(0f, 0f, z), V(size.x * 0.99f, size.y - 2f * r, d), backMat, false);
+        P.Box(parent, "Sign back", center + V(0f, 0f, z), V(size.x - 2f * r, size.y * 0.99f, d), backMat, false);
+    }
+
+    /// <summary>Shrinks any text under <paramref name="root"/> that is wider than <paramref name="maxWidth"/>.</summary>
+    static IEnumerator FitText(Transform root, float maxWidth)
+    {
+        yield return null; // text meshes are built by then
+        foreach (var tm in root.GetComponentsInChildren<TextMesh>())
+        {
+            float w = tm.GetComponent<MeshRenderer>().localBounds.size.x;
+            if (w > maxWidth) tm.characterSize *= maxWidth / w;
+        }
+    }
+
+    /// <summary>Text on a sign made by <see cref="Sign"/>.</summary>
+    static TextMesh SignText(Transform sign, string s, float y, float height, Color color, bool bold = true, float x = 0f, TextAnchor anchor = TextAnchor.MiddleCenter)
+    {
+        return P.Text(sign, s, V(x, y, -0.015f), height, color, anchor, bold);
+    }
+
     // ------------------------------------------------------------------------------------------------- world
 
     void BuildGround(Transform root)
@@ -249,6 +379,21 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         P.Box(root, "Walkway", V(0f, 0.045f, -10f), V(1.2f, 0.01f, 8f), P.Mat(new Color(0.9f, 0.75f, 0.1f), 0f, 0.3f), false);
     }
 
+    /// <summary>
+    /// University plate standing on the gate lintel, centred on the walkway: in view from the start and on the whole
+    /// approach, above head height so it blocks nothing, and clear of the task board (which floats to the right).
+    /// </summary>
+    void BuildBrand(Transform root)
+    {
+        const float w = 1.6f; // plate is w x w/2
+        float y = 2.84f + 0.08f + w / 4f;
+        var plate = Ui.BrandPlate(root, V(0f, y, FenceMinZ - 0.1f), w);
+        SignBack(root, V(0f, y, FenceMinZ - 0.1f), new Vector2(w, w / 2f));
+        StartCoroutine(FitText(plate, w * 0.9f));
+        P.Box(root, "Plate stand", V(-0.5f, 2.88f, FenceMinZ - 0.05f), V(0.06f, 0.1f, 0.06f), darkSteel, false);
+        P.Box(root, "Plate stand", V(0.5f, 2.88f, FenceMinZ - 0.05f), V(0.06f, 0.1f, 0.06f), darkSteel, false);
+    }
+
     void BuildFence(Transform root)
     {
         var post = P.Mat(new Color(0.45f, 0.47f, 0.5f), 0.7f, 0.5f);
@@ -262,8 +407,12 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         P.Box(root, "Gate post L", V(-GateHalf, 1.4f, FenceMinZ), V(0.18f, 2.8f, 0.18f), P.Painted(P.Royal), false);
         P.Box(root, "Gate post R", V(GateHalf, 1.4f, FenceMinZ), V(0.18f, 2.8f, 0.18f), P.Painted(P.Royal), false);
         P.Box(root, "Gate lintel", V(0f, 2.75f, FenceMinZ), V(GateHalf * 2f + 0.2f, 0.18f, 0.18f), P.Painted(P.Royal), false);
-        P.Box(root, "Gate sign", V(0f, 2.25f, FenceMinZ - 0.12f), V(2.9f, 0.55f, 0.04f), P.Painted(new Color(0.9f, 0.75f, 0.1f)), false);
-        P.Text(root, "UNIT ENTRY: GAS MONITOR REQUIRED", V(0f, 2.25f, FenceMinZ - 0.16f), 0.1f, Color.black, TextAnchor.MiddleCenter, true);
+        var gate = Sign(root, "Gate sign", V(0f, 2.3f, FenceMinZ - 0.11f), Vector3.back, new Vector2(3.0f, 0.6f), SafetyYellow, new Color(0.08f, 0.08f, 0.08f), 0.1f);
+        SignText(gate, "UNIT ENTRY", 0.09f, 0.1f, new Color(0.08f, 0.08f, 0.08f));
+        SignText(gate, "GAS MONITOR REQUIRED BEYOND THIS GATE", -0.1f, 0.075f, new Color(0.08f, 0.08f, 0.08f));
+        // brackets that hang the sign from the lintel
+        P.Box(root, "Sign bracket", V(-1.1f, 2.67f, FenceMinZ - 0.06f), V(0.05f, 0.14f, 0.08f), darkSteel, false);
+        P.Box(root, "Sign bracket", V(1.1f, 2.67f, FenceMinZ - 0.06f), V(0.05f, 0.14f, 0.08f), darkSteel, false);
     }
 
     void FenceRun(Transform root, Vector3 a, Vector3 b, Material m, Material meshMat)
@@ -321,7 +470,11 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         P.Box(root, "Ladder rail", V(-7.2f, 3.5f, 8.55f), V(0.05f, 6f, 0.05f), darkSteel, false);
         P.Box(root, "Ladder rail", V(-6.8f, 3.5f, 8.55f), V(0.05f, 6f, 0.05f), darkSteel, false);
         for (int i = 0; i < 16; i++) P.Box(root, "Ladder rung", V(-7f, 0.7f + i * 0.35f, 8.55f), V(0.4f, 0.03f, 0.03f), darkSteel, false);
-        P.Text(root, "V-101", V(-7f, 2.2f, 8.5f), 0.35f, Color.white, TextAnchor.MiddleCenter, true);
+        // equipment ID plate fixed to the shell, clear of the ladder
+        Vector3 out101 = V(-0.7f, 0f, -0.7f).normalized;
+        var id101 = Sign(root, "V-101 ID plate", V(-7f, 2.3f, 10f) + out101 * 1.32f, out101, new Vector2(0.8f, 0.42f), Navy, P.Gold);
+        SignText(id101, "V-101", 0.02f, 0.17f, Color.white);
+        SignText(id101, "PROCESS TOWER", -0.13f, 0.05f, P.Sky, false);
         Pipe(root, V(-7f, 3.8f, 8.7f), V(-7f, 3.8f, 4.4f), 0.12f, steel);
 
         // V-102 horizontal drum
@@ -335,7 +488,9 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         P.Cyl(root, "V-102 nozzle", V(6f, 3.4f, 9f), 0.12f, 0.5f, Vector3.up, steel, false);
         Pipe(root, V(6f, 3.6f, 9f), V(6f, 3.8f, 9f), 0.1f, steel);
         Pipe(root, V(6f, 3.8f, 9f), V(6f, 3.8f, 4.2f), 0.1f, steel);
-        P.Text(root, "V-102", V(6f, 1.9f, 7.65f), 0.35f, Color.white, TextAnchor.MiddleCenter, true);
+        var id102 = Sign(root, "V-102 ID plate", V(6f, 1.9f, 7.68f), Vector3.back, new Vector2(0.9f, 0.42f), Navy, P.Gold);
+        SignText(id102, "V-102", 0.02f, 0.17f, Color.white);
+        SignText(id102, "PROCESS DRUM", -0.13f, 0.05f, P.Sky, false);
     }
 
     void BuildFlange(Transform root)
@@ -353,8 +508,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
             float a = i * Mathf.PI / 4f;
             P.Cyl(root, "Flange bolt", FlangePos + V(0f, Mathf.Cos(a) * 0.16f, Mathf.Sin(a) * 0.16f), 0.014f, 0.2f, Vector3.right, darkSteel, false);
         }
-        var lbl = P.Text(root, "FLANGE F-12", FlangePos + V(0f, 0.6f, 0f), 0.14f, Color.white, TextAnchor.MiddleCenter, true);
-        lbl.gameObject.AddComponent<RoundsBillboard>();
+        Ui.Tag(root, "FLANGE F-12", FlangePos + V(0f, 0.2f, 0f), V(0f, 0.75f, -0.25f), 0.09f, P.Gold);
 
         // The weep: a wet streak, a puddle, and the unsafe things you can press (all hidden until it starts).
         weepVisual = new GameObject("Weep");
@@ -373,7 +527,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         {
             if (task == 2 && phase == 1) MistakeOnce("rag", "A rag spreads the problem. Report the leak.");
         };
-        P.Text(weepVisual.transform, "RAG", V(FlangePos.x + 1.1f, 0.3f, FlangePos.z - 0.7f), 0.1f, Color.white, TextAnchor.MiddleCenter, true).gameObject.AddComponent<RoundsBillboard>();
+        Ui.Tag(weepVisual.transform, "RAG", V(FlangePos.x + 1.1f, 0.08f, FlangePos.z - 0.7f), V(0f, 0.45f, 0f), 0.06f, Warn);
         weepVisual.SetActive(false);
     }
 
@@ -384,7 +538,9 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         P.Cyl(root, "Gauge face", V(GaugePos.x, 1.5f, GaugePos.z - 0.032f), 0.17f, 0.01f, Vector3.forward, P.Mat(Color.white, 0f, 0.2f), false);
         var needle = P.Box(root, "Gauge needle", V(GaugePos.x + 0.04f, 1.54f, GaugePos.z - 0.042f), V(0.01f, 0.14f, 0.004f), P.Mat(new Color(0.9f, 0.1f, 0.1f)), false);
         needle.transform.localRotation = Quaternion.Euler(0f, 0f, -40f);
-        P.Text(root, "G-1  52 PSI", V(GaugePos.x, 1.15f, GaugePos.z - 0.1f), 0.1f, P.Gold, TextAnchor.MiddleCenter, true);
+        // tag plate on the gauge post, under the dial
+        var g1 = Sign(root, "G-1 tag plate", V(GaugePos.x, 1.14f, GaugePos.z - 0.05f), Vector3.back, new Vector2(0.5f, 0.2f), Navy, P.Gold, 0.1f);
+        SignText(g1, "G-1   52 PSI", -0.01f, 0.07f, P.Gold);
     }
 
     void BuildFlare(Transform root)
@@ -392,7 +548,9 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         P.Box(root, "Flare base", V(FlarePos.x, 0.25f, FlarePos.z), V(1.6f, 0.5f, 1.6f), concrete, false);
         P.Cyl(root, "Flare stack", V(FlarePos.x, 11f, FlarePos.z), 0.3f, 22f, Vector3.up, darkSteel, false);
         P.Cyl(root, "Flare tip", V(FlarePos.x, 22.1f, FlarePos.z), 0.45f, 0.4f, Vector3.up, steel, false);
-        P.Text(root, "FLARE", V(FlarePos.x, 1.2f, FlarePos.z - 0.9f), 0.25f, Color.white, TextAnchor.MiddleCenter, true);
+        // plate on the west face of the base, toward the unit
+        var flare = Sign(root, "Flare plate", V(FlarePos.x - 0.82f, 0.27f, FlarePos.z), Vector3.left, new Vector2(1.3f, 0.36f), Navy, Bad);
+        SignText(flare, "FLARE STACK", 0.0f, 0.14f, Color.white);
         flameRoot = new GameObject("Flare flame").transform;
         flameRoot.SetParent(root, false);
         flameRoot.position = V(FlarePos.x, 22.3f, FlarePos.z);
@@ -427,7 +585,8 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         P.Box(root, "Cabin window", c + V(-1.4f, 1.6f, -1.62f), V(0.9f, 0.8f, 0.04f), glass, false);
         P.Box(root, "Cabin window", c + V(-0.2f, 1.6f, -1.62f), V(0.9f, 0.8f, 0.04f), glass, false);
         P.Box(root, "Cabin steps", c + V(1.4f, 0.15f, -2.1f), V(1.1f, 0.3f, 0.7f), concrete, false);
-        P.Text(root, "CONTROL ROOM", c + V(0f, 2.4f, -1.66f), 0.2f, Color.white, TextAnchor.MiddleCenter, true);
+        var cr = Sign(root, "Control room sign", c + V(0f, 2.38f, -1.63f), Vector3.back, new Vector2(2.6f, 0.46f), P.MediumBlue, P.Gold);
+        SignText(cr, "CONTROL ROOM", -0.01f, 0.2f, Color.white);
         P.Cyl(root, "Antenna", c + V(1.6f, 3.9f, 0.8f), 0.03f, 2f, Vector3.up, steel, false);
         cabinLampMat = P.Glow(new Color(1f, 0.1f, 0.05f), 1f);
         P.Ball(root, "Alarm beacon", c + V(-1.7f, 3.05f, 0f), 0.14f, cabinLampMat, false);
@@ -457,18 +616,18 @@ public class RefineryRounds : MonoBehaviour, IShotScript
             sockJoints.Add(j);
             joint = j;
         }
-        P.Text(root, "WIND SOCK", V(SockPos.x, 0.7f, SockPos.z - 0.4f), 0.14f, Color.white, TextAnchor.MiddleCenter, true);
+        var ws = Sign(root, "Wind sock plate", V(SockPos.x, 1.7f, SockPos.z - 0.075f), Vector3.back, new Vector2(0.8f, 0.24f), Navy, P.Gold, 0.1f);
+        SignText(ws, "WIND SOCK", -0.01f, 0.09f, Color.white);
     }
 
     void BuildConditionsBoard(Transform root)
     {
         Vector3 p = V(-5.2f, 2.4f, -9.8f);
-        P.Box(root, "Conditions frame", p + V(0f, 0f, 0.03f), V(2.84f, 1.5f, 0.04f), P.Mat(P.Gold, 0.3f, 0.5f), false);
-        P.Box(root, "Conditions panel", p, V(2.8f, 1.46f, 0.04f), P.Mat(new Color(0.03f, 0.08f, 0.2f), 0f, 0.3f), false);
+        var cond = Sign(root, "Conditions board", p, Vector3.back, new Vector2(2.9f, 1.5f), Navy, P.Gold, 0.05f);
         P.Cyl(root, "Conditions post", V(p.x - 1.2f, 1.2f, p.z + 0.05f), 0.04f, 2.4f, Vector3.up, steel, false);
         P.Cyl(root, "Conditions post", V(p.x + 1.2f, 1.2f, p.z + 0.05f), 0.04f, 2.4f, Vector3.up, steel, false);
-        P.Text(root, "WIND AND SITE CONDITIONS", p + V(-1.3f, 0.58f, -0.04f), 0.1f, P.Gold, TextAnchor.MiddleLeft, true);
-        weatherText = P.Text(root, "", p + V(-1.3f, 0.12f, -0.04f), 0.07f, Color.white, TextAnchor.MiddleLeft);
+        SignText(cond, "WIND AND SITE CONDITIONS", 0.52f, 0.1f, P.Gold, true, -1.3f, TextAnchor.MiddleLeft);
+        weatherText = SignText(cond, "", 0.06f, 0.07f, Color.white, false, -1.3f, TextAnchor.MiddleLeft);
     }
 
     void BuildTable(Transform root)
@@ -478,8 +637,12 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         for (int sx = -1; sx <= 1; sx += 2)
         for (int sz = -1; sz <= 1; sz += 2)
             P.Box(root, "Table leg", V(TablePos.x + sx * 0.72f, 0.41f, TablePos.z + sz * 0.32f), V(0.06f, 0.82f, 0.06f), darkSteel, false);
-        P.Text(root, "PRE-ENTRY STATION", V(TablePos.x, 1.62f, TablePos.z - 0.4f), 0.1f, P.Gold, TextAnchor.MiddleCenter, true);
-        P.Text(root, "1. Grab the monitor (grip / E)\n2. Hold it at the station\n3. Press BUMP TEST", V(TablePos.x, 1.4f, TablePos.z - 0.4f), 0.055f, Color.white, TextAnchor.MiddleCenter);
+        // instruction board standing at the back edge of the table, so the table top stays clear
+        P.Box(root, "Board post", V(TablePos.x - 0.68f, 1.3f, TablePos.z + 0.4f), V(0.04f, 0.9f, 0.04f), darkSteel, false);
+        P.Box(root, "Board post", V(TablePos.x + 0.68f, 1.3f, TablePos.z + 0.4f), V(0.04f, 0.9f, 0.04f), darkSteel, false);
+        var pre = Sign(root, "Pre-entry board", V(TablePos.x, 1.45f, TablePos.z + 0.37f), Vector3.back, new Vector2(1.55f, 0.66f), Navy, P.Gold, 0.07f);
+        SignText(pre, "PRE-ENTRY STATION", 0.19f, 0.09f, P.Gold);
+        SignText(pre, "1. Grab the monitor (grip / E)\n2. Hold it at the bump-test unit\n3. Press the green BUMP TEST button", -0.08f, 0.05f, Color.white, false, -0.68f, TextAnchor.MiddleLeft);
 
         // Bump-test station: a small test-gas unit with a button.
         bumpPos = V(TablePos.x + 0.45f, 0.98f, TablePos.z);
@@ -489,7 +652,9 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         var press = btn.AddComponent<Pressable>();
         press.Label = "BUMP TEST";
         press.Pressed += h => BumpPress();
-        P.Text(root, "BUMP TEST", V(TablePos.x + 0.35f, 1.12f, TablePos.z - 0.22f), 0.05f, Color.white, TextAnchor.MiddleCenter, true);
+        // label plate on the front face of the bump-test unit
+        var bt = Sign(root, "Bump test label", V(TablePos.x + 0.45f, 0.94f, TablePos.z - 0.125f), Vector3.back, new Vector2(0.32f, 0.09f), new Color(0.06f, 0.4f, 0.2f), null);
+        SignText(bt, "BUMP TEST", -0.002f, 0.04f, Color.white);
 
         BuildMonitor(V(TablePos.x - 0.45f, 0.97f, TablePos.z));
     }
@@ -521,8 +686,11 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         var lampMat = P.Glow(Color.green, 1.2f);
         P.Ball(root, "Detector lamp", V(DetectorPos.x, 3.2f, DetectorPos.z), 0.1f, lampMat, false);
         detLampMat = lampMat;
-        detText = P.Text(root, "GD-3  0 %LEL", V(DetectorPos.x, 2.9f, DetectorPos.z - 0.14f), 0.06f, Color.green, TextAnchor.MiddleCenter, true);
-        P.Text(root, "FIXED GAS DETECTOR", V(DetectorPos.x, 2.5f, DetectorPos.z - 0.14f), 0.07f, Color.white, TextAnchor.MiddleCenter);
+        // display window on the head's face, and an ID plate on the post
+        P.Box(root, "Detector display", V(DetectorPos.x, 2.9f, DetectorPos.z - 0.127f), V(0.44f, 0.14f, 0.006f), P.Mat(new Color(0.02f, 0.03f, 0.03f), 0f, 0.8f), false);
+        detText = P.Text(root, "GD-3  0 %LEL", V(DetectorPos.x, 2.9f, DetectorPos.z - 0.135f), 0.06f, Color.green, TextAnchor.MiddleCenter, true);
+        var gd = Sign(root, "Detector plate", V(DetectorPos.x, 2.3f, DetectorPos.z - 0.06f), Vector3.back, new Vector2(0.95f, 0.22f), Navy, P.Gold, 0.1f);
+        SignText(gd, "FIXED GAS DETECTOR", -0.01f, 0.065f, Color.white);
     }
 
     void BuildMuster(Transform root)
@@ -539,9 +707,11 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         P.Box(musterFlag, "Flag mark", V(0.7f, 0f, -0.02f), V(0.5f, 0.5f, 0.01f), P.Painted(Color.white), false);
         P.Box(musterRoot, "Sign post", V(-0.9f, 1f, 0f), V(0.08f, 2f, 0.08f), steel, false);
         P.Box(musterRoot, "Sign post", V(0.9f, 1f, 0f), V(0.08f, 2f, 0.08f), steel, false);
-        P.Box(musterRoot, "Sign panel", V(0f, 1.8f, 0f), V(2.2f, 1.1f, 0.08f), green, false);
-        P.Text(musterRoot, "MUSTER POINT", V(0f, 2.12f, -0.06f), 0.18f, Color.white, TextAnchor.MiddleCenter, true);
-        P.Text(musterRoot, "ASSEMBLY AREA 1", V(0f, 1.88f, -0.06f), 0.09f, Color.white, TextAnchor.MiddleCenter);
+        // the sign face sits just in front of the posts; the check-in button is mounted on it
+        Ui.Panel(musterRoot, "Sign panel", V(0f, 1.8f, -0.05f), new Vector2(2.2f, 1.1f), SafetyGreen, Color.white, 0.06f);
+        SignBack(musterRoot, V(0f, 1.8f, -0.05f), new Vector2(2.2f, 1.1f));
+        P.Text(musterRoot, "MUSTER POINT", V(0f, 2.1f, -0.065f), 0.18f, Color.white, TextAnchor.MiddleCenter, true);
+        P.Text(musterRoot, "ASSEMBLY AREA 1", V(0f, 1.86f, -0.065f), 0.09f, Color.white, TextAnchor.MiddleCenter);
         var btn = P.Box(musterRoot, "Check-in button", V(0f, 1.5f, -0.07f), V(0.9f, 0.22f, 0.05f), P.Glow(P.Gold, 1.2f));
         P.Text(musterRoot, "CHECK IN", V(0f, 1.5f, -0.105f), 0.12f, Color.black, TextAnchor.MiddleCenter, true);
         var press = btn.AddComponent<Pressable>();
@@ -565,8 +735,13 @@ public class RefineryRounds : MonoBehaviour, IShotScript
     void BuildPlaceables(Transform root)
     {
         // Cones and tape at the barricade station
-        P.Text(root, "BARRICADE STATION\ncones: grab and place", V(ConePos.x, 1.4f, ConePos.z - 0.5f), 0.09f, P.Gold, TextAnchor.MiddleCenter, true);
-        P.Box(root, "Station table", V(ConePos.x, 0.05f, ConePos.z), V(1.8f, 0.1f, 0.7f), darkSteel, false);
+        // free-standing station sign behind the cone pallet, turned toward the gate side of the unit
+        var bs = Sign(root, "Barricade station sign", V(ConePos.x, 1.3f, ConePos.z + 0.55f), V(0.6f, 0f, -1f), new Vector2(1.6f, 0.52f), Navy, SafetyYellow, 0.09f);
+        P.Box(bs, "Post", V(-0.68f, -0.65f, 0.03f), V(0.05f, 1.3f, 0.05f), darkSteel, false);
+        P.Box(bs, "Post", V(0.68f, -0.65f, 0.03f), V(0.05f, 1.3f, 0.05f), darkSteel, false);
+        SignText(bs, "BARRICADE STATION", 0.07f, 0.09f, SafetyYellow);
+        SignText(bs, "Cones: grab and place around a leak", -0.11f, 0.05f, Color.white, false);
+        P.Box(root, "Station pallet", V(ConePos.x, 0.05f, ConePos.z), V(1.8f, 0.1f, 0.7f), P.Mat(new Color(0.55f, 0.42f, 0.28f), 0f, 0.25f), false);
         for (int i = 0; i < 4; i++) cones.Add(MakeCone(V(ConePos.x - 0.6f + i * 0.4f, 0.14f, ConePos.z)));
         var tapeGo = new GameObject("Barrier tape");
         tapeGo.transform.SetParent(root, false);
@@ -586,7 +761,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         rb.mass = 3f;
         P.Box(toolBag, "Bag body", Vector3.zero, V(0.5f, 0.26f, 0.26f), P.Painted(new Color(0.9f, 0.4f, 0.05f)), false);
         P.Box(toolBag, "Bag handle", V(0f, 0.16f, 0f), V(0.25f, 0.04f, 0.04f), darkSteel, false);
-        P.Text(toolBag, "TOOLS", V(0f, 0.28f, 0f), 0.09f, Color.white, TextAnchor.MiddleCenter, true).gameObject.AddComponent<RoundsBillboard>();
+        Ui.Tag(toolBag, "TOOL BAG", V(0f, 0.18f, 0f), V(0f, 0.4f, 0f), 0.065f, P.Gold);
         var bc = bag.AddComponent<BoxCollider>();
         bc.size = V(0.5f, 0.3f, 0.3f);
         bag.AddComponent<Grabbable>().Grabbed += g =>
@@ -599,7 +774,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         release.SetParent(root, false);
         P.Cyl(release, "Stub", V(0f, 0.5f, 0f), 0.08f, 1f, Vector3.up, steel, false);
         P.Cyl(release, "Stub flange", V(0f, 1f, 0f), 0.14f, 0.04f, Vector3.up, P.Mat(new Color(0.85f, 0.87f, 0.9f), 0.9f, 0.75f), false);
-        P.Text(release, "SAMPLE POINT", V(0f, 1.35f, 0f), 0.12f, Color.white, TextAnchor.MiddleCenter, true).gameObject.AddComponent<RoundsBillboard>();
+        Ui.Tag(release, "SAMPLE POINT", V(0f, 1.02f, 0f), V(0f, 0.55f, 0f), 0.09f, Bad);
         release.gameObject.SetActive(false);
     }
 
@@ -628,8 +803,6 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         var ring = P.Cyl(marker.transform, "Ring", V(0f, 0.05f, 0f), 1.1f, 0.04f, Vector3.up, P.Glow(P.Gold, 1.1f), false);
         markerRing = ring.transform;
         P.Cyl(marker.transform, "Beam", V(0f, 3f, 0f), 0.04f, 6f, Vector3.up, P.Glow(P.Gold, 1.5f), false);
-        markerLabel = P.Text(marker.transform, "", V(0f, 3.3f, 0f), 0.18f, P.Gold, TextAnchor.MiddleCenter, true);
-        markerLabel.gameObject.AddComponent<RoundsBillboard>();
         marker.SetActive(false);
     }
 
@@ -847,7 +1020,13 @@ public class RefineryRounds : MonoBehaviour, IShotScript
     void SetMarker(Vector3 pos, string label)
     {
         marker.transform.position = V(pos.x, 0f, pos.z);
-        markerLabel.text = label;
+        if (markerText != label)
+        {
+            // the tag is sized to its text, so a new label means a new tag
+            if (markerTag) Destroy(markerTag.gameObject);
+            markerTag = Ui.Tag(marker.transform, label, V(0f, 2.4f, 0f), V(0f, 1.1f, 0f), 0.16f, P.Gold);
+            markerText = label;
+        }
         marker.SetActive(true);
     }
 
@@ -879,7 +1058,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         Vector3 to = boardAnchor.position - cam.position;
         float angle = Vector3.Angle(cam.forward, to);
         if (angle > 50f || to.magnitude > 5.5f || to.magnitude < 1.8f) boardMoving = true;
-        Vector3 desired = cam.position + fwd * 3.4f + right * 1.6f;
+        Vector3 desired = cam.position + fwd * BoardAhead + right * BoardRight;
         desired.y = cam.position.y + 0.65f;
         if (boardMoving)
         {
@@ -895,7 +1074,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         var cam = rig.Camera.transform;
         Vector3 fwd = Flat(cam.forward).normalized;
         Vector3 right = Vector3.Cross(Vector3.up, fwd);
-        Vector3 p = cam.position + fwd * 3.4f + right * 1.6f;
+        Vector3 p = cam.position + fwd * BoardAhead + right * BoardRight;
         p.y = cam.position.y + 0.65f;
         boardAnchor.position = p;
         boardAnchor.rotation = Quaternion.LookRotation(Flat(p - cam.position));
@@ -906,6 +1085,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
     void StartTask(int t)
     {
         task = t;
+        boardTask = t;
         if (board) Destroy(board.gameObject);
         board = TaskBoard.Create(boardAnchor, boardAnchor.position, boardAnchor.rotation, TaskTitles[t], TaskSubs[t], TaskSteps[t], 3.0f, 1.0f);
         RefreshFooter();
@@ -914,6 +1094,13 @@ public class RefineryRounds : MonoBehaviour, IShotScript
     void RefreshFooter()
     {
         board.SetFooter($"Total mistakes: {totalMistakes}   Critical: {totalCritical}");
+    }
+
+    /// <summary>Completes a step of the current board and shows why it matters.</summary>
+    void Done(int step, string message)
+    {
+        board.Complete(step, message);
+        why.Show(StepWhy[boardTask][step]);
     }
 
     void Mistake(string msg, bool critical = false)
@@ -967,13 +1154,13 @@ public class RefineryRounds : MonoBehaviour, IShotScript
             gazeWind = g ? gazeWind + dt : 0f;
             if (g && !weatherReady) board.Say("Reading the wind... one moment.", Color.white);
             if (gazeWind > 1.2f && weatherReady)
-                board.Complete(0, $"Wind from {Compass(weather.WindFromDegrees)} at {weather.WindMph:F0} mph. Stay upwind.");
+                Done(0, $"Wind from {Compass(weather.WindFromDegrees)} at {weather.WindMph:F0} mph. Stay upwind.");
         }
         if (!board.IsDone(1))
         {
             bool g = Gazing(musterRoot.position + V(0f, 4f, 0f), 22f, 70f);
             gazeMuster = g ? gazeMuster + dt : 0f;
-            if (gazeMuster > 1.2f) board.Complete(1, "Muster point noted: upwind side of the unit.");
+            if (gazeMuster > 1.2f) Done(1, "Muster point noted: upwind side of the unit.");
         }
 
         bool inside = Inside(feet);
@@ -983,7 +1170,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         if (board.IsDone(0) && board.IsDone(1) && board.IsDone(2) && board.IsDone(3) && inside && !board.IsDone(4))
         {
             if (!Carrying) MistakeOnce("nomonitor", "You entered without your gas monitor.", true);
-            board.Complete(4, "Entry logged. Next: walk to gauge G-1.");
+            Done(4, "Entry logged. Next: walk to gauge G-1.");
             task = 1;
             phase = 0;
             phaseTimer = 0f;
@@ -1020,7 +1207,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         yield return new WaitForSeconds(2.5f);
         bumpRunning = false;
         bumped = true;
-        if (task == 0) board.Complete(2, "Bump test passed. Keep the monitor with you.");
+        if (task == 0) Done(2, "Bump test passed. Keep the monitor with you.");
     }
 
     // ---- task 2
@@ -1042,7 +1229,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         float dS = FlatDist(feet, releasePos);
         float conc = ConcentrationAt(feet + V(0f, 1.2f, 0f));
         if (el > 1.5f && dS < 2.2f) MistakeOnce("toward", "Walking toward the source risks exposure. Move away.", true);
-        if (!board.IsDone(0) && dS > 10f && conc < 3f) board.Complete(0, "Clean air, away from the release.");
+        if (!board.IsDone(0) && dS > 10f && conc < 3f) Done(0, "Clean air, away from the release.");
         if (!board.IsDone(0) && el > 30f) MistakeOnce("delay", "Delay: get to clean air before anything else.");
         if (board.IsDone(2))
         {
@@ -1090,12 +1277,12 @@ public class RefineryRounds : MonoBehaviour, IShotScript
             if (!phoneOff) MistakeOnce("ignite", "A phone is an ignition source near the leak.", true);
             else MistakeOnce("close", "Too close to the leak. Stay back.");
         }
-        if (!board.IsDone(0) && phoneOff && dF >= 3.5f) board.Complete(0, "Clear of the leak and your phone is off.");
+        if (!board.IsDone(0) && phoneOff && dF >= 3.5f) Done(0, "Clear of the leak and your phone is off.");
         evalTimer += dt;
         if (evalTimer > 0.25f)
         {
             evalTimer = 0f;
-            if (EvaluateBarricade() && board.IsDone(0) && !board.IsDone(1)) board.Complete(1, "Barricade set around the leak.");
+            if (EvaluateBarricade() && board.IsDone(0) && !board.IsDone(1)) Done(1, "Barricade set around the leak.");
         }
         if (board.IsDone(2))
         {
@@ -1176,7 +1363,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         bool atMuster = FlatDist(feet, musterRoot.position) < 3.5f;
         if (!board.IsDone(0))
         {
-            if (atMuster) board.Complete(0, "At the muster point by an upwind route.");
+            if (atMuster) Done(0, "At the muster point by an upwind route.");
             if (ConcentrationAt(feet + V(0f, 1.2f, 0f)) > 6f) exposure += dt;
             if (exposure > 2f) MistakeOnce("plume", "You walked through the gas cloud. Route around it.");
             if (FlatDist(feet, toolBag.position) < 1f) MistakeOnce("bag", "Never go back for belongings during an alarm.", true);
@@ -1190,12 +1377,21 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         if (shotMode || task != 3 || done) return;
         if (!board.IsDone(0)) { board.Say("Walk to the muster point first.", Warn); return; }
         if (board.IsDone(1)) return;
-        board.Complete(1, "Checked in. Everyone is accounted for.");
+        FinishScenario();
+    }
+
+    /// <summary>Last step done: show the procedure summary, then ask the rationale question (scored apart).</summary>
+    void FinishScenario()
+    {
+        Done(1, "Checked in. Everyone is accounted for.");
         done = true;
         alarmActive = false;
         siren.Stop();
         emitE.On = false;
         board.Say(FinalSummary(), totalCritical > 0 ? Bad : Good);
+        var finalBoard = board;
+        why.Ask(Question, best => { if (finalBoard) finalBoard.SetResultLine(why.ReasoningLine, why.ReasoningColor); });
+        board.SetResultLine(why.ReasoningLine, why.ReasoningColor);
     }
 
     void RadioPress(int id)
@@ -1206,26 +1402,26 @@ public class RefineryRounds : MonoBehaviour, IShotScript
             case 0: // ENTERING
                 if (task == 0 && !board.IsDone(3))
                 {
-                    if (board.IsDone(0) && board.IsDone(1) && board.IsDone(2)) board.Complete(3, "Control room logs your entry.");
+                    if (board.IsDone(0) && board.IsDone(1) && board.IsDone(2)) Done(3, "Control room logs your entry.");
                     else board.Say("Finish your checks first: wind, muster point, monitor.", Warn);
                 }
                 break;
             case 1: // WARN
                 if (task == 1 && phase == 1 && !board.IsDone(1))
                 {
-                    if (board.IsDone(0)) board.Complete(1, "Nearby workers warned and moving away.");
+                    if (board.IsDone(0)) Done(1, "Nearby workers warned and moving away.");
                     else board.Say("Get to clean air first, then use the radio.", Warn);
                 }
                 break;
             case 2: // REPORT
                 if (task == 1 && phase == 1 && !board.IsDone(2))
                 {
-                    if (board.IsDone(1)) board.Complete(2, "Control room starts the gas release response.");
+                    if (board.IsDone(1)) Done(2, "Control room starts the gas release response.");
                     else board.Say("Warn nearby workers first, then report.", Warn);
                 }
                 else if (task == 2 && phase == 1 && !board.IsDone(2))
                 {
-                    if (board.IsDone(1)) board.Complete(2, "Leak reported for authorized repair.");
+                    if (board.IsDone(1)) Done(2, "Leak reported for authorized repair.");
                     else board.Say("Barricade the area first (3 cones), then report.", Warn);
                 }
                 break;
@@ -1246,9 +1442,62 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         fwd.Normalize();
         Vector3 right = Vector3.Cross(Vector3.up, fwd);
         Vector3 pos = camPos + fwd * 4.6f - right * 2.2f;
-        pos.y = camPos.y + 0.8f;
+        // follow the camera's pitch so the board stays in frame when the shot looks down
+        pos.y = camPos.y + (look - camPos).normalized.y * 4.6f + 0.55f;
         boardAnchor.position = pos;
         boardAnchor.rotation = Quaternion.LookRotation(Flat(pos - camPos));
+    }
+
+    /// <summary>
+    /// Name tags turn toward Camera.main (the rig), but the screenshots use a separate capture camera, so turn the tags
+    /// toward the shot position instead and keep their leader lines attached.
+    /// </summary>
+    static void AimTagsAt(Vector3 camPos)
+    {
+        foreach (var tf in FindObjectsByType<TagFacing>(FindObjectsSortMode.None))
+        {
+            tf.enabled = false;
+            Vector3 away = tf.Tag.position - camPos;
+            away.y = 0f;
+            if (away.sqrMagnitude > 0.0001f) tf.Tag.rotation = Quaternion.LookRotation(away, Vector3.up);
+            tf.Line.SetPosition(0, tf.Tag.position - Vector3.up * 0.04f);
+            tf.Line.SetPosition(1, tf.Anchor.TransformPoint(tf.AnchorLocal));
+        }
+    }
+
+    /// <summary>
+    /// Takes one screenshot. When an XR runtime is active the capture camera (copied from the rig camera) would be
+    /// driven by the headset pose and refuse a field of view, so it is switched to a plain mono camera first. The view
+    /// is also pre-rendered until the editor has finished compiling shaders, so nothing shows the cyan placeholder.
+    /// </summary>
+    IEnumerator Snap(ShotApi api, string name, Vector3 pos, Vector3 look, float fov)
+    {
+        AimTagsAt(pos);
+        var capGo = GameObject.Find("Capture Camera");
+        var cap = capGo ? capGo.GetComponent<Camera>() : null;
+        if (cap != null)
+        {
+            cap.stereoTargetEye = StereoTargetEyeMask.None;
+            cap.transform.SetPositionAndRotation(pos, Quaternion.LookRotation(look - pos, Vector3.up));
+            cap.fieldOfView = fov;
+            var rt = new RenderTexture(640, 360, 24);
+            cap.targetTexture = rt;
+            float t0 = Time.realtimeSinceStartup;
+            for (int i = 0; i < 400; i++)
+            {
+                cap.Render();
+                yield return null;
+#if UNITY_EDITOR
+                if (i >= 3 && !UnityEditor.ShaderUtil.anythingCompiling) break;
+#else
+                if (i >= 3) break;
+#endif
+                if (Time.realtimeSinceStartup - t0 > 20f) break;
+            }
+            cap.targetTexture = null;
+            Destroy(rt);
+        }
+        yield return api.Shot(name, pos, look, fov);
     }
 
     public IEnumerator Shots(ShotApi api)
@@ -1256,16 +1505,17 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         float waited = 0f;
         while (!weatherReady && waited < 9f) { waited += Time.deltaTime; yield return null; }
         shotMode = true;
+        why.Muted = true; // staged views below; the why panels get their own shots at the end
         rig.LocomotionEnabled = false;
         radio.gameObject.SetActive(false);
         Vector3 w = windDir;
         Vector3 side = Vector3.Cross(Vector3.up, w);
 
         // 1 overview
-        yield return api.Shot("01-overview", V(-26f, 16f, -26f), V(2f, 3f, 6f), 62f);
+        yield return Snap(api, "01-overview", V(-26f, 16f, -26f), V(2f, 3f, 6f), 62f);
 
         // 2 wind sock and conditions board
-        yield return api.Shot("02-wind-sock-and-board", V(-0.5f, 2.3f, -16.5f), V(0.5f, 3.2f, -9f), 72f);
+        yield return Snap(api, "02-wind-sock-and-board", V(-0.5f, 2.3f, -16.5f), V(0.5f, 3.2f, -9f), 72f);
 
         // 3 gas alarm cloud
         Vector3 s = V(2f, 1f, 0.5f);
@@ -1286,7 +1536,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         board.Say("ALARM: your monitor reads gas. Act now.", Bad);
         PlaceBoardFor(camPos, look);
         yield return api.Wait(1.2f);
-        yield return api.Shot("03-gas-alarm-cloud", camPos, look, 62f);
+        yield return Snap(api, "03-gas-alarm-cloud", camPos, look, 62f);
 
         // 4 weep and barricade
         ClearGas();
@@ -1314,7 +1564,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         look = FlangePos + V(0.5f, -0.8f, 0f);
         PlaceBoardFor(camPos, look);
         yield return api.Wait(0.5f);
-        yield return api.Shot("04-weep-and-barricade", camPos, look, 58f);
+        yield return Snap(api, "04-weep-and-barricade", camPos, look, 58f);
 
         // 5 muster point during the site alarm
         ClearGas();
@@ -1327,7 +1577,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         look = mp + V(0f, 2.2f, 0f);
         PlaceBoardFor(camPos, look);
         yield return api.Wait(1.0f);
-        yield return api.Shot("05-muster-point", camPos, look, 58f);
+        yield return Snap(api, "05-muster-point", camPos, look, 58f);
 
         // 6 critical miss: going back for the tool bag
         totalMistakes = 0;
@@ -1337,20 +1587,74 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         totalMistakes = 1;
         totalCritical = 1;
         RefreshFooter();
-        camPos = BagPos + V(-4.5f, 1.8f, -4.5f);
+        // from upwind of the bag, so the drifting release is beyond it and not in the lens
+        camPos = BagPos - w * 5f + side * 1.5f + Vector3.up * 1.6f;
         look = BagPos + V(0f, 0.6f, 0f);
         PlaceBoardFor(camPos, look);
         yield return api.Wait(0.5f);
-        yield return api.Shot("06-critical-miss", camPos, look, 58f);
-    }
-}
+        yield return Snap(api, "06-critical-miss", camPos, look, 58f);
 
-/// <summary>Keeps a label facing the player.</summary>
-public class RoundsBillboard : MonoBehaviour
-{
-    void LateUpdate()
-    {
-        var cam = Camera.main;
-        if (cam) transform.rotation = Quaternion.LookRotation(transform.position - cam.transform.position);
+        // 7 the player's view at the start: pre-entry station, gate, conditions board, university plate
+        ClearGas();
+        alarmActive = false;
+        siren.Stop();
+        totalMistakes = 0;
+        totalCritical = 0;
+        StartTask(0);
+        camPos = V(0f, 1.7f, -14f);
+        look = V(0f, 1.6f, -8f);
+        SnapBoardToView(); // where the board sits at the real start (the rig has not moved)
+        yield return api.Wait(0.3f);
+        yield return Snap(api, "07-start-view", camPos, look, 70f);
+
+        // 8 close-up of the gate: entry sign and the university plate on the lintel
+        board.gameObject.SetActive(false);
+        yield return Snap(api, "08-gate-signage", V(-0.6f, 1.7f, -9.6f), V(0f, 2.65f, FenceMinZ), 50f);
+
+        // 9 equipment labels inside the unit: ID plates on the vessels and the flange name tag
+        yield return Snap(api, "09-equipment-labels", V(-10.2f, 1.75f, 0.2f), V(-6.2f, 1.9f, 7.5f), 60f);
+        board.gameObject.SetActive(true);
+
+        // 10 "why this matters" after the bump test at the pre-entry station
+        StartTask(0);
+        board.Complete(0, "Wind noted.");
+        board.Complete(1, "Muster point noted: upwind side of the unit.");
+        monitorRb.isKinematic = true;
+        monitor.position = V(TablePos.x - 0.45f, 0.97f, TablePos.z);
+        monitor.rotation = Quaternion.identity;
+        bumped = true;
+        camPos = V(TablePos.x - 0.4f, 1.7f, TablePos.z - 2.6f);
+        look = V(TablePos.x + 0.3f, 1.15f, TablePos.z);
+        // board to the right, as in play (the left side has sign posts in the way from here)
+        Vector3 f10 = Flat(look - camPos).normalized, r10 = Vector3.Cross(Vector3.up, f10);
+        boardAnchor.position = camPos + f10 * 4.4f + r10 * 2.3f + Vector3.up * 0.45f;
+        boardAnchor.rotation = Quaternion.LookRotation(Flat(boardAnchor.position - camPos));
+        why.Muted = false;
+        Done(2, "Bump test passed. Keep the monitor with you.");
+        yield return Snap(api, "10-why-this-matters", camPos, look, 62f);
+        why.HideReason();
+
+        // 11-13 the end: check-in at the muster point, then the rationale question and the summary
+        ClearGas();
+        totalMistakes = 0;
+        totalCritical = 0;
+        StartTask(3);
+        board.Complete(0, "At the muster point by an upwind route.");
+        why.Muted = true; // open the question at once instead of after the check-in reason
+        FinishScenario();
+        why.Muted = false;
+        Debug.Log($"[why] scripted pass: done = {done}, question open = {why.Asking}");
+        mp = musterRoot.position;
+        away = Flat(mp - Center).normalized;
+        camPos = mp - away * 7f + Vector3.up * 1.7f;
+        look = mp + V(0f, 1.6f, 0f);
+        PlaceBoardFor(camPos, look);
+        why.AskOffset = new Vector2(0.45f, -0.08f);
+        yield return Snap(api, "11-rationale-question", camPos, look, 62f);
+        why.Answer(2);
+        yield return Snap(api, "12-rationale-feedback", camPos, look, 62f);
+        why.HideAll();
+        Debug.Log("[why] board summary: " + FinalSummary() + " | " + why.ReasoningLine);
+        yield return Snap(api, "13-summary-with-reasoning", camPos, boardAnchor.position + V(0f, -0.55f, 0f), 50f);
     }
 }

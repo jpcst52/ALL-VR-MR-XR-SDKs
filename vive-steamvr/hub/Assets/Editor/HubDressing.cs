@@ -16,7 +16,7 @@ public static class HubDressing
 
     // ------------------------------------------------------------------------------------------ helpers
 
-    static GameObject FindPrefab(string name)
+    internal static GameObject FindPrefab(string name)
     {
         var guids = AssetDatabase.FindAssets(name + " t:Prefab");
         string best = null;
@@ -28,7 +28,7 @@ public static class HubDressing
         return best == null ? null : AssetDatabase.LoadAssetAtPath<GameObject>(best);
     }
 
-    static GameObject Spawn(Transform parent, string prefabName, Vector3 position, float yaw = 0f, float scale = 1f)
+    internal static GameObject Spawn(Transform parent, string prefabName, Vector3 position, float yaw = 0f, float scale = 1f)
     {
         var prefab = FindPrefab(prefabName);
         if (prefab == null) { Debug.LogWarning($"[dress] prefab not found: {prefabName}"); return null; }
@@ -39,7 +39,7 @@ public static class HubDressing
         return go;
     }
 
-    static Bounds Union(GameObject root)
+    internal static Bounds Union(GameObject root)
     {
         var renderers = root.GetComponentsInChildren<Renderer>();
         if (renderers.Length == 0) return new Bounds(root.transform.position, Vector3.zero);
@@ -52,7 +52,7 @@ public static class HubDressing
     /// Centers a group of pieces on x/z = (0,0) and sets the top of its floor piece to y = 0.
     /// (The group's lowest point is not the walkable floor: pieces can extend below it.)
     /// </summary>
-    static void CenterOnFloor(GameObject group, GameObject floorPiece)
+    internal static void CenterOnFloor(GameObject group, GameObject floorPiece)
     {
         var b = Union(group);
         float floorTop = floorPiece != null ? Union(floorPiece).max.y : b.min.y;
@@ -61,17 +61,93 @@ public static class HubDressing
         Debug.Log($"[dress] {group.name}: size {after.size.x:F1} x {after.size.y:F1} x {after.size.z:F1} m, floor top was {floorTop:F2} m, lowest point {after.min.y:F2} m");
     }
 
-    static void SaveScene(string name)
+    /// <summary>Some imported materials use shaders that do not compile in this project (they render magenta); switch them to Standard.</summary>
+    internal static void FixBrokenMaterials()
     {
+        foreach (var r in Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None))
+        {
+            var mats = r.sharedMaterials;
+            bool changed = false;
+            for (int i = 0; i < mats.Length; i++)
+            {
+                var m = mats[i];
+                if (m == null)
+                {
+                    mats[i] = new Material(Shader.Find("Standard")) { color = new Color(1f, 0.93f, 0.7f) };
+                    mats[i].EnableKeyword("_EMISSION");
+                    mats[i].SetColor("_EmissionColor", new Color(1f, 0.9f, 0.6f) * 1.5f);
+                    changed = true;
+                }
+                else if (m.shader == null || m.shader.name.StartsWith("Hidden/Internal") || !m.shader.isSupported)
+                {
+                    Color c = m.HasProperty("_Color") ? m.color : new Color(0.55f, 0.55f, 0.58f);
+                    Texture t = m.HasProperty("_MainTex") ? m.mainTexture : null;
+                    m.shader = Shader.Find("Standard");
+                    m.color = c;
+                    if (t != null) m.mainTexture = t;
+                    EditorUtility.SetDirty(m);
+                    Debug.Log("[dress] fixed shader on material " + m.name);
+                }
+            }
+            if (changed) r.sharedMaterials = mats;
+        }
+    }
+
+    internal static void SaveScene(string name)
+    {
+        FixBrokenMaterials();
         Directory.CreateDirectory(LocalScenes);
         string path = $"{LocalScenes}/{name}.unity";
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), path);
-        EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(path, true) };
+        AddToBuild(path);
         Debug.Log("[dress] scene saved: " + path);
     }
 
+    /// <summary>Registers a scene in the build settings (keeps the others; the Lobby is always first).</summary>
+    internal static void AddToBuild(string path)
+    {
+        var list = EditorBuildSettings.scenes.Where(x => x.path != path).ToList();
+        list.Add(new EditorBuildSettingsScene(path, true));
+        EditorBuildSettings.scenes = list.OrderBy(x => x.path.EndsWith("/Lobby.unity") ? 0 : 1).ToArray();
+    }
+
+    /// <summary>Adds the realism pass: HubPolish (audio and post-processing) and warm work lights over the equipment.</summary>
+    internal static void AddPolish(Vector3? brandOffset = null, Vector3? brandWorld = null, bool bigHall = false, bool showBrand = true)
+    {
+        var polish = new GameObject("Polish").AddComponent<HubPolish>();
+        polish.ShowBrand = showBrand;
+        if (brandOffset.HasValue) polish.BrandOffset = brandOffset.Value;
+        if (brandWorld.HasValue) { polish.UseWorldBrand = true; polish.BrandWorld = brandWorld.Value; polish.BrandWidth = 2.8f; }
+        polish.Resources = AssetDatabase.LoadAssetAtPath<UnityEngine.Rendering.PostProcessing.PostProcessResources>("Packages/com.unity.postprocessing/PostProcessing/PostProcessResources.asset");
+        if (polish.Resources == null) Debug.LogWarning("[dress] PostProcessResources not found; post-processing will be skipped");
+        if (bigHall)
+        {
+            // The warehouse shell is about 39 x 37 m; lamps on a grid keep the far floor and walls from going black
+            for (int ix = -2; ix <= 2; ix++)
+            for (int iz = -2; iz <= 2; iz++)
+            {
+                var l = new GameObject("Hall lamp").AddComponent<Light>();
+                l.transform.SetParent(polish.transform, false);
+                l.transform.position = new Vector3(ix * 7f, 6.5f, iz * 7f);
+                l.type = LightType.Point; l.range = 14f; l.intensity = 1.6f;
+                l.color = new Color(1f, 0.96f, 0.88f);
+                l.shadows = LightShadows.None;
+            }
+        }
+        foreach (var x in new[] { -2.5f, 2.5f })
+        {
+            var l = new GameObject("Work light").AddComponent<Light>();
+            l.transform.SetParent(polish.transform, false);
+            l.transform.position = new Vector3(x, 3.4f, 0.8f);
+            l.type = LightType.Spot; l.range = 9f; l.spotAngle = 85f; l.intensity = 1.6f;
+            l.color = new Color(1f, 0.9f, 0.75f);
+            l.transform.rotation = Quaternion.Euler(90, 0, 0);
+            l.shadows = LightShadows.None;
+        }
+    }
+
     /// <summary>Spawns a wall strip, rotates it, and pushes it against one edge of the floor (0 north, 1 south, 2 east, 3 west).</summary>
-    static void PlaceWall(Transform parent, string name, float yaw, Bounds floor, int side)
+    internal static void PlaceWall(Transform parent, string name, float yaw, Bounds floor, int side)
     {
         var wall = Spawn(parent, name, Vector3.zero, yaw);
         if (wall == null) return;
@@ -95,6 +171,8 @@ public static class HubDressing
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         var scenario = new GameObject("Scenario");
         scenario.AddComponent<HydroTest>().ExternalShell = true;
+        new GameObject("Return to lobby").AddComponent<ReturnToLobby>();
+        AddPolish(new Vector3(-3.8f, 3.1f, 3.5f), null, true);
 
         var dressing = new GameObject("Dressing").transform;
 

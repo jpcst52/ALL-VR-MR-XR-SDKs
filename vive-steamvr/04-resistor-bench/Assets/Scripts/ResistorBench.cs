@@ -68,11 +68,19 @@ public class ResistorBench : MonoBehaviour, IShotScript
 
     // ------------------------------------------------------------------------------------------------- setup
 
+    // signage colours (University of Pittsburgh palette, darkened for panels)
+    static readonly Color PanelNavy = new Color(0.03f, 0.08f, 0.2f, 0.96f);
+    static readonly Color LabelDark = new Color(0.05f, 0.09f, 0.16f, 0.96f);
+    static readonly Color SulfurGreen = new Color(0.35f, 0.95f, 0.5f);
+
     void Start()
     {
         QualitySettings.shadows = ShadowQuality.All;
-        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-        RenderSettings.ambientLight = new Color(0.4f, 0.42f, 0.46f);
+        QualitySettings.shadowDistance = 12f;
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+        RenderSettings.ambientSkyColor = new Color(0.46f, 0.48f, 0.53f);
+        RenderSettings.ambientEquatorColor = new Color(0.36f, 0.37f, 0.39f);
+        RenderSettings.ambientGroundColor = new Color(0.2f, 0.2f, 0.21f);
 
         audioSrc = P.Speaker(transform, null, false, 1f, 0f);
         popClip = P.Noise("pop", 0.25f, 0.6f);
@@ -94,6 +102,7 @@ public class ResistorBench : MonoBehaviour, IShotScript
         rig.Camera.backgroundColor = new Color(0.1f, 0.11f, 0.13f);
         rig.Camera.clearFlags = CameraClearFlags.SolidColor;
         rig.LookAt(new Vector3(0, 1.0f, 0.8f));
+        StartCoroutine(FitBrandText());
     }
 
     LineRenderer MakeLine(string name, Color c, float width)
@@ -128,36 +137,92 @@ public class ResistorBench : MonoBehaviour, IShotScript
     {
         var root = new GameObject("Room").transform;
         root.SetParent(transform, false);
-        P.Box(root, "Floor", new Vector3(0, -0.1f, 0.5f), new Vector3(8f, 0.2f, 7f), P.Mat(new Color(0.42f, 0.43f, 0.45f), 0f, 0.15f));
-        P.Box(root, "Back wall", new Vector3(0, 1.6f, 1.35f), new Vector3(8f, 3.2f, 0.1f), P.Mat(new Color(0.8f, 0.82f, 0.84f), 0f, 0.2f));
+        // sealed concrete floor, painted block wall with a dark base, acoustic-tile ceiling
+        P.Box(root, "Floor", new Vector3(0, -0.1f, 0.5f), new Vector3(8f, 0.2f, 7f), P.Concrete());
+        var wallTex = P.NoiseTexture("wall paint", new Color(0.76f, 0.78f, 0.8f), new Color(0.84f, 0.86f, 0.88f), 10f, 256, 1f, 21);
+        P.Box(root, "Back wall", new Vector3(0, 1.6f, 1.35f), new Vector3(8f, 3.2f, 0.1f), P.Mat(Color.white, 0f, 0.18f, wallTex, 2f));
+        P.Box(root, "Base trim", new Vector3(0, 0.06f, 1.295f), new Vector3(8f, 0.12f, 0.012f), P.Mat(new Color(0.16f, 0.17f, 0.19f), 0f, 0.35f), false);
         P.Box(root, "Blue band", new Vector3(0, 2.6f, 1.295f), new Vector3(8f, 0.25f, 0.01f), P.Mat(P.Royal, 0.1f, 0.4f), false);
         P.Box(root, "Gold band", new Vector3(0, 2.76f, 1.295f), new Vector3(8f, 0.04f, 0.01f), P.Mat(P.Gold, 0.3f, 0.5f), false);
-        P.Box(root, "Ceiling", new Vector3(0, 3.25f, 0.5f), new Vector3(8f, 0.1f, 7f), P.Mat(new Color(0.6f, 0.61f, 0.63f)), false);
+        var tileTex = P.NoiseTexture("ceiling tile", new Color(0.62f, 0.63f, 0.64f), new Color(0.72f, 0.73f, 0.74f), 40f, 256, 1f, 23);
+        P.Box(root, "Ceiling", new Vector3(0, 3.25f, 0.5f), new Vector3(8f, 0.1f, 7f), P.Mat(Color.white, 0f, 0.05f, tileTex, 3f), false);
+        var frame = P.Mat(new Color(0.85f, 0.86f, 0.87f), 0.3f, 0.4f);
         for (int i = -1; i <= 1; i += 2)
-            P.Box(root, "Light panel", new Vector3(i * 1.3f, 3.18f, 0.6f), new Vector3(1.4f, 0.04f, 0.4f), P.Glow(new Color(1f, 0.96f, 0.88f), 2.2f), false);
-        var lamp = new GameObject("Bench light").AddComponent<Light>();
-        lamp.transform.SetParent(root, false);
-        lamp.transform.position = new Vector3(0, 2.8f, 0.4f);
-        lamp.type = LightType.Point; lamp.range = 9f; lamp.intensity = 1.0f; lamp.color = new Color(1f, 0.96f, 0.9f);
+        {
+            P.Box(root, "Light frame", new Vector3(i * 1.3f, 3.19f, 0.6f), new Vector3(1.46f, 0.03f, 0.46f), frame, false);
+            P.Box(root, "Light panel", new Vector3(i * 1.3f, 3.17f, 0.6f), new Vector3(1.4f, 0.02f, 0.4f), P.Glow(new Color(1f, 0.97f, 0.92f), 2.0f), false);
+        }
+
+        // a light under each ceiling fixture (no shadows, cheap), a fill from behind the player, and one
+        // shadow-casting overhead key so parts and instruments sit on the bench instead of floating
+        for (int i = -1; i <= 1; i += 2)
+        {
+            var lamp = new GameObject("Fixture light").AddComponent<Light>();
+            lamp.transform.SetParent(root, false);
+            lamp.transform.position = new Vector3(i * 1.3f, 3.0f, 0.55f);
+            lamp.type = LightType.Point; lamp.range = 7f; lamp.intensity = 1.0f; lamp.color = new Color(1f, 0.97f, 0.92f);
+        }
+        var fill = new GameObject("Room fill").AddComponent<Light>();
+        fill.transform.SetParent(root, false);
+        fill.transform.position = new Vector3(0, 2.4f, -1.4f);
+        fill.type = LightType.Point; fill.range = 7f; fill.intensity = 0.55f; fill.color = new Color(0.92f, 0.95f, 1f);
         var key = new GameObject("Key light").AddComponent<Light>();
         key.transform.SetParent(root, false);
-        key.type = LightType.Directional; key.intensity = 0.5f; key.color = new Color(1f, 0.95f, 0.88f);
-        key.transform.rotation = Quaternion.Euler(55, -20, 0);
-        key.shadows = LightShadows.Soft;
+        key.type = LightType.Directional; key.intensity = 0.45f; key.color = new Color(1f, 0.96f, 0.9f);
+        key.transform.rotation = Quaternion.Euler(70, -15, 0);
+        key.shadows = LightShadows.Soft; key.shadowStrength = 0.55f;
+    }
+
+    // ------------------------------------------------------------------------------------------------- signage helpers
+
+    /// <summary>A sign with a thin steel backing (so it has thickness from the side) and a rounded kit panel in front.</summary>
+    Transform SignBoard(Transform parent, string name, Vector3 worldPos, Vector2 size, Color accent, float accentHeight = 0.07f)
+    {
+        var go = new GameObject(name).transform;
+        go.SetParent(parent, false);
+        go.position = worldPos;
+        P.Box(go, "Backing", new Vector3(0, 0, 0.011f), new Vector3(size.x * 0.96f, size.y * 0.94f, 0.012f), P.DarkSteel(), false);
+        Ui.Panel(go, "Panel", Vector3.zero, size, PanelNavy, accent, accentHeight);
+        return go;
+    }
+
+    /// <summary>
+    /// A laminated label lying flat on the bench mat: rounded panel with an accent edge and the text printed on it.
+    /// Sized from the text so it never clips.
+    /// </summary>
+    Transform MatLabel(Transform parent, string text, Vector3 worldPos, float textHeight, Color accent, Color? textColor = null)
+    {
+        var lines = text.Split('\n');
+        int longest = 0;
+        foreach (var l in lines) longest = Mathf.Max(longest, l.Length);
+        var size = new Vector2(longest * textHeight * 0.6f + textHeight * 1.6f, lines.Length * textHeight * 1.15f + textHeight * 1.3f);
+        var go = new GameObject("Mat label").transform;
+        go.SetParent(parent, false);
+        go.position = worldPos;
+        go.rotation = Quaternion.Euler(90, 0, 0); // panel faces -Z, so this makes it face up
+        Ui.Panel(go, "Plate", Vector3.zero, size, LabelDark, accent, 0.14f);
+        var t = P.Text(go, text, new Vector3(0, -size.y * 0.05f, -0.003f), textHeight, textColor ?? Color.white, TextAnchor.MiddleCenter, true);
+        t.alignment = TextAlignment.Center;
+        return go;
     }
 
     void BuildBench()
     {
         var root = new GameObject("Bench").transform;
         root.SetParent(transform, false);
-        var wood = P.Mat(new Color(0.55f, 0.4f, 0.26f), 0f, 0.3f);
+        var grain = P.NoiseTexture("bench wood", new Color(0.42f, 0.29f, 0.17f), new Color(0.62f, 0.46f, 0.3f), 2.5f, 256, 14f, 31);
+        var wood = P.Mat(Color.white, 0f, 0.35f, grain, 1f);
         P.Box(root, "Bench top", new Vector3(0, 0.87f, 0.8f), new Vector3(3.4f, 0.06f, 0.8f), wood);
+        P.Box(root, "Front apron", new Vector3(0, 0.815f, 0.415f), new Vector3(3.3f, 0.05f, 0.02f), P.DarkSteel(), false);
         for (int sx = -1; sx <= 1; sx += 2)
         for (int sz = -1; sz <= 1; sz += 2)
             P.Box(root, "Leg", new Vector3(sx * 1.6f, 0.42f, 0.8f + sz * 0.35f), new Vector3(0.06f, 0.84f, 0.06f), P.DarkSteel());
-        P.Box(root, "ESD mat", new Vector3(0, 0.903f, 0.8f), new Vector3(3.2f, 0.006f, 0.74f), P.Mat(new Color(0.16f, 0.3f, 0.27f), 0f, 0.2f), false);
-        var t = P.Text(root, "ESD-SAFE MAT  (connected to ground through the hook)", new Vector3(0.1f, 0.909f, 0.43f), 0.03f, P.Sky, TextAnchor.MiddleCenter, true);
-        t.transform.rotation = Quaternion.Euler(90, 0, 0);
+        for (int sx = -1; sx <= 1; sx += 2)
+            P.Box(root, "Foot rail", new Vector3(sx * 1.6f, 0.12f, 0.8f), new Vector3(0.04f, 0.04f, 0.7f), P.DarkSteel(), false);
+        P.Box(root, "Shelf", new Vector3(0, 0.15f, 0.85f), new Vector3(3.14f, 0.025f, 0.6f), P.DarkSteel(), false);
+        var matTex = P.NoiseTexture("esd mat", new Color(0.13f, 0.27f, 0.24f), new Color(0.18f, 0.33f, 0.3f), 30f, 256, 1f, 33);
+        P.Box(root, "ESD mat", new Vector3(0, 0.903f, 0.8f), new Vector3(3.2f, 0.006f, 0.74f), P.Mat(Color.white, 0f, 0.12f, matTex, 4f), false);
+        MatLabel(root, "ESD-SAFE MAT\ngrounded through the hook", new Vector3(1.38f, 0.912f, 0.475f), 0.017f, new Color(0.3f, 0.75f, 0.45f));
     }
 
     void BuildEsdStation()
@@ -169,7 +234,7 @@ public class ResistorBench : MonoBehaviour, IShotScript
         P.Cyl(root, "Hook post", new Vector3(-1.55f, 1.02f, 0.95f), 0.012f, 0.24f, Vector3.up, steel, false);
         P.Box(root, "Hook head", new Vector3(-1.55f, 1.15f, 0.95f), new Vector3(0.07f, 0.02f, 0.03f), P.Mat(P.Gold, 0.4f, 0.5f), false);
         P.Box(root, "Ground jack", new Vector3(-1.55f, 0.907f, 0.95f), new Vector3(0.06f, 0.012f, 0.06f), P.Painted(new Color(0.1f, 0.6f, 0.3f)), false);
-        P.Text(root, "WRIST-STRAP HOOK\n(to ground)", new Vector3(-1.55f, 1.3f, 0.94f), 0.034f, P.Gold, TextAnchor.MiddleCenter, true);
+        Ui.Tag(root, "GROUND HOOK", new Vector3(-1.55f, 1.15f, 0.95f), new Vector3(0.1f, 0.13f, -0.05f), 0.035f, new Color(0.3f, 0.75f, 0.45f));
         strapZone = MakeZone(root, "Strap zone", new Vector3(-1.55f, 1.12f, 0.92f), "strap", 0.22f, 0.07f);
 
         var go = new GameObject("ESD wrist strap");
@@ -186,7 +251,7 @@ public class ResistorBench : MonoBehaviour, IShotScript
         strapObj = go.AddComponent<Grabbable>();
         strapObj.SnapId = "strap";
         strapCord = MakeLine("ESD cord", new Color(0.1f, 0.8f, 0.4f), 0.006f);
-        P.Text(transform, "ESD STRAP", new Vector3(-1.3f, 0.93f, 0.46f), 0.03f, Color.white, TextAnchor.MiddleCenter, true).transform.rotation = Quaternion.Euler(90, 0, 0);
+        MatLabel(root, "WRIST STRAP", new Vector3(-1.3f, 0.912f, 0.465f), 0.018f, new Color(0.3f, 0.75f, 0.45f));
     }
 
     void BuildBins()
@@ -194,25 +259,35 @@ public class ResistorBench : MonoBehaviour, IShotScript
         var root = new GameObject("Parts drawer").transform;
         root.SetParent(transform, false);
         var plastic = P.Mat(new Color(0.85f, 0.87f, 0.9f), 0f, 0.4f);
+        // the back row stands on a riser (a tiered parts rack) so its labels are not hidden behind the front row
+        const float Riser = 0.075f;
+        P.Box(root, "Riser", new Vector3(-0.96f, 0.906f + Riser / 2f, 1.04f), new Vector3(0.74f, Riser, 0.18f), P.DarkSteel());
         for (int i = 0; i < BinParts.Length; i++)
         {
             var spec = BinParts[i];
             float x = -1.2f + (i % 3) * 0.24f;
             float z = 1.04f - (i / 3) * 0.18f;
-            P.Box(root, "Bin floor", new Vector3(x, 0.906f, z), new Vector3(0.22f, 0.012f, 0.16f), plastic);
-            P.Box(root, "Bin front", new Vector3(x, 0.93f, z - 0.076f), new Vector3(0.22f, 0.06f, 0.008f), plastic);
-            P.Box(root, "Bin back", new Vector3(x, 0.93f, z + 0.076f), new Vector3(0.22f, 0.06f, 0.008f), plastic);
-            P.Box(root, "Bin left", new Vector3(x - 0.106f, 0.93f, z), new Vector3(0.008f, 0.06f, 0.16f), plastic);
-            P.Box(root, "Bin right", new Vector3(x + 0.106f, 0.93f, z), new Vector3(0.008f, 0.06f, 0.16f), plastic);
-            P.Box(root, "Label plate", new Vector3(x, 1.02f, z + 0.07f), new Vector3(0.21f, 0.09f, 0.008f), P.Mat(new Color(0.03f, 0.08f, 0.2f)), false);
-            string label = ResistorMath.FormatOhms(spec.Ohms) + " ohm  " + spec.TolerancePct.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + "%\n"
-                + ResistorMath.WattsText(spec.RatedWatts) + "\n" + (spec.AntiSulfur ? "ANTI-SULFUR" : "standard");
-            P.Text(root, label, new Vector3(x, 1.02f, z + 0.064f), 0.02f, spec.AntiSulfur ? new Color(0.4f, 1f, 0.55f) : Color.white, TextAnchor.MiddleCenter, true);
+            float y = i < 3 ? Riser : 0f;
+            P.Box(root, "Bin floor", new Vector3(x, 0.906f + y, z), new Vector3(0.22f, 0.012f, 0.16f), plastic);
+            P.Box(root, "Bin front", new Vector3(x, 0.93f + y, z - 0.076f), new Vector3(0.22f, 0.06f, 0.008f), plastic);
+            P.Box(root, "Bin back", new Vector3(x, 0.93f + y, z + 0.076f), new Vector3(0.22f, 0.06f, 0.008f), plastic);
+            P.Box(root, "Bin left", new Vector3(x - 0.106f, 0.93f + y, z), new Vector3(0.008f, 0.06f, 0.16f), plastic);
+            P.Box(root, "Bin right", new Vector3(x + 0.106f, 0.93f + y, z), new Vector3(0.008f, 0.06f, 0.16f), plastic);
+            // label card in a holder on the bin front, tipped back so it reads from standing height
+            var holder = new GameObject("Bin label").transform;
+            holder.SetParent(root, false);
+            holder.position = new Vector3(x, 0.945f + y, z - 0.095f);
+            holder.rotation = Quaternion.Euler(38f, 0, 0);
+            var acc = spec.AntiSulfur ? new Color(0.2f, 0.8f, 0.4f) : new Color(0.55f, 0.62f, 0.72f);
+            Ui.Panel(holder, "Card", Vector3.zero, new Vector2(0.205f, 0.07f), LabelDark, acc, 0.12f);
+            string tol = spec.TolerancePct.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+            P.Text(holder, ResistorMath.FormatOhms(spec.Ohms) + " ohm " + tol + "% " + ResistorMath.WattsText(spec.RatedWatts), new Vector3(0, 0.01f, -0.004f), 0.017f, Color.white, TextAnchor.MiddleCenter, true);
+            P.Text(holder, spec.AntiSulfur ? "ANTI-SULFUR" : "standard", new Vector3(0, -0.017f, -0.004f), 0.016f, spec.AntiSulfur ? SulfurGreen : new Color(0.75f, 0.8f, 0.88f), TextAnchor.MiddleCenter, spec.AntiSulfur);
             for (int k = 0; k < 3; k++)
-                MakeResistor(spec, new Vector3(x - 0.01f, 0.94f + k * 0.012f, z - 0.045f + k * 0.045f), i * 10 + k + 1);
+                MakeResistor(spec, new Vector3(x - 0.01f, 0.94f + y + k * 0.012f, z - 0.045f + k * 0.045f), i * 10 + k + 1);
         }
-        var legend = P.Text(root, "PARTS DRAWER   |   green dot on the body = anti-sulfur type", new Vector3(-0.96f, 0.908f, 0.72f), 0.024f, P.Sky, TextAnchor.MiddleCenter, true);
-        legend.transform.rotation = Quaternion.Euler(90, 0, 0);
+        Ui.Tag(root, "PARTS DRAWER", new Vector3(-0.96f, 0.97f + Riser, 1.1f), new Vector3(0f, 0.2f, 0.0f), 0.035f, P.Gold);
+        MatLabel(root, "Green dot on the body = ANTI-SULFUR type", new Vector3(-0.96f, 0.912f, 0.7f), 0.016f, new Color(0.2f, 0.8f, 0.4f));
     }
 
     BenchResistor MakeResistor(PartSpec spec, Vector3 pos, int seed)
@@ -263,36 +338,45 @@ public class ResistorBench : MonoBehaviour, IShotScript
     {
         var root = new GameObject("Reading station").transform;
         root.SetParent(transform, false);
-        P.Box(root, "Reading card", new Vector3(-0.4f, 0.904f, 0.5f), new Vector3(0.22f, 0.004f, 0.13f), P.Mat(Color.white, 0f, 0.3f), false);
-        var t = P.Text(root, "UNKNOWN PART", new Vector3(-0.4f, 0.908f, 0.425f), 0.022f, Color.black, TextAnchor.MiddleCenter, true);
+        // a white test card with a printed heading and a royal-blue rule; the unknown part lies on it
+        P.Box(root, "Reading card", new Vector3(-0.4f, 0.9075f, 0.505f), new Vector3(0.22f, 0.003f, 0.15f), P.Mat(new Color(0.96f, 0.96f, 0.94f), 0f, 0.25f), false);
+        P.Box(root, "Card rule", new Vector3(-0.4f, 0.9095f, 0.472f), new Vector3(0.2f, 0.001f, 0.003f), P.Mat(P.Royal), false);
+        var t = P.Text(root, "UNKNOWN PART", new Vector3(-0.4f, 0.9105f, 0.452f), 0.02f, P.MediumBlue, TextAnchor.MiddleCenter, true);
         t.transform.rotation = Quaternion.Euler(90, 0, 0);
-        unknown = MakeResistor(UnknownSpec, new Vector3(-0.4f, 0.93f, 0.5f), 7);
+        unknown = MakeResistor(UnknownSpec, new Vector3(-0.4f, 0.93f, 0.525f), 7);
 
         // answer panel on two legs
         var panel = new GameObject("Answer panel").transform;
         panel.SetParent(root, false);
-        panel.position = new Vector3(-0.3f, 1.1f, 1.1f);
+        panel.position = new Vector3(-0.25f, 1.1f, 1.1f);
         for (int sx = -1; sx <= 1; sx += 2)
-            P.Box(panel, "Leg", new Vector3(sx * 0.3f, -0.125f, 0.0f), new Vector3(0.02f, 0.25f, 0.02f), P.DarkSteel(), false);
-        P.Box(panel, "Plate", Vector3.zero, new Vector3(0.64f, 0.3f, 0.02f), P.Mat(new Color(0.03f, 0.08f, 0.2f), 0f, 0.3f), false);
-        P.Text(panel, "WHAT IS THE VALUE? (read the bands, then measure)", new Vector3(0, 0.115f, -0.013f), 0.026f, P.Gold, TextAnchor.MiddleCenter, true);
+            P.Box(panel, "Leg", new Vector3(sx * 0.28f, -0.1f, 0.012f), new Vector3(0.02f, 0.2f, 0.02f), P.DarkSteel(), false);
+        P.Box(panel, "Backing", new Vector3(0, 0, 0.011f), new Vector3(0.62f, 0.28f, 0.012f), P.DarkSteel(), false);
+        Ui.Panel(panel, "Plate", Vector3.zero, new Vector2(0.66f, 0.3f), PanelNavy, P.Gold, 0.08f);
+        P.Text(panel, "WHAT IS THE VALUE?", new Vector3(0, 0.094f, -0.01f), 0.028f, P.Gold, TextAnchor.MiddleCenter, true);
+        P.Text(panel, "read the bands, then measure", new Vector3(0, 0.062f, -0.01f), 0.018f, P.Sky, TextAnchor.MiddleCenter);
         string[] answers = { "470 ohm", "4.7 k ohm", "47 k ohm", "4.7 M ohm" };
         for (int i = 0; i < answers.Length; i++)
         {
-            var pos = panel.position + new Vector3((i - 1.5f) * 0.15f, 0.01f, -0.02f);
+            var pos = panel.position + new Vector3((i - 1.5f) * 0.15f, -0.008f, -0.02f);
             int idx = i;
             MakeButton(panel, answers[i], pos, new Color(0.2f, 0.5f, 0.95f), () => OnAnswer(idx));
-            P.Text(panel, answers[i], new Vector3((i - 1.5f) * 0.15f, -0.085f, -0.013f), 0.026f, Color.white, TextAnchor.MiddleCenter, true);
+            P.Text(panel, answers[i], new Vector3((i - 1.5f) * 0.15f, -0.09f, -0.01f), 0.024f, Color.white, TextAnchor.MiddleCenter, true);
         }
 
-        // selection tray with a CHECK PART button
-        P.Box(root, "Tray", new Vector3(0.2f, 0.905f, 0.78f), new Vector3(0.22f, 0.01f, 0.14f), P.Mat(new Color(0.9f, 0.9f, 0.92f), 0f, 0.4f), false);
+        // selection tray (a shallow white tray with a lip) and the CHECK PART sign behind it
+        var trayMat = P.Mat(new Color(0.9f, 0.9f, 0.92f), 0f, 0.4f);
+        P.Box(root, "Tray", new Vector3(0.2f, 0.909f, 0.78f), new Vector3(0.22f, 0.006f, 0.14f), trayMat, false);
+        for (int s = -1; s <= 1; s += 2)
+        {
+            P.Box(root, "Tray lip", new Vector3(0.2f, 0.915f, 0.78f + s * 0.068f), new Vector3(0.22f, 0.014f, 0.004f), trayMat, false);
+            P.Box(root, "Tray lip", new Vector3(0.2f + s * 0.108f, 0.915f, 0.78f), new Vector3(0.004f, 0.014f, 0.14f), trayMat, false);
+        }
         trayZone = MakeZone(root, "Tray zone", new Vector3(0.2f, 0.93f, 0.78f), "part", 0.13f, 0.08f);
-        var tt = P.Text(root, "SELECTION TRAY", new Vector3(0.2f, 0.909f, 0.69f), 0.024f, P.Sky, TextAnchor.MiddleCenter, true);
-        tt.transform.rotation = Quaternion.Euler(90, 0, 0);
-        P.Box(root, "Check plate", new Vector3(0.2f, 1.0f, 0.975f), new Vector3(0.26f, 0.2f, 0.02f), P.Mat(new Color(0.03f, 0.08f, 0.2f), 0f, 0.3f), false);
-        MakeButton(root, "CHECK", new Vector3(0.2f, 1.04f, 0.955f), new Color(0.1f, 0.75f, 0.35f), OnCheckPressed);
-        P.Text(root, "CHECK PART", new Vector3(0.2f, 0.965f, 0.963f), 0.03f, Color.white, TextAnchor.MiddleCenter, true).transform.localRotation = Quaternion.identity;
+        MatLabel(root, "SELECTION TRAY", new Vector3(0.2f, 0.912f, 0.68f), 0.018f, P.Gold);
+        SignBoard(root, "Check plate", new Vector3(0.2f, 1.012f, 0.975f), new Vector2(0.26f, 0.2f), new Color(0.1f, 0.75f, 0.35f), 0.08f);
+        MakeButton(root, "CHECK", new Vector3(0.2f, 1.042f, 0.955f), new Color(0.1f, 0.75f, 0.35f), OnCheckPressed);
+        P.Text(root, "CHECK PART", new Vector3(0.2f, 0.96f, 0.965f), 0.03f, Color.white, TextAnchor.MiddleCenter, true);
     }
 
     void BuildMeter()
@@ -317,11 +401,13 @@ public class ResistorBench : MonoBehaviour, IShotScript
         P.Ball(jackRed, "Red socket", Vector3.zero, 0.01f, P.Mat(new Color(0.85f, 0.1f, 0.1f)), false);
         P.Ball(jackBlack, "Black socket", Vector3.zero, 0.01f, P.Mat(new Color(0.05f, 0.05f, 0.05f)), false);
 
-        redProbe = MakeProbe(true, new Vector3(0.36f, 0.93f, 0.45f));
-        blackProbe = MakeProbe(false, new Vector3(0.5f, 0.93f, 0.45f));
+        Ui.Tag(transform, "MULTIMETER", new Vector3(0.62f, 1.19f, 0.9f), new Vector3(0.0f, 0.1f, -0.02f), 0.032f, P.Gold);
+
+        redProbe = MakeProbe(true, new Vector3(0.4f, 0.93f, 0.52f));
+        blackProbe = MakeProbe(false, new Vector3(0.53f, 0.93f, 0.52f));
         redLead = MakeLine("Red lead", new Color(0.85f, 0.1f, 0.1f), 0.005f);
         blackLead = MakeLine("Black lead", new Color(0.05f, 0.05f, 0.05f), 0.005f);
-        P.Text(transform, "METER PROBES: touch both leads, or let go near a lead to clip", new Vector3(0.44f, 0.909f, 0.37f), 0.02f, P.Sky, TextAnchor.MiddleCenter, true).transform.rotation = Quaternion.Euler(90, 0, 0);
+        MatLabel(transform, "METER PROBES\ntouch both leads, or\nlet go near a lead to clip", new Vector3(0.12f, 0.912f, 0.52f), 0.016f, P.Gold);
     }
 
     BenchProbe MakeProbe(bool red, Vector3 pos)
@@ -365,10 +451,11 @@ public class ResistorBench : MonoBehaviour, IShotScript
         ledZone = MakeZone(root, "LED zone", new Vector3(1.12f, 0.97f, 0.65f), "led", 0.1f, 0.05f);
         P.Text(root, "R1", new Vector3(0.9f, 0.923f, 0.58f), 0.026f, Color.black, TextAnchor.MiddleCenter, true).transform.rotation = Quaternion.Euler(90, 0, 0);
         P.Text(root, "LED1", new Vector3(1.12f, 0.923f, 0.58f), 0.026f, Color.black, TextAnchor.MiddleCenter, true).transform.rotation = Quaternion.Euler(90, 0, 0);
-        P.Text(root, "5 V CIRCUIT BOARD", new Vector3(1.0f, 0.923f, 0.5f), 0.022f, Color.black, TextAnchor.MiddleCenter, true).transform.rotation = Quaternion.Euler(90, 0, 0);
-        led1 = MakeLed(new Vector3(0.78f, 0.95f, 0.4f));
-        led2 = MakeLed(new Vector3(0.93f, 0.95f, 0.4f));
-        P.Text(root, "LEDs (spare)", new Vector3(0.855f, 0.909f, 0.33f), 0.02f, P.Sky, TextAnchor.MiddleCenter, true).transform.rotation = Quaternion.Euler(90, 0, 0);
+        P.Text(root, "5 V CIRCUIT BOARD", new Vector3(1.0f, 0.923f, 0.551f), 0.018f, Color.black, TextAnchor.MiddleCenter, true).transform.rotation = Quaternion.Euler(90, 0, 0);
+        led1 = MakeLed(new Vector3(0.8f, 0.95f, 0.47f));
+        led2 = MakeLed(new Vector3(0.92f, 0.95f, 0.47f));
+        MatLabel(root, "LEDs (one spare)", new Vector3(1.06f, 0.912f, 0.465f), 0.016f, new Color(1f, 0.35f, 0.3f));
+        Ui.Tag(root, "LED TEST BOARD", new Vector3(1.0f, 0.93f, 0.78f), new Vector3(-0.05f, 0.25f, 0.02f), 0.032f, P.Gold);
     }
 
     BenchLed MakeLed(Vector3 pos)
@@ -427,8 +514,37 @@ public class ResistorBench : MonoBehaviour, IShotScript
         sh.shapeType = ParticleSystemShapeType.Cone;
         sh.angle = 20f;
         sh.radius = 0.01f;
-        go.GetComponent<ParticleSystemRenderer>().material = new Material(Shader.Find("Sprites/Default"));
+        go.GetComponent<ParticleSystemRenderer>().material = new Material(Shader.Find("Sprites/Default")) { mainTexture = SoftDot() };
+        var col = ps.colorOverLifetime;
+        col.enabled = true;
+        var fade = new Gradient();
+        fade.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                     new[] { new GradientAlphaKey(0.9f, 0f), new GradientAlphaKey(0.6f, 0.4f), new GradientAlphaKey(0f, 1f) });
+        col.color = fade;
+        var size = ps.sizeOverLifetime;
+        size.enabled = true;
+        size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 0.6f, 1f, 2.2f));
         return ps;
+    }
+
+    static Texture2D softDot;
+    /// <summary>Round, soft-edged particle texture so smoke reads as puffs instead of squares.</summary>
+    static Texture2D SoftDot()
+    {
+        if (softDot != null) return softDot;
+        const int n = 64;
+        softDot = new Texture2D(n, n, TextureFormat.RGBA32, false) { name = "soft dot", wrapMode = TextureWrapMode.Clamp };
+        var px = new Color[n * n];
+        for (int y = 0; y < n; y++)
+        for (int x = 0; x < n; x++)
+        {
+            float d = new Vector2(x + 0.5f - n / 2f, y + 0.5f - n / 2f).magnitude / (n / 2f);
+            float a = Mathf.Clamp01(1f - d);
+            px[y * n + x] = new Color(1f, 1f, 1f, a * a);
+        }
+        softDot.SetPixels(px);
+        softDot.Apply();
+        return softDot;
     }
 
     void BuildSupply()
@@ -436,10 +552,12 @@ public class ResistorBench : MonoBehaviour, IShotScript
         var root = new GameObject("Power supply").transform;
         root.SetParent(transform, false);
         P.Box(root, "Case", new Vector3(1.4f, 0.97f, 1.0f), new Vector3(0.3f, 0.14f, 0.2f), P.Mat(new Color(0.25f, 0.27f, 0.3f), 0.4f, 0.5f));
+        P.Box(root, "Front panel", new Vector3(1.4f, 0.97f, 0.8995f), new Vector3(0.29f, 0.13f, 0.002f), P.Mat(new Color(0.13f, 0.14f, 0.16f), 0.5f, 0.45f), false);
+        P.Box(root, "Handle", new Vector3(1.4f, 1.05f, 1.0f), new Vector3(0.22f, 0.012f, 0.03f), P.DarkSteel(), false);
+        Ui.Tag(root, "5 V BENCH SUPPLY", new Vector3(1.4f, 1.056f, 1.0f), new Vector3(0.0f, 0.14f, -0.04f), 0.032f, P.Gold);
         P.Box(root, "Display bezel", new Vector3(1.4f, 1.0f, 0.896f), new Vector3(0.16f, 0.05f, 0.006f), P.Mat(new Color(0.05f, 0.07f, 0.05f)), false);
         psuText = P.Text(root, "0.00 V", new Vector3(1.4f, 1.003f, 0.89f), 0.036f, new Color(0.45f, 1f, 0.5f), TextAnchor.MiddleCenter, true);
-        psuState = P.Text(root, "OUTPUT OFF", new Vector3(1.4f, 0.955f, 0.894f), 0.02f, Color.white, TextAnchor.MiddleCenter, true);
-        P.Text(root, "5 V SUPPLY", new Vector3(1.4f, 1.05f, 0.894f), 0.018f, P.Gold, TextAnchor.MiddleCenter, true);
+        psuState = P.Text(root, "OUTPUT OFF", new Vector3(1.4f, 0.959f, 0.894f), 0.018f, Color.white, TextAnchor.MiddleCenter, true);
         P.Ball(root, "Plus terminal", new Vector3(1.3f, 0.935f, 0.893f), 0.01f, P.Mat(new Color(0.85f, 0.1f, 0.1f)), false);
         P.Ball(root, "Minus terminal", new Vector3(1.5f, 0.935f, 0.893f), 0.01f, P.Mat(new Color(0.05f, 0.05f, 0.05f)), false);
         switchOn = P.Glow(new Color(0.1f, 1f, 0.4f), 1.2f);
@@ -463,9 +581,9 @@ public class ResistorBench : MonoBehaviour, IShotScript
         var go = new GameObject(title + " card").transform;
         go.SetParent(transform, false);
         go.position = center;
-        P.Box(go, "Frame", new Vector3(0, 0, 0.012f), new Vector3(w + 0.04f, h + 0.04f, 0.02f), P.Mat(P.Gold, 0.3f, 0.5f), false);
-        P.Box(go, "Panel", Vector3.zero, new Vector3(w, h, 0.02f), P.Mat(new Color(0.03f, 0.08f, 0.2f), 0f, 0.3f), false);
-        P.Text(go, title, new Vector3(-w / 2f + 0.03f, h / 2f - 0.05f, -0.015f), 0.04f, P.Gold, TextAnchor.MiddleLeft, true);
+        Ui.Panel(go, "Panel", Vector3.zero, new Vector2(w, h), PanelNavy, P.Gold, 0.045f);
+        P.Text(go, title, new Vector3(-w / 2f + 0.035f, h / 2f - 0.08f, -0.015f), 0.04f, P.Gold, TextAnchor.MiddleLeft, true);
+        P.Box(go, "Title rule", new Vector3(0, h / 2f - 0.115f, -0.012f), new Vector3(w - 0.07f, 0.003f, 0.002f), P.Mat(new Color(0.35f, 0.45f, 0.62f)), false);
         return go;
     }
 
@@ -483,12 +601,12 @@ public class ResistorBench : MonoBehaviour, IShotScript
         var poster = new GameObject("Color code poster").transform;
         poster.SetParent(transform, false);
         poster.position = new Vector3(-0.95f, 1.75f, 1.28f);
-        P.Box(poster, "Frame", new Vector3(0, 0, 0.012f), new Vector3(1.54f, 1.04f, 0.02f), P.Mat(P.Gold, 0.3f, 0.5f), false);
-        P.Box(poster, "Panel", Vector3.zero, new Vector3(1.5f, 1.0f, 0.02f), P.Mat(new Color(0.96f, 0.96f, 0.93f), 0f, 0.2f), false);
-        P.Text(poster, "RESISTOR COLOR CODE", new Vector3(0, 0.44f, -0.015f), 0.07f, P.Royal, TextAnchor.MiddleCenter, true);
-        P.Text(poster, "color", new Vector3(-0.74f, 0.27f, -0.015f), 0.024f, Color.black, TextAnchor.MiddleLeft, true);
-        P.Text(poster, "digit", new Vector3(-0.74f, 0.07f, -0.015f), 0.024f, Color.black, TextAnchor.MiddleLeft, true);
-        P.Text(poster, "multiplier", new Vector3(-0.74f, -0.03f, -0.015f), 0.024f, Color.black, TextAnchor.MiddleLeft, true);
+        Ui.Panel(poster, "Panel", Vector3.zero, new Vector2(1.52f, 1.0f), new Color(0.97f, 0.97f, 0.95f), P.Royal, 0.13f);
+        P.Text(poster, "RESISTOR COLOR CODE", new Vector3(0, 0.435f, -0.015f), 0.07f, Color.white, TextAnchor.MiddleCenter, true);
+        P.Box(poster, "Gold rule", new Vector3(0, 0.364f, -0.012f), new Vector3(1.44f, 0.006f, 0.002f), P.Mat(P.Gold, 0.2f, 0.5f), false);
+        P.Text(poster, "color", new Vector3(-0.72f, 0.27f, -0.015f), 0.024f, Color.black, TextAnchor.MiddleLeft, true);
+        P.Text(poster, "digit", new Vector3(-0.72f, 0.07f, -0.015f), 0.024f, Color.black, TextAnchor.MiddleLeft, true);
+        P.Text(poster, "multiplier", new Vector3(-0.72f, -0.03f, -0.015f), 0.024f, Color.black, TextAnchor.MiddleLeft, true);
         for (int i = 0; i < 12; i++)
         {
             float x = (i - 5.5f) * 0.105f + 0.05f;
@@ -504,15 +622,15 @@ public class ResistorBench : MonoBehaviour, IShotScript
 
         // circuit card
         var circuit = Card(new Vector3(0.4f, 1.75f, 1.28f), 0.62f, 0.85f, "LED CIRCUIT");
-        P.Text(circuit, "Supply:  5.0 V\nLED drop:  2.0 V\nLED current:  20 mA\n\nR = (Vs - Vf) / I\nPick the nearest standard\nvalue (E24).\nTolerance: 5% or better.\nPower: P = I x I x R", new Vector3(-0.28f, 0.33f, -0.015f), 0.03f, Color.white, TextAnchor.UpperLeft);
+        P.Text(circuit, "Supply:  5.0 V\nLED drop:  2.0 V\nLED current:  20 mA\n\nR = (Vs - Vf) / I\nPick the nearest standard\nvalue (E24).\nTolerance: 5% or better.\nPower: P = I x I x R", new Vector3(-0.275f, 0.27f, -0.015f), 0.03f, Color.white, TextAnchor.UpperLeft);
 
         // datasheet card with the derating line
         var sheet = Card(new Vector3(1.07f, 1.75f, 1.28f), 0.62f, 0.85f, "DATASHEET (generic)");
-        P.Text(sheet, "Rated power is given at 70 C.\nDerates linearly to 0 W at 155 C.\nThis board runs at 85 C:\nusable power = rated x 0.82.\nPads fit parts up to 1/4 W.", new Vector3(-0.28f, 0.33f, -0.015f), 0.027f, Color.white, TextAnchor.UpperLeft);
+        P.Text(sheet, "Rated power is given at 70 C.\nDerates linearly to 0 W at 155 C.\nThis board runs at 85 C:\nusable power = rated x 0.82.\nPads fit parts up to 1/4 W.", new Vector3(-0.275f, 0.27f, -0.015f), 0.027f, Color.white, TextAnchor.UpperLeft);
         var line = P.Mat(P.Gold, 0.2f, 0.5f);
         var axis = P.Mat(new Color(0.7f, 0.8f, 0.95f), 0f, 0.3f);
         System.Func<float, float> gx = t => -0.24f + (t - 25f) / 135f * 0.5f;
-        System.Func<float, float> gy = p => -0.36f + p * 0.26f;
+        System.Func<float, float> gy = p => -0.33f + p * 0.26f;
         Seg(sheet, new Vector2(gx(25), gy(0)), new Vector2(gx(160), gy(0)), 0.004f, axis);
         Seg(sheet, new Vector2(gx(25), gy(0)), new Vector2(gx(25), gy(1.05f)), 0.004f, axis);
         Seg(sheet, new Vector2(gx(25), gy(1)), new Vector2(gx(70), gy(1)), 0.008f, line);
@@ -526,7 +644,30 @@ public class ResistorBench : MonoBehaviour, IShotScript
 
         // environment card
         var env = Card(new Vector3(1.74f, 1.75f, 1.28f), 0.62f, 0.85f, "ENVIRONMENT");
-        P.Text(env, "Station air:\nSULFUR-RICH\n(process gases nearby).\n\nSulfur can attack the silver\nin standard terminations.\nAnti-sulfur types are built\nto resist it. Look for the\ngreen dot on the body.", new Vector3(-0.28f, 0.33f, -0.015f), 0.03f, new Color(1f, 0.85f, 0.4f), TextAnchor.UpperLeft);
+        P.Text(env, "Station air:\nSULFUR-RICH\n(process gases nearby).\n\nSulfur can attack the silver\nin standard terminations.\nAnti-sulfur types are built\nto resist it. Look for the\ngreen dot on the body.", new Vector3(-0.275f, 0.27f, -0.015f), 0.03f, new Color(1f, 0.85f, 0.4f), TextAnchor.UpperLeft);
+
+        // university / department plate on the wall facing the start position, above the cards and clear of the band text
+        brandPlate = Ui.BrandPlate(transform, new Vector3(1.07f, 2.42f, 1.27f), 0.86f);
+        brandWidth = 0.86f;
+    }
+
+    Transform brandPlate;
+    float brandWidth;
+
+    /// <summary>
+    /// The kit's text wordmark (used when the logo file is absent) is wider than its plate with this font, so shrink
+    /// any line that overruns. Runs one frame after setup, when the text meshes have bounds.
+    /// </summary>
+    IEnumerator FitBrandText()
+    {
+        yield return null;
+        if (brandPlate == null) yield break;
+        float max = brandWidth * 0.9f;
+        foreach (var tm in brandPlate.GetComponentsInChildren<TextMesh>())
+        {
+            float w = tm.GetComponent<Renderer>().bounds.size.x;
+            if (w > max) tm.characterSize *= max / w;
+        }
     }
 
     void BuildTaskBoard()
@@ -787,20 +928,53 @@ public class ResistorBench : MonoBehaviour, IShotScript
         return null;
     }
 
+    /// <summary>
+    /// Screenshot path only: if an OpenXR runtime started (for example the editor's Mock runtime), stop it so the
+    /// capture camera renders a normal desktop view with the requested field of view.
+    /// </summary>
+    static void StopXrForCapture()
+    {
+        var s = UnityEngine.XR.Management.XRGeneralSettings.Instance;
+        if (s == null || s.Manager == null || !s.Manager.isInitializationComplete) return;
+        s.Manager.StopSubsystems();
+        s.Manager.DeinitializeLoader();
+        Debug.Log("[capture] XR stopped for desktop screenshots");
+    }
+
+    /// <summary>
+    /// Screenshot path only: stand the (hidden) player where the capture camera is, so the name tags turn toward the
+    /// picture the way they turn toward a player, then take the shot.
+    /// </summary>
+    IEnumerator ShotAt(ShotApi api, string name, Vector3 position, Vector3 lookAt, float fov)
+    {
+        rig.transform.position += position - rig.Camera.transform.position;
+        yield return null;
+        yield return api.Shot(name, position, lookAt, fov);
+    }
+
     public IEnumerator Shots(ShotApi api)
     {
-        yield return api.Shot("01-bench-overview", new Vector3(-0.2f, 1.75f, -1.0f), new Vector3(-0.1f, 1.0f, 0.9f), 68f);
+        StopXrForCapture();
+        // the desktop hands and pointer would sit in front of the capture camera; hide them for the screenshots
+        rig.Area = null;
+        rig.Left.gameObject.SetActive(false);
+        rig.Right.gameObject.SetActive(false);
+        yield return api.Wait(0.5f);
+        // warm-up render so the editor finishes compiling shader variants (the first frame can show placeholders)
+        yield return ShotAt(api, "01-bench-overview", new Vector3(-0.2f, 1.75f, -1.0f), new Vector3(-0.1f, 1.0f, 0.9f), 68f);
+        yield return api.Wait(2.0f);
+        yield return ShotAt(api, "01-bench-overview", new Vector3(-0.2f, 1.75f, -1.0f), new Vector3(-0.1f, 1.0f, 0.9f), 68f);
 
         Place(strapZone, strapObj);
         yield return api.Wait(0.3f);
-        yield return api.Shot("02-esd-station", new Vector3(-1.2f, 1.45f, 0.1f), new Vector3(-1.5f, 1.0f, 0.85f), 55f);
+        yield return ShotAt(api, "02-esd-station", new Vector3(-1.2f, 1.45f, 0.1f), new Vector3(-1.5f, 1.0f, 0.85f), 55f);
 
-        yield return api.Shot("03-color-code-reading", new Vector3(-0.35f, 1.5f, -0.2f), new Vector3(-0.5f, 1.25f, 0.8f), 62f);
+        yield return ShotAt(api, "03-color-code-reading", new Vector3(-0.35f, 1.5f, -0.2f), new Vector3(-0.5f, 1.25f, 0.8f), 62f);
 
         redProbe.ClipRes = unknown; redProbe.ClipLead = 0;
         blackProbe.ClipRes = unknown; blackProbe.ClipLead = 1;
         yield return api.Wait(0.4f);
-        yield return api.Shot("04-measuring", new Vector3(0.1f, 1.45f, -0.05f), new Vector3(0.1f, 0.98f, 0.7f), 62f);
+        yield return ShotAt(api, "04-measuring", new Vector3(0.1f, 1.45f, -0.05f), new Vector3(0.1f, 0.98f, 0.7f), 62f);
         redProbe.Unclip();
         blackProbe.Unclip();
 
@@ -809,7 +983,7 @@ public class ResistorBench : MonoBehaviour, IShotScript
         Place(ledZone, led1.GetComponent<Grabbable>());
         if (!powerOn) OnPowerToggled();
         yield return api.Wait(0.5f);
-        yield return api.Shot("05-led-lit", new Vector3(1.05f, 1.35f, 0.0f), new Vector3(1.05f, 0.96f, 0.75f), 52f);
+        yield return ShotAt(api, "05-led-lit", new Vector3(1.05f, 1.35f, 0.0f), new Vector3(1.05f, 0.96f, 0.75f), 52f);
 
         if (powerOn) OnPowerToggled();
         var bad = FindPart(47, false, 0.125);
@@ -817,8 +991,10 @@ public class ResistorBench : MonoBehaviour, IShotScript
         Place(ledZone, led2.GetComponent<Grabbable>());
         yield return null;
         OnPowerToggled();
-        yield return api.Wait(0.7f);
-        yield return api.Shot("06-burnt-led-mistake", new Vector3(1.0f, 1.25f, 0.1f), new Vector3(1.05f, 0.98f, 0.7f), 50f);
+        yield return api.Wait(0.35f);
+        yield return ShotAt(api, "06-burnt-led-mistake", new Vector3(1.0f, 1.25f, 0.1f), new Vector3(1.05f, 0.98f, 0.7f), 50f);
+
+        yield return ShotAt(api, "07-wall-references", new Vector3(0.45f, 1.75f, -0.55f), new Vector3(0.45f, 1.85f, 1.28f), 72f);
     }
 
     // ------------------------------------------------------------------------------------------------- shared small types

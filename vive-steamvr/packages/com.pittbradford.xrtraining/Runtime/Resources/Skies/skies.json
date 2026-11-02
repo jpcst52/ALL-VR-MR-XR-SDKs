@@ -1,0 +1,26 @@
+[
+  {
+    "id": "spring",
+    "label": "Spring",
+    "credit": "\"Lilienstein\" by Andreas Mischok, Poly Haven, CC0. Regional-style stand-in, not a photo of Bradford, PA.",
+    "isBradford": false
+  },
+  {
+    "id": "summer",
+    "label": "Summer",
+    "credit": "\"Spaichingen Hill\" by Andreas Mischok, Poly Haven, CC0. Regional-style stand-in, not a photo of Bradford, PA.",
+    "isBradford": false
+  },
+  {
+    "id": "autumn",
+    "label": "Autumn",
+    "credit": "\"Autumn Meadow\" by Sergej Majboroda, Poly Haven, CC0. Regional-style stand-in, not a photo of Bradford, PA.",
+    "isBradford": false
+  },
+  {
+    "id": "winter",
+    "label": "Winter",
+    "credit": "\"Passendorf Snow\" by Grzegorz Wronkowski, Poly Haven, CC0. Regional-style stand-in, not a photo of Bradford, PA.",
+    "isBradford": false
+  }
+]

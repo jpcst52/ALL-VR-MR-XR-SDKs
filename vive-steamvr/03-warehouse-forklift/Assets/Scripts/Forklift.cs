@@ -23,12 +23,33 @@ public class Forklift : MonoBehaviour
     public bool IsStopped => Speed < 0.12f;
     public Vector3 DriverHeadPosition => driverHead.position;
 
+    /// <summary>A person on foot (the co-worker) that the driver also watches for. Optional.</summary>
+    public CoWorker Walker;
+
+    /// <summary>Steps of a put-away at the racking: stop in the lane, turn to the rack, raise, drive in, set the pallet down, back out, lower, turn back.</summary>
+    public enum LoadPhase { None, Approach, TurnIn, Raise, DriveIn, Release, BackOut, Lower, TurnOut }
+    public LoadPhase Phase { get; private set; }
+    /// <summary>True from the moment the forklift stops at the rack until it has turned back into the lane.</summary>
+    public bool Loading => Phase != LoadPhase.None && Phase != LoadPhase.Approach;
+    /// <summary>True while the driver is waiting for the walker to get clear before moving.</summary>
+    public bool HoldingForWalker { get; private set; }
+    public event System.Action LoadingStarted, LoadingFinished;
+
+    const float LiftHeight = 1.5f, Reach = 0.9f, WalkerClear = 3.2f;
+    Vector3 loadPoint, loadFace, laneDir, shelfPos;
+    bool putAway, honkedWalker;
+    float liftY, moved, phaseT;
+    Transform lift, cargo;
+
     int target = 1;
     float yieldUntil, brakeUntil, waveUntil, bubbleUntil, nextHorn;
     Transform driverHead, arm;
     Material beaconMat;
     AudioSource hornLow, hornHigh;
-    TextMesh bubble;
+    // speech bubble: one rounded panel per message, sized to its text, shown above the cab
+    Transform bubbleRoot;
+    readonly System.Collections.Generic.Dictionary<string, GameObject> bubbles = new System.Collections.Generic.Dictionary<string, GameObject>();
+    string bubbleText = "";
     static readonly Color Amber = new Color(1f, 0.62f, 0.05f);
 
     static Vector3 Flat(Vector3 v)
@@ -54,6 +75,114 @@ public class Forklift : MonoBehaviour
     {
         transform.SetPositionAndRotation(position, Quaternion.LookRotation(Flat(heading), Vector3.up));
         Speed = speed;
+    }
+
+    /// <summary>Which route point the forklift drives toward next (used by the scripted self-test).</summary>
+    public void SetTarget(int index) { target = Mathf.Clamp(index, 0, Route.Length - 1); }
+
+    /// <summary>Cancels any hold from a signal or an emergency stop (used when a staged screenshot hands back to live play).</summary>
+    public void ClearHolds()
+    {
+        yieldUntil = brakeUntil = waveUntil = 0f;
+        HideBubble();
+    }
+
+    /// <summary>
+    /// Asks the forklift to stop at <paramref name="point"/> (on its lane) the next time it drives up to it, turn to
+    /// <paramref name="faceDir"/> and put its pallet away. With a shelf position the pallet is left there; without
+    /// one the forks are raised and lowered with the load still on them.
+    /// </summary>
+    public void RequestLoad(Vector3 point, Vector3 faceDir, Vector3? shelf)
+    {
+        loadPoint = point;
+        loadFace = Flat(faceDir);
+        putAway = shelf.HasValue;
+        shelfPos = shelf ?? Vector3.zero;
+        Phase = LoadPhase.Approach;
+    }
+
+    /// <summary>For screenshots: shows the forklift turned toward the rack with the forks raised.</summary>
+    public void PoseLoading(Vector3 position, Vector3 faceDir, float lift01)
+    {
+        transform.SetPositionAndRotation(position, Quaternion.LookRotation(Flat(faceDir), Vector3.up));
+        Speed = 0f;
+        liftY = LiftHeight * Mathf.Clamp01(lift01);
+        lift.localPosition = new Vector3(0, liftY, 0);
+    }
+
+    bool WalkerNear => Walker != null && Walker.gameObject.activeInHierarchy && FlatDist(Walker.transform.position, transform.position) < WalkerClear;
+
+    static float FlatDist(Vector3 a, Vector3 b)
+    {
+        a.y = 0f;
+        b.y = 0f;
+        return Vector3.Distance(a, b);
+    }
+
+    /// <summary>One frame of the put-away. Each step waits until it is finished before the next one starts.</summary>
+    void UpdateLoading(float dt)
+    {
+        if (Walker != null && Walker.gameObject.activeInHierarchy && !honkedWalker && FlatDist(Walker.transform.position, transform.position) < 4.5f)
+        {
+            honkedWalker = true;
+            Honk();
+            Say("HONK - person close by", 1.6f);
+        }
+        HoldingForWalker = false;
+        switch (Phase)
+        {
+            case LoadPhase.TurnIn:
+                transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(loadFace, Vector3.up), 70f * dt);
+                if (Vector3.Angle(transform.forward, loadFace) < 0.5f) Phase = LoadPhase.Raise;
+                break;
+            case LoadPhase.Raise:
+                liftY = Mathf.MoveTowards(liftY, LiftHeight, 0.6f * dt);
+                if (liftY >= LiftHeight) { Phase = LoadPhase.DriveIn; moved = 0f; }
+                break;
+            case LoadPhase.DriveIn:
+                moved += 0.45f * dt;
+                transform.position += transform.forward * (0.45f * dt);
+                if (moved >= Reach) { Phase = LoadPhase.Release; phaseT = 0f; }
+                break;
+            case LoadPhase.Release:
+                phaseT += dt;
+                if (phaseT >= 0.8f)
+                {
+                    if (putAway)
+                    {
+                        cargo.SetParent(transform.parent, true);
+                        cargo.SetPositionAndRotation(shelfPos, Quaternion.LookRotation(loadFace, Vector3.up));
+                    }
+                    Phase = LoadPhase.BackOut;
+                    moved = 0f;
+                }
+                break;
+            case LoadPhase.BackOut:
+                if (WalkerNear) { HoldingForWalker = true; break; }
+                moved += 0.45f * dt;
+                transform.position -= transform.forward * (0.45f * dt);
+                if (moved >= Reach) Phase = LoadPhase.Lower;
+                break;
+            case LoadPhase.Lower:
+                liftY = Mathf.MoveTowards(liftY, 0f, 0.7f * dt);
+                if (liftY <= 0f) Phase = LoadPhase.TurnOut;
+                break;
+            case LoadPhase.TurnOut:
+                if (WalkerNear) { HoldingForWalker = true; break; }
+                transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(laneDir, Vector3.up), 70f * dt);
+                if (Vector3.Angle(transform.forward, laneDir) < 0.5f)
+                {
+                    transform.rotation = Quaternion.LookRotation(laneDir, Vector3.up);
+                    Phase = LoadPhase.None;
+                    Say("Moving off", 2f);
+                    LoadingFinished?.Invoke();
+                }
+                break;
+        }
+        lift.localPosition = new Vector3(0, liftY, 0);
+        if (Phase == LoadPhase.None) return;
+        if (HoldingForWalker) { if (bubbleText != "Holding: person behind me") Say("Holding: person behind me", 30f); }
+        else if (bubbleText.Length == 0 || bubbleText == "Holding: person behind me") Say("Putting a pallet away", 30f);
     }
 
     // ------------------------------------------------------------------------------------------------- model
@@ -96,14 +225,20 @@ public class Forklift : MonoBehaviour
             P.Box(t, "Mast rail", new Vector3(mx, 1.15f, 1.15f), new Vector3(0.08f, 2.1f, 0.1f), dark, false);
         P.Box(t, "Mast cross low", new Vector3(0, 0.15f, 1.15f), new Vector3(0.8f, 0.08f, 0.1f), dark, false);
         P.Box(t, "Mast cross high", new Vector3(0, 2.15f, 1.15f), new Vector3(0.8f, 0.08f, 0.1f), dark, false);
-        P.Box(t, "Carriage", new Vector3(0, 0.4f, 1.27f), new Vector3(1.0f, 0.5f, 0.05f), dark, false);
+        // the carriage, forks and load move together on the mast (raised when putting a pallet away)
+        lift = new GameObject("Lift").transform;
+        lift.SetParent(t, false);
+        P.Box(lift, "Carriage", new Vector3(0, 0.4f, 1.27f), new Vector3(1.0f, 0.5f, 0.05f), dark, false);
         foreach (float fx in new[] { -0.3f, 0.3f })
         {
-            P.Box(t, "Fork blade", new Vector3(fx, 0.16f, 1.85f), new Vector3(0.12f, 0.06f, 1.1f), dark, false);
-            P.Box(t, "Fork heel", new Vector3(fx, 0.35f, 1.31f), new Vector3(0.12f, 0.4f, 0.06f), dark, false);
+            P.Box(lift, "Fork blade", new Vector3(fx, 0.16f, 1.85f), new Vector3(0.12f, 0.06f, 1.1f), dark, false);
+            P.Box(lift, "Fork heel", new Vector3(fx, 0.35f, 1.31f), new Vector3(0.12f, 0.4f, 0.06f), dark, false);
         }
-        P.Box(t, "Pallet", new Vector3(0, 0.25f, 1.85f), new Vector3(1.0f, 0.12f, 1.1f), wood, false);
-        P.Box(t, "Load", new Vector3(0, 0.68f, 1.85f), new Vector3(0.9f, 0.75f, 0.9f), cardboard, false);
+        cargo = new GameObject("Cargo").transform;
+        cargo.SetParent(lift, false);
+        cargo.localPosition = new Vector3(0, 0.19f, 1.85f); // origin at the underside of the pallet
+        P.Box(cargo, "Pallet", new Vector3(0, 0.06f, 0), new Vector3(1.0f, 0.12f, 1.1f), wood, false);
+        P.Box(cargo, "Load", new Vector3(0, 0.49f, 0), new Vector3(0.9f, 0.75f, 0.9f), cardboard, false);
 
         // wheels
         foreach (float wx in new[] { -0.55f, 0.55f })
@@ -125,8 +260,10 @@ public class Forklift : MonoBehaviour
         arm.localRotation = Quaternion.Euler(0, 0, 10f);
 
         // speech bubble above the cab
-        bubble = P.Text(t, "", new Vector3(0, 2.9f, -0.3f), 0.14f, Color.white, TextAnchor.MiddleCenter, true);
-        bubble.gameObject.AddComponent<WfBillboard>();
+        bubbleRoot = new GameObject("Speech bubble").transform;
+        bubbleRoot.SetParent(t, false);
+        bubbleRoot.localPosition = new Vector3(0, 2.95f, -0.3f);
+        bubbleRoot.gameObject.AddComponent<WfBillboard>();
 
         // horn: two tones sounded together
         hornLow = P.Speaker(t, P.Tone("horn-low", 392f, 0.7f, 0.5f, 1.2f), false, 1f, 1f);
@@ -162,15 +299,37 @@ public class Forklift : MonoBehaviour
 
     void Say(string s, float seconds)
     {
-        bubble.text = s;
+        if (!bubbles.TryGetValue(s, out var go))
+        {
+            const float h = 0.13f;
+            go = new GameObject("Bubble: " + s);
+            go.transform.SetParent(bubbleRoot, false);
+            var size = new Vector2(s.Length * h * 0.62f + h * 1.4f, h * 2.3f);
+            Ui.Panel(go.transform, "Panel", Vector3.zero, size, new Color(0.97f, 0.97f, 0.95f), Amber, 0.1f);
+            P.Text(go.transform, s, new Vector3(0, -h * 0.08f, -0.015f), h, new Color(0.05f, 0.08f, 0.16f), TextAnchor.MiddleCenter, true);
+            bubbles[s] = go;
+        }
+        foreach (var b in bubbles.Values) b.SetActive(b == go);
+        bubbleText = s;
         bubbleUntil = Time.time + seconds;
+    }
+
+    void HideBubble()
+    {
+        foreach (var b in bubbles.Values) b.SetActive(false);
+        bubbleText = "";
     }
 
     bool PlayerInPath(out float along)
     {
         along = 0f;
         if (!PlayerInLane) return false;
-        Vector3 rel = PlayerFeet - transform.position;
+        return PointInPath(PlayerFeet, out along);
+    }
+
+    bool PointInPath(Vector3 feet, out float along)
+    {
+        Vector3 rel = feet - transform.position;
         rel.y = 0f;
         along = Vector3.Dot(rel, transform.forward);
         float lateral = Mathf.Abs(Vector3.Dot(rel, transform.right));
@@ -184,10 +343,16 @@ public class Forklift : MonoBehaviour
         beaconMat.SetColor("_EmissionColor", Amber * (on ? 2.5f : 0.15f));
         if (Time.time < waveUntil) arm.localRotation = Quaternion.Euler(0, 0, 150f + 25f * Mathf.Sin(Time.time * 10f));
         else arm.localRotation = Quaternion.Euler(0, 0, 10f);
-        if (bubble.text.Length > 0 && Time.time > bubbleUntil) bubble.text = "";
+        if (bubbleText.Length > 0 && Time.time > bubbleUntil) HideBubble();
         if (Frozen) return;
 
         float dt = Time.deltaTime;
+        if (Loading)
+        {
+            Speed = 0f;
+            UpdateLoading(dt);
+            return;
+        }
         Vector3 pos = transform.position;
         Vector3 to = Route[target] - pos;
         to.y = 0f;
@@ -203,6 +368,31 @@ public class Forklift : MonoBehaviour
         float along;
         if (Time.time < yieldUntil || Time.time < brakeUntil) targetSpeed = 0f;
         else if (PlayerInPath(out along)) targetSpeed = along < 3.2f ? 0f : Mathf.Min(targetSpeed, (along - 3.2f) * 0.7f);
+        if (Walker != null && Walker.gameObject.activeInHierarchy && PointInPath(Walker.transform.position, out along))
+            targetSpeed = along < 3.2f ? 0f : Mathf.Min(targetSpeed, (along - 3.2f) * 0.7f);
+
+        // a requested put-away: slow down and stop at the load point on the lane
+        if (Phase == LoadPhase.Approach)
+        {
+            Vector3 rel0 = loadPoint - pos;
+            rel0.y = 0f;
+            float ahead0 = Vector3.Dot(rel0, transform.forward);
+            float side0 = Mathf.Abs(Vector3.Dot(rel0, transform.right));
+            if (side0 < 0.8f && ahead0 > -0.2f && ahead0 < 4f && Vector3.Angle(transform.forward, desired) < 10f)
+            {
+                targetSpeed = Mathf.Min(targetSpeed, Mathf.Max(0.25f, ahead0 * 0.9f));
+                if (ahead0 < 0.12f)
+                {
+                    Speed = 0f;
+                    laneDir = Flat(transform.forward);
+                    honkedWalker = false;
+                    Phase = LoadPhase.TurnIn;
+                    Say("Putting a pallet away", 30f);
+                    LoadingStarted?.Invoke();
+                    return;
+                }
+            }
+        }
 
         float rate = targetSpeed < Speed ? Decel : Accel;
         Speed = Mathf.MoveTowards(Speed, targetSpeed, rate * dt);

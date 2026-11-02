@@ -23,6 +23,38 @@ public class HydroTest : MonoBehaviour, IShotScript
 
     XRRig rig;
     TaskBoard board;
+    WhyCue why;
+
+    // "Why this matters": one plain-language reason per step, shown after the step is done (general safety awareness,
+    // not a procedure). The rationale question checks a reason whose purpose is easy to miss.
+    static readonly string[] StepWhy =
+    {
+        "Blind flanges seal the open nozzles, so the test water and pressure stay inside the vessel.",
+        "The vent at the top lets air out as water fills. Trapped air squeezes and stores energy under pressure.",
+        "A full, sealed shell means the pump presses on water, which barely compresses, not on a pocket of air.",
+        "The test pressure is set for this vessel. Going higher can overstress it or lift the relief valve.",
+        "If a gasket or flange lets go, water and parts can spray out. Distance keeps you out of that path.",
+        "Draining first drops the pressure. Venting last lets air back in, so the shell drains without a vacuum.",
+    };
+
+    static readonly RationaleQuestion Question = new RationaleQuestion
+    {
+        Topic = "why no air may be left in the shell",
+        Prompt = "Why must the shell be completely full of water, with no air left inside, before you raise the pressure?",
+        Options = new[]
+        {
+            "A full shell makes the pressure gauge read more accurately.",
+            "Trapped air stores far more energy under pressure, so a failure would be much more violent.",
+            "Water in the shell keeps the test pump cool.",
+        },
+        Feedback = new[]
+        {
+            "The gauge reads pressure with or without air. The danger is the energy that trapped air stores.",
+            "Water barely compresses, so it stores little energy. Compressed air can release its energy all at once.",
+            "Cooling the pump is not the point. The danger is the energy that trapped air stores.",
+        },
+        Best = 1,
+    };
     Valve vent, fill, drain;
     Transform needle, waterInGlass;
     TextMesh gaugeText, weatherText;
@@ -58,6 +90,7 @@ public class HydroTest : MonoBehaviour, IShotScript
         BuildExchanger();
         BuildUtilities();
         BuildBoardAndSigns();
+        why = WhyCue.Create(transform);
 
         rig = XRRig.Create(new Vector3(0, 0, -3.6f), 0f);
         rig.Area = new Bounds(new Vector3(0, 0, 0), new Vector3(11.4f, 1f, 10.6f));
@@ -160,7 +193,7 @@ public class HydroTest : MonoBehaviour, IShotScript
         P.Cyl(root, "Drain tail", new Vector3(-1.3f, 0.225f, C.z), 0.05f, 0.45f, Vector3.up, steel);
         fill = MakeValve(root, "FILL", new Vector3(1.6f, 0.45f, C.z), false, v => { });
         drain = MakeValve(root, "DRAIN", new Vector3(-0.8f, 0.45f, C.z), false, v => { });
-        P.Text(root, "HEAT EXCHANGER  HX-101", new Vector3(0, 0.22f, C.z - 0.52f), 0.1f, P.Gold, TextAnchor.MiddleCenter, true).transform.rotation = Quaternion.identity;
+        Ui.Tag(root, "HEAT EXCHANGER  HX-101", new Vector3(0, 1.6f, C.z), new Vector3(0f, 1.35f, -0.3f), 0.075f, P.Gold);
 
         // Particle effects: leak at an open nozzle, and the relief valve jet
         spray = MakeJet(root, "Spray", new Vector3(0.95f, C.y + R + 0.5f, C.z), new Color(0.65f, 0.82f, 1f));
@@ -176,13 +209,13 @@ public class HydroTest : MonoBehaviour, IShotScript
         // Water tank
         P.Cyl(root, "Water tank", new Vector3(4.2f, 0.95f, C.z), 0.55f, 1.9f, Vector3.up, P.Mat(new Color(0.12f, 0.35f, 0.7f), 0.5f, 0.6f));
         P.Cyl(root, "Tank cap", new Vector3(4.2f, 1.92f, C.z), 0.5f, 0.05f, Vector3.up, steel, false);
-        P.Text(root, "TEST WATER", new Vector3(4.2f, 1.3f, C.z - 0.56f), 0.09f, Color.white, TextAnchor.MiddleCenter, true);
+        Ui.Tag(root, "TEST WATER", new Vector3(4.2f, 1.6f, C.z - 0.3f), new Vector3(0f, 0.75f, -0.25f), 0.07f, new Color(0.3f, 0.65f, 1f));
         // Pump skid
         P.Box(root, "Skid", new Vector3(2.6f, 0.1f, 1.2f), new Vector3(1.2f, 0.2f, 0.6f), P.DarkSteel());
         P.Cyl(root, "Motor", new Vector3(2.3f, 0.45f, 1.2f), 0.2f, 0.5f, Vector3.right, P.Painted(P.Royal));
         P.Ball(root, "Pump casing", new Vector3(2.85f, 0.42f, 1.2f), 0.22f, P.Painted(new Color(0.15f, 0.15f, 0.16f)));
         Pipe(root, new Vector3(2.85f, 0.45f, 1.2f), new Vector3(2.85f, 0.45f, C.z), 0.05f, steel);
-        P.Text(root, "TEST PUMP  P-101", new Vector3(2.6f, 0.78f, 0.88f), 0.07f, Color.white, TextAnchor.MiddleCenter, true);
+        Ui.Tag(root, "TEST PUMP  P-101", new Vector3(2.85f, 0.62f, 1.2f), new Vector3(0f, 0.55f, -0.25f), 0.055f, P.Gold);
         // Control stand with START / STOP buttons
         P.Cyl(root, "Stand", new Vector3(2.6f, 0.55f, 0.55f), 0.04f, 1.1f, Vector3.up, steel);
         var panel = P.Box(root, "Panel", new Vector3(2.6f, 1.12f, 0.55f), new Vector3(0.5f, 0.3f, 0.06f), P.Painted(new Color(0.12f, 0.13f, 0.15f)));
@@ -216,8 +249,9 @@ public class HydroTest : MonoBehaviour, IShotScript
         P.Box(pivot, "Needle", new Vector3(0, 0.07f, 0), new Vector3(0.008f, 0.15f, 0.004f), P.Mat(new Color(0.9f, 0.1f, 0.1f)), false);
         P.Ball(pivot, "Hub", Vector3.zero, 0.014f, P.Mat(Color.black), false);
         needle = pivot;
-        gaugeText = P.Text(root, "0 PSI", new Vector3(0, 1.55f, 1.68f), 0.1f, P.Gold, TextAnchor.MiddleCenter, true);
-        P.Text(root, "TEST PRESSURE 150 PSI", new Vector3(0, 1.45f, 1.68f), 0.05f, Color.white, TextAnchor.MiddleCenter);
+        Ui.Panel(root, "Readout panel", new Vector3(1.05f, 1.5f, 1.7f), new Vector2(1.15f, 0.42f), new Color(0.03f, 0.08f, 0.2f, 0.92f), P.Gold, 0.06f);
+        gaugeText = P.Text(root, "0 PSI", new Vector3(1.05f, 1.55f, 1.68f), 0.1f, P.Gold, TextAnchor.MiddleCenter, true);
+        P.Text(root, "TEST PRESSURE 150 PSI", new Vector3(1.05f, 1.45f, 1.68f), 0.05f, Color.white, TextAnchor.MiddleCenter);
 
         // Sight glass beside the vessel shows the water level
         var glassRoot = new GameObject("Sight glass").transform;
@@ -235,7 +269,7 @@ public class HydroTest : MonoBehaviour, IShotScript
         P.Box(root, "Table", new Vector3(-2.6f, 0.4f, 0.2f), new Vector3(1.4f, 0.06f, 0.7f), P.Mat(new Color(0.5f, 0.38f, 0.25f), 0f, 0.3f));
         for (int sx = -1; sx <= 1; sx += 2) for (int sz = -1; sz <= 1; sz += 2)
             P.Box(root, "Table leg", new Vector3(-2.6f + sx * 0.62f, 0.2f, 0.2f + sz * 0.3f), new Vector3(0.06f, 0.4f, 0.06f), P.DarkSteel());
-        P.Text(root, "BLIND FLANGES", new Vector3(-2.6f, 0.52f, -0.2f), 0.06f, P.Gold, TextAnchor.MiddleCenter, true);
+        Ui.Tag(root, "BLIND FLANGES", new Vector3(-2.6f, 0.55f, 0.2f), new Vector3(0f, 0.5f, -0.35f), 0.055f, P.Gold);
         for (int i = 0; i < 2; i++) MakeBlind(new Vector3(-2.95f + i * 0.7f, 0.5f, 0.2f));
     }
 
@@ -258,8 +292,7 @@ public class HydroTest : MonoBehaviour, IShotScript
         var go = new GameObject("Conditions").transform;
         go.SetParent(transform, false);
         go.SetPositionAndRotation(wp, Quaternion.LookRotation(wp - new Vector3(0, 1.6f, -3.6f)));
-        P.Box(go, "Frame", new Vector3(0, 0, 0.02f), new Vector3(2.0f, 0.9f, 0.03f), P.Mat(P.Gold, 0.3f, 0.5f), false);
-        P.Box(go, "Panel", Vector3.zero, new Vector3(1.96f, 0.86f, 0.03f), P.Mat(new Color(0.03f, 0.08f, 0.2f)), false);
+        Ui.Panel(go, "Panel", new Vector3(0, 0, 0.02f), new Vector2(2.0f, 0.9f), new Color(0.03f, 0.08f, 0.2f, 0.96f), P.Gold, 0.05f);
         P.Text(go, "BAY CONDITIONS", new Vector3(-0.9f, 0.28f, -0.02f), 0.09f, P.Gold, TextAnchor.MiddleLeft, true);
         weatherText = P.Text(go, "", new Vector3(-0.9f, 0.0f, -0.02f), 0.06f, Color.white, TextAnchor.MiddleLeft);
     }
@@ -292,7 +325,7 @@ public class HydroTest : MonoBehaviour, IShotScript
         var press = target.AddComponent<Pressable>();
         press.Label = name;
         var lamp = P.Ball(root, "Lamp", new Vector3(0, 0.0f, -0.09f), 0.03f, P.Glow(Color.red, 1.2f), false);
-        P.Text(root, name, new Vector3(0, 0.45f, 0), 0.06f, Color.white, TextAnchor.MiddleCenter, true).gameObject.AddComponent<Billboard>();
+        Ui.Tag(root, name, Vector3.zero, new Vector3(0f, 0.5f, 0f), 0.05f, P.Gold);
         v.Wheel = wheel; v.Lamp = lamp.GetComponent<Renderer>(); v.Toggled = onToggle;
         press.Pressed += h => ToggleValve(v);
         PaintLamp(v);
@@ -449,10 +482,10 @@ public class HydroTest : MonoBehaviour, IShotScript
     void UpdateSteps(float dt)
     {
         if (done) return;
-        if (!board.IsDone(0) && blinds >= 2) board.Complete(0, "Blind flanges fitted.");
-        if (board.IsDone(0) && !board.IsDone(1) && vent.Open && fill.Open) board.Complete(1, "Vent and fill open. Watch the sight glass.");
-        if (board.IsDone(1) && !board.IsDone(2) && level >= 0.99f && !vent.Open && !fill.Open) board.Complete(2, "Full and sealed.");
-        if (board.IsDone(2) && !board.IsDone(3) && pressure >= TestPsi - 0.5f) board.Complete(3, "At test pressure: 150 psi.");
+        if (!board.IsDone(0) && blinds >= 2) Done(0, "Blind flanges fitted.");
+        if (board.IsDone(0) && !board.IsDone(1) && vent.Open && fill.Open) Done(1, "Vent and fill open. Watch the sight glass.");
+        if (board.IsDone(1) && !board.IsDone(2) && level >= 0.99f && !vent.Open && !fill.Open) Done(2, "Full and sealed.");
+        if (board.IsDone(2) && !board.IsDone(3) && pressure >= TestPsi - 0.5f) Done(3, "At test pressure: 150 psi.");
         if (board.IsDone(3) && !board.IsDone(4))
         {
             bool behind = rig.FeetPosition.z < LineZ - 0.15f;
@@ -466,15 +499,25 @@ public class HydroTest : MonoBehaviour, IShotScript
             {
                 hold += dt;
                 board.SetFooter($"Holding: {Mathf.Min(hold, HoldSeconds):F0} / {HoldSeconds:F0} s   Mistakes: {board.Mistakes}   Critical: {board.CriticalMisses}");
-                if (hold >= HoldSeconds) board.Complete(4, "Held 15 s. No leaks seen at the gauge.");
+                if (hold >= HoldSeconds) Done(4, "Held 15 s. No leaks seen at the gauge.");
             }
         }
-        if (board.IsDone(4) && !board.IsDone(5) && !pump && pressure < 1f && drain.Open && vent.Open) board.Complete(5, "Depressurized and vented.");
+        if (board.IsDone(4) && !board.IsDone(5) && !pump && pressure < 1f && drain.Open && vent.Open) Done(5, "Depressurized and vented.");
         if (board.AllDone && !done)
         {
             done = true;
             board.Say(board.Summary(), board.CriticalMisses > 0 ? new Color(1f, 0.38f, 0.38f) : new Color(0.3f, 0.9f, 0.62f));
+            board.SetFooter($"Mistakes: {board.Mistakes}   Critical: {board.CriticalMisses}");
+            // the reasoning result is kept on its own line, apart from the procedure score above
+            why.Ask(Question, best => board.SetResultLine(why.ReasoningLine, why.ReasoningColor));
+            board.SetResultLine(why.ReasoningLine, why.ReasoningColor);
         }
+    }
+
+    void Done(int step, string message)
+    {
+        board.Complete(step, message);
+        why.Show(StepWhy[step]);
     }
 
     // ------------------------------------------------------------------------------------------------- screenshots
@@ -503,6 +546,7 @@ public class HydroTest : MonoBehaviour, IShotScript
 
     public IEnumerator Shots(ShotApi api)
     {
+        why.Muted = true; // the staged steps below complete for real; keep their reasons off the original six views
         var look = new Vector3(0.4f, 1.0f, 2.6f);
         yield return api.Shot("01-test-bay", new Vector3(-5.6f, 3.1f, -4.6f), look, 60f);
         yield return api.Shot("02-blind-flanges", new Vector3(-3.3f, 1.55f, -0.9f), new Vector3(-1.2f, 1.1f, 2.2f), 55f);
@@ -513,6 +557,30 @@ public class HydroTest : MonoBehaviour, IShotScript
         yield return api.Shot("05-hold-from-behind-the-line", new Vector3(-0.8f, 1.7f, -3.6f), new Vector3(0.3f, 1.2f, 2.6f), 62f);
         reliefLifted = true; Stage(false, false, false, 1f, 168f, true, 2); pressure = 168f;
         yield return api.Shot("06-relief-valve-lifts", new Vector3(-1.2f, 1.95f, 0.1f), new Vector3(0f, 1.8f, 2.5f), 55f);
+
+        // "Why this matters" after the vent-and-fill step, while the vessel fills
+        reliefLifted = true; relief.Stop();
+        Stage(true, true, false, 0.55f, 0f, false, 2);
+        why.Muted = false;
+        why.Show(StepWhy[1]);
+        yield return api.Shot("07-why-this-matters", new Vector3(1.6f, 1.65f, 0.2f), new Vector3(1.0f, 1.0f, 2.5f), 60f);
+        why.HideReason();
+
+        // Finish the run through the real rules: hold at test pressure (the rig stands behind the line), then
+        // stop the pump, drain and vent. The last step opens the rationale question.
+        Stage(false, false, false, 1f, TestPsi, true, 2);
+        float t = 0f;
+        while (!board.IsDone(4) && t < HoldSeconds + 8f) { t += Time.deltaTime; yield return null; }
+        Stage(true, false, true, 0.6f, 0f, false, 2);
+        t = 0f;
+        while (!why.Asking && t < 12f) { t += Time.deltaTime; yield return null; }
+        Debug.Log($"[why] scripted pass: steps done = {board.AllDone}, question open = {why.Asking}");
+        yield return api.Shot("08-rationale-question", new Vector3(-0.6f, 1.7f, -2.6f), new Vector3(-0.6f, 1.55f, 1.0f), 60f);
+        why.Answer(0); // a not-best answer, so the shot shows feedback for the chosen, the best, and the other option
+        yield return api.Shot("09-rationale-feedback", new Vector3(-0.6f, 1.7f, -2.6f), new Vector3(-0.6f, 1.55f, 1.0f), 60f);
+        why.HideAll();
+        Debug.Log("[why] board summary: " + board.Summary() + " | " + why.ReasoningLine);
+        yield return api.Shot("10-summary-with-reasoning", new Vector3(-0.9f, 1.75f, -3.3f), new Vector3(-2.3f, 1.35f, -0.4f), 50f);
     }
 }
 

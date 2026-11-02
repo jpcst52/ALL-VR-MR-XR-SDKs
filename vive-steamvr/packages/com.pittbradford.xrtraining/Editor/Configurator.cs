@@ -88,7 +88,7 @@ namespace PittBradford.XR.EditorTools
         /// <summary>Materials are created at runtime from "Standard", so make sure the shader and its variants survive a build.</summary>
         static void KeepShaderVariants()
         {
-            var shaderNames = new[] { "Standard", "Sprites/Default", "Unlit/Color" };
+            var shaderNames = new[] { "Standard", "Sprites/Default", "Unlit/Color", "Unlit/Transparent Cutout", "PittBradford/Text", "Skybox/Procedural", "PittBradford/SeasonSky" };
             var gs = AssetDatabase.LoadMainAssetAtPath("ProjectSettings/GraphicsSettings.asset");
             var so = new SerializedObject(gs);
             var list = so.FindProperty("m_AlwaysIncludedShaders");

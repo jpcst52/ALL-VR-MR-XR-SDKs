@@ -143,8 +143,25 @@ namespace PittBradford.XR
         {
             get
             {
-                if (!font) font = Font.CreateDynamicFontFromOSFont(new[] { "Segoe UI", "Arial", "Roboto", "sans-serif" }, 72);
+                if (!font) font = Font.CreateDynamicFontFromOSFont(new[] { "Segoe UI", "Arial", "Roboto", "sans-serif" }, 160);
                 return font;
+            }
+        }
+
+        static Material textMat;
+        /// <summary>
+        /// Font material that respects depth. Unity's default font shader ignores it, so text would show through walls
+        /// and panels; PittBradford/Text depth-tests and uses the font atlas as an alpha mask.
+        /// </summary>
+        static Material TextMaterial
+        {
+            get
+            {
+                if (textMat != null) return textMat;
+                textMat = new Material(Shader.Find("PittBradford/Text") ?? Shader.Find("GUI/Text Shader")) { name = "pb-text" };
+                textMat.mainTexture = Font.material.mainTexture;
+                UnityEngine.Font.textureRebuilt += f => { if (f == Font && textMat != null) textMat.mainTexture = f.material.mainTexture; };
+                return textMat;
             }
         }
 
@@ -156,12 +173,12 @@ namespace PittBradford.XR
             var tm = go.AddComponent<TextMesh>();
             tm.font = Font;
             tm.text = s;
-            tm.fontSize = 72;
+            tm.fontSize = 160; // large raster size keeps text crisp in a headset
             tm.fontStyle = bold ? FontStyle.Bold : FontStyle.Normal;
-            tm.characterSize = height / 72f * 10f;
+            tm.characterSize = height / 160f * 10f;
             tm.anchor = anchor;
             tm.color = color;
-            go.GetComponent<MeshRenderer>().sharedMaterial = Font.material;
+            go.GetComponent<MeshRenderer>().sharedMaterial = TextMaterial;
             return tm;
         }
 

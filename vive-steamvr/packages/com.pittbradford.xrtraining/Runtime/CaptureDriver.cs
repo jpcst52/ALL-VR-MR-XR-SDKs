@@ -23,11 +23,14 @@ namespace PittBradford.XR
             this.dir = dir;
             this.width = width;
             this.height = height;
+            TagFacing.ViewOverride = null;
             var go = new GameObject("Capture Camera");
             cam = go.AddComponent<Camera>();
             cam.CopyFrom(source);
             cam.enabled = false;
+            cam.stereoTargetEye = StereoTargetEyeMask.None;
             cam.depth = 100;
+            TagFacing.ViewOverride = go.transform;
         }
 
         public IEnumerator Shot(string name, Vector3 position, Vector3 lookAt, float fov = 62f)
@@ -98,10 +101,31 @@ namespace PittBradford.XR
                 Quit(2);
                 yield break;
             }
+            StopXr();
+            yield return null;
+#if UNITY_EDITOR
+            while (UnityEditor.ShaderUtil.anythingCompiling) yield return null; // first renders come out cyan otherwise
+#endif
             var api = new ShotApi(dir, main, w, h);
             yield return script.Shots(api);
             Debug.Log($"[capture] done, {api.Count} screenshots");
             Quit(0);
+        }
+
+        /// <summary>The editor can start the OpenXR mock runtime, which tilts and overrides cameras; screenshots want it off.</summary>
+        static void StopXr()
+        {
+            try
+            {
+                var t = Type.GetType("UnityEngine.XR.Management.XRGeneralSettings, Unity.XR.Management");
+                var inst = t?.GetProperty("Instance")?.GetValue(null);
+                var mgr = inst?.GetType().GetProperty("Manager")?.GetValue(inst);
+                if (mgr == null) return;
+                mgr.GetType().GetMethod("StopSubsystems")?.Invoke(mgr, null);
+                mgr.GetType().GetMethod("DeinitializeLoader")?.Invoke(mgr, null);
+                Debug.Log("[capture] XR stopped for screenshots");
+            }
+            catch (Exception e) { Debug.LogWarning("[capture] could not stop XR: " + e.Message); }
         }
 
         static void Quit(int code)

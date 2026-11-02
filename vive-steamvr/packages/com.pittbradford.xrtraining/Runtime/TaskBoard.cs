@@ -16,8 +16,8 @@ namespace PittBradford.XR
 
         readonly List<TextMesh> lines = new List<TextMesh>();
         readonly List<bool> done = new List<bool>();
-        TextMesh status, footer;
-        Coroutine fade;
+        TextMesh status, footer, resultLine;
+        float textScale = 1f;
 
         static readonly Color Pending = new Color(0.62f, 0.7f, 0.82f);
         static readonly Color Active = Color.white;
@@ -29,12 +29,12 @@ namespace PittBradford.XR
             go.transform.SetParent(parent, false);
             go.transform.SetPositionAndRotation(position, rotation);
             var board = go.AddComponent<TaskBoard>();
+            board.textScale = textScale;
 
             float k = textScale;
             float lineHeight = 0.095f * k;
             float height = (0.7f + 0.35f) * k + steps.Length * lineHeight;
-            var frame = P.Box(go.transform, "Frame", new Vector3(0, -height / 2f + 0.25f, 0.02f), new Vector3(width + 0.08f, height + 0.08f, 0.03f), P.Mat(P.Gold, 0.3f, 0.5f), false);
-            P.Box(go.transform, "Panel", new Vector3(0, -height / 2f + 0.25f, 0.0f), new Vector3(width, height, 0.03f), P.Mat(new Color(0.03f, 0.08f, 0.2f), 0f, 0.3f), false);
+            Ui.Panel(go.transform, "Panel", new Vector3(0, -height / 2f + 0.25f, 0.02f), new Vector2(width + 0.06f, height + 0.06f), new Color(0.03f, 0.08f, 0.2f, 0.96f), P.Gold, 0.035f);
 
             P.Text(go.transform, title.ToUpperInvariant(), new Vector3(-width / 2f + 0.1f, 0.12f * k, -0.02f), 0.085f * k, P.Gold, TextAnchor.MiddleLeft, true);
             P.Text(go.transform, subtitle, new Vector3(-width / 2f + 0.1f, 0.0f, -0.02f), 0.05f * k, P.Sky, TextAnchor.MiddleLeft);
@@ -88,6 +88,18 @@ namespace PittBradford.XR
         }
 
         public void SetFooter(string text) { footer.text = text; }
+
+        /// <summary>
+        /// An extra line under the footer for a result kept apart from the procedure score (for example the
+        /// "Reasoning" result of a <see cref="WhyCue"/> question). Created on first use.
+        /// </summary>
+        public void SetResultLine(string text, Color? color = null)
+        {
+            if (resultLine == null)
+                resultLine = P.Text(transform, "", footer.transform.localPosition + new Vector3(0f, -0.11f * textScale, 0f), 0.048f * textScale, P.Sky, TextAnchor.MiddleLeft, true);
+            resultLine.text = text;
+            resultLine.color = color ?? P.Sky;
+        }
 
         void UpdateFooter()
         {

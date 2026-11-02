@@ -2,7 +2,14 @@
 
 Hands-on practice for a hydrostatic (150 psi) test of a shell-and-tube heat exchanger, in VR on a Vive Pro 2 or at the desktop with mouse and keyboard. The scenario is inspired by the web example in `training-simulations/` and the multi-user rig in `multi-player/hydrotest/`.
 
-**Status:** runs in the Unity editor in desktop mode (the owner played it). It has **not** been tested on a Vive Pro 2 or any headset. Screenshots from the Unity editor are in the hub project (see [../hub/README.md](../hub/README.md)); a screenshot set for this project has not been generated yet.
+**Status:** runs in the Unity editor in desktop mode (the owner played it before the "why this matters" update). It has **not** been tested on a Vive Pro 2 or any headset. Ten screenshots were rendered from the Unity editor in desktop mode (not a headset) by the built-in capture driver; the hub project has a dressed version (see [../hub/README.md](../hub/README.md)).
+
+**"Why this matters" update (November 1, 2026):** compiles in Unity 6000.3.20f1; the scripted capture run goes through all six steps with the real rules, opens the rationale question and answers it, with no errors from the scenario or kit scripts. The new panels have **not** been played by hand yet (mouse click, keys 1-3, or the VR pointer and trigger on the answer buttons), and not on a headset.
+
+![Test bay overview, Unity editor render, desktop mode](screenshots/01-test-bay.png)
+![Test pressure reached, Unity editor render, desktop mode](screenshots/04-test-pressure.png)
+
+The other screenshots are in [screenshots/](screenshots/); the four "why" views are below.
 
 This is general safety-awareness practice, not a site procedure, a test permit, or a certification. It does not replace training by your employer.
 
@@ -17,6 +24,25 @@ This is general safety-awareness practice, not a site procedure, a test permit, 
 
 A task board shows the steps, mistakes, and critical misses (for example, pressurizing with the vent closed or standing over the vessel during the hold).
 
+## Why this matters, and one reasoning question
+
+A Penn State study (Wang & Messner, 2026; see [../../docs/research/UNIVERSITY-VR-AR-LANDSCAPE.md](../../docs/research/UNIVERSITY-VR-AR-LANDSCAPE.md)) found that VR beat video on procedure and spatial scores, but neither conveyed *why* the steps mattered. So, as in the other scenarios that use this design:
+
+- **After each step** a panel headed **WHY THIS MATTERS** shows one plain-language sentence for about seven seconds, a little below your line of sight, and follows your view gently. For example, after "Open the VENT first, then the FILL valve": *"The vent at the top lets air out as water fills. Trapped air squeezes and stores energy under pressure."*
+- **After the last step** one multiple-choice question appears (three options, one best answer): *Why must the shell be completely full of water, with no air left inside, before you raise the pressure?* Point at an option and pull the trigger (VR), or click it or press 1, 2 or 3 (desktop). Every option then shows a line of feedback, and the best answer is marked in green.
+- **The result is kept apart from the procedure score.** The task board shows the usual summary (for example "STRONG PRACTICE: no mistakes.") and, on its own line, "Reasoning: best answer ..." or "Reasoning: review ...". It is practice feedback, not pass/fail and not a certification.
+
+The reasons are general safety awareness written for this example. They are not taken from a standard or a site procedure and have not been reviewed by a partner yet.
+
+| | |
+|---|---|
+| ![Why this matters panel after the vent-and-fill step](screenshots/07-why-this-matters.png) | ![The rationale question before answering](screenshots/08-rationale-question.png) |
+| 07 Why this matters (after step 2) | 08 Rationale question |
+| ![Feedback after a not-best answer: chosen in amber, best in green](screenshots/09-rationale-feedback.png) | ![Task board summary with a separate Reasoning line](screenshots/10-summary-with-reasoning.png) |
+| 09 Feedback on every option (staged with a not-best answer) | 10 Summary with the separate Reasoning line |
+
+Desktop editor renders (November 1, 2026), not headset captures. In 08 to 10 the steps were completed by the capture script through the scenario's own rules, and the answer was chosen by the script.
+
 ## Controls
 
 | Action | Vive wands | Desktop |
@@ -25,6 +51,7 @@ A task board shows the steps, mistakes, and critical misses (for example, pressu
 | Look / turn | Head; right stick snap-turn | Hold right mouse and move |
 | Press (valves, pump buttons) | Point + trigger | Crosshair + left click |
 | Grab (blind flanges) | Grip near the object | Look at the object and press E |
+| Answer the reasoning question | Point + trigger | Crosshair + left click, or keys 1, 2, 3 |
 
 ## Setup
 
@@ -36,7 +63,9 @@ A task board shows the steps, mistakes, and critical misses (for example, pressu
 ## Files
 
 - `Assets/Editor/ProjectSetup.cs`: the setup and build menu items.
-- `../packages/com.pittbradford.xrtraining/Runtime/Scenarios/HydroTest.cs`: the scenario itself. It lives in the shared kit so the hub project can reuse it.
+- `../packages/com.pittbradford.xrtraining/Runtime/Scenarios/HydroTest.cs`: the scenario itself, including the step reasons and the rationale question. It lives in the shared kit so the hub project can reuse it.
+- `../packages/com.pittbradford.xrtraining/Runtime/WhyCue.cs`: the shared "why this matters" panel and rationale question (`WhyCue.Show`, `WhyCue.Ask`), built from the kit's `Ui.Panel`.
+- Screenshots: `Unity.exe -projectPath <this folder> -executeMethod PittBradford.XR.EditorTools.CaptureRunner.Run -pbCapture <folder> -logFile <log>` (no `-batchmode`).
 
 ## What is simulated and what is not
 
