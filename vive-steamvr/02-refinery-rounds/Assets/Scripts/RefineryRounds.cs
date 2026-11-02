@@ -220,10 +220,11 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         concrete = P.Concrete();
         hazard = P.Hazard();
 
-        var root = new GameObject("Refinery unit").transform;
-        root.SetParent(transform, false);
-        gasRoot = new GameObject("Gas cloud").transform;
-        gasRoot.SetParent(transform, false);
+        // Every world object is made through the kit helpers (P.Node, P.Box, P.Text, Ui.Panel ...). In a baked scene
+        // (Pitt-Bradford > Bake scene) they return the saved objects instead, matched by parent, name and call order,
+        // and the code below re-attaches handlers and fields. Do not rename baked objects that this script looks up.
+        var root = P.Node("Refinery unit", transform).transform;
+        gasRoot = P.Node("Gas cloud", transform).transform;
 
         BuildGround(root);
         BuildFence(root);
@@ -318,11 +319,13 @@ public class RefineryRounds : MonoBehaviour, IShotScript
     /// </summary>
     static Transform Sign(Transform parent, string name, Vector3 pos, Vector3 faceDir, Vector2 size, Color fill, Color? accent = null, float accentHeight = 0.08f)
     {
-        var h = new GameObject(name).transform;
-        h.SetParent(parent, false);
-        h.position = pos;
-        faceDir.y = 0f;
-        h.rotation = Quaternion.LookRotation(-faceDir.normalized, Vector3.up);
+        var h = P.Node(name, parent).transform;
+        if (P.IsNew(h))
+        {
+            h.position = pos;
+            faceDir.y = 0f;
+            h.rotation = Quaternion.LookRotation(-faceDir.normalized, Vector3.up);
+        }
         Ui.Panel(h, "Panel", Vector3.zero, size, fill, accent, accentHeight);
         SignBack(h, Vector3.zero, size);
         return h;
@@ -364,13 +367,16 @@ public class RefineryRounds : MonoBehaviour, IShotScript
 
     void BuildGround(Transform root)
     {
-        var sun = new GameObject("Sun").AddComponent<Light>();
-        sun.transform.SetParent(root, false);
-        sun.type = LightType.Directional;
-        sun.intensity = 1.05f;
-        sun.color = new Color(1f, 0.96f, 0.88f);
-        sun.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
-        sun.shadows = LightShadows.Soft;
+        var sunGo = P.Node("Sun", root);
+        var sun = P.Ensure<Light>(sunGo);
+        if (P.IsNew(sunGo))
+        {
+            sun.type = LightType.Directional;
+            sun.intensity = 1.05f;
+            sun.color = new Color(1f, 0.96f, 0.88f);
+            sun.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+            sun.shadows = LightShadows.Soft;
+        }
 
         var gravel = P.Mat(Color.white, 0f, 0.08f, P.NoiseTexture("gravel", new Color(0.30f, 0.28f, 0.24f), new Color(0.52f, 0.5f, 0.46f), 10f, 256, 1f, 11), 26f);
         P.Box(root, "Ground", V(0f, -0.1f, 5f), V(130f, 0.2f, 130f), gravel);
@@ -464,7 +470,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         // V-101 tower
         P.Cyl(root, "V-101 shell", V(-7f, 5f, 10f), 1.3f, 10f, Vector3.up, steel, false);
         var head = P.Ball(root, "V-101 head", V(-7f, 10f, 10f), 1.3f, steel, false);
-        head.transform.localScale = V(2.6f, 1.2f, 2.6f);
+        if (P.IsNew(head)) head.transform.localScale = V(2.6f, 1.2f, 2.6f);
         P.Cyl(root, "V-101 skirt", V(-7f, 0.4f, 10f), 1.35f, 0.8f, Vector3.up, darkSteel, false);
         P.Cyl(root, "V-101 platform", V(-7f, 6.5f, 10f), 2.0f, 0.08f, Vector3.up, darkSteel, false);
         P.Box(root, "Ladder rail", V(-7.2f, 3.5f, 8.55f), V(0.05f, 6f, 0.05f), darkSteel, false);
@@ -482,7 +488,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         for (int s = -1; s <= 1; s += 2)
         {
             var cap = P.Ball(root, "V-102 head", V(6f + s * 3.5f, 1.9f, 9f), 1.3f, steel, false);
-            cap.transform.localScale = V(1.2f, 2.6f, 2.6f);
+            if (P.IsNew(cap)) cap.transform.localScale = V(1.2f, 2.6f, 2.6f);
             P.Box(root, "V-102 saddle", V(6f + s * 2f, 0.3f, 9f), V(0.4f, 0.6f, 1.8f), P.Painted(P.Royal), false);
         }
         P.Cyl(root, "V-102 nozzle", V(6f, 3.4f, 9f), 0.12f, 0.5f, Vector3.up, steel, false);
@@ -511,19 +517,18 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         Ui.Tag(root, "FLANGE F-12", FlangePos + V(0f, 0.2f, 0f), V(0f, 0.75f, -0.25f), 0.09f, P.Gold);
 
         // The weep: a wet streak, a puddle, and the unsafe things you can press (all hidden until it starts).
-        weepVisual = new GameObject("Weep");
-        weepVisual.transform.SetParent(root, false);
+        weepVisual = P.Node("Weep", root);
         var wet = P.Mat(new Color(0.05f, 0.04f, 0.03f), 0.2f, 0.95f);
         P.Box(weepVisual.transform, "Wet streak", V(FlangePos.x, 0.65f, FlangePos.z), V(0.03f, 1.1f, 0.03f), wet, false);
         P.Cyl(weepVisual.transform, "Puddle", V(FlangePos.x, 0.025f, FlangePos.z), 0.55f, 0.012f, Vector3.up, wet, false);
         var bolts = P.Prim(PrimitiveType.Sphere, weepVisual.transform, "Bolts target", FlangePos, Vector3.one * 0.55f, null);
         bolts.GetComponent<Renderer>().enabled = false;
-        bolts.AddComponent<Pressable>().Pressed += h =>
+        P.Ensure<Pressable>(bolts).Pressed += h =>
         {
             if (task == 2 && phase == 1) MistakeOnce("tighten", "Never tighten a leaking joint yourself.", true);
         };
         var rag = P.Box(weepVisual.transform, "Rag", V(FlangePos.x + 1.1f, 0.05f, FlangePos.z - 0.7f), V(0.35f, 0.06f, 0.25f), P.Mat(new Color(0.55f, 0.5f, 0.42f), 0f, 0.1f));
-        rag.AddComponent<Pressable>().Pressed += h =>
+        P.Ensure<Pressable>(rag).Pressed += h =>
         {
             if (task == 2 && phase == 1) MistakeOnce("rag", "A rag spreads the problem. Report the leak.");
         };
@@ -537,7 +542,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         P.Cyl(root, "Gauge case", V(GaugePos.x, 1.5f, GaugePos.z), 0.2f, 0.06f, Vector3.forward, P.Mat(new Color(0.15f, 0.15f, 0.17f), 0.7f, 0.5f), false);
         P.Cyl(root, "Gauge face", V(GaugePos.x, 1.5f, GaugePos.z - 0.032f), 0.17f, 0.01f, Vector3.forward, P.Mat(Color.white, 0f, 0.2f), false);
         var needle = P.Box(root, "Gauge needle", V(GaugePos.x + 0.04f, 1.54f, GaugePos.z - 0.042f), V(0.01f, 0.14f, 0.004f), P.Mat(new Color(0.9f, 0.1f, 0.1f)), false);
-        needle.transform.localRotation = Quaternion.Euler(0f, 0f, -40f);
+        if (P.IsNew(needle)) needle.transform.localRotation = Quaternion.Euler(0f, 0f, -40f);
         // tag plate on the gauge post, under the dial
         var g1 = Sign(root, "G-1 tag plate", V(GaugePos.x, 1.14f, GaugePos.z - 0.05f), Vector3.back, new Vector2(0.5f, 0.2f), Navy, P.Gold, 0.1f);
         SignText(g1, "G-1   52 PSI", -0.01f, 0.07f, P.Gold);
@@ -551,26 +556,29 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         // plate on the west face of the base, toward the unit
         var flare = Sign(root, "Flare plate", V(FlarePos.x - 0.82f, 0.27f, FlarePos.z), Vector3.left, new Vector2(1.3f, 0.36f), Navy, Bad);
         SignText(flare, "FLARE STACK", 0.0f, 0.14f, Color.white);
-        flameRoot = new GameObject("Flare flame").transform;
-        flameRoot.SetParent(root, false);
-        flameRoot.position = V(FlarePos.x, 22.3f, FlarePos.z);
+        flameRoot = P.Node("Flare flame", root).transform;
+        if (P.IsNew(flameRoot)) flameRoot.position = V(FlarePos.x, 22.3f, FlarePos.z);
         var fire = P.Glow(new Color(1f, 0.5f, 0.1f), 2.4f);
         var core = P.Glow(new Color(1f, 0.85f, 0.3f), 3f);
-        P.Ball(flameRoot, "Flame outer", V(0f, 0.9f, 0f), 0.5f, fire, false).transform.localScale = V(0.9f, 2.2f, 0.9f);
-        P.Ball(flameRoot, "Flame core", V(0f, 0.6f, 0f), 0.3f, core, false).transform.localScale = V(0.5f, 1.4f, 0.5f);
+        var outer = P.Ball(flameRoot, "Flame outer", V(0f, 0.9f, 0f), 0.5f, fire, false);
+        if (P.IsNew(outer)) outer.transform.localScale = V(0.9f, 2.2f, 0.9f);
+        var inner = P.Ball(flameRoot, "Flame core", V(0f, 0.6f, 0f), 0.3f, core, false);
+        if (P.IsNew(inner)) inner.transform.localScale = V(0.5f, 1.4f, 0.5f);
         flameLight = MakeLight(flameRoot, flameRoot.position + V(0f, 1f, 0f), new Color(1f, 0.6f, 0.25f), 40f, 2f);
     }
 
     Light MakeLight(Transform parent, Vector3 pos, Color c, float range, float intensity)
     {
-        var go = new GameObject("Light");
-        go.transform.SetParent(parent, false);
-        go.transform.position = pos;
-        var l = go.AddComponent<Light>();
-        l.type = LightType.Point;
-        l.color = c;
-        l.range = range;
-        l.intensity = intensity;
+        var go = P.Node("Light", parent);
+        var l = P.Ensure<Light>(go);
+        if (P.IsNew(go))
+        {
+            go.transform.position = pos;
+            l.type = LightType.Point;
+            l.color = c;
+            l.range = range;
+            l.intensity = intensity;
+        }
         return l;
     }
 
@@ -588,8 +596,9 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         var cr = Sign(root, "Control room sign", c + V(0f, 2.38f, -1.63f), Vector3.back, new Vector2(2.6f, 0.46f), P.MediumBlue, P.Gold);
         SignText(cr, "CONTROL ROOM", -0.01f, 0.2f, Color.white);
         P.Cyl(root, "Antenna", c + V(1.6f, 3.9f, 0.8f), 0.03f, 2f, Vector3.up, steel, false);
-        cabinLampMat = P.Glow(new Color(1f, 0.1f, 0.05f), 1f);
-        P.Ball(root, "Alarm beacon", c + V(-1.7f, 3.05f, 0f), 0.14f, cabinLampMat, false);
+        // the beacon flashes by changing its material, so take the renderer's own copy (a baked one shares an asset)
+        var beacon = P.Ball(root, "Alarm beacon", c + V(-1.7f, 3.05f, 0f), 0.14f, P.Glow(new Color(1f, 0.1f, 0.05f), 1f), false);
+        cabinLampMat = beacon.GetComponent<Renderer>().material;
         cabinBeaconLight = MakeLight(root, c + V(-1.7f, 3.3f, 0f), new Color(1f, 0.15f, 0.1f), 25f, 3f);
         cabinBeaconLight.enabled = false;
         cabinLampMat.SetColor("_EmissionColor", Color.black);
@@ -601,17 +610,15 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         P.Cyl(root, "Sock pole", V(SockPos.x, 2.6f, SockPos.z), 0.06f, 5.2f, Vector3.up, pole, false);
         P.Box(root, "Sock base", V(SockPos.x, 0.1f, SockPos.z), V(0.6f, 0.2f, 0.6f), concrete, false);
         P.Ball(root, "Sock cap", V(SockPos.x, 5.2f, SockPos.z), 0.09f, pole, false);
-        sockPivot = new GameObject("Sock pivot").transform;
-        sockPivot.SetParent(root, false);
-        sockPivot.position = V(SockPos.x, 5.1f, SockPos.z);
+        sockPivot = P.Node("Sock pivot", root).transform;
+        if (P.IsNew(sockPivot)) sockPivot.position = V(SockPos.x, 5.1f, SockPos.z);
         var orange = P.Painted(new Color(1f, 0.45f, 0.05f));
         var white = P.Painted(Color.white);
         Transform joint = sockPivot;
         for (int i = 0; i < 5; i++)
         {
-            var j = new GameObject("Sock joint " + i).transform;
-            j.SetParent(joint, false);
-            j.localPosition = i == 0 ? Vector3.zero : V(0f, 0f, SockSeg);
+            var j = P.Node("Sock joint " + i, joint).transform;
+            if (P.IsNew(j)) j.localPosition = i == 0 ? Vector3.zero : V(0f, 0f, SockSeg);
             P.Cyl(j, "Sock segment", V(0f, 0f, SockSeg / 2f), 0.3f - 0.045f * i, SockSeg, Vector3.forward, i % 2 == 0 ? orange : white, false);
             sockJoints.Add(j);
             joint = j;
@@ -649,7 +656,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         P.Box(root, "Bump station", V(TablePos.x + 0.45f, 0.94f, TablePos.z), V(0.36f, 0.12f, 0.24f), P.Painted(new Color(0.2f, 0.25f, 0.3f)), false);
         P.Cyl(root, "Test gas bottle", V(TablePos.x + 0.6f, 1.12f, TablePos.z + 0.04f), 0.05f, 0.28f, Vector3.up, P.Painted(new Color(0.15f, 0.55f, 0.3f)), false);
         var btn = P.Prim(PrimitiveType.Cylinder, root, "Bump button", V(TablePos.x + 0.35f, 1.012f, TablePos.z - 0.03f), V(0.13f, 0.012f, 0.13f), P.Glow(new Color(0.1f, 0.75f, 0.35f), 0.9f));
-        var press = btn.AddComponent<Pressable>();
+        var press = P.Ensure<Pressable>(btn);
         press.Label = "BUMP TEST";
         press.Pressed += h => BumpPress();
         // label plate on the front face of the bump-test unit
@@ -661,19 +668,20 @@ public class RefineryRounds : MonoBehaviour, IShotScript
 
     void BuildMonitor(Vector3 pos)
     {
-        var go = new GameObject("Gas monitor");
-        go.transform.position = pos;
+        var go = P.Node("Gas monitor");
+        bool fresh = P.IsNew(go);
+        if (fresh) go.transform.position = pos;
         monitor = go.transform;
-        monitorRb = go.AddComponent<Rigidbody>();
-        monitorRb.mass = 0.3f;
+        monitorRb = P.Ensure<Rigidbody>(go);
+        if (fresh) monitorRb.mass = 0.3f;
         P.Box(monitor, "Body", Vector3.zero, V(0.07f, 0.12f, 0.03f), P.Painted(P.Gold), false);
         P.Box(monitor, "Screen", V(0f, 0.01f, -0.0155f), V(0.056f, 0.07f, 0.004f), P.Mat(new Color(0.03f, 0.05f, 0.04f), 0f, 0.7f), false);
         monScreen = P.Text(monitor, "0", V(0f, 0.012f, -0.0185f), 0.016f, Color.green, TextAnchor.MiddleCenter, true);
         var lamp = P.Ball(monitor, "LED", V(0f, 0.054f, -0.012f), 0.009f, P.Glow(Color.green, 1.2f), false);
-        monLampMat = lamp.GetComponent<Renderer>().sharedMaterial;
-        var col = go.AddComponent<BoxCollider>();
-        col.size = V(0.12f, 0.18f, 0.08f);
-        monitorGrab = go.AddComponent<Grabbable>();
+        monLampMat = lamp.GetComponent<Renderer>().material; // own copy: it changes colour every frame
+        var col = P.Ensure<BoxCollider>(go);
+        if (fresh) col.size = V(0.12f, 0.18f, 0.08f);
+        monitorGrab = P.Ensure<Grabbable>(go);
         monitorGrab.Grabbed += g => { monitorHeld = true; monitorClipped = false; };
         monitorGrab.Dropped += g => { monitorHeld = false; if (bumped) monitorClipped = true; };
         monAudio = P.Speaker(monitor, P.Tone("beep", 2200f, 0.12f, 0.5f, 3f), false, 0.8f, 1f);
@@ -683,9 +691,8 @@ public class RefineryRounds : MonoBehaviour, IShotScript
     {
         P.Cyl(root, "Detector post", V(DetectorPos.x, 1.5f, DetectorPos.z), 0.05f, 3f, Vector3.up, steel, false);
         P.Box(root, "Detector head", V(DetectorPos.x, 2.9f, DetectorPos.z), V(0.5f, 0.4f, 0.25f), P.Painted(new Color(0.2f, 0.25f, 0.3f)), false);
-        var lampMat = P.Glow(Color.green, 1.2f);
-        P.Ball(root, "Detector lamp", V(DetectorPos.x, 3.2f, DetectorPos.z), 0.1f, lampMat, false);
-        detLampMat = lampMat;
+        var detLamp = P.Ball(root, "Detector lamp", V(DetectorPos.x, 3.2f, DetectorPos.z), 0.1f, P.Glow(Color.green, 1.2f), false);
+        detLampMat = detLamp.GetComponent<Renderer>().material; // own copy: it changes colour every frame
         // display window on the head's face, and an ID plate on the post
         P.Box(root, "Detector display", V(DetectorPos.x, 2.9f, DetectorPos.z - 0.127f), V(0.44f, 0.14f, 0.006f), P.Mat(new Color(0.02f, 0.03f, 0.03f), 0f, 0.8f), false);
         detText = P.Text(root, "GD-3  0 %LEL", V(DetectorPos.x, 2.9f, DetectorPos.z - 0.135f), 0.06f, Color.green, TextAnchor.MiddleCenter, true);
@@ -695,14 +702,12 @@ public class RefineryRounds : MonoBehaviour, IShotScript
 
     void BuildMuster(Transform root)
     {
-        musterRoot = new GameObject("Muster point").transform;
-        musterRoot.SetParent(root, false);
+        musterRoot = P.Node("Muster point", root).transform;
         var green = P.Mat(new Color(0.05f, 0.5f, 0.25f), 0.1f, 0.5f);
         P.Cyl(musterRoot, "Pad", V(0f, 0.03f, 0f), 3.2f, 0.06f, Vector3.up, concrete, false);
         P.Cyl(musterRoot, "Flag pole", V(-2f, 3f, 0f), 0.05f, 6f, Vector3.up, steel, false);
-        musterFlag = new GameObject("Flag pivot").transform;
-        musterFlag.SetParent(musterRoot, false);
-        musterFlag.localPosition = V(-2f, 5.5f, 0f);
+        musterFlag = P.Node("Flag pivot", musterRoot).transform;
+        if (P.IsNew(musterFlag)) musterFlag.localPosition = V(-2f, 5.5f, 0f);
         P.Box(musterFlag, "Flag", V(0.7f, 0f, 0f), V(1.4f, 0.9f, 0.03f), green, false);
         P.Box(musterFlag, "Flag mark", V(0.7f, 0f, -0.02f), V(0.5f, 0.5f, 0.01f), P.Painted(Color.white), false);
         P.Box(musterRoot, "Sign post", V(-0.9f, 1f, 0f), V(0.08f, 2f, 0.08f), steel, false);
@@ -714,7 +719,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         P.Text(musterRoot, "ASSEMBLY AREA 1", V(0f, 1.86f, -0.065f), 0.09f, Color.white, TextAnchor.MiddleCenter);
         var btn = P.Box(musterRoot, "Check-in button", V(0f, 1.5f, -0.07f), V(0.9f, 0.22f, 0.05f), P.Glow(P.Gold, 1.2f));
         P.Text(musterRoot, "CHECK IN", V(0f, 1.5f, -0.105f), 0.12f, Color.black, TextAnchor.MiddleCenter, true);
-        var press = btn.AddComponent<Pressable>();
+        var press = P.Ensure<Pressable>(btn);
         press.Label = "CHECK IN";
         press.Pressed += h => CheckInPress();
     }
@@ -743,35 +748,37 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         SignText(bs, "Cones: grab and place around a leak", -0.11f, 0.05f, Color.white, false);
         P.Box(root, "Station pallet", V(ConePos.x, 0.05f, ConePos.z), V(1.8f, 0.1f, 0.7f), P.Mat(new Color(0.55f, 0.42f, 0.28f), 0f, 0.25f), false);
         for (int i = 0; i < 4; i++) cones.Add(MakeCone(V(ConePos.x - 0.6f + i * 0.4f, 0.14f, ConePos.z)));
-        var tapeGo = new GameObject("Barrier tape");
-        tapeGo.transform.SetParent(root, false);
-        tape = tapeGo.AddComponent<LineRenderer>();
+        var tapeGo = P.Node("Barrier tape", root);
+        tape = P.Ensure<LineRenderer>(tapeGo);
         tape.positionCount = 0;
-        tape.widthMultiplier = 0.045f;
-        tape.material = new Material(Shader.Find("Sprites/Default"));
-        tape.startColor = new Color(1f, 0.8f, 0.05f, 1f);
-        tape.endColor = new Color(1f, 0.8f, 0.05f, 1f);
-        tape.useWorldSpace = true;
+        if (P.IsNew(tapeGo))
+        {
+            tape.widthMultiplier = 0.045f;
+            tape.material = new Material(Shader.Find("Sprites/Default"));
+            tape.startColor = new Color(1f, 0.8f, 0.05f, 1f);
+            tape.endColor = new Color(1f, 0.8f, 0.05f, 1f);
+            tape.useWorldSpace = true;
+        }
 
         // The tempting tool bag
-        var bag = new GameObject("Tool bag");
-        bag.transform.position = BagPos;
+        var bag = P.Node("Tool bag");
+        bool freshBag = P.IsNew(bag);
+        if (freshBag) bag.transform.position = BagPos;
         toolBag = bag.transform;
-        var rb = bag.AddComponent<Rigidbody>();
-        rb.mass = 3f;
+        var rb = P.Ensure<Rigidbody>(bag);
+        if (freshBag) rb.mass = 3f;
         P.Box(toolBag, "Bag body", Vector3.zero, V(0.5f, 0.26f, 0.26f), P.Painted(new Color(0.9f, 0.4f, 0.05f)), false);
         P.Box(toolBag, "Bag handle", V(0f, 0.16f, 0f), V(0.25f, 0.04f, 0.04f), darkSteel, false);
         Ui.Tag(toolBag, "TOOL BAG", V(0f, 0.18f, 0f), V(0f, 0.4f, 0f), 0.065f, P.Gold);
-        var bc = bag.AddComponent<BoxCollider>();
-        bc.size = V(0.5f, 0.3f, 0.3f);
-        bag.AddComponent<Grabbable>().Grabbed += g =>
+        var bc = P.Ensure<BoxCollider>(bag);
+        if (freshBag) bc.size = V(0.5f, 0.3f, 0.3f);
+        P.Ensure<Grabbable>(bag).Grabbed += g =>
         {
             if (task == 3 && !done) MistakeOnce("bag", "Never go back for belongings during an alarm.", true);
         };
 
         // Release point for the task 2 gas alarm (moved next to the player when it starts)
-        release = new GameObject("Release point").transform;
-        release.SetParent(root, false);
+        release = P.Node("Release point", root).transform;
         P.Cyl(release, "Stub", V(0f, 0.5f, 0f), 0.08f, 1f, Vector3.up, steel, false);
         P.Cyl(release, "Stub flange", V(0f, 1f, 0f), 0.14f, 0.04f, Vector3.up, P.Mat(new Color(0.85f, 0.87f, 0.9f), 0.9f, 0.75f), false);
         Ui.Tag(release, "SAMPLE POINT", V(0f, 1.02f, 0f), V(0f, 0.55f, 0f), 0.09f, Bad);
@@ -780,26 +787,29 @@ public class RefineryRounds : MonoBehaviour, IShotScript
 
     Rigidbody MakeCone(Vector3 pos)
     {
-        var go = new GameObject("Cone");
-        go.transform.position = pos;
-        var rb = go.AddComponent<Rigidbody>();
-        rb.mass = 0.6f;
+        var go = P.Node("Cone");
+        bool fresh = P.IsNew(go);
+        if (fresh) go.transform.position = pos;
+        var rb = P.Ensure<Rigidbody>(go);
+        if (fresh) rb.mass = 0.6f;
         var orange = P.Painted(new Color(1f, 0.4f, 0.05f));
         P.Box(go.transform, "Cone base", V(0f, 0.015f, 0f), V(0.32f, 0.03f, 0.32f), orange, false);
         P.Cyl(go.transform, "Cone lower", V(0f, 0.1f, 0f), 0.12f, 0.14f, Vector3.up, orange, false);
         P.Cyl(go.transform, "Cone stripe", V(0f, 0.19f, 0f), 0.095f, 0.05f, Vector3.up, P.Painted(Color.white), false);
         P.Cyl(go.transform, "Cone upper", V(0f, 0.28f, 0f), 0.07f, 0.14f, Vector3.up, orange, false);
-        var bc = go.AddComponent<BoxCollider>();
-        bc.size = V(0.32f, 0.4f, 0.32f);
-        bc.center = V(0f, 0.2f, 0f);
-        go.AddComponent<Grabbable>();
+        var bc = P.Ensure<BoxCollider>(go);
+        if (fresh)
+        {
+            bc.size = V(0.32f, 0.4f, 0.32f);
+            bc.center = V(0f, 0.2f, 0f);
+        }
+        P.Ensure<Grabbable>(go);
         return rb;
     }
 
     void BuildMarker(Transform root)
     {
-        marker = new GameObject("Objective marker");
-        marker.transform.SetParent(root, false);
+        marker = P.Node("Objective marker", root);
         var ring = P.Cyl(marker.transform, "Ring", V(0f, 0.05f, 0f), 1.1f, 0.04f, Vector3.up, P.Glow(P.Gold, 1.1f), false);
         markerRing = ring.transform;
         P.Cyl(marker.transform, "Beam", V(0f, 3f, 0f), 0.04f, 6f, Vector3.up, P.Glow(P.Gold, 1.5f), false);
@@ -808,8 +818,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
 
     void BuildAudio(Transform root)
     {
-        var go = new GameObject("Site siren");
-        go.transform.SetParent(root, false);
+        var go = P.Node("Site siren", root);
         siren = P.Speaker(go.transform, MakeSiren(), true, 0.35f, 0f);
     }
 
@@ -832,7 +841,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
 
     void BuildRadio()
     {
-        radio = new GameObject("Radio and monitor panel").transform;
+        radio = P.Node("Radio and monitor panel").transform;
         P.Box(radio, "Trim", V(0f, 0f, 0.012f), V(0.52f, 0.32f, 0.01f), P.Mat(P.Gold, 0.3f, 0.5f), false);
         P.Box(radio, "Body", Vector3.zero, V(0.5f, 0.3f, 0.02f), P.Mat(new Color(0.05f, 0.06f, 0.08f), 0.3f, 0.5f), false);
         monText = P.Text(radio, "MONITOR  0 %LEL", V(-0.22f, 0.12f, -0.015f), 0.026f, Color.green, TextAnchor.MiddleLeft, true);
@@ -846,7 +855,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
     TextMesh MakeRadioButton(string label, Vector3 pos, int id)
     {
         var b = P.Box(radio, label + " button", pos, V(0.22f, 0.07f, 0.02f), P.Mat(new Color(0.12f, 0.28f, 0.6f), 0.2f, 0.5f));
-        var p = b.AddComponent<Pressable>();
+        var p = P.Ensure<Pressable>(b);
         p.Label = label;
         p.Pressed += h => RadioPress(id);
         return P.Text(radio, label, pos + V(0f, 0f, -0.016f), 0.026f, Color.white, TextAnchor.MiddleCenter, true);
@@ -873,6 +882,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
                 pf = new Puff();
                 pf.M = P.Transparent(new Color(0.95f, 0.8f, 0.25f, 0.3f));
                 var go = P.Ball(gasRoot, "Gas puff", Vector3.zero, 0.5f, pf.M, false);
+                P.Ensure<DontBake>(go); // made during play: never part of a bake
                 go.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 pf.T = go.transform;
                 e.Pool.Add(pf);

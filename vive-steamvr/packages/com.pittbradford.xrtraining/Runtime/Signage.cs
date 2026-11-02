@@ -60,7 +60,10 @@ namespace PittBradford.XR
 
         static GameObject QuadWith(Transform parent, string name, Vector3 localPos, Vector2 size, Texture2D tex)
         {
+            var found = Bake.TryAdopt(parent, name);
+            if (found != null) return found;
             var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            Bake.Created(q);
             q.name = name;
             Object.Destroy(q.GetComponent<Collider>());
             q.transform.SetParent(parent, false);
@@ -79,11 +82,11 @@ namespace PittBradford.XR
         /// </summary>
         public static Transform Panel(Transform parent, string name, Vector3 localPos, Vector2 size, Color fill, Color? accent = null, float accentHeight = 0.07f)
         {
-            var root = new GameObject(name).transform;
-            root.SetParent(parent, false);
+            var root = P.Node(name, parent).transform;
+            if (Bake.IsAdopted(root)) return root; // baked panel: keep it as saved (its Shadow and Face come with it)
             root.localPosition = localPos;
             float aspect = size.x / size.y;
-            string suffix = $"{ColorUtility.ToHtmlStringRGBA(fill)}-{(accent.HasValue ? ColorUtility.ToHtmlStringRGBA(accent.Value) : "n")}-{aspect:F2}";
+            string suffix = $"{ColorUtility.ToHtmlStringRGBA(fill)}-{(accent.HasValue ? ColorUtility.ToHtmlStringRGBA(accent.Value) : "n")}-{aspect:F2}-{accentHeight:F3}";
             var shadowTex = RoundedRect("shadow-" + aspect.ToString("F2"), new Color(0, 0, 0, 0.35f), new Color(0, 0, 0, 0.35f), aspect, 0.18f, 0f);
             var faceTex = RoundedRect("panel-" + suffix, fill, Color.Lerp(fill, Color.white, 0.35f), aspect, 0.12f, 0.022f, accent, accentHeight);
             QuadWith(root, "Shadow", new Vector3(0.012f, -0.014f, 0.004f), size * 1.03f, shadowTex);
@@ -100,6 +103,7 @@ namespace PittBradford.XR
         {
             float height = width * 0.5f;
             var root = Panel(parent, "Brand plate", localPos, new Vector2(width, height), new Color(0.0f, 0.13f, 0.36f, 0.97f), P.Gold, 0.035f);
+            if (Bake.IsAdopted(root)) return root; // baked plate: logo and lines are saved with it
             var logo = Resources.Load<Texture2D>("Branding/pitt-bradford");
             if (logo != null)
             {
@@ -123,20 +127,26 @@ namespace PittBradford.XR
         /// </summary>
         public static Transform Tag(Transform parent, string text, Vector3 anchorLocal, Vector3 offsetLocal, float height = 0.09f, Color? accent = null)
         {
-            var root = new GameObject("Tag: " + text).transform;
-            root.SetParent(parent, false);
+            var root = P.Node("Tag: " + text, parent).transform;
+            if (Bake.IsAdopted(root))
+            {
+                // baked tag: plate, label and leader are saved with it; reconnect the facing behaviour
+                var baked = P.Ensure<TagFacing>(root.gameObject);
+                baked.Anchor = parent;
+                baked.Tag = root;
+                if (baked.Line == null) baked.Line = root.GetComponentInChildren<LineRenderer>(true);
+                return root;
+            }
             root.localPosition = anchorLocal + offsetLocal;
 
             float textW = Mathf.Max(0.18f, text.Length * height * 0.62f) + height * 1.1f;
             var size = new Vector2(textW, height * 1.9f);
             var acc = accent ?? P.Gold;
             var plate = Panel(root, "Plate", Vector3.zero, size, new Color(0.02f, 0.07f, 0.18f, 0.94f), acc, 0.11f);
-            var t = P.Text(plate, text, new Vector3(0, -height * 0.04f, -0.012f), height, Color.white, TextAnchor.MiddleCenter, true);
-            t.name = "Label";
+            P.Text(plate, text, new Vector3(0, -height * 0.04f, -0.012f), height, Color.white, TextAnchor.MiddleCenter, true, "Label");
 
             // Leader line from the plate to the anchor, drawn in world space so the tag can turn freely
-            var line = new GameObject("Leader").AddComponent<LineRenderer>();
-            line.transform.SetParent(root, false);
+            var line = P.Node("Leader", root).AddComponent<LineRenderer>();
             line.useWorldSpace = true;
             line.positionCount = 2;
             line.startWidth = line.endWidth = 0.006f;
@@ -150,32 +160,6 @@ namespace PittBradford.XR
             face.Line = line;
             face.Tag = root;
             return root;
-        }
-    }
-
-    /// <summary>Turns a <see cref="Ui.Tag"/> to face the viewer and keeps its leader line on the anchor.</summary>
-    public class TagFacing : MonoBehaviour
-    {
-        /// <summary>Set by the screenshot driver so tags face the capture camera instead of the player.</summary>
-        public static Transform ViewOverride;
-        public Transform Anchor, Tag;
-        public Vector3 AnchorLocal;
-        public LineRenderer Line;
-
-        void LateUpdate()
-        {
-            var cam = ViewOverride != null ? ViewOverride : (Camera.main != null ? Camera.main.transform : null);
-            if (cam != null)
-            {
-                var away = Tag.position - cam.position;
-                away.y = 0f;
-                // Panels face -Z, so look in the direction pointing away from the viewer
-                if (away.sqrMagnitude > 0.0001f) Tag.rotation = Quaternion.LookRotation(away, Vector3.up);
-            }
-            var anchorWorld = Anchor.TransformPoint(AnchorLocal);
-            // End the line at the plate's near edge instead of its centre
-            Line.SetPosition(0, Tag.position - Vector3.up * 0.04f);
-            Line.SetPosition(1, anchorWorld);
         }
     }
 }

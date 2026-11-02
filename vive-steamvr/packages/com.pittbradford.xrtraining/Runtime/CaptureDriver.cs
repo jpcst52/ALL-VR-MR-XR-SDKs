@@ -72,6 +72,7 @@ namespace PittBradford.XR
         {
             string dir = Arg("-pbCapture");
             if (dir == null) return;
+            UnityEngine.Random.InitState(1234); // same gas-puff jitter on every screenshot run
             var go = new GameObject("Capture Driver");
             DontDestroyOnLoad(go);
             go.AddComponent<CaptureDriver>().dir = dir;

@@ -122,6 +122,17 @@ namespace PittBradford.XR.EditorTools
 
         public static void CreateScene<T>(string path) where T : MonoBehaviour
         {
+            // A baked scene holds the whole world (Pitt-Bradford > Bake scene); do not replace it with an empty one.
+            if (File.Exists(path) && File.ReadAllText(path).Contains("m_Name: Scenario") && AssetDatabase.LoadAssetAtPath<SceneAsset>(path) != null)
+            {
+                EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+                if (Object.FindAnyObjectByType<BakedWorld>(FindObjectsInactive.Include) != null)
+                {
+                    EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(path, true) };
+                    Debug.Log("[setup] kept the baked scene " + path + " (use Pitt-Bradford > Unbake scene first to start from an empty one)");
+                    return;
+                }
+            }
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             new GameObject("Scenario").AddComponent<T>();
             Directory.CreateDirectory(Path.GetDirectoryName(path));

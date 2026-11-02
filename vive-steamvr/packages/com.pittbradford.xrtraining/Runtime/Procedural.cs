@@ -60,7 +60,10 @@ namespace PittBradford.XR
             }
             else
             {
-                m.SetFloat("_Mode", 3);
+                // 2 = "Fade" in the Standard shader's editor, which is what these keywords and blend modes are. (3 was
+                // used before; it looked the same at runtime, but the editor rewrites a saved mode-3 material to
+                // premultiplied "Transparent", so baked fences and puffs came out brighter.)
+                m.SetFloat("_Mode", 2);
                 m.DisableKeyword("_ALPHATEST_ON");
                 m.EnableKeyword("_ALPHABLEND_ON");
             }
@@ -109,11 +112,43 @@ namespace PittBradford.XR
         public static Material Hazard() => Mat(Color.white, 0f, 0.3f, StripeTexture("hazard", new Color(1f, 0.78f, 0.1f), new Color(0.08f, 0.08f, 0.08f), 8), 1f);
         public static Material Painted(Color c) => Mat(c, 0.1f, 0.5f);
 
+        // ------------------------------------------------------------------ baked scenes (adopt or create)
+
+        /// <summary>
+        /// An empty object called <paramref name="name"/> under <paramref name="parent"/> (null = scene root). Use it instead
+        /// of <c>new GameObject(name)</c> + SetParent. In a baked scene it returns the saved object untouched (see <see cref="Bake"/>).
+        /// </summary>
+        public static GameObject Node(string name, Transform parent = null)
+        {
+            var found = Bake.TryAdopt(parent, name);
+            if (found != null) return found;
+            var go = new GameObject(name);
+            if (parent != null) go.transform.SetParent(parent, false);
+            Bake.Created(go);
+            return go;
+        }
+
+        /// <summary>GetComponent, or AddComponent when the object does not have one yet (baked objects already do).</summary>
+        public static T Ensure<T>(GameObject go) where T : Component
+        {
+            var c = go.GetComponent<T>();
+            return c != null ? c : go.AddComponent<T>();
+        }
+
+        /// <summary>
+        /// True when the helper created the object this session; false when it was adopted from a baked scene. Guard code
+        /// that sets up a fresh object (position, scale, component settings) so edits made in the scene are kept.
+        /// </summary>
+        public static bool IsNew(Object o) => !Bake.IsAdopted(o);
+
         // ------------------------------------------------------------------ shapes
 
         public static GameObject Prim(PrimitiveType type, Transform parent, string name, Vector3 localPos, Vector3 scale, Material mat, bool collider = true)
         {
+            var found = Bake.TryAdopt(parent, name);
+            if (found != null) return found;
             var go = GameObject.CreatePrimitive(type);
+            Bake.Created(go);
             go.name = name;
             go.transform.SetParent(parent, false);
             go.transform.localPosition = localPos;
@@ -130,6 +165,7 @@ namespace PittBradford.XR
         public static GameObject Cyl(Transform parent, string name, Vector3 pos, float radius, float length, Vector3 axis, Material mat, bool collider = true)
         {
             var go = Prim(PrimitiveType.Cylinder, parent, name, pos, new Vector3(radius * 2f, length / 2f, radius * 2f), mat, collider);
+            if (Bake.IsAdopted(go)) return go;
             go.transform.localRotation = Quaternion.FromToRotation(Vector3.up, axis.normalized);
             return go;
         }
@@ -153,7 +189,7 @@ namespace PittBradford.XR
         /// Font material that respects depth. Unity's default font shader ignores it, so text would show through walls
         /// and panels; PittBradford/Text depth-tests and uses the font atlas as an alpha mask.
         /// </summary>
-        static Material TextMaterial
+        internal static Material TextMaterial
         {
             get
             {
@@ -165,9 +201,22 @@ namespace PittBradford.XR
             }
         }
 
-        public static TextMesh Text(Transform parent, string s, Vector3 localPos, float height, Color color, TextAnchor anchor = TextAnchor.MiddleLeft, bool bold = false)
+        /// <summary>
+        /// A text label. In a baked scene the saved TextMesh is adopted as it is (text, size, colour and position from the
+        /// scene) and only its font and material are put back, because the OS font and its atlas exist only at runtime.
+        /// </summary>
+        public static TextMesh Text(Transform parent, string s, Vector3 localPos, float height, Color color, TextAnchor anchor = TextAnchor.MiddleLeft, bool bold = false, string name = "Text")
         {
-            var go = new GameObject("Text");
+            var found = Bake.TryAdopt(parent, name);
+            if (found != null)
+            {
+                var baked = Ensure<TextMesh>(found);
+                baked.font = Font;
+                found.GetComponent<MeshRenderer>().sharedMaterial = TextMaterial;
+                return baked;
+            }
+            var go = new GameObject(name);
+            Bake.Created(go);
             go.transform.SetParent(parent, false);
             go.transform.localPosition = localPos;
             var tm = go.AddComponent<TextMesh>();
@@ -214,8 +263,22 @@ namespace PittBradford.XR
             return clip;
         }
 
+        /// <summary>
+        /// An AudioSource on <paramref name="parent"/>. On a baked object the saved source (the n-th for the n-th call) is
+        /// reused with its settings and only the generated clip is put back (generated clips are not saved).
+        /// </summary>
         public static AudioSource Speaker(Transform parent, AudioClip clip, bool loop = false, float volume = 1f, float spatial = 1f)
         {
+            if (Bake.IsAdopted(parent.gameObject))
+            {
+                int n = Bake.NextSpeaker(parent.gameObject);
+                var existing = parent.GetComponents<AudioSource>();
+                if (n < existing.Length)
+                {
+                    existing[n].clip = clip;
+                    return existing[n];
+                }
+            }
             var src = parent.gameObject.AddComponent<AudioSource>();
             src.clip = clip;
             src.loop = loop;

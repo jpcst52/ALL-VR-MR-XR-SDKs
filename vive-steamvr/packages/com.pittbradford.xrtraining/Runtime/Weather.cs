@@ -26,7 +26,13 @@ namespace PittBradford.XR
         // Bradford, Pennsylvania
         public static IEnumerator Fetch(Action<Reading> done, double latitude = 41.9559, double longitude = -78.6439)
         {
-            string url = $"https://api.open-meteo.com/v1/forecast?latitude={latitude:F4}&longitude={longitude:F4}" +
+            // -pbOfflineWeather on the command line skips the network (repeatable screenshot runs and comparisons)
+            if (Array.IndexOf(Environment.GetCommandLineArgs(), "-pbOfflineWeather") >= 0)
+            {
+                done(Fallback);
+                yield break;
+            }
+            string url =$"https://api.open-meteo.com/v1/forecast?latitude={latitude:F4}&longitude={longitude:F4}" +
                          "&current=temperature_2m,wind_speed_10m,wind_direction_10m&temperature_unit=fahrenheit&wind_speed_unit=mph";
             using (var req = UnityWebRequest.Get(url))
             {

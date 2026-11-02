@@ -291,6 +291,19 @@
       ],
       "ended": "2026-11-02T04:50:04.587Z",
       "note": "Unity lobby: open terrace, seasonal glitch sky, portal thumbnails; editor-verified desktop; screenshots in docs/images/hub-sky-*"
+    },
+    {
+      "id": "bake-infra",
+      "name": "Bake scenes: tool + Refinery pilot",
+      "task": "Kit adopt-or-create helpers, Bake menu, bake Refinery Rounds scene",
+      "state": "done",
+      "started": "2026-11-02T05:40:23.889Z",
+      "watch": [
+        "vive-steamvr/packages",
+        "vive-steamvr/02-refinery-rounds"
+      ],
+      "ended": "2026-11-02T06:09:42.527Z",
+      "note": "Bake+adopt tool built; Refinery baked: 393 objects in scene; image diff <=0.30% pixels; scripted run passes; other projects compile"
     }
   ]
 }

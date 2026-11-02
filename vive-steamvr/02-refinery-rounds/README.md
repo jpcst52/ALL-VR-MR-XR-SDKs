@@ -78,6 +78,24 @@ See [../../docs/research/README.md](../../docs/research/README.md).
 4. Optional: **Pitt-Bradford > Build Windows player** builds to `Builds/RefineryRounds/`.
 5. Screenshots: `Unity.exe -projectPath <this folder> -executeMethod PittBradford.XR.EditorTools.CaptureRunner.Run -pbCapture <folder> -logFile <log>` (no `-batchmode`; it needs graphics). The editor enters play mode, the scenario's `Shots` coroutine stages and photographs thirteen views, and the editor exits. A built player also accepts `-pbCapture <folder>`.
 
+## Baked scenes
+
+**What "baked" means.** The world (ground, fence, rack, vessels, signs, lights, cones, the monitor, about 390 objects) is still described in `RefineryRounds.cs`, but it has been *baked* into `Assets/Scenes/RefineryRounds.unity`: every object is a normal GameObject in the saved scene, so you can see it in the Hierarchy and Scene view, select it, move it, rescale it or swap its material. The generated materials and textures are saved as assets in `Assets/Baked/RefineryRounds/` (commit this folder together with the scene). The scenario object carries a small **Baked World** component that lists what was baked and when.
+
+**Pressing Play.** `Start()` runs exactly as before. Each kit helper call (`P.Node`, `P.Box`, `P.Cyl`, `P.Ball`, `P.Prim`, `P.Text`, `Ui.Panel`, `Ui.Tag`, `Ui.BrandPlate`) first looks for the saved object and *adopts* it, unchanged, instead of making a new one. The code then re-attaches what a scene file cannot hold: button and grab handlers, the script's fields (sock joints, lamps, cones ...), the generated sounds, and the runtime font of the text. Objects are matched by **parent, name and call order**: the third `P.Box(root, "Table leg", ...)` call adopts the third child called "Table leg" under "Refinery unit".
+
+**Edits you make in the scene are kept** (position, rotation, scale, material, light settings, collider size) for objects the script only builds. Some objects are moved by the script while it runs, so editing their position has no lasting effect: the muster point (placed upwind from the live wind), the sock joints and flare flame (animated), the chest radio and the gas monitor once clipped, the release point and the gold marker (moved per task). Scene lighting (ambient, fog, sky) is copied into the scene so the editor view looks right, but `Start()` still sets it, so change lighting in the script.
+
+**Rules while editing.** Do not rename, re-parent or reorder (among same-named siblings) baked objects: the script finds them by name and order, and would build a new copy next to a renamed one. Deleting a baked object brings it back at the next Play (the script recreates what it cannot find); to hide one, untick it (inactive) instead. Your own extra objects are fine anywhere in the scene and survive a re-bake.
+
+**Still created at runtime (on purpose):** the XR rig, hands and cameras; the task board and its anchor; the "why this matters" panels and the reasoning question; the gas puffs; the gold marker's name tag; the capture camera. They are rebuilt each play or change during play, so they are not in the scene.
+
+**Re-bake after changing the script** (for example a new sign in `BuildFence`): open the project, then **Pitt-Bradford > Bake scene (play mode)**. It enters play mode with time frozen, waits until `Start()` has built everything, saves the result into the scene and returns to edit mode (about 15 seconds). Re-baking keeps the edits you made to existing objects and adds the new ones. Headless: `Unity.exe -projectPath <this folder> -executeMethod PittBradford.XR.EditorTools.SceneBaker.BakeAndExit -logFile <log>` (no `-batchmode`).
+
+**Unbake** (go back to building everything at Start): **Pitt-Bradford > Unbake scene** (or `-executeMethod PittBradford.XR.EditorTools.SceneBaker.UnbakeAndExit`). It deletes the baked objects and `Assets/Baked/RefineryRounds/` and restores the scene lighting; the scenario then runs exactly as it did before baking. For a clean bake that drops all scene edits, Unbake and then Bake. **Set up project** no longer replaces a baked scene with an empty one.
+
+**Verified (November 2, 2026, desktop editor only, emulated, not a headset):** the 13 capture shots were rendered with the scene unbaked and baked and compared pixel by pixel. Outside the animated wind sock, flame and flag, which differ between any two runs, the only differences are sub-pixel edges of the sign panels (their textures are now imported PNGs) and text glyph edges (the runtime font atlas is filled in a different order); under 0.3% of pixels differ by more than 8 of 255 levels in every shot. The scripted run completed in both cases (all tasks, scoring and the reasoning question, no script errors). A table moved in the saved scene appeared at its new position at Play. The baked scene file is about 970 KB and opens in under 0.1 s.
+
 ## Screenshots
 
 Desktop editor renders made by the capture run above (November 1, 2026). They are not headset captures. Each view is staged by the script (for example the gas cloud and the barricade are placed, not played, and in 11 and 12 the script finishes the scenario and picks the answer), so they show what the scene looks like, not a recorded play-through.
@@ -105,5 +123,6 @@ Desktop editor renders made by the capture run above (November 1, 2026). They ar
 - `../packages/com.pittbradford.xrtraining/Runtime/WhyCue.cs`: the shared "why this matters" panel and question used here and in the Hydrostatic Test Bay.
 - `Assets/Editor/ProjectSetup.cs`: the setup and build menu items.
 - `Assets/Scenes`, `Assets/XR`, `Assets/Resources`, `ProjectSettings`: created by **Set up project** (OpenXR settings, scene, shader keepers).
+- `Assets/Baked/RefineryRounds/`: materials and textures written by **Bake scene**; the baked scene refers to them (see "Baked scenes").
 - `screenshots/`: the thirteen desktop editor renders above.
 - `Packages/manifest.json`: same dependencies as project 01 (the kit by `file:` path).
