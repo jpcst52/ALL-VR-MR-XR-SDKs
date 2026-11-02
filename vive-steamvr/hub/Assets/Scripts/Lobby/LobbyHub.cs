@@ -91,8 +91,7 @@ public class LobbyHub : MonoBehaviour, IShotScript
 
     void Build()
     {
-        var root = new GameObject("Lobby").transform;
-        root.SetParent(transform, false);
+        var root = P.Node("Lobby", transform).transform;
 
         var floor = P.Box(root, "Floor", new Vector3(0, -0.05f, 0), new Vector3(HallWidth, 0.1f, HallDepth), P.Concrete());
         if (ExternalShell) floor.GetComponent<Renderer>().enabled = false; // keep the collider, show the building's floor
@@ -127,17 +126,20 @@ public class LobbyHub : MonoBehaviour, IShotScript
             P.Box(root, "Plate post", new Vector3(-10.1f, 1.4f, HallDepth / 2 - 0.2f), new Vector3(0.12f, 2.8f, 0.12f), steel);
         }
 
-        var sun = new GameObject("Light").AddComponent<Light>();
-        sun.transform.SetParent(root, false);
-        sun.type = LightType.Directional;
-        sun.intensity = 0.9f;
-        sun.shadows = LightShadows.Soft;
-        sun.transform.rotation = Quaternion.Euler(55, -20, 0);
+        var sunGo = P.Node("Light", root);
+        var sun = P.Ensure<Light>(sunGo);
+        if (P.IsNew(sunGo))
+        {
+            sun.type = LightType.Directional;
+            sun.intensity = 0.9f;
+            sun.shadows = LightShadows.Soft;
+            sun.transform.rotation = Quaternion.Euler(55, -20, 0);
+        }
 
         // Welcome board on the north wall
-        var board = new GameObject("Welcome board").transform;
-        board.SetParent(root, false);
-        board.localPosition = new Vector3(0, 6.6f, HallDepth / 2 - 0.3f);
+        var boardGo = P.Node("Welcome board", root);
+        var board = boardGo.transform;
+        if (P.IsNew(boardGo)) board.localPosition = new Vector3(0, 6.6f, HallDepth / 2 - 0.3f);
         Ui.Panel(board, "Panel", new Vector3(0, 0, 0.02f), new Vector2(11.2f, 2.0f), new Color(0f, 0.13f, 0.36f, 0.98f), P.Gold, 0.05f);
         P.Text(board, "Pitt-Bradford XR Training Hub", new Vector3(0, 0.38f, -0.06f), 0.62f, Color.white, TextAnchor.MiddleCenter, true);
         P.Text(board, "Step onto a portal's pad and wait a moment to start.   Desktop: keys 1-4.", new Vector3(0, -0.22f, -0.06f), 0.24f, P.Sky, TextAnchor.MiddleCenter);
@@ -152,19 +154,22 @@ public class LobbyHub : MonoBehaviour, IShotScript
             BuildPortal(root, Entries[i], i, new Vector3((i - (Entries.Length - 1) / 2f) * PortalSpacing, 0f, PortalZ));
 
         // Return hint on the south parapet, readable when you turn round
-        var hint = new GameObject("Hint").transform;
-        hint.SetParent(root, false);
-        hint.localPosition = new Vector3(0, 0.62f, -HallDepth / 2 + 0.16f);
-        hint.localRotation = Quaternion.Euler(0, 180, 0);
+        var hintGo = P.Node("Hint", root);
+        var hint = hintGo.transform;
+        if (P.IsNew(hintGo))
+        {
+            hint.localPosition = new Vector3(0, 0.62f, -HallDepth / 2 + 0.16f);
+            hint.localRotation = Quaternion.Euler(0, 180, 0);
+        }
         Ui.Panel(hint, "Panel", Vector3.zero, new Vector2(8.6f, 0.5f), new Color(0f, 0.13f, 0.36f, 0.97f), P.Gold, 0.08f);
         P.Text(hint, "In any scenario: hold both grips (or press Backspace) to come back here.", new Vector3(0, -0.02f, -0.012f), 0.2f, Color.white, TextAnchor.MiddleCenter);
     }
 
     void BuildPortal(Transform parent, Entry e, int index, Vector3 pos)
     {
-        var p = new GameObject("Portal " + (index + 1) + ": " + e.Title).transform;
-        p.SetParent(parent, false);
-        p.localPosition = pos;
+        var pGo = P.Node("Portal " + (index + 1) + ": " + e.Title, parent);
+        var p = pGo.transform;
+        if (P.IsNew(pGo)) p.localPosition = pos;
         var frameMat = P.Mat(new Color(0.16f, 0.17f, 0.2f), 0.7f, 0.5f);
         var accent = P.Mat(e.Color, 0f, 0.4f);
         const float w = 2.6f, h = 3.2f, t = 0.22f;
@@ -189,28 +194,29 @@ public class LobbyHub : MonoBehaviour, IShotScript
         {
             const float tw = 2.0f, th = tw * 9f / 16f;
             var frame = Ui.Panel(p, "Thumbnail", new Vector3(0, 2.1f, -0.07f), new Vector2(tw + 0.12f, th + 0.12f), new Color(0.97f, 0.97f, 0.98f, 1f));
-            var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            q.name = "Picture";
-            Destroy(q.GetComponent<Collider>());
-            q.transform.SetParent(frame, false);
-            q.transform.localPosition = new Vector3(0, 0, -0.008f);
-            q.transform.localScale = new Vector3(tw, th, 1f);
-            var r = q.GetComponent<MeshRenderer>();
-            r.sharedMaterial = new Material(Shader.Find("Sprites/Default")) { mainTexture = thumb, name = "thumb-" + e.Thumb };
-            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            r.receiveShadows = false;
+            var thumbMat = new Material(Shader.Find("Sprites/Default")) { mainTexture = thumb, name = "thumb-" + e.Thumb };
+            var q = P.Prim(PrimitiveType.Quad, frame, "Picture", new Vector3(0, 0, -0.008f), new Vector3(tw, th, 1f), thumbMat, false);
+            if (P.IsNew(q))
+            {
+                var r = q.GetComponent<MeshRenderer>();
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                r.receiveShadows = false;
+            }
         }
 
         var status = P.Text(p, "Step on the pad", new Vector3(0, 0.04f, -1.5f), 0.14f, new Color(0.1f, 0.12f, 0.18f), TextAnchor.MiddleCenter, true);
         status.transform.localRotation = Quaternion.Euler(90, 0, 0); // lies flat, readable from the south
 
-        var lamp = new GameObject("Lamp").AddComponent<Light>();
-        lamp.transform.SetParent(p, false);
-        lamp.transform.localPosition = new Vector3(0, 3.2f, -1.2f);
-        lamp.type = LightType.Point;
-        lamp.range = 6f;
-        lamp.intensity = 0.9f;
-        lamp.color = Color.Lerp(e.Color, Color.white, 0.65f);
+        var lampGo = P.Node("Lamp", p);
+        var lamp = P.Ensure<Light>(lampGo);
+        if (P.IsNew(lampGo))
+        {
+            lamp.transform.localPosition = new Vector3(0, 3.2f, -1.2f);
+            lamp.type = LightType.Point;
+            lamp.range = 6f;
+            lamp.intensity = 0.9f;
+            lamp.color = Color.Lerp(e.Color, Color.white, 0.65f);
+        }
 
         portals.Add(new PortalState { Entry = e, Root = p, Status = status, Gate = gateMat });
     }

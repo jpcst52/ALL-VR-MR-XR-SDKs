@@ -81,9 +81,23 @@ public partial class WarehouseForklift
 
     // ------------------------------------------------------------------------------------------------- build
 
+    // Static scenery of the event (may be baked into the scene): the staff door and its sign, the loading-zone paint and
+    // the stand. The co-worker, the questions, prompts and summary are runtime events and are never baked.
+    static readonly string[] CoworkerScenery = { "Co-worker event", "Loading zone markings", "Loading zone sign" };
+
     void BuildCoworkerEvent()
     {
-        if (!CoworkerHazard) return;
+        if (!CoworkerHazard)
+        {
+            // Hazard off: build nothing. A scene baked with it on still holds the door, paint and stand, so hide them;
+            // the rack cartons are always baked and simply stay on the shelf. No re-bake is needed after toggling.
+            foreach (var n in CoworkerScenery)
+            {
+                var baked = transform.Find(n);
+                if (baked != null && Bake.WasLoaded(baked)) baked.gameObject.SetActive(false);
+            }
+            return;
+        }
         ev = Ev.Idle;
         var root = NewRoot("Co-worker event");
 
@@ -98,20 +112,21 @@ public partial class WarehouseForklift
         SignText(staff, "STAFF ENTRANCE", -0.01f, 0.14f, P.Gold);
 
         // the forklift puts its pallet on the middle shelf of the west-wall bay at z 4.5..6.5; clear the cartons the
-        // racking builder put there so the pallet has room
+        // racking builder put there so the pallet has room. This runs at every Play, on built or baked cartons alike;
+        // it is skipped while baking so the scene file keeps every carton (and the toggle can be turned off later).
         Physics.SyncTransforms();
         loadPoint = new Vector3(-10f, 0f, 5.5f);
         shelf = new Vector3(-13.0f, 1.64f, loadPoint.z);
-        foreach (var c in Physics.OverlapBox(new Vector3(-13f, 2.15f, loadPoint.z), new Vector3(0.4f, 0.45f, 0.9f), Quaternion.identity, ~0, QueryTriggerInteraction.Ignore))
-            if (c.name == "Carton") Destroy(c.gameObject);
+        if (!BakeSession)
+            foreach (var c in Physics.OverlapBox(new Vector3(-13f, 2.15f, loadPoint.z), new Vector3(0.4f, 0.45f, 0.9f), Quaternion.identity, ~0, QueryTriggerInteraction.Ignore))
+                if (c.name == "Carton") Destroy(c.gameObject);
 
         // painted loading zone on the west lane in front of that bay
         var marks = NewRoot("Loading zone markings");
         float lz = loadPoint.z;
         Paint(marks, "Loading zone edge N", -11.6f, lz + 1.45f, -8.4f, lz + 1.6f, hazard, 0.011f);
         Paint(marks, "Loading zone edge S", -11.6f, lz - 1.6f, -8.4f, lz - 1.45f, hazard, 0.011f);
-        FloorText(marks, "LOADING ZONE", new Vector3(-9.0f, 0.018f, lz), 0.22f, SafetyYellow);
-        marks.Find("Text").rotation = Quaternion.Euler(90, -90, 0); // reads from the walkway (east)
+        FloorText(marks, "LOADING ZONE", new Vector3(-9.0f, 0.018f, lz), 0.22f, SafetyYellow, -90f); // reads from the walkway (east)
 
         // the safe-behaviour expectation, on a stand beside the walkway, facing the learner
         var stand = Stand("Loading zone sign", LoadingSignPos, new Vector3(-3.5f, 1.4f, 4.6f), 1.15f, 0.72f, 0.75f);

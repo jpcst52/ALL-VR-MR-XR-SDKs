@@ -46,6 +46,15 @@ Open each project in Unity Hub with editor **6000.3.20f1**, open the scene, pres
 | D13 | 04 | Bin labels, wall cards and answer panel | All readable from the standing position; nothing blocks the parts | |
 | D14 | all | Anything that feels wrong: text too small, objects in the way, panels you cannot click | Note what and where; screenshots help | |
 
+### Baked scenes (all four projects and the hub)
+
+| # | Check | Pass looks like | Result |
+|---|---|---|---|
+| B1 | Open a project scene (02, 03, 04, 01) and look at the Hierarchy before pressing Play | Hundreds of GameObjects are listed (for example 393 in 02, 628 in 03, 399 in 04, 217 in 01), not just a "Scenario" object | |
+| B2 | Press Play | The scene looks and behaves as it did before baking; no new red errors in the Console | |
+| B3 | Stop; select a baked object (for example the table), move it, save, press Play | The object is at its new position at Play and there is no duplicate | |
+| B4 | **Pitt-Bradford > Unbake scene**, press Play, then **Bake scene (play mode)** again | Unbake leaves only the Scenario object and the scene still plays; re-bake restores the objects with no duplicates | |
+
 ## 3. Hands-on checks for the hub lobby
 
 Open `vive-steamvr\hub`, run **Pitt-Bradford > Build hub: lobby and all scenarios**, open the `Lobby` scene and press Play.

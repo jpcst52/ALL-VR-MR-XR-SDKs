@@ -80,7 +80,7 @@ The hub project `vive-steamvr/hub` dresses the scenarios with Asset Store art an
 
 1. Open `vive-steamvr/hub` in Unity 6000.3.20f1 with the packs imported (the list is in [../vive-steamvr/hub/README.md](../vive-steamvr/hub/README.md)). Without a pack, its pieces are skipped and the scenes still build.
 2. Menu **Pitt-Bradford > Set up hub project** (once).
-3. Menu **Pitt-Bradford > Build hub: lobby and all scenarios**. This saves five scenes under `Assets/Scenes/Local/` and puts `Lobby` first in the build settings.
+3. Menu **Pitt-Bradford > Build hub: lobby and all scenarios**. This saves five scenes under `Assets/Scenes/Local/` and puts `Lobby` first in the build settings. Then open each scene in turn and run **Pitt-Bradford > Bake scene (play mode)** so its GameObjects are saved in the scene (about 15 seconds each); rebuilding removes the bakes. Projects 01 to 04 are already baked and committed.
 4. Open `Lobby` and press Play.
 
 **In the lobby:** step onto a portal's pad and wait about 1.4 seconds, or press 1 to 4 on the keyboard. **In a scenario:** hold both grips for 1.5 seconds or press Backspace to return. In the Hydrostatic Test Bay scene, **P** toggles post-processing.

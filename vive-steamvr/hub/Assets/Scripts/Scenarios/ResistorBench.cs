@@ -105,29 +105,37 @@ public class ResistorBench : MonoBehaviour, IShotScript
         StartCoroutine(FitBrandText());
     }
 
+    // Baked scene (Pitt-Bradford > Bake scene): the room, bench, bins, labels, cards, meter, supply, strap, probes,
+    // zones and buttons are saved in ResistorBench.unity. The kit helpers (P.Node, P.Box, P.Text, Ui.Panel ...) adopt the
+    // saved objects, matched by parent, name and call order; set-up inside "if (P.IsNew(...))" runs only for a freshly
+    // made object, so scene edits are kept, while handlers and fields are re-attached below every time. The resistors
+    // and LEDs (the parts moved, tested, lit and burned out) and the smoke stay runtime-only (plain new GameObject).
+    // Do not rename baked objects that this script looks up.
+
     LineRenderer MakeLine(string name, Color c, float width)
     {
-        var go = new GameObject(name);
-        go.transform.SetParent(transform, false);
-        var lr = go.AddComponent<LineRenderer>();
+        var go = P.Node(name, transform);
+        var lr = P.Ensure<LineRenderer>(go);
         lr.positionCount = 2;
-        lr.startWidth = width;
-        lr.endWidth = width;
-        lr.material = new Material(Shader.Find("Sprites/Default"));
-        lr.startColor = c;
-        lr.endColor = c;
-        lr.useWorldSpace = true;
+        if (P.IsNew(go))
+        {
+            lr.startWidth = width;
+            lr.endWidth = width;
+            lr.material = new Material(Shader.Find("Sprites/Default"));
+            lr.startColor = c;
+            lr.endColor = c;
+            lr.useWorldSpace = true;
+        }
         return lr;
     }
 
     SnapZone MakeZone(Transform parent, string name, Vector3 pos, string id, float radius, float markerRadius)
     {
-        var z = new GameObject(name);
-        z.transform.SetParent(parent, false);
-        z.transform.position = pos;
-        var zone = z.AddComponent<SnapZone>();
+        var z = P.Node(name, parent);
+        if (P.IsNew(z)) z.transform.position = pos;
+        var zone = P.Ensure<SnapZone>(z);
         zone.Id = id;
-        zone.Radius = radius;
+        if (P.IsNew(z)) zone.Radius = radius;
         var marker = P.Cyl(z.transform, "Marker", Vector3.zero, markerRadius, 0.006f, Vector3.up, P.Glow(P.Gold, 1.2f), false);
         markers.Add(new ZoneMarker { Zone = zone, Rend = marker.GetComponent<Renderer>(), T = marker.transform, Base = marker.transform.localScale });
         return zone;
@@ -135,8 +143,7 @@ public class ResistorBench : MonoBehaviour, IShotScript
 
     void BuildRoom()
     {
-        var root = new GameObject("Room").transform;
-        root.SetParent(transform, false);
+        var root = P.Node("Room", transform).transform;
         // sealed concrete floor, painted block wall with a dark base, acoustic-tile ceiling
         P.Box(root, "Floor", new Vector3(0, -0.1f, 0.5f), new Vector3(8f, 0.2f, 7f), P.Concrete());
         var wallTex = P.NoiseTexture("wall paint", new Color(0.76f, 0.78f, 0.8f), new Color(0.84f, 0.86f, 0.88f), 10f, 256, 1f, 21);
@@ -157,20 +164,29 @@ public class ResistorBench : MonoBehaviour, IShotScript
         // shadow-casting overhead key so parts and instruments sit on the bench instead of floating
         for (int i = -1; i <= 1; i += 2)
         {
-            var lamp = new GameObject("Fixture light").AddComponent<Light>();
-            lamp.transform.SetParent(root, false);
-            lamp.transform.position = new Vector3(i * 1.3f, 3.0f, 0.55f);
-            lamp.type = LightType.Point; lamp.range = 7f; lamp.intensity = 1.0f; lamp.color = new Color(1f, 0.97f, 0.92f);
+            var lampGo = P.Node("Fixture light", root);
+            var lamp = P.Ensure<Light>(lampGo);
+            if (P.IsNew(lampGo))
+            {
+                lamp.transform.position = new Vector3(i * 1.3f, 3.0f, 0.55f);
+                lamp.type = LightType.Point; lamp.range = 7f; lamp.intensity = 1.0f; lamp.color = new Color(1f, 0.97f, 0.92f);
+            }
         }
-        var fill = new GameObject("Room fill").AddComponent<Light>();
-        fill.transform.SetParent(root, false);
-        fill.transform.position = new Vector3(0, 2.4f, -1.4f);
-        fill.type = LightType.Point; fill.range = 7f; fill.intensity = 0.55f; fill.color = new Color(0.92f, 0.95f, 1f);
-        var key = new GameObject("Key light").AddComponent<Light>();
-        key.transform.SetParent(root, false);
-        key.type = LightType.Directional; key.intensity = 0.45f; key.color = new Color(1f, 0.96f, 0.9f);
-        key.transform.rotation = Quaternion.Euler(70, -15, 0);
-        key.shadows = LightShadows.Soft; key.shadowStrength = 0.55f;
+        var fillGo = P.Node("Room fill", root);
+        var fill = P.Ensure<Light>(fillGo);
+        if (P.IsNew(fillGo))
+        {
+            fill.transform.position = new Vector3(0, 2.4f, -1.4f);
+            fill.type = LightType.Point; fill.range = 7f; fill.intensity = 0.55f; fill.color = new Color(0.92f, 0.95f, 1f);
+        }
+        var keyGo = P.Node("Key light", root);
+        var key = P.Ensure<Light>(keyGo);
+        if (P.IsNew(keyGo))
+        {
+            key.type = LightType.Directional; key.intensity = 0.45f; key.color = new Color(1f, 0.96f, 0.9f);
+            key.transform.rotation = Quaternion.Euler(70, -15, 0);
+            key.shadows = LightShadows.Soft; key.shadowStrength = 0.55f;
+        }
     }
 
     // ------------------------------------------------------------------------------------------------- signage helpers
@@ -178,9 +194,8 @@ public class ResistorBench : MonoBehaviour, IShotScript
     /// <summary>A sign with a thin steel backing (so it has thickness from the side) and a rounded kit panel in front.</summary>
     Transform SignBoard(Transform parent, string name, Vector3 worldPos, Vector2 size, Color accent, float accentHeight = 0.07f)
     {
-        var go = new GameObject(name).transform;
-        go.SetParent(parent, false);
-        go.position = worldPos;
+        var go = P.Node(name, parent).transform;
+        if (P.IsNew(go)) go.position = worldPos;
         P.Box(go, "Backing", new Vector3(0, 0, 0.011f), new Vector3(size.x * 0.96f, size.y * 0.94f, 0.012f), P.DarkSteel(), false);
         Ui.Panel(go, "Panel", Vector3.zero, size, PanelNavy, accent, accentHeight);
         return go;
@@ -196,20 +211,21 @@ public class ResistorBench : MonoBehaviour, IShotScript
         int longest = 0;
         foreach (var l in lines) longest = Mathf.Max(longest, l.Length);
         var size = new Vector2(longest * textHeight * 0.6f + textHeight * 1.6f, lines.Length * textHeight * 1.15f + textHeight * 1.3f);
-        var go = new GameObject("Mat label").transform;
-        go.SetParent(parent, false);
-        go.position = worldPos;
-        go.rotation = Quaternion.Euler(90, 0, 0); // panel faces -Z, so this makes it face up
+        var go = P.Node("Mat label", parent).transform;
+        if (P.IsNew(go))
+        {
+            go.position = worldPos;
+            go.rotation = Quaternion.Euler(90, 0, 0); // panel faces -Z, so this makes it face up
+        }
         Ui.Panel(go, "Plate", Vector3.zero, size, LabelDark, accent, 0.14f);
         var t = P.Text(go, text, new Vector3(0, -size.y * 0.05f, -0.003f), textHeight, textColor ?? Color.white, TextAnchor.MiddleCenter, true);
-        t.alignment = TextAlignment.Center;
+        if (P.IsNew(t)) t.alignment = TextAlignment.Center;
         return go;
     }
 
     void BuildBench()
     {
-        var root = new GameObject("Bench").transform;
-        root.SetParent(transform, false);
+        var root = P.Node("Bench", transform).transform;
         var grain = P.NoiseTexture("bench wood", new Color(0.42f, 0.29f, 0.17f), new Color(0.62f, 0.46f, 0.3f), 2.5f, 256, 14f, 31);
         var wood = P.Mat(Color.white, 0f, 0.35f, grain, 1f);
         P.Box(root, "Bench top", new Vector3(0, 0.87f, 0.8f), new Vector3(3.4f, 0.06f, 0.8f), wood);
@@ -227,8 +243,7 @@ public class ResistorBench : MonoBehaviour, IShotScript
 
     void BuildEsdStation()
     {
-        var root = new GameObject("ESD station").transform;
-        root.SetParent(transform, false);
+        var root = P.Node("ESD station", transform).transform;
         var steel = P.Steel();
         groundJack = new Vector3(-1.55f, 0.91f, 0.95f);
         P.Cyl(root, "Hook post", new Vector3(-1.55f, 1.02f, 0.95f), 0.012f, 0.24f, Vector3.up, steel, false);
@@ -237,18 +252,21 @@ public class ResistorBench : MonoBehaviour, IShotScript
         Ui.Tag(root, "GROUND HOOK", new Vector3(-1.55f, 1.15f, 0.95f), new Vector3(0.1f, 0.13f, -0.05f), 0.035f, new Color(0.3f, 0.75f, 0.45f));
         strapZone = MakeZone(root, "Strap zone", new Vector3(-1.55f, 1.12f, 0.92f), "strap", 0.22f, 0.07f);
 
-        var go = new GameObject("ESD wrist strap");
-        go.transform.SetParent(transform, false);
-        go.transform.position = new Vector3(-1.3f, 0.93f, 0.55f);
-        var rb = go.AddComponent<Rigidbody>();
-        rb.mass = 0.05f;
-        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-        var col = go.AddComponent<BoxCollider>();
-        col.size = new Vector3(0.14f, 0.05f, 0.14f);
+        var go = P.Node("ESD wrist strap", transform);
+        bool fresh = P.IsNew(go);
+        if (fresh) go.transform.position = new Vector3(-1.3f, 0.93f, 0.55f);
+        var rb = P.Ensure<Rigidbody>(go);
+        var col = P.Ensure<BoxCollider>(go);
+        if (fresh)
+        {
+            rb.mass = 0.05f;
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            col.size = new Vector3(0.14f, 0.05f, 0.14f);
+        }
         P.Cyl(go.transform, "Band", Vector3.zero, 0.055f, 0.03f, Vector3.up, P.Mat(new Color(0.15f, 0.35f, 0.85f), 0f, 0.5f), false);
         P.Cyl(go.transform, "Inner", Vector3.zero, 0.04f, 0.034f, Vector3.up, P.Mat(new Color(0.9f, 0.9f, 0.92f), 0f, 0.5f), false);
         P.Box(go.transform, "Buckle", new Vector3(0.055f, 0.0f, 0.0f), new Vector3(0.03f, 0.036f, 0.03f), P.Mat(P.Gold, 0.5f, 0.6f), false);
-        strapObj = go.AddComponent<Grabbable>();
+        strapObj = P.Ensure<Grabbable>(go);
         strapObj.SnapId = "strap";
         strapCord = MakeLine("ESD cord", new Color(0.1f, 0.8f, 0.4f), 0.006f);
         MatLabel(root, "WRIST STRAP", new Vector3(-1.3f, 0.912f, 0.465f), 0.018f, new Color(0.3f, 0.75f, 0.45f));
@@ -256,8 +274,7 @@ public class ResistorBench : MonoBehaviour, IShotScript
 
     void BuildBins()
     {
-        var root = new GameObject("Parts drawer").transform;
-        root.SetParent(transform, false);
+        var root = P.Node("Parts drawer", transform).transform;
         var plastic = P.Mat(new Color(0.85f, 0.87f, 0.9f), 0f, 0.4f);
         // the back row stands on a riser (a tiered parts rack) so its labels are not hidden behind the front row
         const float Riser = 0.075f;
@@ -274,10 +291,12 @@ public class ResistorBench : MonoBehaviour, IShotScript
             P.Box(root, "Bin left", new Vector3(x - 0.106f, 0.93f + y, z), new Vector3(0.008f, 0.06f, 0.16f), plastic);
             P.Box(root, "Bin right", new Vector3(x + 0.106f, 0.93f + y, z), new Vector3(0.008f, 0.06f, 0.16f), plastic);
             // label card in a holder on the bin front, tipped back so it reads from standing height
-            var holder = new GameObject("Bin label").transform;
-            holder.SetParent(root, false);
-            holder.position = new Vector3(x, 0.945f + y, z - 0.095f);
-            holder.rotation = Quaternion.Euler(38f, 0, 0);
+            var holder = P.Node("Bin label", root).transform;
+            if (P.IsNew(holder))
+            {
+                holder.position = new Vector3(x, 0.945f + y, z - 0.095f);
+                holder.rotation = Quaternion.Euler(38f, 0, 0);
+            }
             var acc = spec.AntiSulfur ? new Color(0.2f, 0.8f, 0.4f) : new Color(0.55f, 0.62f, 0.72f);
             Ui.Panel(holder, "Card", Vector3.zero, new Vector2(0.205f, 0.07f), LabelDark, acc, 0.12f);
             string tol = spec.TolerancePct.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
@@ -290,6 +309,8 @@ public class ResistorBench : MonoBehaviour, IShotScript
         MatLabel(root, "Green dot on the body = ANTI-SULFUR type", new Vector3(-0.96f, 0.912f, 0.7f), 0.016f, new Color(0.2f, 0.8f, 0.4f));
     }
 
+    /// <summary>A stocked part. Runtime-only on purpose (plain new GameObject, never baked): parts are moved between bins,
+    /// tray, meter and board during play and carry their simulated measured value.</summary>
     BenchResistor MakeResistor(PartSpec spec, Vector3 pos, int seed)
     {
         float s = spec.RatedWatts >= 0.4 ? 1.45f : (spec.RatedWatts <= 0.07 ? 0.8f : 1f);
@@ -336,19 +357,17 @@ public class ResistorBench : MonoBehaviour, IShotScript
 
     void BuildReadingStation()
     {
-        var root = new GameObject("Reading station").transform;
-        root.SetParent(transform, false);
+        var root = P.Node("Reading station", transform).transform;
         // a white test card with a printed heading and a royal-blue rule; the unknown part lies on it
         P.Box(root, "Reading card", new Vector3(-0.4f, 0.9075f, 0.505f), new Vector3(0.22f, 0.003f, 0.15f), P.Mat(new Color(0.96f, 0.96f, 0.94f), 0f, 0.25f), false);
         P.Box(root, "Card rule", new Vector3(-0.4f, 0.9095f, 0.472f), new Vector3(0.2f, 0.001f, 0.003f), P.Mat(P.Royal), false);
         var t = P.Text(root, "UNKNOWN PART", new Vector3(-0.4f, 0.9105f, 0.452f), 0.02f, P.MediumBlue, TextAnchor.MiddleCenter, true);
-        t.transform.rotation = Quaternion.Euler(90, 0, 0);
+        if (P.IsNew(t)) t.transform.rotation = Quaternion.Euler(90, 0, 0);
         unknown = MakeResistor(UnknownSpec, new Vector3(-0.4f, 0.93f, 0.525f), 7);
 
         // answer panel on two legs
-        var panel = new GameObject("Answer panel").transform;
-        panel.SetParent(root, false);
-        panel.position = new Vector3(-0.25f, 1.1f, 1.1f);
+        var panel = P.Node("Answer panel", root).transform;
+        if (P.IsNew(panel)) panel.position = new Vector3(-0.25f, 1.1f, 1.1f);
         for (int sx = -1; sx <= 1; sx += 2)
             P.Box(panel, "Leg", new Vector3(sx * 0.28f, -0.1f, 0.012f), new Vector3(0.02f, 0.2f, 0.02f), P.DarkSteel(), false);
         P.Box(panel, "Backing", new Vector3(0, 0, 0.011f), new Vector3(0.62f, 0.28f, 0.012f), P.DarkSteel(), false);
@@ -381,10 +400,12 @@ public class ResistorBench : MonoBehaviour, IShotScript
 
     void BuildMeter()
     {
-        var root = new GameObject("Multimeter").transform;
-        root.SetParent(transform, false);
-        root.position = new Vector3(0.62f, 1.05f, 0.82f);
-        root.rotation = Quaternion.Euler(30, 0, 0);
+        var root = P.Node("Multimeter", transform).transform;
+        if (P.IsNew(root))
+        {
+            root.position = new Vector3(0.62f, 1.05f, 0.82f);
+            root.rotation = Quaternion.Euler(30, 0, 0);
+        }
         P.Box(root, "Body", Vector3.zero, new Vector3(0.2f, 0.3f, 0.04f), P.Mat(new Color(0.95f, 0.75f, 0.1f), 0.1f, 0.4f));
         P.Box(root, "Display bezel", new Vector3(0, 0.07f, -0.021f), new Vector3(0.17f, 0.085f, 0.006f), P.Mat(new Color(0.08f, 0.1f, 0.08f), 0f, 0.6f), false);
         meterText = P.Text(root, "OL", new Vector3(0, 0.068f, -0.027f), 0.036f, new Color(0.45f, 1f, 0.5f), TextAnchor.MiddleCenter, true);
@@ -392,12 +413,10 @@ public class ResistorBench : MonoBehaviour, IShotScript
         P.Cyl(root, "Dial", new Vector3(0, -0.04f, -0.027f), 0.045f, 0.012f, Vector3.back, P.Mat(new Color(0.12f, 0.12f, 0.14f), 0.3f, 0.5f), false);
         P.Box(root, "Dial mark", new Vector3(0, -0.015f, -0.034f), new Vector3(0.006f, 0.03f, 0.004f), P.Mat(Color.white), false);
         P.Text(root, "RESISTANCE", new Vector3(0, -0.105f, -0.023f), 0.016f, Color.black, TextAnchor.MiddleCenter, true);
-        jackRed = new GameObject("Red jack").transform;
-        jackRed.SetParent(root, false);
-        jackRed.localPosition = new Vector3(-0.055f, -0.14f, -0.024f);
-        jackBlack = new GameObject("Black jack").transform;
-        jackBlack.SetParent(root, false);
-        jackBlack.localPosition = new Vector3(0.055f, -0.14f, -0.024f);
+        jackRed = P.Node("Red jack", root).transform;
+        if (P.IsNew(jackRed)) jackRed.localPosition = new Vector3(-0.055f, -0.14f, -0.024f);
+        jackBlack = P.Node("Black jack", root).transform;
+        if (P.IsNew(jackBlack)) jackBlack.localPosition = new Vector3(0.055f, -0.14f, -0.024f);
         P.Ball(jackRed, "Red socket", Vector3.zero, 0.01f, P.Mat(new Color(0.85f, 0.1f, 0.1f)), false);
         P.Ball(jackBlack, "Black socket", Vector3.zero, 0.01f, P.Mat(new Color(0.05f, 0.05f, 0.05f)), false);
 
@@ -412,24 +431,26 @@ public class ResistorBench : MonoBehaviour, IShotScript
 
     BenchProbe MakeProbe(bool red, Vector3 pos)
     {
-        var go = new GameObject(red ? "Red probe" : "Black probe");
-        go.transform.SetParent(transform, false);
-        go.transform.position = pos;
-        var rb = go.AddComponent<Rigidbody>();
-        rb.mass = 0.05f;
-        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-        var col = go.AddComponent<BoxCollider>();
-        col.center = new Vector3(0, 0, -0.04f);
-        col.size = new Vector3(0.04f, 0.04f, 0.14f);
+        var go = P.Node(red ? "Red probe" : "Black probe", transform);
+        bool fresh = P.IsNew(go);
+        if (fresh) go.transform.position = pos;
+        var rb = P.Ensure<Rigidbody>(go);
+        var col = P.Ensure<BoxCollider>(go);
+        if (fresh)
+        {
+            rb.mass = 0.05f;
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            col.center = new Vector3(0, 0, -0.04f);
+            col.size = new Vector3(0.04f, 0.04f, 0.14f);
+        }
         var c = red ? new Color(0.85f, 0.1f, 0.1f) : new Color(0.06f, 0.06f, 0.06f);
         P.Cyl(go.transform, "Handle", new Vector3(0, 0, -0.03f), 0.014f, 0.12f, Vector3.forward, P.Mat(c, 0f, 0.5f), false);
         P.Cyl(go.transform, "Needle", new Vector3(0, 0, 0.075f), 0.0035f, 0.07f, Vector3.forward, P.Steel(), false);
-        var tip = new GameObject("Tip").transform;
-        tip.SetParent(go.transform, false);
-        tip.localPosition = new Vector3(0, 0, 0.11f);
-        var bp = go.AddComponent<BenchProbe>();
+        var tip = P.Node("Tip", go.transform).transform;
+        if (P.IsNew(tip)) tip.localPosition = new Vector3(0, 0, 0.11f);
+        var bp = P.Ensure<BenchProbe>(go);
         bp.Tip = tip;
-        var g = go.AddComponent<Grabbable>();
+        var g = P.Ensure<Grabbable>(go);
         g.SnapId = "probe";
         g.Dropped += OnProbeDropped;
         g.Grabbed += x => bp.ClipRes = null;
@@ -438,8 +459,7 @@ public class ResistorBench : MonoBehaviour, IShotScript
 
     void BuildBoard()
     {
-        var root = new GameObject("Breadboard").transform;
-        root.SetParent(transform, false);
+        var root = P.Node("Breadboard", transform).transform;
         P.Box(root, "Board", new Vector3(1.0f, 0.91f, 0.65f), new Vector3(0.5f, 0.02f, 0.3f), P.Mat(new Color(0.93f, 0.9f, 0.82f), 0f, 0.3f));
         P.Box(root, "Plus rail", new Vector3(1.0f, 0.9205f, 0.775f), new Vector3(0.46f, 0.002f, 0.012f), P.Mat(new Color(0.85f, 0.15f, 0.15f)), false);
         P.Box(root, "Minus rail", new Vector3(1.0f, 0.9205f, 0.525f), new Vector3(0.46f, 0.002f, 0.012f), P.Mat(new Color(0.15f, 0.25f, 0.85f)), false);
@@ -449,15 +469,23 @@ public class ResistorBench : MonoBehaviour, IShotScript
             P.Box(root, "Hole", new Vector3(0.78f + ix * 0.03f, 0.9205f, iz < 2 ? 0.6f + iz * 0.02f : 0.69f + (iz - 2) * 0.02f), new Vector3(0.008f, 0.002f, 0.008f), hole, false);
         boardResZone = MakeZone(root, "Resistor zone", new Vector3(0.9f, 0.93f, 0.65f), "part", 0.1f, 0.07f);
         ledZone = MakeZone(root, "LED zone", new Vector3(1.12f, 0.97f, 0.65f), "led", 0.1f, 0.05f);
-        P.Text(root, "R1", new Vector3(0.9f, 0.923f, 0.58f), 0.026f, Color.black, TextAnchor.MiddleCenter, true).transform.rotation = Quaternion.Euler(90, 0, 0);
-        P.Text(root, "LED1", new Vector3(1.12f, 0.923f, 0.58f), 0.026f, Color.black, TextAnchor.MiddleCenter, true).transform.rotation = Quaternion.Euler(90, 0, 0);
-        P.Text(root, "5 V CIRCUIT BOARD", new Vector3(1.0f, 0.923f, 0.551f), 0.018f, Color.black, TextAnchor.MiddleCenter, true).transform.rotation = Quaternion.Euler(90, 0, 0);
+        FlatOnBench(P.Text(root, "R1", new Vector3(0.9f, 0.923f, 0.58f), 0.026f, Color.black, TextAnchor.MiddleCenter, true));
+        FlatOnBench(P.Text(root, "LED1", new Vector3(1.12f, 0.923f, 0.58f), 0.026f, Color.black, TextAnchor.MiddleCenter, true));
+        FlatOnBench(P.Text(root, "5 V CIRCUIT BOARD", new Vector3(1.0f, 0.923f, 0.551f), 0.018f, Color.black, TextAnchor.MiddleCenter, true));
         led1 = MakeLed(new Vector3(0.8f, 0.95f, 0.47f));
         led2 = MakeLed(new Vector3(0.92f, 0.95f, 0.47f));
         MatLabel(root, "LEDs (one spare)", new Vector3(1.06f, 0.912f, 0.465f), 0.016f, new Color(1f, 0.35f, 0.3f));
         Ui.Tag(root, "LED TEST BOARD", new Vector3(1.0f, 0.93f, 0.78f), new Vector3(-0.05f, 0.25f, 0.02f), 0.032f, P.Gold);
     }
 
+    /// <summary>Lays freshly made printed text flat on the board (a baked label keeps its saved rotation).</summary>
+    static void FlatOnBench(TextMesh t)
+    {
+        if (P.IsNew(t)) t.transform.rotation = Quaternion.Euler(90, 0, 0);
+    }
+
+    /// <summary>An LED. Runtime-only on purpose (plain new GameObject, never baked): it is moved onto the board, its
+    /// dome material changes with the current, and it burns out with a smoke puff.</summary>
     BenchLed MakeLed(Vector3 pos)
     {
         var go = new GameObject("LED");
@@ -549,8 +577,7 @@ public class ResistorBench : MonoBehaviour, IShotScript
 
     void BuildSupply()
     {
-        var root = new GameObject("Power supply").transform;
-        root.SetParent(transform, false);
+        var root = P.Node("Power supply", transform).transform;
         P.Box(root, "Case", new Vector3(1.4f, 0.97f, 1.0f), new Vector3(0.3f, 0.14f, 0.2f), P.Mat(new Color(0.25f, 0.27f, 0.3f), 0.4f, 0.5f));
         P.Box(root, "Front panel", new Vector3(1.4f, 0.97f, 0.8995f), new Vector3(0.29f, 0.13f, 0.002f), P.Mat(new Color(0.13f, 0.14f, 0.16f), 0.5f, 0.45f), false);
         P.Box(root, "Handle", new Vector3(1.4f, 1.05f, 1.0f), new Vector3(0.22f, 0.012f, 0.03f), P.DarkSteel(), false);
@@ -564,23 +591,28 @@ public class ResistorBench : MonoBehaviour, IShotScript
         switchOff = P.Glow(new Color(1f, 0.2f, 0.2f), 1.2f);
         var sw = P.Box(root, "Power switch", new Vector3(1.4f, 0.935f, 0.89f), new Vector3(0.06f, 0.025f, 0.015f), switchOff);
         switchRend = sw.GetComponent<Renderer>();
-        var press = sw.AddComponent<Pressable>();
+        var press = P.Ensure<Pressable>(sw);
         press.Label = "POWER";
         press.Pressed += h => OnPowerToggled();
 
         var red = MakeLine("Supply plus wire", new Color(0.85f, 0.1f, 0.1f), 0.006f);
-        red.SetPosition(0, new Vector3(1.3f, 0.935f, 0.893f));
-        red.SetPosition(1, new Vector3(1.2f, 0.93f, 0.78f));
+        if (P.IsNew(red))
+        {
+            red.SetPosition(0, new Vector3(1.3f, 0.935f, 0.893f));
+            red.SetPosition(1, new Vector3(1.2f, 0.93f, 0.78f));
+        }
         var blk = MakeLine("Supply minus wire", new Color(0.05f, 0.05f, 0.05f), 0.006f);
-        blk.SetPosition(0, new Vector3(1.5f, 0.935f, 0.893f));
-        blk.SetPosition(1, new Vector3(1.22f, 0.93f, 0.52f));
+        if (P.IsNew(blk))
+        {
+            blk.SetPosition(0, new Vector3(1.5f, 0.935f, 0.893f));
+            blk.SetPosition(1, new Vector3(1.22f, 0.93f, 0.52f));
+        }
     }
 
     Transform Card(Vector3 center, float w, float h, string title)
     {
-        var go = new GameObject(title + " card").transform;
-        go.SetParent(transform, false);
-        go.position = center;
+        var go = P.Node(title + " card", transform).transform;
+        if (P.IsNew(go)) go.position = center;
         Ui.Panel(go, "Panel", Vector3.zero, new Vector2(w, h), PanelNavy, P.Gold, 0.045f);
         P.Text(go, title, new Vector3(-w / 2f + 0.035f, h / 2f - 0.08f, -0.015f), 0.04f, P.Gold, TextAnchor.MiddleLeft, true);
         P.Box(go, "Title rule", new Vector3(0, h / 2f - 0.115f, -0.012f), new Vector3(w - 0.07f, 0.003f, 0.002f), P.Mat(new Color(0.35f, 0.45f, 0.62f)), false);
@@ -592,15 +624,14 @@ public class ResistorBench : MonoBehaviour, IShotScript
         Vector2 mid = (a + b) / 2f;
         float len = Vector2.Distance(a, b);
         var go = P.Box(parent, "Line", new Vector3(mid.x, mid.y, -0.013f), new Vector3(len, thick, 0.004f), mat, false);
-        go.transform.localRotation = Quaternion.Euler(0, 0, Mathf.Atan2(b.y - a.y, b.x - a.x) * Mathf.Rad2Deg);
+        if (P.IsNew(go)) go.transform.localRotation = Quaternion.Euler(0, 0, Mathf.Atan2(b.y - a.y, b.x - a.x) * Mathf.Rad2Deg);
     }
 
     void BuildWallPanels()
     {
         // color code poster
-        var poster = new GameObject("Color code poster").transform;
-        poster.SetParent(transform, false);
-        poster.position = new Vector3(-0.95f, 1.75f, 1.28f);
+        var poster = P.Node("Color code poster", transform).transform;
+        if (P.IsNew(poster)) poster.position = new Vector3(-0.95f, 1.75f, 1.28f);
         Ui.Panel(poster, "Panel", Vector3.zero, new Vector2(1.52f, 1.0f), new Color(0.97f, 0.97f, 0.95f), P.Royal, 0.13f);
         P.Text(poster, "RESISTOR COLOR CODE", new Vector3(0, 0.435f, -0.015f), 0.07f, Color.white, TextAnchor.MiddleCenter, true);
         P.Box(poster, "Gold rule", new Vector3(0, 0.364f, -0.012f), new Vector3(1.44f, 0.006f, 0.002f), P.Mat(P.Gold, 0.2f, 0.5f), false);
@@ -687,9 +718,12 @@ public class ResistorBench : MonoBehaviour, IShotScript
     void MakeButton(Transform parent, string name, Vector3 pos, Color color, System.Action onPress)
     {
         var b = P.Prim(PrimitiveType.Cylinder, parent, name + " button", Vector3.zero, new Vector3(0.09f, 0.012f, 0.09f), P.Glow(color, 0.9f));
-        b.transform.position = pos;
-        b.transform.rotation = Quaternion.Euler(90, 0, 0);
-        var p = b.AddComponent<Pressable>();
+        if (P.IsNew(b))
+        {
+            b.transform.position = pos;
+            b.transform.rotation = Quaternion.Euler(90, 0, 0);
+        }
+        var p = P.Ensure<Pressable>(b);
         p.Label = name;
         p.Pressed += h => onPress();
     }
@@ -1031,31 +1065,8 @@ public class BenchResistor : MonoBehaviour
     }
 }
 
-/// <summary>A meter probe. When released near a lead it clips on and follows the part.</summary>
-public class BenchProbe : MonoBehaviour
-{
-    public Transform Tip;
-    public BenchResistor ClipRes;
-    public int ClipLead;
-    Rigidbody rb;
-
-    void Awake() { rb = GetComponent<Rigidbody>(); }
-
-    public void Unclip()
-    {
-        ClipRes = null;
-        rb.isKinematic = false;
-    }
-
-    void LateUpdate()
-    {
-        if (ClipRes == null || GetComponentInParent<Hand>() != null) return;
-        rb.isKinematic = true;
-        Quaternion rot = Quaternion.LookRotation(new Vector3(0.1f, -0.85f, 0.5f));
-        transform.rotation = rot;
-        transform.position = ClipRes.LeadMid(ClipLead) - rot * Tip.localPosition;
-    }
-}
+// BenchProbe lives in BenchProbe.cs (the probes are baked into the scene, and Unity saves a MonoBehaviour only from a
+// file of the same name).
 
 /// <summary>The LED: glows with the current, or burns out with a puff of smoke.</summary>
 public class BenchLed : MonoBehaviour

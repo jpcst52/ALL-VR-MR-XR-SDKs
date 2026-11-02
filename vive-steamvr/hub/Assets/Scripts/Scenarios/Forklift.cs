@@ -23,8 +23,8 @@ public class Forklift : MonoBehaviour
     public bool IsStopped => Speed < 0.12f;
     public Vector3 DriverHeadPosition => driverHead.position;
 
-    /// <summary>A person on foot (the co-worker) that the driver also watches for. Optional.</summary>
-    public CoWorker Walker;
+    /// <summary>A person on foot (the co-worker) that the driver also watches for. Optional; set at runtime (never saved).</summary>
+    [System.NonSerialized] public CoWorker Walker;
 
     /// <summary>Steps of a put-away at the racking: stop in the lane, turn to the rack, raise, drive in, set the pallet down, back out, lower, turn back.</summary>
     public enum LoadPhase { None, Approach, TurnIn, Raise, DriveIn, Release, BackOut, Lower, TurnOut }
@@ -58,12 +58,15 @@ public class Forklift : MonoBehaviour
         return v.normalized;
     }
 
+    /// <summary>
+    /// Builds the forklift (or, in a baked scene, adopts the saved one in its start pose and re-finds its parts: the
+    /// lift, cargo, driver head and arm, beacon and horns). The speech bubbles are made at runtime and never baked.
+    /// </summary>
     public static Forklift Build(Transform parent, Vector3[] route, Vector3 crossing)
     {
-        var go = new GameObject("Forklift");
-        go.transform.SetParent(parent, false);
-        go.transform.SetPositionAndRotation(route[0], Quaternion.LookRotation(Flat(route[1] - route[0]), Vector3.up));
-        var f = go.AddComponent<Forklift>();
+        var go = P.Node("Forklift", parent);
+        if (P.IsNew(go)) go.transform.SetPositionAndRotation(route[0], Quaternion.LookRotation(Flat(route[1] - route[0]), Vector3.up));
+        var f = P.Ensure<Forklift>(go);
         f.Route = route;
         f.CrossingPoint = crossing;
         f.BuildModel();
@@ -215,10 +218,10 @@ public class Forklift : MonoBehaviour
         for (int i = 0; i < 5; i++)
             P.Box(t, "Guard slat", new Vector3(0, 2.1f, 0.2f - i * 0.2125f), new Vector3(1.15f, 0.04f, 0.1f), black, false);
 
-        // beacon
-        beaconMat = P.Glow(Amber, 2f);
+        // beacon: it flashes by changing its material, so take the renderer's own copy (a baked one shares an asset)
         P.Cyl(t, "Beacon base", new Vector3(0, 2.17f, -0.62f), 0.07f, 0.06f, Vector3.up, black, false);
-        P.Ball(t, "Beacon", new Vector3(0, 2.27f, -0.62f), 0.09f, beaconMat, false);
+        var beacon = P.Ball(t, "Beacon", new Vector3(0, 2.27f, -0.62f), 0.09f, P.Glow(Amber, 2f), false);
+        beaconMat = beacon.GetComponent<Renderer>().material;
 
         // mast, carriage, forks, and a pallet load
         foreach (float mx in new[] { -0.35f, 0.35f })
@@ -226,17 +229,15 @@ public class Forklift : MonoBehaviour
         P.Box(t, "Mast cross low", new Vector3(0, 0.15f, 1.15f), new Vector3(0.8f, 0.08f, 0.1f), dark, false);
         P.Box(t, "Mast cross high", new Vector3(0, 2.15f, 1.15f), new Vector3(0.8f, 0.08f, 0.1f), dark, false);
         // the carriage, forks and load move together on the mast (raised when putting a pallet away)
-        lift = new GameObject("Lift").transform;
-        lift.SetParent(t, false);
+        lift = P.Node("Lift", t).transform;
         P.Box(lift, "Carriage", new Vector3(0, 0.4f, 1.27f), new Vector3(1.0f, 0.5f, 0.05f), dark, false);
         foreach (float fx in new[] { -0.3f, 0.3f })
         {
             P.Box(lift, "Fork blade", new Vector3(fx, 0.16f, 1.85f), new Vector3(0.12f, 0.06f, 1.1f), dark, false);
             P.Box(lift, "Fork heel", new Vector3(fx, 0.35f, 1.31f), new Vector3(0.12f, 0.4f, 0.06f), dark, false);
         }
-        cargo = new GameObject("Cargo").transform;
-        cargo.SetParent(lift, false);
-        cargo.localPosition = new Vector3(0, 0.19f, 1.85f); // origin at the underside of the pallet
+        cargo = P.Node("Cargo", lift).transform;
+        if (P.IsNew(cargo)) cargo.localPosition = new Vector3(0, 0.19f, 1.85f); // origin at the underside of the pallet
         P.Box(cargo, "Pallet", new Vector3(0, 0.06f, 0), new Vector3(1.0f, 0.12f, 1.1f), wood, false);
         P.Box(cargo, "Load", new Vector3(0, 0.49f, 0), new Vector3(0.9f, 0.75f, 0.9f), cardboard, false);
 
@@ -252,14 +253,13 @@ public class Forklift : MonoBehaviour
         var head = P.Ball(t, "Driver head", new Vector3(0, 1.55f, -0.35f), 0.12f, skin, false);
         driverHead = head.transform;
         P.Prim(PrimitiveType.Sphere, t, "Driver hard hat", new Vector3(0, 1.64f, -0.35f), new Vector3(0.28f, 0.16f, 0.3f), hatMat, false);
-        var pivot = new GameObject("Driver arm").transform;
-        pivot.SetParent(t, false);
-        pivot.localPosition = new Vector3(0.22f, 1.35f, -0.3f);
+        var pivot = P.Node("Driver arm", t).transform;
+        if (P.IsNew(pivot)) pivot.localPosition = new Vector3(0.22f, 1.35f, -0.3f);
         P.Prim(PrimitiveType.Capsule, pivot, "Arm", new Vector3(0, -0.2f, 0), new Vector3(0.08f, 0.2f, 0.08f), vestMat, false);
         arm = pivot;
         arm.localRotation = Quaternion.Euler(0, 0, 10f);
 
-        // speech bubble above the cab
+        // speech bubble above the cab: runtime only (plain GameObject, never baked); its bubbles are made as needed
         bubbleRoot = new GameObject("Speech bubble").transform;
         bubbleRoot.SetParent(t, false);
         bubbleRoot.localPosition = new Vector3(0, 2.95f, -0.3f);
@@ -268,8 +268,11 @@ public class Forklift : MonoBehaviour
         // horn: two tones sounded together
         hornLow = P.Speaker(t, P.Tone("horn-low", 392f, 0.7f, 0.5f, 1.2f), false, 1f, 1f);
         hornHigh = P.Speaker(t, P.Tone("horn-high", 494f, 0.7f, 0.5f, 1.2f), false, 1f, 1f);
-        hornLow.maxDistance = 35f;
-        hornHigh.maxDistance = 35f;
+        if (P.IsNew(t))
+        {
+            hornLow.maxDistance = 35f;
+            hornHigh.maxDistance = 35f;
+        }
     }
 
     // ------------------------------------------------------------------------------------------------- behavior

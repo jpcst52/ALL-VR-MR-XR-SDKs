@@ -57,6 +57,15 @@ Checked in the editor (play mode, Nov 1): scripts and the shader compile without
 - `Assets/Scripts/Lobby/HubPolish.cs` adds room tone, a pump hum, tone-mapping, bloom and a vignette; press **P** on the desktop to switch post-processing off. Frame rate on a headset has not been measured.
 - The kit's signage helpers (`Signage.cs`) give rounded panels, name tags with leader lines, and a depth-correct text shader (`PBText.shader`).
 
+## Baked scenes
+
+Every hub scene (`Lobby`, `HydrostaticTest_Hub`, `RefineryRounds_Hub`, `WarehouseForklift_Hub`, `ResistorBench_Hub`) is **baked**: all its GameObjects are saved in the scene, visible in the Hierarchy and editable, instead of being generated at Start (see [../packages/com.pittbradford.xrtraining/README.md](../packages/com.pittbradford.xrtraining/README.md) for how bake and adopt work). Object counts in the saved scene files: Lobby 125, Hydrostatic Test Bay 239, Refinery Rounds 398, Warehouse and Forklift 632, Resistor Bench 403. Edits you make to baked objects persist at Play.
+
+- **Build, then bake.** **Build hub: lobby and all scenarios** rebuilds the scenes from scratch and so removes any bake. After it, open each scene in turn and run **Pitt-Bradford > Bake scene (play mode)** (about 15 seconds each). **Unbake scene** returns a scene to generating at Start.
+- The scenes and their baked assets (`Assets/Baked/`) are local only, like the other hub scenes, because the hub's `.gitignore` commits only our code.
+- Still created at runtime on purpose: the VR rig, task boards, why-panels, the co-worker and awareness check, resistors and LEDs, gas puffs, room tone and pump hum.
+- Not verified: headset, a built player, hand play of the baked hub scenes (checked by loading each through the portals in the editor, with a screenshot of each).
+
 ## Files
 
 - `Assets/Editor/HubSetup.cs`: project configuration (built-in pipeline, OpenXR).
