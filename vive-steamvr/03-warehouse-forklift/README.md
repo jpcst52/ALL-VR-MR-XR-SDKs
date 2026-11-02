@@ -111,6 +111,19 @@ The capture run ends with a scripted self-test (`CoworkerShots` in `WarehouseFor
 
 The self-test turns off the head's `TrackedPoseDriver` for its run: with XR stopped by the capture driver, that component reset the camera rotation every frame and undid the scripted head direction. This affects only the capture run. Whether the same happens in normal desktop play with no headset has not been checked.
 
+## Baked scenes
+
+`Assets/Scenes/WarehouseForklift.unity` is **baked**: the warehouse that `Start()` builds (shell, lights, floor markings, racking and cartons, cargo block, dock, signs and stands, PPE items, cones, mirror, hazards, the forklift in its start pose, and the co-worker event's staff door, loading-zone paint and stand) is saved in the scene as about 630 ordinary GameObjects, so you can see, select and edit them in the Hierarchy and Scene view. Generated materials and textures are in `Assets/Baked/WarehouseForklift/` (commit it with the scene). At Play the same `Start()` runs and the kit helpers adopt the saved objects instead of making new ones. How baking and adoption work, the editing rules (do not rename, re-parent or reorder baked objects; untick instead of deleting) and the menus **Pitt-Bradford > Bake scene (play mode)** / **Unbake scene** are described in the kit README: [../packages/com.pittbradford.xrtraining/README.md](../packages/com.pittbradford.xrtraining/README.md#baked-scenes-bake-and-adopt). Re-bake after changing the build code. **Set up project** does not replace a baked scene.
+
+Specific to this project:
+
+- **Still made at runtime (never baked):** the XR rig, the player body and PPE zones, the task board, the near-miss flash, the corner-mirror camera and its render texture (the mirror face gets its material at every Play), the forklift's speech bubbles, the co-worker, and the awareness-check blanking shell, question panels, prompts and summary.
+- **Moved by the script while it runs, so position edits do not last:** the forklift (drives its route; it is baked in its start pose), its lift and cargo, the driver's arm, the PPE items and cones once grabbed.
+- **Rack cartons:** all cartons are baked. When the co-worker hazard is on, `Start()` removes the cartons in the west-wall bay where the forklift puts its pallet, at every Play (also on baked cartons). The bake skips that removal and the runtime mesh merging (static batching), so the scene file keeps the plain objects.
+- **The `Coworker Hazard` toggle** (inspector, on the `WarehouseForklift` component) needs no re-bake. The scene was baked with it on. Turn it off and, at Play, the baked staff door, loading-zone paint and stand are hidden (the objects `Co-worker event`, `Loading zone markings`, `Loading zone sign` are set inactive), no co-worker is made and the cartons stay on the shelf, as in the unbaked scenario. If a scene is baked with the toggle off, those three objects are simply not in the scene and are built at Play when it is turned back on (re-bake only if you want to see them in the editor).
+
+Checked on November 2, 2026 (desktop editor, emulated, no headset): the bake saved 627 objects (play mode had 690; the rest are the runtime-only objects above); the scene file is about 1.7 MB and opens in under 0.05 s. The 13 capture shots were rendered with the scene unbaked and baked (`-pbOfflineWeather`) and compared: at most 0.35% of pixels differ by more than 8 of 255 levels in any shot, at text glyph and sign panel edges, the hard hat's resting position (about 1 px), and the animated beacon, driver's arm and live co-worker shots, which also differ between two baked runs (up to 0.39%). The scripted self-test passed on the baked scene (awareness score 2 of 3 as expected, `[selftest] PASS`). At Play the baked and unbaked scenes hold the same objects (694, same names and counts, no duplicates); a table moved in the saved scene stayed at its new position at Play; with `Coworker Hazard` off the event scenery was hidden, no co-worker was made and all 52 cartons stayed.
+
 ## Screenshots
 
 Desktop editor renders made by the capture run above (November 1, 2026). They are not headset captures. Views 01-09 are staged by the script (the forklift is placed and frozen, cones are dropped by the script). Views 10-13 are taken during the scripted self-test while the event plays live, with a script standing in for the learner. None of them is a recorded play-through by a person.
@@ -141,4 +154,5 @@ Desktop editor renders made by the capture run above (November 1, 2026). They ar
 - `Assets/Scripts/WfBillboard.cs` - keeps a label or the driver's speech bubble facing the player
 - `Assets/Editor/ProjectSetup.cs` - the Pitt-Bradford menu items
 - `Assets/Scenes`, `Assets/XR`, `Assets/Resources`, `ProjectSettings` - created by **Set up project**
+- `Assets/Baked/WarehouseForklift/` - materials and textures written by **Bake scene**; the baked scene refers to them (see "Baked scenes")
 - `screenshots/` - the 13 desktop editor renders above

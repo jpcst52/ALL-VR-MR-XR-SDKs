@@ -22,10 +22,15 @@ public class CoWorker : MonoBehaviour
     float phase;
     Transform head, legL, legR, armL, armR;
 
+    /// <summary>
+    /// Builds the co-worker (hidden until <see cref="Begin"/>). Always made at runtime: it appears and walks during
+    /// play, so it is kept out of a scene bake (plain GameObject plus <see cref="DontBake"/>).
+    /// </summary>
     public static CoWorker Build(Transform parent, Vector3[] route)
     {
         var go = new GameObject("Co-worker");
         go.transform.SetParent(parent, false);
+        go.AddComponent<DontBake>();
         var c = go.AddComponent<CoWorker>();
         c.Route = route;
         c.BuildModel();

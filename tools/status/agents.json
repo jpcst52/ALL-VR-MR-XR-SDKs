@@ -304,6 +304,43 @@
       ],
       "ended": "2026-11-02T06:09:42.527Z",
       "note": "Bake+adopt tool built; Refinery baked: 393 objects in scene; image diff <=0.30% pixels; scripted run passes; other projects compile"
+    },
+    {
+      "id": "bake-01",
+      "name": "Bake: project 01 (kit HydroTest)",
+      "task": "Convert HydroTest to bake+adopt and bake project 01 scene",
+      "state": "done",
+      "started": "2026-11-02T06:10:47.131Z",
+      "watch": [
+        "vive-steamvr/01-hydrostatic-test",
+        "vive-steamvr/packages"
+      ],
+      "ended": "2026-11-02T06:21:51.485Z",
+      "note": "Project 01 baked: 217 GameObjects; HydroTest converted; image diff worst 2.04% (>8) / 0.28% (>32); scripted run passes"
+    },
+    {
+      "id": "bake-03",
+      "name": "Bake: project 03",
+      "task": "Convert WarehouseForklift to bake+adopt and bake scene",
+      "state": "done",
+      "started": "2026-11-02T06:10:47.180Z",
+      "watch": [
+        "vive-steamvr/03-warehouse-forklift"
+      ],
+      "ended": "2026-11-02T06:24:58.251Z",
+      "note": "Project 03 baked: 628 GameObjects; self-test PASS; image diff <=0.35%; toggle documented"
+    },
+    {
+      "id": "bake-04",
+      "name": "Bake: project 04",
+      "task": "Convert ResistorBench to bake+adopt and bake scene",
+      "state": "done",
+      "started": "2026-11-02T06:10:47.229Z",
+      "watch": [
+        "vive-steamvr/04-resistor-bench"
+      ],
+      "ended": "2026-11-02T06:20:40.475Z",
+      "note": "Project 04 baked: 399 GameObjects, baked assets 0.95 MB, image diff <=0.54%, scripted run passes; BenchProbe moved to own file"
     }
   ]
 }

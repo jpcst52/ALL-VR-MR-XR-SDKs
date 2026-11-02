@@ -31,7 +31,7 @@ Signs and labels use the shared kit's signage helpers (`Ui.Panel`, `Ui.Tag`, `Ui
 
 A Unity 6 (`6000.3.20f1`, built-in render pipeline) VR training example, inspired by the kind of work done by makers of passive electronic components (resistors including current-sense and anti-sulfur types, fuses, varistors, thermal sensors). It is **generic education only**: it makes no claims about any company's real processes, products, or datasheets. The derating curve, the pad size, and the LED limits are illustrative numbers invented for the exercise.
 
-Everything is built from Unity primitives at run time (no imported art). It uses the shared kit in [`../packages/com.pittbradford.xrtraining`](../packages/com.pittbradford.xrtraining).
+Everything is built from Unity primitives by code (no imported art); the static world is baked into the scene file (see "Baked scenes"). It uses the shared kit in [`../packages/com.pittbradford.xrtraining`](../packages/com.pittbradford.xrtraining).
 
 ## Learning goals
 
@@ -84,10 +84,22 @@ This is general awareness practice, not a procedure, qualification, or certifica
    `Unity.exe -projectPath <absolute path to 04-resistor-bench> -executeMethod PittBradford.XR.EditorTools.CaptureRunner.Run -pbCapture <absolute screenshots folder> -logFile <log>`.
    It enters play mode, takes seven shots (`01-bench-overview`, `02-esd-station`, `03-color-code-reading`, `04-measuring`, `05-led-lit`, `06-burnt-led-mistake`, `07-wall-references`) and exits. For the capture only, the scenario stops any OpenXR session that started (the editor may start the OpenXR Mock runtime, which otherwise tilts the pictures and blocks the field of view), hides the desktop hands, and moves the hidden player to each camera position so the name tags face the picture.
 
+## Baked scenes
+
+`Assets/Scenes/ResistorBench.unity` is **baked**: the room, lights, bench, parts rack and bins with their label cards, mat labels, reading card and answer panel, selection tray and CHECK PART button, multimeter body and jacks, breadboard, power supply and its switch, wall poster and cards, name tags, the university plate, the wrist strap, both meter probes, the snap zones and the wires (398 objects) are normal GameObjects in the saved scene, so you can see, select, move and restyle them in the editor. Their generated materials and textures are in `Assets/Baked/ResistorBench/` (93 materials and 42 textures, about 0.95 MB; identical materials are saved once, so the 12 color-band swatches are 12 assets). Commit that folder with the scene. `Start()` still runs: the kit helpers adopt the saved objects (matched by parent, name and call order) and the script re-attaches the button and grab handlers, the snap zones, the meter and supply displays, and the leads.
+
+**Still created at runtime (on purpose):** the resistors (all 19, including the unknown part), the two LEDs with their light and smoke, the XR rig and hands, and the task board. The parts move between bins, tray, meter and board, carry their simulated measured value, and the LEDs change colour and burn out, so they are rebuilt each play and are not in the scene.
+
+Edits to baked objects are kept at Play (for example, moving the multimeter in the scene moves it in play, and the probe leads follow its jacks). Do not rename, re-parent or reorder baked objects; to hide one, untick it instead of deleting it. After changing the script, re-bake with **Pitt-Bradford > Bake scene (play mode)**; **Pitt-Bradford > Unbake scene** goes back to building everything at Start. Headless: `Unity.exe -projectPath <this folder> -executeMethod PittBradford.XR.EditorTools.SceneBaker.BakeAndExit -logFile <log>` (no `-batchmode`). How it works and the conversion recipe: [kit README, "Baked scenes"](../packages/com.pittbradford.xrtraining/README.md#baked-scenes-bake-and-adopt).
+
+**Verified (November 2, 2026, desktop editor only, not a headset):** the seven capture shots were rendered with the scene unbaked and baked (`-pbOfflineWeather`) and compared pixel by pixel; at most 0.54% of pixels differ by more than 8 of 255 levels in any shot. The differences are text glyph edges (the runtime font atlas fills in a different order), sub-pixel edges of the sign panels (their textures are now imported PNGs), the random smoke puff in shot 6, and the resting place of the probes after they are unclipped and fall back onto the bench in shots 5 and 6 (they land slightly differently; repeated baked runs match each other exactly there). In both runs the scripted capture completed: the strap snapped to the hook, the meter read 4.7 k on the unknown part, the anti-sulfur 150 ohm part lit the LED, and the 47 ohm part burned out the second LED, with no script errors. The baked scene file is about 1 MB and opens in under 0.1 s.
+
 ## Code layout
 
-- `Assets/Scripts/ResistorBench.cs`: the scenario (`ResistorBench : MonoBehaviour, IShotScript`) plus small components `BenchResistor`, `BenchProbe`, `BenchLed`.
+- `Assets/Scripts/ResistorBench.cs`: the scenario (`ResistorBench : MonoBehaviour, IShotScript`) plus the small components `BenchResistor` and `BenchLed`.
+- `Assets/Scripts/BenchProbe.cs`: the meter probe component (in its own file so the baked scene can save it).
 - `Assets/Scripts/ResistorMath.cs`: pure C# (no Unity types): color bands, E24, Ohm's law, derating, simulated measurement, part check.
+- `Assets/Baked/ResistorBench/`: materials and textures written by **Bake scene**; the baked scene refers to them.
 - `Assets/Editor/ProjectSetup.cs`: the menu items.
 
 ## Plain C# test list (`ResistorMath`)

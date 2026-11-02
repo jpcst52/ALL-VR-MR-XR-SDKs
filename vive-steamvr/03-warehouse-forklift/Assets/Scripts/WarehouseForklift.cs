@@ -67,6 +67,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
 
     // state
     Zone prevZone = Zone.Entry;
+    bool baking; // set in Start: this Play is the editor's bake session (see BakeSession)
     bool staging, finished, allPpe, mirrorChecked, crossingValid;
     bool spillMarked, uprightMarked, spillSpotted, uprightSpotted;
     float floorTimer, mirrorLook, lookDriver, lookSpill, lookUpright, flashT;
@@ -77,6 +78,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
 
     void Start()
     {
+        baking = BakeSession;
         QualitySettings.shadows = ShadowQuality.All;
         // ceiling / wall / floor ambient: brighter from the lit roof, darker bounce from the concrete
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
@@ -94,6 +96,11 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         hazard = P.Hazard();
         concrete = P.Concrete();
 
+        // Every world object is made through the kit helpers (P.Node, P.Box, P.Text, Ui.Panel ...). In a baked scene
+        // (Pitt-Bradford > Bake scene) they return the saved objects instead, matched by parent, name and call order,
+        // and the code below re-attaches handlers and fields. Do not rename baked objects that this script looks up.
+        // Runtime-only (never baked): the player body and PPE zones, the XR rig, task board, near-miss flash, mirror
+        // camera, the forklift's speech bubbles, the co-worker, and the awareness-check / prompt / summary panels.
         body = new GameObject("Player body").transform;
 
         BuildShell();
@@ -125,11 +132,29 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         BuildBrand();
     }
 
-    Transform NewRoot(string name)
+    Transform NewRoot(string name) => P.Node(name, transform).transform;
+
+    /// <summary>
+    /// True while the editor's Bake scene tool is running Start to capture the world. Things that must happen only in
+    /// real play (merging meshes for static batching, clearing rack cartons for the loading event) are skipped then, so
+    /// the scene file keeps the plain objects and Start does those steps on them at every Play.
+    /// </summary>
+    static bool BakeSession
     {
-        var t = new GameObject(name).transform;
-        t.SetParent(transform, false);
-        return t;
+        get
+        {
+#if UNITY_EDITOR
+            return UnityEditor.SessionState.GetString(Bake.StageKey, "") == "play";
+#else
+            return false;
+#endif
+        }
+    }
+
+    /// <summary>Static batching merges meshes at runtime; never during a bake (the merged mesh must not be saved).</summary>
+    static void CombineStatic(Transform root)
+    {
+        if (!BakeSession) StaticBatchingUtility.Combine(root.gameObject);
     }
 
     // ------------------------------------------------------------------------------------------------- signage helpers
@@ -145,11 +170,13 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
     /// </summary>
     Transform Sign(Transform parent, string name, Vector3 pos, Vector3 faceDir, Vector2 size, Color fill, Color? accent = null, float accentHeight = 0.08f)
     {
-        var h = new GameObject(name).transform;
-        h.SetParent(parent, false);
-        h.position = pos;
-        faceDir.y = 0f;
-        h.rotation = Quaternion.LookRotation(-faceDir.normalized, Vector3.up);
+        var h = P.Node(name, parent).transform;
+        if (P.IsNew(h))
+        {
+            h.position = pos;
+            faceDir.y = 0f;
+            h.rotation = Quaternion.LookRotation(-faceDir.normalized, Vector3.up);
+        }
         Ui.Panel(h, "Panel", Vector3.zero, size, fill, accent, accentHeight);
         SignBack(h, Vector3.zero, size);
         return h;
@@ -240,21 +267,27 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         {
             var pos = new Vector3(lx, 6.55f, lz);
             P.Box(root, "Light panel", pos, new Vector3(2.2f, 0.06f, 0.6f), P.Glow(new Color(1f, 0.96f, 0.88f), 2.2f), false);
-            var l = new GameObject("Point").AddComponent<Light>();
-            l.transform.SetParent(root, false);
-            l.transform.position = pos - Vector3.up * 0.5f;
-            l.type = LightType.Point;
-            l.range = 17f;
-            l.intensity = 0.85f;
-            l.color = new Color(1f, 0.95f, 0.86f);
+            var lgo = P.Node("Point", root);
+            var l = P.Ensure<Light>(lgo);
+            if (P.IsNew(lgo))
+            {
+                l.transform.position = pos - Vector3.up * 0.5f;
+                l.type = LightType.Point;
+                l.range = 17f;
+                l.intensity = 0.85f;
+                l.color = new Color(1f, 0.95f, 0.86f);
+            }
         }
-        var sun = new GameObject("Key light").AddComponent<Light>();
-        sun.transform.SetParent(root, false);
-        sun.type = LightType.Directional;
-        sun.intensity = 0.4f;
-        sun.color = new Color(1f, 0.94f, 0.85f);
-        sun.transform.rotation = Quaternion.Euler(60, -30, 0);
-        sun.shadows = LightShadows.Soft;
+        var sunGo = P.Node("Key light", root);
+        var sun = P.Ensure<Light>(sunGo);
+        if (P.IsNew(sunGo))
+        {
+            sun.type = LightType.Directional;
+            sun.intensity = 0.4f;
+            sun.color = new Color(1f, 0.94f, 0.85f);
+            sun.transform.rotation = Quaternion.Euler(60, -30, 0);
+            sun.shadows = LightShadows.Soft;
+        }
 
         // entry gantry over the PPE line, with the task board hung from it
         P.Box(root, "Gantry post W", new Vector3(-13.7f, 2.3f, -6.1f), new Vector3(0.3f, 4.6f, 0.3f), darkSteel, false);
@@ -354,10 +387,12 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         FloorText(root, "FORKLIFT LANE  >>>", new Vector3(4f, 0.016f, -1.0f), 0.3f, Color.white);
     }
 
-    void FloorText(Transform root, string s, Vector3 pos, float height, Color color)
+    /// <summary>Text lying on the floor; <paramref name="yaw"/> turns it to read from another side (0 = from the south).</summary>
+    TextMesh FloorText(Transform root, string s, Vector3 pos, float height, Color color, float yaw = 0f)
     {
         var t = P.Text(root, s, pos, height, color, TextAnchor.MiddleCenter, true);
-        t.transform.rotation = Quaternion.Euler(90, 0, 0);
+        if (P.IsNew(t)) t.transform.rotation = Quaternion.Euler(90, yaw, 0);
+        return t;
     }
 
     // ------------------------------------------------------------------------------------------------- racking and cargo
@@ -370,8 +405,8 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         Rack(root, 3.0f, 2.6f, 9.4f, 4, 13, UprightPos.z);   // this row has the bent upright on its aisle face
         Rack(root, 6.0f, 2.6f, 9.4f, 4, 14, float.NaN);
         Rack(root, -13.0f, 0.5f, 12.5f, 6, 15, float.NaN);   // scenery along the west wall
-        // merge the many small static meshes to keep draw calls low
-        StaticBatchingUtility.Combine(root.gameObject);
+        // merge the many small static meshes to keep draw calls low (at Play only, not while baking)
+        CombineStatic(root);
     }
 
     /// <summary>A pallet-rack row along z. The aisle face is the -x side. dentZ is the z of a bent aisle-side upright.</summary>
@@ -405,7 +440,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
                     float tilt = 6f;
                     float shift = (height / 2f) * Mathf.Sin(tilt * Mathf.Deg2Rad);
                     var bent = P.Box(root, "Bent upright", new Vector3(x - shift, height / 2f, z), new Vector3(0.08f, height, 0.08f), upright);
-                    bent.transform.localRotation = Quaternion.Euler(0, 0, tilt);
+                    if (P.IsNew(bent)) bent.transform.localRotation = Quaternion.Euler(0, 0, tilt);
                     P.Box(root, "Impact scuff", new Vector3(x - 0.05f, 0.35f, z), new Vector3(0.14f, 0.3f, 0.14f), P.Mat(new Color(0.12f, 0.12f, 0.13f), 0f, 0.2f), false);
                 }
                 else
@@ -455,7 +490,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         foreach (float z in zs)
         foreach (float y in ys)
             P.Box(root, "Cargo", new Vector3(x, y, z), new Vector3(1.1f, 1.2f, 1.5f), mats[rng.Next(0, 3)]);
-        StaticBatchingUtility.Combine(root.gameObject);
+        CombineStatic(root);
         // the sign is created after combining and outside the batched root (TextMesh has no MeshFilter)
         // Fixed to the stack's east face, readable from the walkway (+x). The old text faced -x, so it read mirrored.
         var blind = Sign(transform, "Blind corner sign", new Vector3(-5.475f, 2.2f, -3.8f), Vector3.right, new Vector2(1.7f, 0.62f), SafetyYellow, Ink, 0.09f);
@@ -484,11 +519,13 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
     /// <summary>A free-standing sign panel facing a point. The returned transform has its origin on the floor; the front is local -z.</summary>
     Transform Stand(string name, Vector3 basePos, Vector3 faceToward, float width, float height, float bottom)
     {
-        var t = new GameObject(name).transform;
-        t.SetParent(transform, false);
-        Vector3 d = basePos - faceToward;
-        d.y = 0f;
-        t.SetPositionAndRotation(basePos, Quaternion.LookRotation(d.normalized, Vector3.up));
+        var t = P.Node(name, transform).transform;
+        if (P.IsNew(t))
+        {
+            Vector3 d = basePos - faceToward;
+            d.y = 0f;
+            t.SetPositionAndRotation(basePos, Quaternion.LookRotation(d.normalized, Vector3.up));
+        }
         P.Box(t, "Post L", new Vector3(-width / 2f + 0.08f, bottom / 2f, 0.05f), new Vector3(0.06f, bottom, 0.06f), steel);
         P.Box(t, "Post R", new Vector3(width / 2f - 0.08f, bottom / 2f, 0.05f), new Vector3(0.06f, bottom, 0.06f), steel);
         Ui.Panel(t, "Panel", new Vector3(0, bottom + height / 2f, 0f), new Vector2(width, height), Navy, P.Gold, 0.05f);
@@ -499,7 +536,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
     Pressable MakeButton(Transform parent, string name, Vector3 localPos, Vector3 size, Color color, System.Action onPress)
     {
         var b = P.Box(parent, name + " button", localPos, size, P.Glow(color, 0.9f));
-        var p = b.AddComponent<Pressable>();
+        var p = P.Ensure<Pressable>(b);
         p.Label = name;
         p.Pressed += h => onPress();
         return p;
@@ -553,27 +590,29 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
 
     void MakeHat(Vector3 pos)
     {
-        var go = new GameObject("Hard hat");
-        go.transform.position = pos;
-        var rb = go.AddComponent<Rigidbody>();
-        rb.mass = 0.4f;
+        var go = P.Node("Hard hat");
+        bool fresh = P.IsNew(go);
+        if (fresh) go.transform.position = pos;
+        var rb = P.Ensure<Rigidbody>(go);
+        if (fresh) rb.mass = 0.4f;
         var yellow = P.Mat(new Color(1f, 0.82f, 0.05f), 0.1f, 0.7f);
         P.Prim(PrimitiveType.Sphere, go.transform, "Dome", new Vector3(0, 0.03f, 0), new Vector3(0.27f, 0.2f, 0.3f), yellow, false);
         P.Cyl(go.transform, "Brim", new Vector3(0, -0.04f, 0.02f), 0.15f, 0.012f, Vector3.up, yellow, false);
         P.Box(go.transform, "Ridge", new Vector3(0, 0.1f, 0), new Vector3(0.04f, 0.03f, 0.26f), yellow, false);
-        var col = go.AddComponent<BoxCollider>();
-        col.size = new Vector3(0.3f, 0.2f, 0.32f);
-        var g = go.AddComponent<Grabbable>();
+        var col = P.Ensure<BoxCollider>(go);
+        if (fresh) col.size = new Vector3(0.3f, 0.2f, 0.32f);
+        var g = P.Ensure<Grabbable>(go);
         g.SnapId = "ppe-hat";
         Register(g);
     }
 
     void MakeVest(Vector3 pos)
     {
-        var go = new GameObject("Hi-vis vest");
-        go.transform.position = pos;
-        var rb = go.AddComponent<Rigidbody>();
-        rb.mass = 0.5f;
+        var go = P.Node("Hi-vis vest");
+        bool fresh = P.IsNew(go);
+        if (fresh) go.transform.position = pos;
+        var rb = P.Ensure<Rigidbody>(go);
+        if (fresh) rb.mass = 0.5f;
         var lime = P.Mat(new Color(0.78f, 1f, 0.05f), 0f, 0.4f);
         var silver = P.Mat(new Color(0.85f, 0.85f, 0.88f), 0.8f, 0.8f);
         foreach (float zs in new[] { -0.11f, 0.11f })
@@ -584,19 +623,20 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         }
         foreach (float xs in new[] { -0.12f, 0.12f })
             P.Box(go.transform, "Strap", new Vector3(xs, 0.23f, 0), new Vector3(0.06f, 0.03f, 0.24f), lime, false);
-        var col = go.AddComponent<BoxCollider>();
-        col.size = new Vector3(0.42f, 0.48f, 0.26f);
-        var g = go.AddComponent<Grabbable>();
+        var col = P.Ensure<BoxCollider>(go);
+        if (fresh) col.size = new Vector3(0.42f, 0.48f, 0.26f);
+        var g = P.Ensure<Grabbable>(go);
         g.SnapId = "ppe-vest";
         Register(g);
     }
 
     void MakeGlasses(Vector3 pos)
     {
-        var go = new GameObject("Safety glasses");
-        go.transform.position = pos;
-        var rb = go.AddComponent<Rigidbody>();
-        rb.mass = 0.1f;
+        var go = P.Node("Safety glasses");
+        bool fresh = P.IsNew(go);
+        if (fresh) go.transform.position = pos;
+        var rb = P.Ensure<Rigidbody>(go);
+        if (fresh) rb.mass = 0.1f;
         var lens = P.Transparent(new Color(0.7f, 0.85f, 1f, 0.4f));
         var frame = P.Mat(new Color(0.08f, 0.08f, 0.1f), 0f, 0.4f);
         P.Box(go.transform, "Lens L", new Vector3(-0.045f, 0, 0), new Vector3(0.07f, 0.04f, 0.008f), lens, false);
@@ -604,9 +644,9 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         P.Box(go.transform, "Brow", new Vector3(0, 0.024f, 0), new Vector3(0.17f, 0.01f, 0.01f), frame, false);
         P.Box(go.transform, "Temple L", new Vector3(-0.085f, 0, -0.065f), new Vector3(0.008f, 0.008f, 0.13f), frame, false);
         P.Box(go.transform, "Temple R", new Vector3(0.085f, 0, -0.065f), new Vector3(0.008f, 0.008f, 0.13f), frame, false);
-        var col = go.AddComponent<BoxCollider>();
-        col.size = new Vector3(0.22f, 0.12f, 0.16f);
-        var g = go.AddComponent<Grabbable>();
+        var col = P.Ensure<BoxCollider>(go);
+        if (fresh) col.size = new Vector3(0.22f, 0.12f, 0.16f);
+        var g = P.Ensure<Grabbable>(go);
         g.SnapId = "ppe-glasses";
         Register(g);
     }
@@ -652,12 +692,13 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         mirrorNormal.Normalize();
 
         P.Cyl(root, "Mirror post", mirrorCenter - mirrorNormal * 0.08f - new Vector3(0, mirrorCenter.y / 2f, 0), 0.04f, mirrorCenter.y, Vector3.up, steel, false);
-        var m = new GameObject("Mirror").transform;
-        m.SetParent(root, false);
-        m.SetPositionAndRotation(mirrorCenter, Quaternion.LookRotation(-mirrorNormal, Vector3.up));
+        var m = P.Node("Mirror", root).transform;
+        if (P.IsNew(m)) m.SetPositionAndRotation(mirrorCenter, Quaternion.LookRotation(-mirrorNormal, Vector3.up));
         P.Box(m, "Frame", new Vector3(0, 0, 0.04f), new Vector3(1.0f, 1.0f, 0.06f), P.Mat(new Color(0.95f, 0.4f, 0.05f), 0.1f, 0.5f), false);
         var face = P.Prim(PrimitiveType.Quad, m, "Face", Vector3.zero, new Vector3(0.86f, 0.86f, 1f), null, false);
 
+        // The mirror image is a render texture that exists only at runtime: the face gets its material at every Play
+        // (a baked face has a placeholder material), and the mirror camera is never baked.
         mirrorRt = new RenderTexture(256, 256, 16) { name = "MirrorRT" };
         var shader = Shader.Find("Unlit/Texture");
         Material mat = shader != null ? new Material(shader) : P.Glow(Color.white, 1f);
@@ -679,8 +720,9 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         mirrorCam.depth = -10f;
         mirrorCam.stereoTargetEye = StereoTargetEyeMask.None;
 
-        mirrorLampMat = P.Glow(Color.red, 1.2f);
-        P.Ball(root, "Mirror lamp", mirrorCenter + new Vector3(0, -0.65f, 0) + mirrorNormal * 0.05f, 0.05f, mirrorLampMat, false);
+        // the lamp turns green when the mirror is checked: take the renderer's own copy (a baked one shares an asset)
+        var lamp = P.Ball(root, "Mirror lamp", mirrorCenter + new Vector3(0, -0.65f, 0) + mirrorNormal * 0.05f, 0.05f, P.Glow(Color.red, 1.2f), false);
+        mirrorLampMat = lamp.GetComponent<Renderer>().material;
     }
 
     void BuildSignalStation()
@@ -717,20 +759,22 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
 
     void MakeCone(Vector3 pos)
     {
-        var go = new GameObject("Safety cone");
-        go.transform.position = pos;
-        var rb = go.AddComponent<Rigidbody>();
-        rb.mass = 0.6f;
+        var go = P.Node("Safety cone");
+        bool fresh = P.IsNew(go);
+        if (fresh) go.transform.position = pos;
+        var rb = P.Ensure<Rigidbody>(go);
+        if (fresh) rb.mass = 0.6f;
         var orange = P.Mat(new Color(1f, 0.38f, 0.04f), 0f, 0.4f);
         var white = P.Mat(new Color(0.95f, 0.95f, 0.95f), 0f, 0.4f);
         P.Box(go.transform, "Base", new Vector3(0, -0.235f, 0), new Vector3(0.32f, 0.03f, 0.32f), P.Mat(new Color(0.1f, 0.1f, 0.1f), 0f, 0.3f), false);
         P.Cyl(go.transform, "Lower", new Vector3(0, -0.13f, 0), 0.12f, 0.18f, Vector3.up, orange, false);
         P.Cyl(go.transform, "Band", new Vector3(0, 0.04f, 0), 0.09f, 0.16f, Vector3.up, white, false);
         P.Cyl(go.transform, "Tip", new Vector3(0, 0.2f, 0), 0.06f, 0.16f, Vector3.up, orange, false);
-        var col = go.AddComponent<BoxCollider>();
-        col.size = new Vector3(0.32f, 0.5f, 0.32f);
-        rb.centerOfMass = new Vector3(0, -0.15f, 0);
-        var g = go.AddComponent<Grabbable>();
+        var col = P.Ensure<BoxCollider>(go);
+        if (fresh) col.size = new Vector3(0.32f, 0.5f, 0.32f);
+        // a low centre of mass keeps a dropped cone upright (a baked Rigidbody saves it; set it if the scene did not)
+        if (fresh || rb.automaticCenterOfMass) rb.centerOfMass = new Vector3(0, -0.15f, 0);
+        var g = P.Ensure<Grabbable>(go);
         g.SnapId = "cone";
         Register(g);
         cones.Add(g);
@@ -851,7 +895,8 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
 
     void Update()
     {
-        if (rig == null || staging) return;
+        // while the Bake scene tool captures the world nothing should play (it removes runtime-only parts such as the mirror camera)
+        if (rig == null || staging || baking) return;
         if (UpdateAwarenessPause()) return; // the scene is frozen for the awareness check
         float dt = Time.deltaTime;
         Vector3 feet = rig.FeetPosition;

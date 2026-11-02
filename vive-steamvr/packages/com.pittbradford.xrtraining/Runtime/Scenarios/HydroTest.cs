@@ -102,9 +102,13 @@ public class HydroTest : MonoBehaviour, IShotScript
         StartCoroutine(Weather.Fetch(r => { weather = r; UpdateWeatherText(); }));
     }
 
+    // Every world object is made through the kit helpers (P.Node, P.Box, P.Text, Ui.Panel ...). In a baked scene (one
+    // with a BakedWorld) they return the saved object instead of a new one, so set-up applied after creation is guarded
+    // with P.IsNew and scene edits are kept; handlers, fields and runtime state are always applied. In an unbaked scene
+    // (and in the hub, where ExternalShell is true) every helper creates its object exactly as before.
     void BuildBay()
     {
-        var root = new GameObject("Bay").transform;
+        var root = P.Node("Bay").transform;
         var concrete = P.Concrete();
         var floor = P.Box(root, "Floor", new Vector3(0, -0.1f, 0), new Vector3(14, 0.2f, 12), concrete);
         if (ExternalShell) floor.GetComponent<Renderer>().enabled = false; // keep the collider, show the building's floor instead
@@ -128,20 +132,27 @@ public class HydroTest : MonoBehaviour, IShotScript
         {
             var pos = new Vector3(ix * 3f, 5.62f, iz * 3.2f);
             P.Box(root, "Light panel", pos, new Vector3(1.6f, 0.06f, 0.5f), P.Glow(new Color(1f, 0.96f, 0.88f), 2.2f), false);
-            var l = new GameObject("Point").AddComponent<Light>();
-            l.transform.SetParent(root, false);
-            l.transform.position = pos - Vector3.up * 0.4f;
-            l.type = LightType.Point; l.range = 11f; l.intensity = 0.9f; l.color = new Color(1f, 0.95f, 0.86f);
+            var lgo = P.Node("Point", root);
+            var l = P.Ensure<Light>(lgo);
+            if (P.IsNew(lgo))
+            {
+                l.transform.position = pos - Vector3.up * 0.4f;
+                l.type = LightType.Point; l.range = 11f; l.intensity = 0.9f; l.color = new Color(1f, 0.95f, 0.86f);
+            }
         }
-        var sun = new GameObject("Key light").AddComponent<Light>();
-        sun.type = LightType.Directional; sun.intensity = 0.55f; sun.color = new Color(1f, 0.94f, 0.85f);
-        sun.transform.rotation = Quaternion.Euler(52, -35, 0);
-        sun.shadows = LightShadows.Soft;
+        var sunGo = P.Node("Key light");
+        var sun = P.Ensure<Light>(sunGo);
+        if (P.IsNew(sunGo))
+        {
+            sun.type = LightType.Directional; sun.intensity = 0.55f; sun.color = new Color(1f, 0.94f, 0.85f);
+            sun.transform.rotation = Quaternion.Euler(52, -35, 0);
+            sun.shadows = LightShadows.Soft;
+        }
 
         // Floor markings: the stay-clear line and the exclusion zone around the vessel
         P.Box(root, "Safety line", new Vector3(0, 0.006f, LineZ), new Vector3(12.8f, 0.012f, 0.14f), P.Hazard(), false);
         var t = P.Text(root, "STAY BEHIND THIS LINE DURING THE PRESSURE HOLD", new Vector3(0, 0.014f, LineZ - 0.4f), 0.16f, P.Gold, TextAnchor.MiddleCenter, true);
-        t.transform.rotation = Quaternion.Euler(90, 0, 0);
+        if (P.IsNew(t)) t.transform.rotation = Quaternion.Euler(90, 0, 0);
         // Rolling door on the front wall for scale
         if (!ExternalShell) P.Box(root, "Door", new Vector3(-3.6f, 1.6f, -5.93f), new Vector3(3.2f, 3.2f, 0.06f), P.Mat(new Color(0.45f, 0.47f, 0.5f), 0.6f, 0.5f), false);
         // Columns
@@ -152,7 +163,7 @@ public class HydroTest : MonoBehaviour, IShotScript
 
     void BuildExchanger()
     {
-        var root = new GameObject("Heat exchanger").transform;
+        var root = P.Node("Heat exchanger").transform;
         var steel = P.Steel();
         var bright = P.Mat(new Color(0.85f, 0.87f, 0.9f), 0.9f, 0.75f);
         P.Cyl(root, "Shell", C, R, L, Vector3.right, steel);
@@ -161,7 +172,7 @@ public class HydroTest : MonoBehaviour, IShotScript
             P.Cyl(root, "Shell flange", C + Vector3.right * (s * (L / 2f - 0.05f)), R + 0.1f, 0.08f, Vector3.right, bright);
             P.Cyl(root, "Channel", C + Vector3.right * (s * (L / 2f + 0.22f)), R + 0.02f, 0.36f, Vector3.right, steel);
             var cap = P.Ball(root, "Dished head", C + Vector3.right * (s * (L / 2f + 0.4f)), R, steel);
-            cap.transform.localScale = new Vector3(R * 2f * 0.5f, R * 2f, R * 2f);
+            if (P.IsNew(cap)) cap.transform.localScale = new Vector3(R * 2f * 0.5f, R * 2f, R * 2f);
             P.Cyl(root, "Saddle ring", C + Vector3.right * (s * 1.1f), R + 0.03f, 0.12f, Vector3.right, P.Painted(P.Royal));
             P.Box(root, "Saddle", new Vector3(s * 1.1f, (C.y - R) / 2f, C.z), new Vector3(0.3f, C.y - R, 0.9f), P.Painted(P.Royal));
             P.Box(root, "Saddle foot", new Vector3(s * 1.1f, 0.03f, C.z), new Vector3(0.5f, 0.06f, 1.1f), P.DarkSteel());
@@ -173,11 +184,11 @@ public class HydroTest : MonoBehaviour, IShotScript
             var baseY = C.y + R;
             P.Cyl(root, "Nozzle", new Vector3(x, baseY + 0.2f, C.z), 0.1f, 0.4f, Vector3.up, steel);
             P.Cyl(root, "Nozzle flange", new Vector3(x, baseY + 0.4f, C.z), 0.17f, 0.05f, Vector3.up, bright);
-            var z = new GameObject(i == 0 ? "Blind zone A" : "Blind zone B");
-            z.transform.SetParent(root, false);
-            z.transform.position = new Vector3(x, baseY + 0.455f, C.z);
-            var zone = z.AddComponent<SnapZone>();
-            zone.Id = "blind"; zone.Radius = 0.3f;
+            var z = P.Node(i == 0 ? "Blind zone A" : "Blind zone B", root);
+            if (P.IsNew(z)) z.transform.position = new Vector3(x, baseY + 0.455f, C.z);
+            var zone = P.Ensure<SnapZone>(z);
+            zone.Id = "blind"; // must match the blind flanges' SnapId
+            if (P.IsNew(z)) zone.Radius = 0.3f;
             int idx = i;
             zone.Snapped += (zn, g) => { blinds++; zoneMarkers[idx].enabled = false; Haptic(); };
             zones[i] = zone;
@@ -198,13 +209,13 @@ public class HydroTest : MonoBehaviour, IShotScript
         // Particle effects: leak at an open nozzle, and the relief valve jet
         spray = MakeJet(root, "Spray", new Vector3(0.95f, C.y + R + 0.5f, C.z), new Color(0.65f, 0.82f, 1f));
         relief = MakeJet(root, "Relief jet", new Vector3(-0.2f, C.y + R + 0.05f, C.z - 0.25f), new Color(0.8f, 0.9f, 1f));
-        relief.transform.rotation = Quaternion.Euler(-60f, 0, 0);
+        if (P.IsNew(relief)) relief.transform.rotation = Quaternion.Euler(-60f, 0, 0);
         P.Cyl(root, "Relief valve", new Vector3(-0.2f, C.y + R + 0.02f, C.z - 0.2f), 0.06f, 0.2f, new Vector3(0, 0.7f, -0.7f), P.Painted(new Color(0.8f, 0.1f, 0.1f)));
     }
 
     void BuildUtilities()
     {
-        var root = new GameObject("Utilities").transform;
+        var root = P.Node("Utilities").transform;
         var steel = P.Steel();
         // Water tank
         P.Cyl(root, "Water tank", new Vector3(4.2f, 0.95f, C.z), 0.55f, 1.9f, Vector3.up, P.Mat(new Color(0.12f, 0.35f, 0.7f), 0.5f, 0.6f));
@@ -228,24 +239,22 @@ public class HydroTest : MonoBehaviour, IShotScript
 
         // Pressure gauge on a stand facing the player
         P.Cyl(root, "Gauge post", new Vector3(0, 0.9f, 1.7f), 0.03f, 1.8f, Vector3.up, steel);
-        var dial = new GameObject("Gauge").transform;
-        dial.SetParent(root, false);
-        dial.position = new Vector3(0, 1.85f, 1.7f);
+        var dial = P.Node("Gauge", root).transform;
+        if (P.IsNew(dial)) dial.position = new Vector3(0, 1.85f, 1.7f);
         P.Cyl(dial, "Case", new Vector3(0, 0, 0.0f), 0.2f, 0.06f, Vector3.forward, P.Mat(new Color(0.15f, 0.15f, 0.17f), 0.7f, 0.5f), false);
         var face = P.Cyl(dial, "Face", new Vector3(0, 0, -0.032f), 0.18f, 0.01f, Vector3.forward, P.Mat(Color.white, 0f, 0.2f), false);
         for (int i = 0; i <= 10; i++)
         {
             float a = Mathf.Lerp(-135f, 135f, i / 10f);
             var tick = P.Box(dial, "Tick", Quaternion.Euler(0, 0, -a) * new Vector3(0, 0.155f, -0.04f), new Vector3(0.008f, i % 5 == 0 ? 0.035f : 0.02f, 0.004f), P.Mat(Color.black), false);
-            tick.transform.localRotation = Quaternion.Euler(0, 0, -a);
+            if (P.IsNew(tick)) tick.transform.localRotation = Quaternion.Euler(0, 0, -a);
             if (i % 2 == 0) P.Text(dial, (i * 30).ToString(), Quaternion.Euler(0, 0, -a) * new Vector3(0, 0.115f, -0.045f), 0.028f, Color.black, TextAnchor.MiddleCenter, true);
         }
         // Red band for the test pressure and a red line at the maximum
         var test = P.Box(dial, "Test mark", Quaternion.Euler(0, 0, -(Mathf.Lerp(-135f, 135f, TestPsi / 300f))) * new Vector3(0, 0.16f, -0.042f), new Vector3(0.012f, 0.05f, 0.004f), P.Mat(new Color(0.1f, 0.65f, 0.3f)), false);
-        test.transform.localRotation = Quaternion.Euler(0, 0, -Mathf.Lerp(-135f, 135f, TestPsi / 300f));
-        var pivot = new GameObject("Needle pivot").transform;
-        pivot.SetParent(dial, false);
-        pivot.localPosition = new Vector3(0, 0, -0.05f);
+        if (P.IsNew(test)) test.transform.localRotation = Quaternion.Euler(0, 0, -Mathf.Lerp(-135f, 135f, TestPsi / 300f));
+        var pivot = P.Node("Needle pivot", dial).transform;
+        if (P.IsNew(pivot)) pivot.localPosition = new Vector3(0, 0, -0.05f);
         P.Box(pivot, "Needle", new Vector3(0, 0.07f, 0), new Vector3(0.008f, 0.15f, 0.004f), P.Mat(new Color(0.9f, 0.1f, 0.1f)), false);
         P.Ball(pivot, "Hub", Vector3.zero, 0.014f, P.Mat(Color.black), false);
         needle = pivot;
@@ -254,13 +263,12 @@ public class HydroTest : MonoBehaviour, IShotScript
         P.Text(root, "TEST PRESSURE 150 PSI", new Vector3(1.05f, 1.45f, 1.68f), 0.05f, Color.white, TextAnchor.MiddleCenter);
 
         // Sight glass beside the vessel shows the water level
-        var glassRoot = new GameObject("Sight glass").transform;
-        glassRoot.SetParent(root, false);
-        glassRoot.position = new Vector3(2.15f, 0.5f, C.z - 0.1f);
+        var glassRoot = P.Node("Sight glass", root).transform;
+        if (P.IsNew(glassRoot)) glassRoot.position = new Vector3(2.15f, 0.5f, C.z - 0.1f);
         P.Cyl(glassRoot, "Glass", new Vector3(0, 0.6f, 0), 0.06f, 1.2f, Vector3.up, P.Transparent(new Color(0.8f, 0.9f, 1f, 0.25f)), false);
         var water = P.Cyl(glassRoot, "Water", new Vector3(0, 0.0f, 0), 0.05f, 1.2f, Vector3.up, P.Mat(new Color(0.15f, 0.5f, 0.95f), 0f, 0.9f), false);
         waterInGlass = water.transform;
-        waterInGlass.localPosition = new Vector3(0, 0, 0);
+        waterInGlass.localPosition = new Vector3(0, 0, 0); // runtime state: Update sets the level every frame
         P.Box(glassRoot, "Top cap", new Vector3(0, 1.22f, 0), new Vector3(0.16f, 0.04f, 0.16f), steel, false);
         P.Box(glassRoot, "Bottom cap", new Vector3(0, -0.02f, 0), new Vector3(0.16f, 0.04f, 0.16f), steel, false);
         P.Text(glassRoot, "LEVEL", new Vector3(0, 1.32f, -0.09f), 0.06f, Color.white, TextAnchor.MiddleCenter, true);
@@ -289,9 +297,8 @@ public class HydroTest : MonoBehaviour, IShotScript
         board.SetFooter("Point at valves and buttons and press the trigger. Grab blind flanges with the grip.");
         // Conditions board on the right wall
         var wp = new Vector3(5.6f, 2.4f, -1.0f);
-        var go = new GameObject("Conditions").transform;
-        go.SetParent(transform, false);
-        go.SetPositionAndRotation(wp, Quaternion.LookRotation(wp - new Vector3(0, 1.6f, -3.6f)));
+        var go = P.Node("Conditions", transform).transform;
+        if (P.IsNew(go)) go.SetPositionAndRotation(wp, Quaternion.LookRotation(wp - new Vector3(0, 1.6f, -3.6f)));
         Ui.Panel(go, "Panel", new Vector3(0, 0, 0.02f), new Vector2(2.0f, 0.9f), new Color(0.03f, 0.08f, 0.2f, 0.96f), P.Gold, 0.05f);
         P.Text(go, "BAY CONDITIONS", new Vector3(-0.9f, 0.28f, -0.02f), 0.09f, P.Gold, TextAnchor.MiddleLeft, true);
         weatherText = P.Text(go, "", new Vector3(-0.9f, 0.0f, -0.02f), 0.06f, Color.white, TextAnchor.MiddleLeft);
@@ -308,21 +315,19 @@ public class HydroTest : MonoBehaviour, IShotScript
     Valve MakeValve(Transform parent, string name, Vector3 pos, bool open, Action<Valve> onToggle)
     {
         var v = new Valve { Name = name, Open = open };
-        var root = new GameObject(name + " valve").transform;
-        root.SetParent(parent, false);
-        root.position = pos;
+        var root = P.Node(name + " valve", parent).transform;
+        if (P.IsNew(root)) root.position = pos;
         P.Box(root, "Body", Vector3.zero, new Vector3(0.14f, 0.14f, 0.14f), P.Painted(new Color(0.75f, 0.1f, 0.1f)), false);
         P.Cyl(root, "Stem", new Vector3(0, 0.12f, 0), 0.012f, 0.2f, Vector3.up, P.Steel(), false);
-        var wheel = new GameObject("Wheel").transform;
-        wheel.SetParent(root, false);
-        wheel.localPosition = new Vector3(0, 0.22f, 0);
+        var wheel = P.Node("Wheel", root).transform;
+        if (P.IsNew(wheel)) wheel.localPosition = new Vector3(0, 0.22f, 0);
         P.Cyl(wheel, "Rim", Vector3.zero, 0.11f, 0.02f, Vector3.up, P.Painted(new Color(0.9f, 0.15f, 0.12f)));
         P.Box(wheel, "Spoke A", Vector3.zero, new Vector3(0.22f, 0.018f, 0.02f), P.Painted(new Color(0.9f, 0.15f, 0.12f)), false);
         P.Box(wheel, "Spoke B", Vector3.zero, new Vector3(0.02f, 0.018f, 0.22f), P.Painted(new Color(0.9f, 0.15f, 0.12f)), false);
         // A bigger invisible target makes the wheel easy to point at
         var target = P.Prim(PrimitiveType.Sphere, wheel, "Target", Vector3.zero, Vector3.one * 0.3f, null);
         target.GetComponent<Renderer>().enabled = false;
-        var press = target.AddComponent<Pressable>();
+        var press = P.Ensure<Pressable>(target);
         press.Label = name;
         var lamp = P.Ball(root, "Lamp", new Vector3(0, 0.0f, -0.09f), 0.03f, P.Glow(Color.red, 1.2f), false);
         Ui.Tag(root, name, Vector3.zero, new Vector3(0f, 0.5f, 0f), 0.05f, P.Gold);
@@ -358,18 +363,19 @@ public class HydroTest : MonoBehaviour, IShotScript
     void MakeButton(Transform parent, string name, Vector3 pos, Color color, Action onPress)
     {
         var b = P.Prim(PrimitiveType.Cylinder, parent, name + " button", pos, new Vector3(0.1f, 0.012f, 0.1f), P.Glow(color, 0.9f));
-        b.transform.rotation = Quaternion.Euler(90, 0, 0);
-        var p = b.AddComponent<Pressable>();
+        if (P.IsNew(b)) b.transform.rotation = Quaternion.Euler(90, 0, 0);
+        var p = P.Ensure<Pressable>(b);
         p.Label = name;
         p.Pressed += h => onPress();
     }
 
     void MakeBlind(Vector3 pos)
     {
-        var go = new GameObject("Blind flange");
-        go.transform.position = pos;
-        var rb = go.AddComponent<Rigidbody>();
-        rb.mass = 2f;
+        var go = P.Node("Blind flange");
+        bool fresh = P.IsNew(go);
+        if (fresh) go.transform.position = pos;
+        var rb = P.Ensure<Rigidbody>(go);
+        if (fresh) rb.mass = 2f;
         var disc = P.Cyl(go.transform, "Disc", Vector3.zero, 0.17f, 0.04f, Vector3.up, P.Mat(new Color(0.8f, 0.82f, 0.86f), 0.9f, 0.7f), false);
         P.Cyl(go.transform, "Boss", new Vector3(0, 0.03f, 0), 0.05f, 0.03f, Vector3.up, P.Steel(), false);
         for (int i = 0; i < 8; i++)
@@ -377,10 +383,10 @@ public class HydroTest : MonoBehaviour, IShotScript
             float a = i * Mathf.PI / 4f;
             P.Cyl(go.transform, "Bolt", new Vector3(Mathf.Cos(a) * 0.13f, 0.025f, Mathf.Sin(a) * 0.13f), 0.012f, 0.025f, Vector3.up, P.DarkSteel(), false);
         }
-        var col = go.AddComponent<BoxCollider>();
-        col.size = new Vector3(0.36f, 0.06f, 0.36f);
-        var g = go.AddComponent<Grabbable>();
-        g.SnapId = "blind";
+        var col = P.Ensure<BoxCollider>(go);
+        if (fresh) col.size = new Vector3(0.36f, 0.06f, 0.36f);
+        var g = P.Ensure<Grabbable>(go);
+        g.SnapId = "blind"; // must match the snap zones' Id
     }
 
     void Pipe(Transform parent, Vector3 a, Vector3 b, float radius, Material mat)
@@ -390,18 +396,24 @@ public class HydroTest : MonoBehaviour, IShotScript
 
     ParticleSystem MakeJet(Transform parent, string name, Vector3 pos, Color color)
     {
-        var go = new GameObject(name);
-        go.transform.SetParent(parent, false);
-        go.transform.position = pos;
-        go.transform.rotation = Quaternion.Euler(-90, 0, 0);
-        var ps = go.AddComponent<ParticleSystem>();
-        var main = ps.main;
-        main.startLifetime = 0.9f; main.startSpeed = 4f; main.startSize = 0.05f; main.gravityModifier = 0.8f;
-        main.startColor = color; main.loop = true; main.playOnAwake = false;
-        var em = ps.emission; em.rateOverTime = 90;
-        var sh = ps.shape; sh.shapeType = ParticleSystemShapeType.Cone; sh.angle = 12f; sh.radius = 0.02f;
-        var r = go.GetComponent<ParticleSystemRenderer>();
-        r.material = new Material(Shader.Find("Sprites/Default"));
+        var go = P.Node(name, parent);
+        bool fresh = P.IsNew(go);
+        if (fresh)
+        {
+            go.transform.position = pos;
+            go.transform.rotation = Quaternion.Euler(-90, 0, 0);
+        }
+        var ps = P.Ensure<ParticleSystem>(go);
+        if (fresh)
+        {
+            var main = ps.main;
+            main.startLifetime = 0.9f; main.startSpeed = 4f; main.startSize = 0.05f; main.gravityModifier = 0.8f;
+            main.startColor = color; main.loop = true; main.playOnAwake = false;
+            var em = ps.emission; em.rateOverTime = 90;
+            var sh = ps.shape; sh.shapeType = ParticleSystemShapeType.Cone; sh.angle = 12f; sh.radius = 0.02f;
+            // a runtime material; the bake saves it as an asset under Assets/Baked/<Scene>/, so baked jets keep theirs
+            go.GetComponent<ParticleSystemRenderer>().material = new Material(Shader.Find("Sprites/Default"));
+        }
         ps.Stop();
         return ps;
     }
