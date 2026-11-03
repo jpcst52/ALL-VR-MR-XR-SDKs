@@ -39,7 +39,7 @@
       badges,
       el("span", { class: "go", text: ex.webServed === false ? "Open the project notes" : "Launch" })
     ]);
-    var a = el("a", { class: "tile", href: ex.url, id: "tile-" + ex.id }, [shot, body]);
+    var a = el("a", { class: "tile", href: /\.md$/i.test(ex.url) ? "launcher/doc.html?f=" + encodeURIComponent(ex.url) : ex.url, id: "tile-" + ex.id }, [shot, body]);
     a.setAttribute("aria-label", ex.title + ". " + ex.status + ". " + ex.badges.join(", ") + (ex.note ? ". " + ex.note : ""));
     return a;
   }
@@ -53,6 +53,7 @@
     var jump = document.getElementById("jump");
     jump.appendChild(el("a", { href: "#path", text: "Demo path" }));
     data.sections.forEach(function (s) { jump.appendChild(el("a", { href: "#sec-" + s.id, text: s.title.replace(/ \(.*\)/, "") })); });
+    jump.appendChild(el("a", { href: "#tools", text: "Guides" }));
 
     // demo path
     var path = document.getElementById("path");
@@ -85,15 +86,21 @@
       host.appendChild(sec);
     });
 
-    // tools
-    var tools = document.getElementById("tools");
-    tools.appendChild(el("h2", { id: "tools-h", text: "Presenter tools" }));
-    var ul = el("ul");
-    data.tools.forEach(function (t) {
-      var a = el("a", { href: t.url }, [document.createTextNode(t.title), t.note ? el("small", { text: "(" + t.note + ")" }) : null]);
-      ul.appendChild(el("li", {}, [a]));
+    // guides: grouped links to every document and deck; Markdown opens in the in-menu viewer (doc.html), other files open directly
+    var guides = document.getElementById("tools");
+    guides.appendChild(el("h2", { id: "tools-h", text: "Guides, status and decks" }));
+    guides.appendChild(el("p", { class: "intro", text: "Everything written down in this repository. Guides open here in the menu, offline." }));
+    var groups = el("div", { class: "groups" });
+    data.guides.forEach(function (g) {
+      var ul = el("ul");
+      g.links.forEach(function (t) {
+        var href = /\.md$/i.test(t.url) ? "launcher/doc.html?f=" + encodeURIComponent(t.url) : t.url;
+        var a = el("a", { href: href, id: "guide-" + t.id }, [document.createTextNode(t.title), t.note ? el("small", { text: t.note }) : null]);
+        ul.appendChild(el("li", {}, [a]));
+      });
+      groups.appendChild(el("section", { class: "group", "aria-labelledby": "g-" + g.id }, [el("h3", { id: "g-" + g.id, text: g.title }), ul]));
     });
-    tools.appendChild(ul);
+    guides.appendChild(groups);
 
     // relay hint: multiplayer pages need the relay, which serves this same site on its own port
     var port = String(data.meta.relayPort);

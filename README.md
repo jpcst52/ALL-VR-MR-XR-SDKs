@@ -8,6 +8,7 @@ Small, separate examples that highlight a distinctive capability of each technol
 
 ## Contents
 
+- [Main menu](#main-menu)
 - [Gallery](#gallery)
 - [Examples](#examples)
 - [Getting started](#getting-started)
@@ -18,6 +19,12 @@ Small, separate examples that highlight a distinctive capability of each technol
 - [Slide decks](#slide-decks)
 - [Tools](#tools)
 - [Platform notes](#platform-notes)
+
+## Main menu
+
+Start the demo server (`scripts\start-demo.cmd`, details in [docs/HOW-TO-RUN.md](docs/HOW-TO-RUN.md)) and the **main menu** opens: tiles for every browser demo, the multiplayer examples, the Unity training projects, the native SDK samples and the Quest pages, plus every guide, status page and slide deck. Guides open inside the menu, offline. The full documentation list is in [docs/README.md](docs/README.md).
+
+![The main menu](docs/images/launcher.png)
 
 ## Gallery
 
@@ -63,6 +70,7 @@ The Unity, Android, and Apple examples need their native toolchains and devices,
 | `unity-xri/` | Unity XR Interaction Toolkit | Grab selection color feedback |
 | `multi-player/vr/` | Three.js + WebXR | Circuit Lab: build and power electrical circuits together |
 | `multi-player/ar/` | Three.js + WebXR | Site Safety Layout: shared AR layout with hit-test alignment |
+| `vive-steamvr/` | Unity 6, OpenXR / SteamVR | Hub lobby and four training projects (hydrostatic test, refinery rounds, warehouse and forklift, resistor bench) on a shared kit |
 | `training-simulations/` | Three.js + WebXR | Seventeen hands-on business, research, industrial safety and life-science (draft) practice scenarios |
 
 Each folder has its own README with setup instructions, prerequisites, and platform limitations. Browser-based examples embed a screenshot of themselves running. Unity examples are Unity-ready source folders rather than full Unity projects: copy the scripts into a compatible Unity project and follow that example's setup instructions.

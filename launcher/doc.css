@@ -1,0 +1,34 @@
+/* Guide viewer for the launcher. Fonts and the brand bar come from ../brand-kit/brand.css (offline). */
+:root { --royal: #003594; --gold: #ffb81c; --navy: #00205b; --sky: #dbeeff; --ink: #0b1b3a; --muted: #44536f; --line: #b9d3ee; }
+* { box-sizing: border-box; }
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+@media (min-width: 1800px) { html { font-size: 19px; } }
+body { margin: 0; background: var(--sky); color: var(--ink); font-family: var(--pitt-font); line-height: 1.55; }
+.wrap { width: min(60rem, 100% - 2rem); margin-inline: auto; }
+.skip { position: absolute; left: -999px; } .skip:focus { left: 1rem; top: 1rem; background: #fff; padding: .5rem 1rem; z-index: 9; }
+.top { background: var(--navy); color: #fff; border-bottom: 4px solid var(--gold); padding: .8rem 0; }
+.top-inner { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.5rem; justify-content: space-between; }
+.crumbs { display: flex; flex-wrap: wrap; gap: .3rem 1rem; align-items: center; font-size: .95rem; }
+.crumbs a { color: #fff; font-weight: 700; text-decoration: none; padding: .45rem .9rem; border: 2px solid var(--gold); border-radius: 999px; min-height: 2.75rem; display: inline-flex; align-items: center; }
+.crumbs a:hover, .crumbs a:focus-visible { background: var(--gold); color: var(--navy); }
+.crumbs span { color: var(--sky); overflow-wrap: anywhere; }
+.doc { background: #fff; margin: 1.5rem auto; padding: 1.2rem 1.6rem 2rem; border-radius: .9rem; border: 1px solid var(--line); overflow-wrap: anywhere; }
+.doc h1 { font-family: var(--pitt-display); font-weight: 400; font-size: 2.6rem; color: var(--navy); line-height: 1.1; margin: .4rem 0 .6rem; letter-spacing: .01em; }
+.doc h2 { font-family: var(--pitt-display); font-weight: 400; font-size: 1.9rem; color: var(--royal); margin: 2rem 0 .5rem; border-bottom: 3px solid var(--gold); padding-bottom: .15rem; }
+.doc h3 { font-size: 1.2rem; color: var(--navy); margin: 1.4rem 0 .3rem; }
+.doc h4, .doc h5, .doc h6 { margin: 1.1rem 0 .2rem; color: var(--navy); }
+.doc a { color: var(--royal); text-underline-offset: 2px; }
+.doc a:focus-visible, .crumbs a:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.doc code { background: #eef4fb; border: 1px solid var(--line); border-radius: .3rem; padding: .05rem .3rem; font-size: .9em; font-family: Consolas, "Cascadia Mono", monospace; }
+.doc pre { background: var(--navy); color: #fff; padding: .9rem 1rem; border-radius: .6rem; overflow-x: auto; }
+.doc pre code { background: none; border: 0; padding: 0; color: inherit; }
+.doc img { max-width: 100%; height: auto; border-radius: .5rem; border: 1px solid var(--line); }
+.doc blockquote { margin: 1rem 0; padding: .6rem 1rem; border-left: 5px solid var(--gold); background: #fff8e6; color: #3a2a00; }
+.doc hr { border: 0; border-top: 2px solid var(--line); margin: 1.5rem 0; }
+.tw { overflow-x: auto; margin: 1rem 0; }
+.doc table { border-collapse: collapse; min-width: 100%; font-size: .95rem; }
+.doc th { background: var(--navy); color: #fff; text-align: left; }
+.doc th, .doc td { border: 1px solid var(--line); padding: .45rem .7rem; vertical-align: top; }
+.doc tbody tr:nth-child(even) { background: #f4f9ff; }
+.foot { color: var(--muted); font-size: .9rem; padding: 0 0 2rem; }
+@media (max-width: 600px) { .doc { padding: .8rem 1rem 1.5rem; } .doc h1 { font-size: 2.1rem; } }

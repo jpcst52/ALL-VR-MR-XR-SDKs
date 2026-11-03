@@ -157,3 +157,11 @@ a:focus-visible, button:focus-visible {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
   .tile:hover, .step a:hover { transform: none; }
 }
+
+/* guides: grouped link lists */
+.tools .intro { margin: 0.3rem 0 0; color: var(--muted); }
+.tools .groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1.2rem; margin-top: 0.9rem; }
+.tools .group h3 { margin: 0 0 0.2rem; font-size: 1.1rem; color: var(--navy); }
+.tools .group ul { flex-direction: column; flex-wrap: nowrap; gap: 0.4rem; margin-top: 0.4rem; }
+.tools .group a { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; border-radius: 0.8rem; }
+.tools .group small { margin: 0; font-size: 0.82rem; }

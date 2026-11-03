@@ -44,6 +44,8 @@ for (const vp of [{ width: 1600, height: 1000 }, { width: 420, height: 900 }]) {
   const tiles = await page.locator(".tile").count();
   const fonts = await page.evaluate(async () => { await document.fonts.ready; return ["League Gothic", "Merriweather", "Roboto"].map((f) => document.fonts.check(`16px "${f}"`)); });
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);
+  const guideLinks = await page.locator(".tools .group a").count();
+  if (guideLinks !== data.guides.flatMap((g) => g.links).length) problems.push(`${vp.width}px: expected ${data.guides.flatMap((g) => g.links).length} guide links, found ${guideLinks}`);
   if (tiles !== data.examples.length) problems.push(`${vp.width}px: expected ${data.examples.length} tiles, found ${tiles}`);
   if (fonts.includes(false)) problems.push(`${vp.width}px: a brand font failed to load`);
   if (overflow) problems.push(`${vp.width}px: horizontal overflow`);
@@ -61,7 +63,7 @@ const rows = [];
 const targets = [
   ...data.examples.map((e) => ({ id: e.id, kind: "url", path: e.url, skip: e.webServed === false })),
   ...data.examples.filter((e) => e.screenshot).map((e) => ({ id: e.id, kind: "image", path: e.screenshot, skip: false })),
-  ...data.tools.map((t) => ({ id: t.id, kind: "tool", path: t.url, skip: t.webServed === false })),
+  ...data.guides.flatMap((g) => g.links).map((t) => ({ id: t.id, kind: "guide", path: t.url, skip: t.webServed === false })),
   ...data.demoPath.filter((s) => s.ref).map((s) => ({ id: `step ${s.step}`, kind: "step ref", path: data.examples.find((e) => e.id === s.ref)?.url ?? null, skip: data.examples.find((e) => e.id === s.ref)?.webServed === false })),
 ];
 for (const t of targets) {
@@ -72,6 +74,30 @@ for (const t of targets) {
   if (res.status !== 200) problems.push(`${t.id}: ${t.path} returned ${res.status}`);
 }
 console.table(rows);
+
+// 3. every Markdown guide opens in the in-menu viewer: heading shown, no console errors, no unrendered Markdown, links resolve
+{
+  const { context, page } = await load({ width: 1200, height: 900 });
+  const guides = [...new Set([...data.guides.flatMap((g) => g.links), ...data.examples].map((x) => x.url).filter((u) => /\.md$/i.test(u)))];
+  const viewRows = [];
+  for (const g of guides) {
+    const before = problems.length;
+    await page.goto(new URL("launcher/doc.html?f=" + encodeURIComponent(g), base).href, { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("#doc h1, #doc h2", { timeout: 10000 }).catch(() => {});
+    const info = await page.evaluate(() => {
+      const d = document.getElementById("doc");
+      const bad = [...d.querySelectorAll("a[href]")].map((a) => a.getAttribute("href")).filter((h) => /^(\.\.?\/|[\w.-]+\.md)/.test(h) && !h.startsWith("doc.html"));
+      return { h1: !!d.querySelector("h1"), raw: (() => { const c = d.cloneNode(true); c.querySelectorAll("pre, code").forEach((n) => n.remove()); return /^#{1,6} |^```|\*\*\w/m.test(c.innerText); })(), bad: bad.slice(0, 3), overflow: document.documentElement.scrollWidth > innerWidth + 1 };
+    });
+    if (!info.h1) problems.push(`viewer: ${g} shows no heading`);
+    if (info.raw) problems.push(`viewer: ${g} has unrendered Markdown`);
+    if (info.bad.length) problems.push(`viewer: ${g} has unrewritten links ${info.bad.join(", ")}`);
+    if (info.overflow) problems.push(`viewer: ${g} overflows horizontally`);
+    viewRows.push({ guide: g, ok: problems.length === before });
+  }
+  console.table(viewRows);
+  await context.close();
+}
 
 await browser.close();
 if (problems.length) { console.log("FAIL"); problems.forEach((p) => console.log("  " + p)); failed = 1; } else console.log("ok: launcher loads offline with no console errors, all web-served paths return 200");

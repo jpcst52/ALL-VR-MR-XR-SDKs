@@ -4,6 +4,7 @@ One page for running every part of this repository. Pick the row that matches wh
 
 | I want to... | Go to |
 |---|---|
+| Find any guide, status page or deck | The **main menu** (the launcher that opens with the demo) or [README.md](README.md), the documentation index |
 | Run the demo for people (launcher, Practice Lab, multiplayer) | [1. Run the demo](#1-run-the-demo-web-launcher-practice-lab-multiplayer) |
 | Try the Unity training projects at a desk or on the Vive | [2. Unity projects](#2-unity-projects-01-04) |
 | Walk through the lobby with portals | [3. The hub lobby](#3-the-hub-lobby-local-only) |

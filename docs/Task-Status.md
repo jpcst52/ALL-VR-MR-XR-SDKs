@@ -74,3 +74,5 @@ Legend: ✅ done · 🔄 in progress · ⏳ waiting on a prerequisite · 👤 ne
 | F1 | Demo-day kit (start script, QR codes, checklist, backups) | 🔄 | docs/demo-day written, incl. HARDWARE-TEST-SESSION.md (pass/fail sheet for the lab); hardware steps need a rehearsal |
 | F2 | Rehearsal | ⏳ 👤 | owner has lab time this week (answered Nov 1); checklist to prepare |
 | F3 | Decide whether to push to GitHub | ✅ | pushed Nov 2, 2026 (to commit 3b81dcc, branch main); later work (baked scenes) will be committed and pushed when the owner asks |
+| F4 | Main menu for everything in the repo | ✅ | launcher now lists the browser demos, multiplayer, hub + four Unity projects, six native SDK samples, Quest pages, and 31 guide/deck links; guides open offline in launcher/doc.html; launcher-check covers 20 tiles, 31 links and all 39 guides |
+| F5 | Documentation index | ✅ | docs/README.md lists every guide by purpose; linked from the root README, HOW-TO-RUN and the menu |

@@ -1,23 +1,86 @@
 {
   "meta": {
     "title": "XR Training Launcher",
-    "subtitle": "Pitt-Bradford XR training examples. Pick a tile to launch it.",
+    "subtitle": "Main menu for the Pitt-Bradford XR training examples: demos, Unity projects, native SDK samples, guides and decks.",
     "relayPort": 8443,
     "dashboardUrl": "tools/status/README.md"
   },
   "sections": [
-    { "id": "browser", "title": "Browser demos", "intro": "Run in any WebGL browser on this PC. Each has a desktop fallback; the ENTER VR button appears only where the browser and headset support WebXR." },
-    { "id": "multiplayer", "title": "Multiplayer (needs the relay)", "intro": "These pages talk to the WebSocket relay. Open this launcher from the relay (port 8443) so the links reach it." },
-    { "id": "vive", "title": "Vive / SteamVR (Unity)", "intro": "Unity projects. They are not served by the web server; they run in the Unity editor on the Vive PC. The tiles open the project notes." },
-    { "id": "quest", "title": "Quest", "intro": "Opened from the Quest Browser, using the controller pointer. Nothing here has been tested on a physical Quest yet." }
+    {
+      "id": "browser",
+      "title": "Browser demos",
+      "intro": "Run in any WebGL browser on this PC. Each has a desktop fallback; the ENTER VR button appears only where the browser and headset support WebXR."
+    },
+    {
+      "id": "multiplayer",
+      "title": "Multiplayer (needs the relay)",
+      "intro": "These pages talk to the WebSocket relay. Open this launcher from the relay (port 8443) so the links reach it."
+    },
+    {
+      "id": "vive",
+      "title": "Unity training projects (Vive / SteamVR)",
+      "intro": "Unity 6 projects on the shared training kit. They run in the Unity editor on the Vive PC (desktop mode works without a headset), so these tiles open the project notes. Not tested on a headset yet."
+    },
+    {
+      "id": "native",
+      "title": "Native SDK examples (source)",
+      "intro": "One small example per SDK. They need their own toolchain (Unity packages, Android Studio or Xcode) and are not served here, so each tile opens its notes with the setup steps."
+    },
+    {
+      "id": "quest",
+      "title": "Quest",
+      "intro": "Opened from the Quest Browser, using the controller pointer. Nothing here has been tested on a physical Quest yet."
+    }
   ],
   "demoPath": [
-    { "step": 1, "minutes": 1, "title": "Frame the session", "who": "Presenter", "what": "Say these are learning prototypes, not certified training. Show this launcher and the badges that mark what is tested.", "ref": null },
-    { "step": 2, "minutes": 4, "title": "Fieldwork Practice Lab on the desktop", "who": "Presenter", "what": "Open the lab, enter a name, and run one hands-on scenario such as Work at height. Point out the consequences and the critical safety misses.", "ref": "training-lab" },
-    { "step": 3, "minutes": 3, "title": "Same lab in a headset", "who": "Volunteer in a headset; presenter on the desktop", "what": "Volunteer presses ENTER VR and selects hotspots with a controller. Hardware test is still pending, so keep the desktop view ready.", "ref": "training-lab-quest" },
-    { "step": 4, "minutes": 3, "title": "Circuit Lab, shared bench", "who": "Presenter on desktop, volunteer joins the same room", "what": "Both join one room, load the demo circuit, close the switch, and watch the bulb light for everyone. Needs the relay.", "ref": "circuit-lab" },
-    { "step": 5, "minutes": 2, "title": "Site Safety Layout", "who": "Presenter", "what": "Load the sample layout and let the checklist call out the missing exit or barrier. Desktop fallback; AR needs a phone or headset with WebXR.", "ref": "site-safety" },
-    { "step": 6, "minutes": 2, "title": "Hydrostatic Test Bay in Unity", "who": "Presenter at the Vive PC", "what": "Show the Unity scene in desktop mode and explain where the Vive work is heading. Not yet tested in a headset.", "ref": "hydro-test-bay" }
+    {
+      "step": 1,
+      "minutes": 1,
+      "title": "Frame the session",
+      "who": "Presenter",
+      "what": "Say these are learning prototypes, not certified training. Show this launcher and the badges that mark what is tested.",
+      "ref": null
+    },
+    {
+      "step": 2,
+      "minutes": 4,
+      "title": "Fieldwork Practice Lab on the desktop",
+      "who": "Presenter",
+      "what": "Open the lab, enter a name, and run one hands-on scenario such as Work at height. Point out the consequences and the critical safety misses.",
+      "ref": "training-lab"
+    },
+    {
+      "step": 3,
+      "minutes": 3,
+      "title": "Same lab in a headset",
+      "who": "Volunteer in a headset; presenter on the desktop",
+      "what": "Volunteer presses ENTER VR and selects hotspots with a controller. Hardware test is still pending, so keep the desktop view ready.",
+      "ref": "training-lab-quest"
+    },
+    {
+      "step": 4,
+      "minutes": 3,
+      "title": "Circuit Lab, shared bench",
+      "who": "Presenter on desktop, volunteer joins the same room",
+      "what": "Both join one room, load the demo circuit, close the switch, and watch the bulb light for everyone. Needs the relay.",
+      "ref": "circuit-lab"
+    },
+    {
+      "step": 5,
+      "minutes": 2,
+      "title": "Site Safety Layout",
+      "who": "Presenter",
+      "what": "Load the sample layout and let the checklist call out the missing exit or barrier. Desktop fallback; AR needs a phone or headset with WebXR.",
+      "ref": "site-safety"
+    },
+    {
+      "step": 6,
+      "minutes": 2,
+      "title": "Hydrostatic Test Bay in Unity",
+      "who": "Presenter at the Vive PC",
+      "what": "Show the Unity scene in desktop mode and explain where the Vive work is heading. Not yet tested in a headset.",
+      "ref": "hydro-test-bay"
+    }
   ],
   "examples": [
     {
@@ -25,7 +88,9 @@
       "title": "Fieldwork XR Practice Lab",
       "summary": "Seventeen hands-on practice scenarios with consequences, feedback and a score.",
       "section": "browser",
-      "badges": ["Browser"],
+      "badges": [
+        "Browser"
+      ],
       "status": "Ready on desktop",
       "statusKind": "ready",
       "url": "training-simulations/",
@@ -37,7 +102,9 @@
       "title": "Three.js Prism Bloom",
       "summary": "A faceted animated prism with orbiting lights, orbit controls and a VR entry button.",
       "section": "browser",
-      "badges": ["Browser"],
+      "badges": [
+        "Browser"
+      ],
       "status": "Ready on desktop",
       "statusKind": "ready",
       "url": "threejs/",
@@ -48,7 +115,9 @@
       "title": "A-Frame Orbit Garden",
       "summary": "Gaze-to-select lantern shapes in a declarative A-Frame scene.",
       "section": "browser",
-      "badges": ["Browser"],
+      "badges": [
+        "Browser"
+      ],
       "status": "Ready on desktop",
       "statusKind": "ready",
       "url": "a-frame/",
@@ -59,7 +128,9 @@
       "title": "Babylon.js Luminous Totem",
       "summary": "A glowing totem with halo and beacons using Babylon's built-in WebXR experience.",
       "section": "browser",
-      "badges": ["Browser"],
+      "badges": [
+        "Browser"
+      ],
       "status": "Ready on desktop",
       "statusKind": "ready",
       "url": "babylonjs/",
@@ -70,7 +141,9 @@
       "title": "WebXR Color Field",
       "summary": "Framework-free WebXR Device API sample: a desktop preview and a color-changing immersive session.",
       "section": "browser",
-      "badges": ["Browser"],
+      "badges": [
+        "Browser"
+      ],
       "status": "Ready on desktop",
       "statusKind": "ready",
       "url": "webxr/",
@@ -81,7 +154,10 @@
       "title": "Circuit Lab (multiplayer VR)",
       "summary": "A shared electronics bench: snap together batteries, switches, bulbs and motors with others in one room.",
       "section": "multiplayer",
-      "badges": ["Browser", "Needs relay on :8443"],
+      "badges": [
+        "Browser",
+        "Needs relay on :8443"
+      ],
       "status": "Ready on desktop",
       "statusKind": "ready",
       "url": "multi-player/vr/",
@@ -94,7 +170,10 @@
       "title": "Site Safety Layout (multiplayer AR)",
       "summary": "Plan exits, extinguishers and barriers together; a live checklist flags what is missing.",
       "section": "multiplayer",
-      "badges": ["Browser", "Needs relay on :8443"],
+      "badges": [
+        "Browser",
+        "Needs relay on :8443"
+      ],
       "status": "Ready on desktop",
       "statusKind": "ready",
       "url": "multi-player/ar/",
@@ -102,49 +181,172 @@
       "relay": true
     },
     {
+      "id": "vive-hub",
+      "title": "Hub lobby with portals",
+      "summary": "A lobby hall with a portal to each scenario, scenario thumbnails and a sky that changes season every 30 seconds.",
+      "section": "vive",
+      "badges": [
+        "Unity on the Vive PC"
+      ],
+      "status": "Editor-tested, headset test pending",
+      "statusKind": "pending",
+      "url": "vive-steamvr/hub/README.md",
+      "webServed": false,
+      "screenshot": "docs/images/hub-lobby-2-portals.png",
+      "screenshotNote": "Unity editor, desktop mode",
+      "note": "Uses Asset Store packs that are not in the repository"
+    },
+    {
       "id": "hydro-test-bay",
       "title": "Hydrostatic Test Bay",
-      "summary": "Unity scene on the shared XR training kit. Runs in the editor in desktop mode.",
+      "summary": "Pressure-test a heat exchanger: blind flanges, vent and fill, hold at 150 psi from behind the line.",
       "section": "vive",
-      "badges": ["Unity on the Vive PC"],
-      "status": "Hardware test pending",
+      "badges": [
+        "Unity on the Vive PC"
+      ],
+      "status": "Editor-tested, headset test pending",
       "statusKind": "pending",
       "url": "vive-steamvr/01-hydrostatic-test/README.md",
       "webServed": false,
       "screenshot": "vive-steamvr/01-hydrostatic-test/screenshots/01-test-bay.png",
       "screenshotNote": "Unity editor, desktop mode",
-      "note": "Runs on the Vive PC in Unity"
+      "note": "Stand-alone project, no paid assets"
     },
     {
-      "id": "vive-hub",
-      "title": "Vive hub project",
-      "summary": "Hub scene with portals to each scenario. Still being assembled.",
+      "id": "refinery-rounds",
+      "title": "Refinery Rounds",
+      "summary": "Walk battery-limits rounds: wind check, gas alarm, weep and barricade, muster point. Live weather with an offline fallback.",
       "section": "vive",
-      "badges": ["Unity on the Vive PC"],
-      "status": "Planned",
-      "statusKind": "planned",
-      "url": "vive-steamvr/hub/README.md",
+      "badges": [
+        "Unity on the Vive PC"
+      ],
+      "status": "Editor-tested, headset test pending",
+      "statusKind": "pending",
+      "url": "vive-steamvr/02-refinery-rounds/README.md",
       "webServed": false,
-      "note": "Runs on the Vive PC in Unity"
+      "screenshot": "vive-steamvr/02-refinery-rounds/screenshots/01-overview.png",
+      "screenshotNote": "Unity editor, desktop mode",
+      "note": "Stand-alone project, no paid assets"
     },
     {
-      "id": "vive-next",
-      "title": "More Vive scenarios",
-      "summary": "Refinery rounds, warehouse and forklift safety, and a resistor selection bench.",
+      "id": "warehouse-forklift",
+      "title": "Warehouse and Forklift",
+      "summary": "Pedestrian and forklift safety: PPE, blind corners, mirror, and a pause-and-ask awareness check.",
       "section": "vive",
-      "badges": ["Unity on the Vive PC"],
-      "status": "Planned",
+      "badges": [
+        "Unity on the Vive PC"
+      ],
+      "status": "Editor-tested, headset test pending",
+      "statusKind": "pending",
+      "url": "vive-steamvr/03-warehouse-forklift/README.md",
+      "webServed": false,
+      "screenshot": "vive-steamvr/03-warehouse-forklift/screenshots/01-warehouse-overview.png",
+      "screenshotNote": "Unity editor, desktop mode",
+      "note": "Stand-alone project, no paid assets"
+    },
+    {
+      "id": "resistor-bench",
+      "title": "Resistor Bench",
+      "summary": "Read the color code, measure, pick the right resistor and test it; a wrong part burns out the LED.",
+      "section": "vive",
+      "badges": [
+        "Unity on the Vive PC"
+      ],
+      "status": "Editor-tested, headset test pending",
+      "statusKind": "pending",
+      "url": "vive-steamvr/04-resistor-bench/README.md",
+      "webServed": false,
+      "screenshot": "vive-steamvr/04-resistor-bench/screenshots/01-bench-overview.png",
+      "screenshotNote": "Unity editor, desktop mode",
+      "note": "Stand-alone project, no paid assets"
+    },
+    {
+      "id": "unity-xri",
+      "title": "Unity XR Interaction Toolkit",
+      "summary": "Grab an object and its color changes; release restores it.",
+      "section": "native",
+      "badges": [
+        "Unity XRI"
+      ],
+      "status": "Needs its native toolchain",
       "statusKind": "planned",
-      "url": "docs/Task-Status.md",
-      "webServed": true,
-      "note": "Runs on the Vive PC in Unity"
+      "url": "unity-xri/README.md",
+      "webServed": false
+    },
+    {
+      "id": "openxr",
+      "title": "Unity OpenXR",
+      "summary": "A small OpenXR feature that reacts to the runtime instance lifecycle.",
+      "section": "native",
+      "badges": [
+        "OpenXR"
+      ],
+      "status": "Needs its native toolchain",
+      "statusKind": "planned",
+      "url": "openxr/README.md",
+      "webServed": false
+    },
+    {
+      "id": "steamvr",
+      "title": "SteamVR plugin",
+      "summary": "A SteamVR boolean action toggles a material color.",
+      "section": "native",
+      "badges": [
+        "SteamVR"
+      ],
+      "status": "Needs its native toolchain",
+      "statusKind": "planned",
+      "url": "steamvr/README.md",
+      "webServed": false
+    },
+    {
+      "id": "meta-xr",
+      "title": "Meta XR passthrough camera",
+      "summary": "Show the Quest passthrough camera stream in a Unity UI image.",
+      "section": "native",
+      "badges": [
+        "Meta Quest"
+      ],
+      "status": "Needs its native toolchain",
+      "statusKind": "planned",
+      "url": "meta-xr/README.md",
+      "webServed": false
+    },
+    {
+      "id": "arcore",
+      "title": "Google ARCore",
+      "summary": "Detect a floor plane and place an anchored cube on tap.",
+      "section": "native",
+      "badges": [
+        "Android"
+      ],
+      "status": "Needs its native toolchain",
+      "statusKind": "planned",
+      "url": "arcore-android/README.md",
+      "webServed": false
+    },
+    {
+      "id": "apple-spatial",
+      "title": "Apple Vision Pro",
+      "summary": "SwiftUI and RealityKit immersive space with world-anchored landmarks.",
+      "section": "native",
+      "badges": [
+        "visionOS"
+      ],
+      "status": "Needs its native toolchain",
+      "statusKind": "planned",
+      "url": "apple-spatial/README.md",
+      "webServed": false
     },
     {
       "id": "training-lab-quest",
       "title": "Practice Lab in the Quest Browser",
       "summary": "The same lab with a controller pointer on a floating choice card. Emulated only so far.",
       "section": "quest",
-      "badges": ["Quest", "Browser"],
+      "badges": [
+        "Quest",
+        "Browser"
+      ],
       "status": "Hardware test pending",
       "statusKind": "pending",
       "url": "training-simulations/",
@@ -156,30 +358,218 @@
       "title": "Circuit Lab in the Quest Browser",
       "summary": "Join the shared bench from a headset. Needs HTTPS from the lab PC that the Quest trusts.",
       "section": "quest",
-      "badges": ["Quest", "Needs relay on :8443"],
+      "badges": [
+        "Quest",
+        "Needs relay on :8443"
+      ],
       "status": "Hardware test pending",
       "statusKind": "pending",
       "url": "multi-player/vr/",
       "screenshot": "multi-player/screenshots/vr/01-circuit-lab-in-vr.png",
       "screenshotNote": "Emulated Quest 3",
       "relay": true
-    },
-    {
-      "id": "quest-unity",
-      "title": "Quest Unity builds",
-      "summary": "Android builds of the lite Unity projects. Options still being chosen.",
-      "section": "quest",
-      "badges": ["Quest", "Unity on the Vive PC"],
-      "status": "Planned",
-      "statusKind": "planned",
-      "url": "docs/PROJECT-STATUS.md",
-      "note": "Not started"
     }
   ],
-  "tools": [
-    { "id": "dashboard", "title": "Status dashboard", "url": "tools/status/README.md", "note": "optional; npm run status prints its address (automatic port)", "webServed": false },
-    { "id": "task-status", "title": "Task status", "url": "docs/Task-Status.md" },
-    { "id": "project-status", "title": "Project status", "url": "docs/PROJECT-STATUS.md" },
-    { "id": "research", "title": "Research notes", "url": "docs/research/README.md" }
+  "guides": [
+    {
+      "id": "start",
+      "title": "Start here",
+      "links": [
+        {
+          "id": "readme",
+          "title": "Repository overview",
+          "url": "README.md"
+        },
+        {
+          "id": "guides-index",
+          "title": "Documentation index",
+          "url": "docs/README.md",
+          "note": "every guide and what it is for"
+        },
+        {
+          "id": "how-to-run",
+          "title": "How to run everything",
+          "url": "docs/HOW-TO-RUN.md",
+          "note": "demo, Unity, hub, headsets, tests"
+        },
+        {
+          "id": "testing",
+          "title": "Testing guide",
+          "url": "docs/TESTING.md",
+          "note": "automated suites and hands-on checks"
+        },
+        {
+          "id": "sdk-list",
+          "title": "SDK list",
+          "url": "SDK-list.md"
+        }
+      ]
+    },
+    {
+      "id": "status",
+      "title": "Status",
+      "links": [
+        {
+          "id": "task-status",
+          "title": "Task status",
+          "url": "docs/Task-Status.md",
+          "note": "what is done and what is not"
+        },
+        {
+          "id": "project-status",
+          "title": "Project status",
+          "url": "docs/PROJECT-STATUS.md",
+          "note": "decisions and caveats"
+        },
+        {
+          "id": "dashboard-guide",
+          "title": "Status dashboard guide",
+          "url": "docs/status-dashboard-guide.md",
+          "note": "npm run status"
+        },
+        {
+          "id": "dashboard",
+          "title": "Status dashboard tool",
+          "url": "tools/status/README.md"
+        }
+      ]
+    },
+    {
+      "id": "demoday",
+      "title": "Demo day (Nov 13, 2026)",
+      "links": [
+        {
+          "id": "demo-readme",
+          "title": "Demo-day kit",
+          "url": "docs/demo-day/README.md"
+        },
+        {
+          "id": "demo-checklist",
+          "title": "Checklist",
+          "url": "docs/demo-day/CHECKLIST.md"
+        },
+        {
+          "id": "demo-talk",
+          "title": "Talk track",
+          "url": "docs/demo-day/TALK-TRACK.md"
+        },
+        {
+          "id": "demo-hardware",
+          "title": "Hardware test session",
+          "url": "docs/demo-day/HARDWARE-TEST-SESSION.md",
+          "note": "pass/fail sheet for the lab"
+        },
+        {
+          "id": "demo-vive",
+          "title": "Vive setup",
+          "url": "docs/demo-day/VIVE-SETUP.md"
+        },
+        {
+          "id": "demo-quest",
+          "title": "Quest setup",
+          "url": "docs/demo-day/QUEST-SETUP.md"
+        },
+        {
+          "id": "demo-backup",
+          "title": "Backup plan",
+          "url": "docs/demo-day/BACKUP-PLAN.md"
+        },
+        {
+          "id": "demo-trouble",
+          "title": "Troubleshooting",
+          "url": "docs/demo-day/TROUBLESHOOTING.md"
+        }
+      ]
+    },
+    {
+      "id": "research",
+      "title": "Research and studies",
+      "links": [
+        {
+          "id": "research",
+          "title": "Research notes",
+          "url": "docs/research/README.md"
+        },
+        {
+          "id": "research-landscape",
+          "title": "University VR and AR landscape",
+          "url": "docs/research/UNIVERSITY-VR-AR-LANDSCAPE.md"
+        },
+        {
+          "id": "research-studies",
+          "title": "Study designs and instruments",
+          "url": "docs/research/STUDY-DESIGNS.md"
+        }
+      ]
+    },
+    {
+      "id": "decks",
+      "title": "Slide decks (download)",
+      "links": [
+        {
+          "id": "deck-overview",
+          "title": "Project overview",
+          "url": "Project-Overview.pptx",
+          "note": "21 slides"
+        },
+        {
+          "id": "deck-run",
+          "title": "Run the XR examples",
+          "url": "Run-the-XR-Examples.pptx"
+        },
+        {
+          "id": "deck-multi",
+          "title": "Multiplayer WebXR examples",
+          "url": "multi-player/Multiplayer-WebXR-Examples.pptx"
+        }
+      ]
+    },
+    {
+      "id": "build",
+      "title": "Build, kit and tools",
+      "links": [
+        {
+          "id": "kit",
+          "title": "Shared Unity training kit",
+          "url": "vive-steamvr/packages/com.pittbradford.xrtraining/README.md",
+          "note": "signage, bake and adopt, scenarios"
+        },
+        {
+          "id": "brand-kit",
+          "title": "Brand kit (web)",
+          "url": "brand-kit/README.md"
+        },
+        {
+          "id": "multi-readme",
+          "title": "Multiplayer relay",
+          "url": "multi-player/README.md"
+        },
+        {
+          "id": "lab-readme",
+          "title": "Practice Lab",
+          "url": "training-simulations/README.md"
+        },
+        {
+          "id": "capture",
+          "title": "Screenshot and check tools",
+          "url": "tools/vr-capture/README.md"
+        },
+        {
+          "id": "decks-tool",
+          "title": "Deck builder",
+          "url": "tools/decks/README.md"
+        },
+        {
+          "id": "vendor",
+          "title": "Offline libraries",
+          "url": "vendor/README.md"
+        },
+        {
+          "id": "sky-credits",
+          "title": "Sky image credits",
+          "url": "assets/skies/CREDITS.md"
+        }
+      ]
+    }
   ]
 }
