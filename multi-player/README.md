@@ -13,7 +13,7 @@ The [combined slide deck](./Multiplayer-WebXR-Examples.pptx) explains how to run
 
 Participants join a named room, see the same shared parts and other participants, and only one person can hold a part at a time. Both pages use the same relay and protocol, but each example is a *theme* with its own part catalog. Rooms are namespaced by theme, so a room called `lab` in Circuit Lab is separate from a room called `lab` in Site Safety Layout. Both pages accept `?theme=circuits` or `?theme=safety`, so a headset or phone can join either theme alongside laptop/desktop browser builders.
 
-Parts are generated from Three.js primitives, room state is relayed by this project's server, and this is not a production-hosted multiplayer service.
+The shared parts are generated from Three.js primitives. The room around the board (lab, yard or test bay) is built from CC0 glTF props, and other participants appear as characters in hard hats (see [Rooms, props and people](#rooms-props-and-people)). Room state is relayed by this project's server, and this is not a production-hosted multiplayer service.
 
 ## Hydrostatic Test Rig (third theme)
 
@@ -27,10 +27,40 @@ Parts are generated from Three.js primitives, room state is relayed by this proj
 
 The three pages share the Pitt palette, bundled fonts and the Pitt-Bradford + **CIST** brand bar from [brand-kit](../brand-kit/README.md) (logo when the git-ignored `branding/logo.png` is present, text wordmark otherwise). In the scene, name tags and part labels are backed pills, and a Pitt-Bradford + CIST plaque stands at the back edge of the shared board. On a phone the panel becomes a bottom sheet below the board. Checked with `node tools/vr-capture/ui-check.mjs` (desktop browser at 1440 x 900 and 390 x 844; no headset or real phone).
 
+## Rooms, props and people
+
+![Circuit Lab with three participants](./screenshots/circuit-lab-avatars.png)
+
+Each example now stands in a room instead of on a bare disc: a tiled electronics lab (Circuit Lab), a corrugated-wall site yard (Site Safety Layout), and a concrete test bay (Hydrostatic Test Rig). Walls carry the Pitt Royal and Gold band. Floors, walls and benches are generated in code (no downloaded textures), lit by a key light with soft shadows plus a small generated image-based light, so metal and plastic read as metal and plastic.
+
+- **Props:** 21 CC0 glTF models from Poly Haven (a multimeter, laptop, toolbox, tool cart, fire extinguisher, fire alarm, barrels, propane tanks, crates, a portable generator, pipe runs, hanging lamps and more), simplified to roughly 0.2k to 6k triangles each (most under 2.5k) and merged to one mesh per material. Where they stand is plain data in [`shared/layouts.mjs`](./shared/layouts.mjs). The room is hidden when you enter AR (the real room shows instead) and when you enter VR (the board becomes a table-top model on a small floor stage).
+- **People:** every other participant is a stylised character (CC0 KayKit adventurers, about 4k triangles, with idle, walk and reach animations) wearing a hard hat. The character and the hat color come from a hash of the participant id, so every client shows the same person the same way (4 characters x 8 hat colors). The name tag is the brand-kit pill with the hat color as its accent.
+  - *Headset and phone participants* send their head position, facing and two hand positions about 15 times a second. The character stands under the head and floating gloves follow the controllers. There is no inverse kinematics: when hand data is present the character's own arms are hidden.
+  - *Desktop participants* have no pose, so their character stands at the board edge nearest their cursor, walks when the cursor moves, faces the board when still, and reaches while holding a part. A colored ring and a thin line show what they point at.
+- **Honest look:** the characters are cartoon-like. No CC0 realistic people were found that fit a Quest triangle budget, so these are friendly stand-ins, not photo-real staff. [CREDITS.md](./CREDITS.md) lists every model with author, source page and license.
+- **Fallbacks:** if a model cannot be loaded, the prop becomes a plain box or cylinder and the person becomes a primitive figure with a hard hat, and the page keeps working ([fallback screenshot](./screenshots/fallback-no-models.png)). Only the first 8 participants get the character model; later arrivals get the primitive figure to stay inside the triangle budget.
+- **Lite mode:** on a software renderer (no GPU) the page defaults to lite: no shadows and no glTF props, just the room and the people. Force it with `?lite=1` (or `?lite=0`); `?shadows=0|1` and `?props=0|1` override the two parts. Shadows are never drawn inside a headset.
+- **Protocol:** one new optional message. A client may send `{ "type": "pose", "head": [x,y,z], "yaw": r, "hands": [[x,y,z]|null, [x,y,z]|null] }` in board coordinates. The relay validates it, limits it to one per 30 ms and broadcasts `peer-pose`. A peer's profile gains an optional `pose` field only after that peer has sent one, so old clients and pages are unaffected. Tests cover the relay, validation, late joiners and the unchanged four-field profile.
+
+Screenshots: [Site Safety Layout](./screenshots/site-safety-avatars.png), [Test bay](./screenshots/test-bay-avatars.png), and an [emulated Quest 3](./screenshots/vr/02-quest-peer-seen-by-desktop.png) participant seen by a desktop user (the Quest view itself is in [01-circuit-lab-in-vr.png](./screenshots/vr/01-circuit-lab-in-vr.png)). The Quest captures come from the IWER emulator, not a real headset.
+
+### Budgets (measured)
+
+Measured with [`tools/shots.mjs`](./tools/shots.mjs) in desktop Chrome on a software renderer (SwiftShader) with the demo build loaded, two other participants shown as models, and no shadow pass (what a headset would draw). Triangle counts do not depend on the renderer; frame rate on this renderer says nothing about a Quest.
+
+| Scene | Triangles | Draw calls | Room props loaded |
+|---|---|---|---|
+| Circuit Lab | 62k | 173 | 14 of 14 |
+| Site Safety Layout | 37k | 84 | 18 of 18 |
+| Hydrostatic Test Rig | 79k | 218 | 13 of 13 |
+| Circuit Lab with every model blocked (fallback) | 8.6k | 74 | 0 of 14 (14 primitives) |
+
+Each further character adds about 4.7k triangles (body plus hat), so eight model participants on the heaviest scene stay near 107k, under the 120k target (`SCENE_TRIANGLE_BUDGET` in [`shared/avatar-logic.mjs`](./shared/avatar-logic.mjs); the tests check the model files against it). Most draw calls come from the shared parts and name labels; the room itself costs about 40 to 60. Inside a headset the room is hidden, so the scene is smaller still. **Not verified:** frame rate on a Quest or any real GPU.
+
 ## Requirements
 
 - Node.js 20 or newer and npm.
-- A modern WebGL browser with network access for the pinned Three.js 0.169.0 CDN modules.
+- A modern WebGL browser. No internet is needed: Three.js 0.169.0 and its loaders are vendored in `vendor/three/`, the fonts in `vendor/fonts/`, and the 3D models in `assets/models-mp/`.
 - To enter immersive VR: a compatible headset, browser, and active runtime that support WebXR `immersive-vr`.
 - To enter immersive AR: a compatible mobile device and browser that support WebXR `immersive-ar` and hit testing.
 - Every collaborator must be able to reach the same server origin and use the same room name.
@@ -97,7 +127,7 @@ This requires both devices to agree on the same physical points and remain in th
 
 ## Tests
 
-`npm test` runs eight tests covering mixed VR/AR WebSocket clients, room snapshots and isolation, theme separation, toggle and rotate rules, exclusive object ownership, disconnect cleanup, invalid room rejection/transforms, and the HTTP example routes/path traversal guard. The headset session and AR camera/hit-test itself still need supported physical hardware for end-to-end testing.
+`npm test` runs 31 tests: the relay (mixed VR/AR clients, snapshots and isolation, theme separation, toggle and rotate rules, exclusive object ownership, disconnect cleanup, invalid input, HTTP routes and path traversal), TLS certificates, the hydrostatic checklist, optional avatar poses (validation, relay, late joiners, old-client profile unchanged), and the asset checks: every model in `shared/models.json` exists as a GLB and has a CC0 entry and source link in `CREDITS.md`, no model is shipped unlisted, every prop used by a room layout and every avatar character is in the manifest, per-model and per-scene triangle budgets, deterministic avatar looks, and the fallback logic (a failing load gives the primitive, every layout prop maps to a primitive stand-in). The browser-side fallback is exercised by `ONLY=fallback node multi-player/tools/shots.mjs` (all model requests blocked). The headset session and AR camera/hit-test itself still need supported physical hardware for end-to-end testing.
 
 The AR screenshot is explicitly a desktop fallback capture of the live AR page's scene. It is not a recording of camera passthrough or a physical AR session.
 
@@ -107,11 +137,20 @@ The AR screenshot is explicitly a desktop fallback capture of the live AR page's
 multi-player/
   server.mjs          static HTTPS/HTTP host and room WebSocket relay
   package.json        Node.js start and test commands
+  CREDITS.md          every 3D model: author, source page, license (CC0)
   test/
     server.test.mjs   room, ownership, snapshot, and validation tests
+    pose.test.mjs     optional avatar pose message
+    avatars-assets.test.mjs  credits, manifest, budgets, fallback logic
+  tools/              shots.mjs (screenshots and budgets), prepare-*.mjs and make-manifest.mjs (how the models were made), preview-models.html
   shared/
     app.js            collaborative 3D scene, room protocol client, VR and AR
-    themes.js         Circuit Lab and Site Safety Layout parts, models, and live summaries
+    world.js          room, lighting, generated floor and walls, glTF props with primitive fallbacks
+    layouts.mjs       where the props go in each example (data)
+    avatars.js        character avatars, hard hats, gloves, name tags
+    avatar-logic.mjs  pure avatar helpers (looks, animation choice, pose validation, fallback loader)
+    models.json       manifest of the shipped models and their licenses
+    themes.js         Circuit Lab, Site Safety Layout and Hydrostatic Test Rig parts, models, and live summaries
     style.css         browser panel and responsive layout
   vr/
     index.html        WebXR immersive-vr entry point

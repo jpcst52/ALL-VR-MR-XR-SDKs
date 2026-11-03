@@ -1,0 +1,174 @@
+{
+  "packs": {
+    "polyhaven": {
+      "name": "Poly Haven models",
+      "author": "individual artists credited per file below",
+      "source": "https://polyhaven.com/models",
+      "licenseNote": "Poly Haven states that every asset is CC0: https://polyhaven.com/license",
+      "license": "CC0 1.0 (Creative Commons Zero)",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "adventurers": {
+      "name": "KayKit Character Pack: Adventurers 1.0",
+      "author": "Kay Lousberg (kaylousberg.com)",
+      "source": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0",
+      "licenseNote": "Stated in the LICENSE.txt at the root of the pack's repository (the official KayKit-Game-Assets GitHub organization).",
+      "license": "CC0 1.0 (Creative Commons Zero)",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  "props": {
+    "Barrel_01": {
+      "file": "props/Barrel_01.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/Barrel_01",
+      "author": "Jorge Camacho"
+    },
+    "WetFloorSign_01": {
+      "file": "props/WetFloorSign_01.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/WetFloorSign_01",
+      "author": "Fran Calvente"
+    },
+    "barrel_03": {
+      "file": "props/barrel_03.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/barrel_03",
+      "author": "Serhii Khromov"
+    },
+    "bench_vice_01": {
+      "file": "props/bench_vice_01.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/bench_vice_01",
+      "author": "Yann Kervran, Antanas Kep"
+    },
+    "classic_laptop": {
+      "file": "props/classic_laptop.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/classic_laptop",
+      "author": "Arrangemonk"
+    },
+    "fire_alarm": {
+      "file": "props/fire_alarm.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/fire_alarm",
+      "author": "Slinc"
+    },
+    "hanging_industrial_lamp": {
+      "file": "props/hanging_industrial_lamp.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/hanging_industrial_lamp",
+      "author": "Kuutti Siitonen"
+    },
+    "industrial_pastic_container": {
+      "file": "props/industrial_pastic_container.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/industrial_pastic_container",
+      "author": "Galo Benivegna"
+    },
+    "industrial_storage_cart": {
+      "file": "props/industrial_storage_cart.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/industrial_storage_cart",
+      "author": "Jule Bielitz"
+    },
+    "korean_fire_extinguisher_01": {
+      "file": "props/korean_fire_extinguisher_01.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/korean_fire_extinguisher_01",
+      "author": "UM JOORIN"
+    },
+    "metal_stool_01": {
+      "file": "props/metal_stool_01.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/metal_stool_01",
+      "author": "Ulan Cabanilla"
+    },
+    "metal_tool_chest": {
+      "file": "props/metal_tool_chest.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/metal_tool_chest",
+      "author": "Yann Kervran, John Hutcheson"
+    },
+    "metal_toolbox": {
+      "file": "props/metal_toolbox.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/metal_toolbox",
+      "author": "Mateusz Sadek"
+    },
+    "modular_industrial_pipes_01": {
+      "file": "props/modular_industrial_pipes_01.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/modular_industrial_pipes_01",
+      "author": "Jorge Camacho"
+    },
+    "portable_generator": {
+      "file": "props/portable_generator.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/portable_generator",
+      "author": "James Ray Cock"
+    },
+    "portable_searchlight": {
+      "file": "props/portable_searchlight.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/portable_searchlight",
+      "author": "Elijah Cragg"
+    },
+    "propane_tank": {
+      "file": "props/propane_tank.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/propane_tank",
+      "author": "Slinc"
+    },
+    "retro_multimeter": {
+      "file": "props/retro_multimeter.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/retro_multimeter",
+      "author": "elli moeller"
+    },
+    "security_light": {
+      "file": "props/security_light.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/security_light",
+      "author": "Maximilian Schuster"
+    },
+    "tool_cart": {
+      "file": "props/tool_cart.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/tool_cart",
+      "author": "Savva Zakharov"
+    },
+    "wooden_crate_01": {
+      "file": "props/wooden_crate_01.glb",
+      "pack": "polyhaven",
+      "source": "https://polyhaven.com/a/wooden_crate_01",
+      "author": "James Ray Cock"
+    }
+  },
+  "characters": {
+    "barbarian": {
+      "file": "characters/barbarian.glb",
+      "pack": "adventurers",
+      "source": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0",
+      "author": "Kay Lousberg"
+    },
+    "knight": {
+      "file": "characters/knight.glb",
+      "pack": "adventurers",
+      "source": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0",
+      "author": "Kay Lousberg"
+    },
+    "mage": {
+      "file": "characters/mage.glb",
+      "pack": "adventurers",
+      "source": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0",
+      "author": "Kay Lousberg"
+    },
+    "rogue": {
+      "file": "characters/rogue.glb",
+      "pack": "adventurers",
+      "source": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0",
+      "author": "Kay Lousberg"
+    }
+  }
+}

@@ -2,6 +2,9 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { themes } from "./themes.js";
 import { PITT, tagSprite, brandPlate } from "../../brand-kit/panels.js";
+import { buildEnvironment } from "./world.js";
+import { createAvatar } from "./avatars.js";
+import { normalizePose } from "./avatar-logic.mjs";
 
 const mode = document.body.dataset.mode === "ar" ? "ar" : "vr";
 const params = new URLSearchParams(location.search);
@@ -35,7 +38,7 @@ if (!("xr" in navigator)) {
 const scene = new THREE.Scene();
 const sceneColor = "#071433"; // deep Pitt navy
 scene.background = mode === "ar" ? null : new THREE.Color(sceneColor);
-scene.fog = new THREE.Fog(sceneColor, 10, 28);
+scene.fog = new THREE.Fog(sceneColor, 16, 44);
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 80);
 camera.position.set(2.8, 2.9, 4.4);
 camera.lookAt(0, 0.5, 0);
@@ -44,6 +47,19 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: mode === "ar"
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.xr.enabled = true;
+// Filmic tone mapping and a soft shadow map (the shadow is switched off inside headsets to save fill rate).
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+// Lite mode (no shadows, no glTF props: just the room and the avatars) is the default on software renderers, which are far too
+// slow for the full scene. ?lite=0|1 forces it; ?shadows=0|1 and ?props=0|1 override the two parts. Headsets never draw shadows.
+const gl = renderer.getContext();
+const gpuName = String(gl.getParameter(gl.getExtension("WEBGL_debug_renderer_info")?.UNMASKED_RENDERER_WEBGL ?? gl.RENDERER));
+const liteMode = params.has("lite") ? params.get("lite") === "1" : /swiftshader|llvmpipe|software/i.test(gpuName);
+const flag = (name, fallback) => (params.has(name) ? params.get(name) === "1" : fallback);
+const shadowsWanted = flag("shadows", !liteMode);
+const propsWanted = flag("props", !liteMode);
+renderer.shadowMap.enabled = shadowsWanted;
 if (mode === "ar") renderer.setClearColor(0x000000, 0);
 renderer.domElement.className = "scene";
 renderer.domElement.setAttribute("aria-label", theme.sceneLabel);
@@ -53,23 +69,46 @@ const orbit = new OrbitControls(camera, renderer.domElement);
 orbit.enableDamping = true;
 orbit.target.set(0, 0.55, 0);
 
-scene.add(new THREE.HemisphereLight(0xc9e7ff, 0x37484e, 2.3));
-const keyLight = new THREE.DirectionalLight(0xffedcf, 3.2);
-keyLight.position.set(-4, 7, 5);
+scene.add(new THREE.HemisphereLight(0xdcecff, 0x4a4f58, 1.1));
+const keyLight = new THREE.DirectionalLight(0xfff0dc, 3.0);
+keyLight.position.set(-4, 8, 5);
+keyLight.castShadow = shadowsWanted;
+keyLight.shadow.mapSize.set(2048, 2048);
+keyLight.shadow.camera.left = -10;
+keyLight.shadow.camera.right = 10;
+keyLight.shadow.camera.top = 10;
+keyLight.shadow.camera.bottom = -10;
+keyLight.shadow.camera.near = 1;
+keyLight.shadow.camera.far = 24;
+keyLight.shadow.bias = -0.0006;
+keyLight.shadow.normalBias = 0.03;
 scene.add(keyLight);
+
+// The room around the board: generated floor and walls, plus CC0 glTF props (primitive stand-ins if a model fails to load).
+const environment = buildEnvironment({ themeId, mode, scene, renderer, withProps: propsWanted });
 
 const board = new THREE.Group();
 scene.add(board);
 
 const workSurface = new THREE.Mesh(
   new THREE.CylinderGeometry(3.4, 3.4, 0.12, 72),
-  new THREE.MeshStandardMaterial({ color: "#1d3260", roughness: 0.82 }),
+  new THREE.MeshStandardMaterial({ color: "#1d3260", roughness: 0.62, metalness: 0.05 }),
 );
 workSurface.position.y = -0.08;
+workSurface.receiveShadow = true;
 board.add(workSurface);
+const padRim = new THREE.Mesh(
+  new THREE.TorusGeometry(3.4, 0.05, 8, 96),
+  new THREE.MeshStandardMaterial({ color: "#aeb8c6", roughness: 0.3, metalness: 0.85 }),
+);
+padRim.rotation.x = Math.PI / 2;
+padRim.position.y = -0.03;
+board.add(padRim);
 
 const grid = new THREE.GridHelper(6.7, 28, "#7fc4ff", "#36507f");
 grid.position.y = 0.0;
+grid.material.transparent = true;
+grid.material.opacity = 0.4;
 board.add(grid);
 
 const boardGuide = new THREE.Mesh(
@@ -143,32 +182,20 @@ function makeLabel(text, color) {
 }
 
 function makePeer(peer) {
-  const group = new THREE.Group();
-  const color = peer.mode === "ar" ? "#ffb36b" : peer.mode === "vr" ? "#7fc4ff" : "#b8a5ff";
-  const head = new THREE.Mesh(
-    new THREE.SphereGeometry(0.12, 18, 14),
-    new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.18 }),
-  );
-  head.position.y = 1.65;
-  group.add(head);
-  const torso = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.08, 0.11, 0.42, 12),
-    new THREE.MeshStandardMaterial({ color, transparent: true, opacity: 0.75 }),
-  );
-  torso.position.y = 1.36;
-  group.add(torso);
-  const label = makeLabel(`${peer.name} · ${peer.mode.toUpperCase()}`, color);
-  label.position.y = 1.92;
-  group.add(label);
-  board.add(group);
-  return group;
+  const avatar = createAvatar({ id: peer.id, name: peer.name, mode: peer.mode, makeLabel });
+  board.add(avatar.root);
+  return avatar;
 }
 
 function makePart(part) {
   const group = theme.build(part);
   group.userData.part = part;
   group.traverse((child) => {
-    if (child.isMesh) child.userData.sharedObject = group;
+    if (child.isMesh) {
+      child.userData.sharedObject = group;
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
   });
   return group;
 }
@@ -241,30 +268,24 @@ function updateRoster() {
 }
 
 function updatePeer(peer) {
-  let group = peers.get(peer.id)?.group;
-  if (!group) {
-    group = makePeer(peer);
-    peers.set(peer.id, { ...peer, group });
+  let avatar = peers.get(peer.id)?.avatar;
+  if (!avatar) {
+    avatar = makePeer(peer);
+    peers.set(peer.id, { ...peer, avatar, group: avatar.root });
   } else {
-    peers.set(peer.id, { ...peers.get(peer.id), ...peer, group });
+    peers.set(peer.id, { ...peers.get(peer.id), ...peer, avatar, group: avatar.root });
   }
-  if (Array.isArray(peer.cursor)) group.position.set(peer.cursor[0], 0, peer.cursor[1]);
+  // A cursor of exactly [0, 0] is the relay's default for "not seen yet". Poses are optional and only come from XR clients.
+  if (Array.isArray(peer.cursor) && (peer.cursor[0] !== 0 || peer.cursor[1] !== 0)) avatar.setCursor(peer.cursor);
+  const pose = normalizePose(peer.pose);
+  if (pose) avatar.setPose(pose);
   updateRoster();
 }
 
 function removePeer(id) {
   const peer = peers.get(id);
   if (!peer) return;
-  board.remove(peer.group);
-  peer.group.traverse((child) => {
-    if (child.isSprite) {
-      child.material.map?.dispose();
-      child.material.dispose();
-    } else if (child.isMesh) {
-      child.geometry.dispose();
-      child.material.dispose();
-    }
-  });
+  peer.avatar.dispose();
   peers.delete(id);
   for (const object of objects.values()) {
     if (object.heldBy === id) object.heldBy = null;
@@ -298,8 +319,14 @@ function receive(message) {
       const peer = peers.get(message.id);
       if (peer) {
         peer.cursor = message.position;
-        peer.group.position.set(message.position[0], 0, message.position[1]);
+        peer.avatar.setCursor(message.position);
       }
+      break;
+    }
+    case "peer-pose": {
+      const peer = peers.get(message.id);
+      const pose = normalizePose(message);
+      if (peer && pose) peer.avatar.setPose(pose);
       break;
     }
     case "peer-leave":
@@ -653,7 +680,9 @@ for (let index = 0; index < 2; index += 1) {
   });
   controller.addEventListener("connected", (event) => {
     controller.userData.targetRayMode = event.data?.targetRayMode;
+    controller.userData.connected = true;
   });
+  controller.addEventListener("disconnected", () => { controller.userData.connected = false; });
 }
 
 function onXrSelectStart(controller) {
@@ -812,6 +841,23 @@ renderer.xr.addEventListener("sessionstart", () => {
   board.position.set(0, 0.85, -1.15);
   board.scale.setScalar(0.4);
 });
+// Inside a headset the room is hidden (VR shows the table-top model, AR shows the real room) and the shadow is dropped.
+// VR only: with the room hidden, give the player a floor to stand on and a pedestal under the table-top model.
+const vrStage = new THREE.Group();
+vrStage.visible = false;
+{
+  const floorDisc = new THREE.Mesh(new THREE.CircleGeometry(5, 64), new THREE.MeshStandardMaterial({ color: "#14224a", roughness: 0.9 }));
+  floorDisc.rotation.x = -Math.PI / 2;
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(4.9, 0.03, 6, 96), new THREE.MeshBasicMaterial({ color: PITT.gold }));
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = 0.01;
+  const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.18, 0.78, 20), new THREE.MeshStandardMaterial({ color: "#aeb8c6", roughness: 0.3, metalness: 0.85 }));
+  pedestal.position.set(0, 0.39, -1.15); // stops just under the board
+  vrStage.add(floorDisc, ring, pedestal);
+  scene.add(vrStage);
+}
+renderer.xr.addEventListener("sessionstart", () => { environment.applyXr(true); environment.setShadows(false); vrStage.visible = mode === "vr"; });
+renderer.xr.addEventListener("sessionend", () => { environment.applyXr(false); environment.setShadows(shadowsWanted); vrStage.visible = false; });
 renderer.xr.addEventListener("sessionend", () => {
   if (mode !== "vr") return;
   board.position.set(0, 0, 0);
@@ -819,8 +865,46 @@ renderer.xr.addEventListener("sessionend", () => {
 });
 
 let lastSummary = "";
+let lastFrameTime = 0;
+let lastPoseSent = 0;
+const poseHead = new THREE.Vector3();
+const poseAhead = new THREE.Vector3();
+const poseHand = new THREE.Vector3();
+
+// Headset and phone participants share where their head and hands are, in board coordinates, about 15 times a second.
+function sendPose(time) {
+  if (!renderer.xr.isPresenting || !isConnected() || time - lastPoseSent < 66) return;
+  const xrCamera = renderer.xr.getCamera();
+  xrCamera.getWorldPosition(poseHead);
+  xrCamera.getWorldDirection(poseAhead).add(poseHead);
+  const head = board.worldToLocal(poseHead.clone());
+  const ahead = board.worldToLocal(poseAhead.clone());
+  const hands = [0, 1].map((index) => {
+    const controller = renderer.xr.getController(index);
+    if (!controller.userData.connected || controller.userData.targetRayMode === "screen") return null;
+    controller.getWorldPosition(poseHand);
+    return board.worldToLocal(poseHand.clone()).toArray();
+  });
+  const pose = normalizePose({ head: head.toArray(), yaw: Math.atan2(ahead.x - head.x, ahead.z - head.z), hands });
+  if (!pose) return;
+  lastPoseSent = time;
+  send({ type: "pose", ...pose });
+}
+
+function updateAvatars(time) {
+  const dt = Math.min(0.1, Math.max(0, (time - lastFrameTime) / 1000));
+  lastFrameTime = time;
+  const holders = new Set();
+  for (const object of objects.values()) if (object.heldBy) holders.add(object.heldBy);
+  for (const [id, peer] of peers) {
+    peer.avatar.setHolding(holders.has(id));
+    peer.avatar.update(dt);
+  }
+}
 
 function onMessageFrame(time, frame) {
+  updateAvatars(time);
+  sendPose(time);
   const text = theme.update(objects, time / 1000);
   if (text !== lastSummary) {
     summary.textContent = text;
@@ -859,6 +943,9 @@ window.addEventListener("resize", () => {
   frameScene();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+// Read-only handles for the capture and measurement scripts (tools/measure.mjs); nothing in the page depends on it.
+window.__mp = { renderer, scene, peers, environment, objects };
 
 window.addEventListener("beforeunload", () => {
   releaseGrab();

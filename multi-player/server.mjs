@@ -5,6 +5,7 @@ import { dirname, extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 import { WebSocket, WebSocketServer } from "ws";
+import { normalizePose } from "./shared/avatar-logic.mjs";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const ROOM_PATTERN = /^[a-z0-9][a-z0-9-]{0,23}$/i;
@@ -60,7 +61,9 @@ function cleanName(value) {
 }
 
 function clientProfile(peer) {
-  return { id: peer.id, name: peer.name, mode: peer.mode, cursor: peer.cursor };
+  const profile = { id: peer.id, name: peer.name, mode: peer.mode, cursor: peer.cursor };
+  if (peer.pose) profile.pose = peer.pose; // optional: only headset and phone participants send poses
+  return profile;
 }
 
 export function createRelay() {
@@ -96,6 +99,8 @@ export function createRelay() {
       cursor: [0, 0],
       joined: false,
       lastCursorAt: 0,
+      pose: null,
+      lastPoseAt: 0,
     };
     clients.add(peer);
 
@@ -178,6 +183,17 @@ export function createRelay() {
             position: peer.cursor,
             mode: peer.mode,
           }, peer.id);
+          break;
+        }
+        case "pose": {
+          // Optional avatar pose (head position, yaw, two hand positions in board coordinates). Old clients never send it.
+          const now = Date.now();
+          if (now - peer.lastPoseAt < 30) return;
+          const pose = normalizePose(message);
+          if (!pose) return;
+          peer.pose = pose;
+          peer.lastPoseAt = now;
+          broadcast(room, { type: "peer-pose", id: peer.id, ...pose }, peer.id);
           break;
         }
         case "place": {
