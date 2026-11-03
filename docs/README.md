@@ -41,7 +41,7 @@ General safety-awareness practice only: none of the scenarios is a procedure, pe
 
 ## Research
 
-[research/README.md](research/README.md) is the index. [UNIVERSITY-VR-AR-LANDSCAPE.md](research/UNIVERSITY-VR-AR-LANDSCAPE.md) surveys other universities' VR and AR work; [STUDY-DESIGNS.md](research/STUDY-DESIGNS.md) holds the study designs and the presence and cognitive-load instruments; [references.bib](research/references.bib) holds the verified sources.
+[research/README.md](research/README.md) is the index. [VERIFICATION.md](research/VERIFICATION.md) records the 2026-11-03 re-check of every citation, and [CONTENT-REVIEW.md](research/CONTENT-REVIEW.md) reviews the scenario safety and anatomy statements against public sources. [UNIVERSITY-VR-AR-LANDSCAPE.md](research/UNIVERSITY-VR-AR-LANDSCAPE.md) surveys other universities' VR and AR work; [STUDY-DESIGNS.md](research/STUDY-DESIGNS.md) holds the study designs and the presence and cognitive-load instruments; [references.bib](research/references.bib) holds the verified sources.
 
 ## Per-project notes
 

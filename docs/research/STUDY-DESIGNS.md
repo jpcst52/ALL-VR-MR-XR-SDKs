@@ -13,7 +13,7 @@ Three concrete designs mapped to this repository. They are drafts for discussion
 | Time and errors | Logged by the app (see logging proposal) | Ordinary mistakes and critical misses counted separately. |
 | Cybersickness | Simulator Sickness Questionnaire (Kennedy et al., 1993); background in Rebenitsch & Owen (2016) | Before and after exposure. Needed for the headset conditions (Moro et al., 2017 reported more adverse effects in a VR group). |
 | Presence | Schubert, Friedmann, & Regenbrecht (2001) | Also relevant to Slater (2009). |
-| Usability | System Usability Scale (Brooke, 1996) | Bibliographic details partly to confirm; see README. |
+| Usability | System Usability Scale (Brooke, 1996) | Crossref lists no author (author taken from a UCL record) and page range to confirm; see README. |
 | Workload | NASA-TLX (Hart & Staveland, 1988) | Scoring variant to be chosen and stated before data collection. |
 | Presence (multidimensional, added) | Multimodal Presence Scale (Makransky, Lilleholt, & Aaby, 2017), with physical, social and self-presence subscales | Use the social-presence subscale in the multi-user rooms (Circuit Lab, Site Safety Layout). The authors validated it with medical and biology students; whether it suits our groups is untested. Items to be taken from the published scale, not paraphrased here. |
 | Cognitive load in virtual environments (added) | Multidimensional cognitive load scale for virtual environments (Andersen & Makransky, 2021) | Extends Leppink's cognitive load scale by splitting extraneous load into instructions, interaction, and environment, which helps tell a clumsy interface from a distracting scene. Use alongside, or instead of, NASA-TLX; decide before data collection. Items to be taken from the published scale. |
@@ -79,7 +79,7 @@ Three concrete designs mapped to this repository. They are drafts for discussion
 
 **Hypotheses.**
 - H1: Presence will be higher in the headset conditions than on desktop.
-- H2: Knowledge and transfer scores will be similar across platforms (consistent with the reviews' general finding of rough parity, Hamilton et al., 2021; and with Buttussi & Chittaro, 2018, who reported learning gains regardless of display), with headset conditions showing more symptoms on the SSQ.
+- H2: Knowledge and transfer scores will be similar across platforms (Buttussi & Chittaro, 2018, reported knowledge gains regardless of display. The reviews do not show simple parity: Hamilton et al., 2021 found most included studies favoured immersive VR with a smaller number finding no difference, and Wu et al., 2020 found a small HMD advantage (ES 0.24). Treat "similar" as a hypothesis, not as a finding of the literature), with headset conditions showing more symptoms on the SSQ.
 - H3: Differences between the two headsets will be small for learning; any difference in tracking or comfort is an empirical question.
 
 **Conditions.** Desktop (mouse and keyboard or equivalent), Vive Pro 2 with controllers, Quest with controllers. Optionally add hand tracking versus controllers on the Quest; the verified evidence so far found no clear learning difference between them (Khundam et al., 2021; Saran, 2025), so this would be exploratory.
