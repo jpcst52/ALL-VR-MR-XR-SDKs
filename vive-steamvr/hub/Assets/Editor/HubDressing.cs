@@ -122,27 +122,27 @@ public static class HubDressing
         if (polish.Resources == null) Debug.LogWarning("[dress] PostProcessResources not found; post-processing will be skipped");
         if (bigHall)
         {
-            // The warehouse shell is about 39 x 37 m; lamps on a grid keep the far floor and walls from going black
-            for (int ix = -2; ix <= 2; ix++)
-            for (int iz = -2; iz <= 2; iz++)
+            // Hydrostatic Test Bay: four fill lamps inside the 14.8 x 13.2 m room (the earlier 25-lamp grid for the old 39 m hall lit nothing extra
+            // and cost a pass per lamp on every object in range)
+            foreach (var p in new[] { new Vector2(-3.7f, -3.2f), new Vector2(3.7f, -3.2f), new Vector2(-3.7f, 3.2f), new Vector2(3.7f, 3.2f) })
             {
-                var l = new GameObject("Hall lamp").AddComponent<Light>();
+                var l = new GameObject("Room lamp").AddComponent<Light>();
                 l.transform.SetParent(polish.transform, false);
-                l.transform.position = new Vector3(ix * 7f, 6.5f, iz * 7f);
-                l.type = LightType.Point; l.range = 14f; l.intensity = 1.6f;
+                l.transform.position = new Vector3(p.x, 5.0f, p.y);
+                l.type = LightType.Point; l.range = 11f; l.intensity = 1.5f;
                 l.color = new Color(1f, 0.96f, 0.88f);
                 l.shadows = LightShadows.None;
             }
-        }
-        foreach (var x in new[] { -2.5f, 2.5f })
-        {
-            var l = new GameObject("Work light").AddComponent<Light>();
-            l.transform.SetParent(polish.transform, false);
-            l.transform.position = new Vector3(x, 3.4f, 0.8f);
-            l.type = LightType.Spot; l.range = 9f; l.spotAngle = 85f; l.intensity = 1.6f;
-            l.color = new Color(1f, 0.9f, 0.75f);
-            l.transform.rotation = Quaternion.Euler(90, 0, 0);
-            l.shadows = LightShadows.None;
+            foreach (var x in new[] { -2.5f, 2.5f })
+            {
+                var l = new GameObject("Work light").AddComponent<Light>();
+                l.transform.SetParent(polish.transform, false);
+                l.transform.position = new Vector3(x, 3.4f, 0.8f);
+                l.type = LightType.Spot; l.range = 9f; l.spotAngle = 85f; l.intensity = 1.6f;
+                l.color = new Color(1f, 0.9f, 0.75f);
+                l.transform.rotation = Quaternion.Euler(90, 0, 0);
+                l.shadows = LightShadows.None;
+            }
         }
     }
 
@@ -174,6 +174,14 @@ public static class HubDressing
         new GameObject("Return to lobby").AddComponent<ReturnToLobby>();
         AddPolish(new Vector3(-3.8f, 3.1f, 3.5f), null, true);
 
+        BuildHydroDressing();
+
+        SaveScene("HydrostaticTest_Hub");
+    }
+
+    /// <summary>The Hydrostatic Test Bay dressing (floor, plant props, room, people); also used to redress an open baked scene.</summary>
+    internal static void BuildHydroDressing()
+    {
         var dressing = new GameObject("Dressing").transform;
 
         // The floor: the IGBlocks "medium" warehouse floor. The bay is enclosed by a room built in HubSceneDressing.DressHydro,
@@ -192,8 +200,9 @@ public static class HubDressing
         HubSceneDressing.Put(props, "Gascan_Yellow", 4.9f, 1.3f, 110f);
         HubSceneDressing.DressHydro(dressing);
 
-        SaveScene("HydrostaticTest_Hub");
     }
+
+    internal static void RedressHydro() => BuildHydroDressing();
 
     /// <summary>For -executeMethod HubDressing.BuildHydroTestBayCli.</summary>
     public static void BuildHydroTestBayCli()

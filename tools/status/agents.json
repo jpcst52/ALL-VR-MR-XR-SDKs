@@ -422,6 +422,85 @@
       ],
       "ended": "2026-11-03T07:59:04.326Z",
       "note": "Multiplayer upgraded: CC0 props + KayKit avatars, pose message, credits, 31 tests pass, ui-check 48/48; commit d109ff9"
+    },
+    {
+      "id": "r2Comply",
+      "name": "Compliance sweep",
+      "task": "Sweep names, review decks and demo-day",
+      "state": "done",
+      "started": "2026-11-03T08:12:04.802Z",
+      "watch": [
+        "tools/decks",
+        "docs/COMPLIANCE-SWEEP.md"
+      ],
+      "ended": "2026-11-03T08:24:37.325Z",
+      "note": "Sweep: no company names in public files; decks rebuilt (65 slides, 5 added); demo-day fixed; report in docs/COMPLIANCE-SWEEP.md"
+    },
+    {
+      "id": "r2Web",
+      "name": "Round2 Web QA",
+      "task": "QA multiplayer + 4 demos",
+      "state": "done",
+      "started": "2026-11-03T08:12:05.745Z",
+      "watch": [
+        "multi-player",
+        "threejs",
+        "a-frame",
+        "babylonjs",
+        "webxr"
+      ],
+      "ended": "2026-11-03T09:03:34.791Z",
+      "note": "Multiplayer + 4 demos QA: 34 unit, 81 mp-check, 26 sdk-check, ui-check 48; fixes committed"
+    },
+    {
+      "id": "r2Proj",
+      "name": "Round2 Unity docs",
+      "task": "Review unity READMEs and TESTING",
+      "state": "done",
+      "started": "2026-11-03T08:12:06.288Z",
+      "watch": [
+        "vive-steamvr",
+        "docs/TESTING.md"
+      ],
+      "ended": "2026-11-03T08:24:39.229Z",
+      "note": "Rewrote 4 Unity READMEs, kit README, TESTING sections 2-3; ResistorMath list run (71 pass); committed 5b367bc"
+    },
+    {
+      "id": "r2Content",
+      "name": "Round2 content review",
+      "task": "citations + scenario content",
+      "state": "done",
+      "started": "2026-11-03T08:12:08.276Z",
+      "watch": [
+        "docs/research"
+      ],
+      "ended": "2026-11-03T08:27:21.341Z",
+      "note": "77 bib entries re-checked: 76 Crossref + 1 DataCite verified, 10 no-abstract (unverifiable findings); 10 bib fixes, 16 claims corrected; Rocketbox added; CONTENT-REVIEW + VERIFICATION written; 2 reasons.js wording fixes; 1 muster-direction inconsistency flagged"
+    },
+    {
+      "id": "r2Lab",
+      "name": "Round2 Lab QA",
+      "task": "QA and improve web Practice Lab",
+      "state": "done",
+      "started": "2026-11-03T08:12:16.924Z",
+      "watch": [
+        "training-simulations",
+        "assets/models"
+      ],
+      "ended": "2026-11-03T09:17:22.915Z",
+      "note": "Rooms and props for 11 plain scenes, texture leak fixed, keyboard/reduced-motion fixes, panel-aware camera; 36/36 tests, ui-check lab 36/36; desktop software GL only"
+    },
+    {
+      "id": "r2Hub",
+      "name": "Hub round 2",
+      "task": "Critical review and improvement of five hub scenes",
+      "state": "done",
+      "started": "2026-11-03T08:12:23.836Z",
+      "watch": [
+        "vive-steamvr/hub"
+      ],
+      "ended": "2026-11-03T09:49:53.102Z",
+      "note": "Hub round 2: lobby rebuilt (gallery, reception, lounge, CIST corner, 10 people); fixes in four scenes; SetPass medians 352/515/551/1301/787 (editor Play mode); portals + warehouse self-test pass; no headset"
     }
   ]
 }

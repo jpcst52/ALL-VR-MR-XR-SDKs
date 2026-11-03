@@ -24,9 +24,9 @@ public class LobbyHub : MonoBehaviour, IShotScript
 
     public static readonly Entry[] Entries =
     {
-        new Entry { Title = "Hydrostatic Test Bay", Blurb = "Pressure-test a pipe spool\nfollowing the checklist", Scene = "HydrostaticTest_Hub", Thumb = "hydrostatic-test", Color = new Color32(0x00, 0x35, 0x94, 255) },
+        new Entry { Title = "Hydrostatic Test Bay", Blurb = "Pressure-test a heat exchanger\nfollowing the checklist", Scene = "HydrostaticTest_Hub", Thumb = "hydrostatic-test", Color = new Color32(0x00, 0x35, 0x94, 255) },
         new Entry { Title = "Refinery Rounds", Blurb = "Battery-limits walk-round\nwith live weather", Scene = "RefineryRounds_Hub", Thumb = "refinery-rounds", Color = new Color32(0xC9, 0x6A, 0x00, 255) },
-        new Entry { Title = "Warehouse & Forklift", Blurb = "Spot hazards, drive and\nstack safely", Scene = "WarehouseForklift_Hub", Thumb = "warehouse-forklift", Color = new Color32(0x1F, 0x7A, 0x4D, 255) },
+        new Entry { Title = "Warehouse & Forklift", Blurb = "Walk the floor safely\naround forklifts", Scene = "WarehouseForklift_Hub", Thumb = "warehouse-forklift", Color = new Color32(0x1F, 0x7A, 0x4D, 255) },
         new Entry { Title = "Resistor Bench", Blurb = "Choose the right resistor\nfor the circuit", Scene = "ResistorBench_Hub", Thumb = "resistor-bench", Color = new Color32(0x7A, 0x2E, 0x8F, 255) },
     };
 

@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using PittBradford.XR;
 
 /// <summary>
 /// Dresses the Warehouse and Forklift and Refinery Rounds hub scenes with Asset Store props (local packs) and
@@ -21,7 +22,7 @@ public static class HubSceneDressing
     /// (The packs' pivots are inconsistent, so bounds are the reliable anchor.) Colliders are disabled unless solid.
     /// </summary>
     /// <summary>Switches off what dressing does not need: colliders, probes, sounds, NavMesh blockers; rigidbodies become kinematic.</summary>
-    static void Tidy(GameObject go, bool solid)
+    internal static void Tidy(GameObject go, bool solid)
     {
         foreach (var t in go.GetComponentsInChildren<Transform>(true))
             if (t != null && t.name.Contains("NavMeshBlocker")) t.gameObject.SetActive(false);
@@ -29,9 +30,23 @@ public static class HubSceneDressing
             foreach (var c in go.GetComponentsInChildren<Collider>()) c.enabled = false;
         foreach (var p in go.GetComponentsInChildren<ReflectionProbe>()) p.enabled = false;
         foreach (var a in go.GetComponentsInChildren<AudioSource>()) a.enabled = false;
+        foreach (var l in go.GetComponentsInChildren<Light>()) l.enabled = false; // prop lamps (stand lights, generator): their glow stays in the material; a real light costs a pass per object
         foreach (var rb in go.GetComponentsInChildren<Rigidbody>()) rb.isKinematic = true;
         foreach (var t in go.GetComponentsInChildren<Transform>())
             GameObjectUtility.SetStaticEditorFlags(t.gameObject, StaticEditorFlags.BatchingStatic);
+    }
+
+    /// <summary>Gives a prop its own copies of its materials multiplied by a tint (values above 1 brighten); for the Sci-Fi containers whose textures render near black.</summary>
+    internal static void Tint(GameObject go, Color mul)
+    {
+        if (go == null) return;
+        foreach (var r in go.GetComponentsInChildren<Renderer>())
+        {
+            var mats = r.sharedMaterials;
+            for (int i = 0; i < mats.Length; i++)
+                if (mats[i] != null) { var c = new Material(mats[i]); c.color = mats[i].color * mul; c.name = mats[i].name + " (tinted)"; mats[i] = c; }
+            r.sharedMaterials = mats;
+        }
     }
 
     public static GameObject Put(Transform parent, string prefab, float x, float z, float yaw = 0f, float y = 0f, float scale = 1f, bool solid = false)
@@ -68,7 +83,7 @@ public static class HubSceneDressing
     }
 
     /// <summary>A thin coloured slab (wainscot band, stripe) with a plain Standard material, kept in the scene file.</summary>
-    static GameObject Band(Transform parent, string name, Vector3 center, Vector3 size, Color color)
+    internal static GameObject Band(Transform parent, string name, Vector3 center, Vector3 size, Color color)
     {
         var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
         go.name = name;
@@ -84,7 +99,7 @@ public static class HubSceneDressing
     }
 
     /// <summary>A painted wall slab (Standard material, low gloss); optionally with a Pitt blue and gold base stripe on its +x/-x face.</summary>
-    static GameObject PaintedWall(Transform parent, string name, Vector3 center, Vector3 size, Color color, bool brandStripe)
+    internal static GameObject PaintedWall(Transform parent, string name, Vector3 center, Vector3 size, Color color, bool brandStripe)
     {
         var w = Band(parent, name, center, size, color);
         w.GetComponent<Renderer>().sharedMaterial.SetFloat("_Glossiness", 0.12f);
@@ -101,7 +116,7 @@ public static class HubSceneDressing
     /// Puts files, books and boxes on the planks of a Modern Office "Shelving" unit placed at (cx, cz) with the given yaw
     /// (plank tops are at y 0.10, 0.58, 1.02, 1.46, 1.92; the unit is 1.44 wide).
     /// </summary>
-    static void Stock(Transform parent, float cx, float cz, float yaw)
+    internal static void Stock(Transform parent, float cx, float cz, float yaw)
     {
         float a = yaw * Mathf.Deg2Rad;
         Vector2 ax = new Vector2(Mathf.Cos(a), -Mathf.Sin(a)); // the unit's own x axis in the room plane
@@ -114,7 +129,7 @@ public static class HubSceneDressing
         add("Files 1", 0.1f, 1.92f, 0.8f);
     }
 
-    static Transform Group(Transform parent, string name)
+    internal static Transform Group(Transform parent, string name)
     {
         var g = new GameObject(name).transform;
         g.SetParent(parent, false);
@@ -122,7 +137,7 @@ public static class HubSceneDressing
     }
 
     /// <summary>A person at the floor point, facing yaw (0 = +z, 90 = +x), playing an activity from the Rocketbox controllers.</summary>
-    static GameObject Person(Transform parent, string avatar, float x, float z, float yaw, string activity, float y = 0f)
+    internal static GameObject Person(Transform parent, string avatar, float x, float z, float yaw, string activity, float y = 0f)
     {
         var p = PeopleSetup.Spawn(parent, avatar, new Vector3(x, y, z), yaw, activity);
         if (p != null) p.name = System.IO.Path.GetFileName(avatar) + " (" + activity + ")";
@@ -167,15 +182,14 @@ public static class HubSceneDressing
         // --- south-east staging: shipping containers (one stacked), pallets, boards
         var south = Group(root, "South staging");
         Put(south, "Containerbig01", 5.9f, -10.4f, 90f);
-        Put(south, "Container", 9.2f, -10.9f, 20f);
         Put(south, "Box_Pallet04", -1.8f, -9.6f, 10f);
         Put(south, "Box_Pallet09", 0.0f, -10.9f, 0f);
         Put(south, "Wooden_boards1", 5.5f, -7.6f, 90f);
-        Put(south, "Crate01", 8.0f, -7.8f, 25f);
-        Put(south, "Cardboard_boxGroup01a", 9.0f, -7.6f, 0f);
+        Put(south, "Crate01", 7.4f, -7.6f, 25f);
+        Put(south, "Cardboard_boxGroup01a", 9.7f, -7.0f, 0f);
         Put(south, "HandTruck", -1.3f, -7.7f, 70f);
         Put(south, "Fire Extinguisher", -4.2f, -11.8f, 0f, 0.9f);
-        Put(south, "Garbage Bin", -0.4f, -11.6f);
+        Put(south, "Garbage Bin", -1.2f, -11.6f);
 
         // --- supervisor's office corner (Modern Office), against the south wall
         var office = Group(root, "Office corner");
@@ -186,7 +200,7 @@ public static class HubSceneDressing
         Put(office, "Lamp 1", 13.3f, -11.1f, 0f, 0.82f);
         Put(office, "File Cabinet", 10.9f, -11.6f, 0f);
         Put(office, "Water cooler", 10.2f, -11.5f, 0f);
-        Put(office, "Plant 1", 13.6f, -9.0f);
+        Put(office, "Plant 1", 13.7f, -8.2f);
         PutAt(office, "World map", new Vector3(12.3f, 2.4f, -11.9f), 0f);
 
         // --- west strip: ladders, a parked forklift, catwalk with rails on pillars, barrels, pallets
@@ -230,6 +244,7 @@ public static class HubSceneDressing
         Person(people, BF1, 11.4f, -10.1f, 180f, "WorkTable");              // office
         Person(people, SEC, -2.3f, -7.6f, 0f, "Wait");                     // by the entry
         AddPeopleLibrary(root);
+        HubPerfPass.Apply(root);
     }
 
     // ------------------------------------------------------------------------------------------ refinery
@@ -257,9 +272,9 @@ public static class HubSceneDressing
 
         // --- containers and crates on the west side of the gate
         var yard = Group(root, "Container yard");
-        Put(yard, "ShippingContainer_Red", -19.0f, -3.5f, 0f);
-        Put(yard, "ShippingContainer_Blue", -19.0f, -3.5f, 0f, 2.48f);
-        Put(yard, "ShippingContainer_Green", -16.0f, -6.5f, 90f);
+        Tint(Put(yard, "ShippingContainer_Red", -19.0f, -3.5f, 0f), new Color(3.2f, 1.5f, 1.2f));
+        Tint(Put(yard, "ShippingContainer_Blue", -19.0f, -3.5f, 0f, 2.48f), new Color(1.1f, 2.0f, 3.6f));
+        Tint(Put(yard, "ShippingContainer_Green", -16.0f, -6.5f, 90f), new Color(1.3f, 2.6f, 1.5f));
         Put(yard, "Crate_tarp01big", -14.4f, -2.0f, 25f);
         Put(yard, "Cratemetall", -22.0f, 0.5f, 90f);
         Put(yard, "Barrel", -14.3f, -9.5f);
@@ -285,8 +300,8 @@ public static class HubSceneDressing
         Put(east, "Box_Pallet06", 17.5f, 12.8f, 20f);
         Put(east, "Crate_wood01", 20.0f, 11.2f, 40f);
         Put(east, "Ladder_02", 15.6f, 3.2f, -90f);
-        Put(east, "Barrel", 18.6f, 0.8f);
-        Put(east, "Barrel", 19.3f, 1.4f, 40f);
+        Put(east, "Barrel", 19.4f, -1.4f);
+        Put(east, "Barrel", 20.1f, -0.8f, 40f);
         Put(east, "Pallet Variation 02", 18.0f, 10.5f, 20f, 0.0f, 0.9f);
         Put(east, "Crate_tarp01small", 19.0f, 13.0f, 0f);
         Put(east, "StandingLight", 14.5f, 13.5f, 250f);
@@ -318,6 +333,7 @@ public static class HubSceneDressing
         crew.LocalPosition = Vector3.zero;
         Person(crew.transform, CM2, -0.5f, -2.4f, 90f, "Talk");
         Person(crew.transform, CF1, 0.5f, -2.4f, -90f, "Talk");
+        HubPerfPass.Apply(root);
     }
 
     // ------------------------------------------------------------------------------------------ hydrostatic test bay
@@ -369,10 +385,10 @@ public static class HubSceneDressing
         Put(back, "Pipes 04", -7.2f, 6.0f, 90f, 0f, 0.85f);
         Put(back, "Pipes 06", 7.1f, 6.1f, 90f, 0f, 0.8f);
         Put(back, "Ladder_03a", 4.6f, 6.0f, 0f);
-        Put(back, "Pallet", -5.6f, 5.2f, 10f);
-        Put(back, "Crate Long", -5.6f, 5.2f, 10f, 0.2f);
-        Put(back, "Pallet", -3.9f, 5.5f, 80f);
-        Put(back, "Crate Short", -3.9f, 5.5f, 80f, 0.2f);
+        Tint(Put(back, "Pallet", -5.6f, 5.2f, 10f), new Color(2.4f, 2.1f, 1.7f));
+        Tint(Put(back, "Crate Long", -5.6f, 5.2f, 10f, 0.2f), new Color(2.4f, 2.1f, 1.7f));
+        Tint(Put(back, "Pallet", -3.9f, 5.5f, 80f), new Color(2.4f, 2.1f, 1.7f));
+        Tint(Put(back, "Crate Short", -3.9f, 5.5f, 80f, 0.2f), new Color(2.4f, 2.1f, 1.7f));
         Put(back, "Barrel", 6.4f, 5.7f);
         Put(back, "Barrel", 6.9f, 5.0f, 40f);
         Put(back, "Barrel", 5.9f, 4.9f, 80f);
@@ -420,6 +436,19 @@ public static class HubSceneDressing
         Put(office, "Water cooler", 7.1f, -5.4f, -90f);
         Put(office, "Plant 4", 6.5f, -6.0f);
 
+        // --- notice board, posters and floor markings (kit panels): front wall above the receiving stack, back wall, right wall
+        var notes = Group(root, "Notices and floor markings");
+        HubLobbyDressing.Notice(notes, "Bay notice board", new Vector3(2.4f, 2.7f, -6.55f), Vector3.forward, new Vector2(2.2f, 1.3f), "BAY NOTICES",
+            new[] { "Eye protection in the bay.", "Keep clear of the line during a hold.", "Report any leak or drip." }, new Color(0f, 0.13f, 0.36f, 0.97f));
+        HubLobbyDressing.Notice(notes, "Poster: stay clear", new Vector3(-3.0f, 2.9f, 6.55f), Vector3.back, new Vector2(1.5f, 1.0f), "STAY CLEAR",
+            new[] { "Never stand over a", "pressurised line." }, new Color(0.55f, 0.1f, 0.05f, 0.97f), 0.07f);
+        HubLobbyDressing.Notice(notes, "Poster: housekeeping", new Vector3(-5.0f, 2.9f, 6.55f), Vector3.back, new Vector2(1.5f, 1.0f), "HOUSEKEEPING",
+            new[] { "Tools back on the", "cart after each task." }, new Color(0.1f, 0.4f, 0.25f, 0.97f), 0.07f);
+        PutAt(notes, "World map", new Vector3(7.33f, 2.7f, -3.2f), -90f);
+        Color yellow = new Color(1f, 0.8f, 0.1f);
+        Band(notes, "Walkway line", new Vector3(-4.35f, 0.008f, -4.0f), new Vector3(0.1f, 0.012f, 4.4f), yellow);
+        Band(notes, "Walkway line", new Vector3(-2.85f, 0.008f, -4.0f), new Vector3(0.1f, 0.012f, 4.4f), yellow);
+
         // --- people: everyone stays behind the stay-behind line (z 0.6)
         var people = Group(root, "People");
         Person(people, BM1, 2.8f, -1.7f, -35f, "Note");          // test supervisor logging the gauge readout
@@ -428,6 +457,7 @@ public static class HubSceneDressing
         Person(people, CF1, 5.2f, -1.5f, -90f, "Talk");
         Person(people, SEC, -5.2f, 0.0f, 0f, "Wait");            // safety officer at the line
         Person(people, BF1, 5.6f, -4.3f, 90f, "Documents");      // at the supervisor's desk
+        HubPerfPass.Apply(root);
     }
 
     // ------------------------------------------------------------------------------------------ lobby
@@ -437,73 +467,7 @@ public static class HubSceneDressing
     /// board, the season chip, the brand plate and the walking lanes (the centre strip and the diagonals to the pads stay clear).
     /// Hall is x -12..12, z -9..9; the pads are at z 5.7; the start is at (0, -6.5).
     /// </summary>
-    public static void DressLobby(Transform dressing)
-    {
-        var root = Group(dressing, "Reception and lounge");
-
-        // --- reception (east): backdrop wall with a wall map and clock, front desk with computer, lamp, phone, papers, plants
-        var rec = Group(root, "Reception desk");
-        PaintedWall(rec, "Backdrop wall", new Vector3(11.6f, 1.8f, -5.8f), new Vector3(0.2f, 3.6f, 6.6f), new Color(0.9f, 0.92f, 0.95f), true);
-        PutAt(rec, "World map", new Vector3(11.45f, 2.15f, -5.8f), -90f);
-        PutAt(rec, "Clock", new Vector3(11.48f, 2.95f, -3.6f), -90f);
-        Put(rec, "Table 1", 9.2f, -5.8f, 90f);
-        Put(rec, "Computer 1", 9.15f, -6.5f, 90f, 0.82f);
-        Put(rec, "Laptop", 9.2f, -5.2f, 90f, 0.82f);
-        Put(rec, "Lamp 1", 9.0f, -4.5f, 90f, 0.82f);
-        Put(rec, "Phone 1", 9.3f, -5.8f, 90f, 0.82f);
-        Put(rec, "Papers", 8.9f, -6.1f, 80f, 0.82f);
-        Put(rec, "Notebook", 8.8f, -5.5f, 100f, 0.82f);
-        Put(rec, "Chair 2", 10.3f, -6.6f, 90f);
-        Put(rec, "File Cabinet", 11.0f, -3.3f, -90f);
-        Put(rec, "Plant 2", 9.1f, -3.5f);
-        Put(rec, "Plant 4", 11.2f, -8.3f);
-        Put(rec, "Bin", 10.3f, -4.3f);
-
-        // --- lounge (west): backdrop wall with a projector screen, meeting table with four chairs, coffee corner
-        var lounge = Group(root, "Lounge");
-        PaintedWall(lounge, "Backdrop wall", new Vector3(-11.6f, 1.8f, -5.8f), new Vector3(0.2f, 3.6f, 6.6f), new Color(0.9f, 0.92f, 0.95f), true);
-        PutAt(lounge, "Proyector screen", new Vector3(-11.4f, 2.2f, -5.8f), 90f);
-        Put(lounge, "Table 2", -9.6f, -5.8f, 90f);
-        Put(lounge, "Chair", -10.55f, -6.5f, 90f);
-        Put(lounge, "Chair", -10.55f, -5.0f, 90f);
-        Put(lounge, "Chair", -8.65f, -6.5f, -90f);
-        Put(lounge, "Chair", -8.65f, -5.0f, -90f);
-        Put(lounge, "Notebook", -9.6f, -5.6f, 20f, 0.77f);
-        Put(lounge, "Bottle", -9.4f, -6.3f, 0f, 0.77f);
-        Put(lounge, "Table 1", -9.2f, -8.1f, 0f);
-        Put(lounge, "machine coffee", -9.9f, -8.1f, 180f, 0.82f);
-        Put(lounge, "paper cup", -9.3f, -8.1f, 0f, 0.82f);
-        Put(lounge, "Water cooler", -11.2f, -8.2f, 90f);
-        Put(lounge, "Plant 4", -11.3f, -3.0f);
-        Put(lounge, "Plant 2", -8.2f, -3.2f);
-        Put(lounge, "Bin", -7.5f, -8.2f);
-
-        // --- east waiting row: three chairs facing the hall with a side table, between the reception and the north portals
-        var wait = Group(root, "Waiting row");
-        Put(wait, "Chair", 11.0f, 0.6f, -90f);
-        Put(wait, "Chair", 11.0f, 1.6f, -90f);
-        Put(wait, "Chair", 11.0f, 2.6f, -90f);
-        Put(wait, "Table 2", 11.2f, 4.4f, 90f);
-        Put(wait, "books 1", 11.2f, 4.0f, 90f, 0.77f);
-        Put(wait, "Plant 2", 11.2f, 6.6f);
-
-        // --- plants in the corners and along the sides (clear of the portals, pads and the brand plate)
-        var green = Group(root, "Plants");
-        Put(green, "Plant 4", 11.2f, 7.8f);
-        Put(green, "Plant 4", -11.4f, 7.4f);
-        Put(green, "Plant 2", 9.8f, 2.5f);
-        Put(green, "Plant 2", -9.8f, 2.0f);
-        Put(green, "Plant 4", 11.3f, -1.2f);
-
-        // --- people
-        var people = Group(root, "People");
-        Person(people, BF1, 10.25f, -5.2f, -90f, "Documents");   // receptionist behind the desk
-        Person(people, MED, 7.4f, -5.0f, 90f, "Wait");           // visitor waiting at the desk
-        Person(people, AM5, -8.4f, -1.8f, 90f, "Talk");          // a small group talking
-        Person(people, AF3, -7.3f, -1.8f, -90f, "Talk");
-        Person(people, BM1, 3.6f, -1.0f, -147f, "Wave");         // faculty member greeting the arrival
-        Person(people, SEC, -3.6f, -7.7f, 0f, "Idle");           // security guard at the entrance
-    }
+    public static void DressLobby(Transform dressing) => HubLobbyDressing.Build(dressing);
 
     // ------------------------------------------------------------------------------------------ resistor bench
 
@@ -571,8 +535,9 @@ public static class HubSceneDressing
         // --- people
         var people = Group(root, "People");
         Person(people, BM1, 2.5f, 0.7f, -113f, "Talk");         // instructor beside the wall references
-        Person(people, CM2, -2.85f, -2.3f, -90f, "WorkTable"); // two students at the side table
+        Person(people, AM5, -2.85f, -2.3f, -90f, "WorkTable"); // two students at the side table
         Person(people, AF3, -2.85f, -1.15f, -90f, "Note");
         Person(people, MED, 3.1f, -2.0f, -40f, "Look");         // someone looking around
+        HubPerfPass.Apply(root);
     }
 }

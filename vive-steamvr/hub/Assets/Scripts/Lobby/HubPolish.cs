@@ -23,6 +23,15 @@ public class HubPolish : MonoBehaviour
     public float BrandWidth = 1.7f;
     public Vector3 BrandWorld;
 
+    /// <summary>
+    /// Render budget (set by the builder). In the built-in forward pipeline every extra pixel light is another pass over every object in its
+    /// range; the scenes' fill lights barely show, so only the sun is pixel-lit by default (the rest are per-vertex). Editor measurement:
+    /// the warehouse went from about 6,700 to about 1,700 SetPass calls with this one setting (see the README table).
+    /// </summary>
+    public int PixelLights = 1;
+    public float ShadowDistance = 25f;
+
+    int oldPixelLights, oldCascades; float oldShadowDistance; bool qualityChanged;
     bool brandPlaced;
     PostProcessLayer layer;
     PostProcessVolume volume;
@@ -32,6 +41,12 @@ public class HubPolish : MonoBehaviour
 
     void Start()
     {
+        oldPixelLights = QualitySettings.pixelLightCount; oldShadowDistance = QualitySettings.shadowDistance; oldCascades = QualitySettings.shadowCascades;
+        qualityChanged = true;
+        QualitySettings.pixelLightCount = Mathf.Min(oldPixelLights, PixelLights);
+        QualitySettings.shadowDistance = Mathf.Min(oldShadowDistance, ShadowDistance);
+        QualitySettings.shadowCascades = Mathf.Min(oldCascades, 2);
+
         // The hall is big; lift the ambient light so equipment away from the lamps is not lost in the dark
         RenderSettings.ambientLight = Color.Lerp(RenderSettings.ambientLight, new Color(0.62f, 0.64f, 0.7f), 0.8f);
 
@@ -112,5 +127,7 @@ public class HubPolish : MonoBehaviour
     void OnDestroy()
     {
         if (volume != null) Destroy(volume.gameObject);
+        if (!qualityChanged) return; // leave the project's quality settings as they were
+        QualitySettings.pixelLightCount = oldPixelLights; QualitySettings.shadowDistance = oldShadowDistance; QualitySettings.shadowCascades = oldCascades;
     }
 }

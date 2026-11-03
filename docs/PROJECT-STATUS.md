@@ -140,3 +140,13 @@ Last updated: November 1, 2026 (evening).
 - Triangle counts: the figures reported earlier (about 1.4-1.5 M for Warehouse and Refinery) were most likely read in Play mode. With static batching a MeshFilter's shared mesh is the combined mesh, so the sum counts it many times. Counted in edit mode on the baked scenes: Lobby 125 k, Hydro 149 k, Resistor 77 k, Warehouse 125 k, Refinery 189 k triangles. Frame rate on a Vive Pro 2 is still unmeasured.
 - Checked in the Unity editor (desktop): all four pads load their scenes (rig stood on each pad); the scripted self-test (ShotRunner) ran the Hydro flow to all six steps OK and no mistakes, the Resistor flow and the Refinery flow to their ends, and the Warehouse flow including the awareness pause (score 2 of 3 as designed); people animate. Not checked: any headset, frame rate on a Vive Pro 2, hand play.
 - Open: the Rocketbox "Documents" animation is a bent-over reading pose (right at a desk, odd when standing), so it is used only at desks; the Sci-Fi crates and pallets render dark.
+
+## November 3, 2026 (round 2): hub critical review, richer lobby, render budget
+
+- All five hub scenes were re-inspected from the start view and from walking height; details and before/after pictures (`docs/images/hub-r2-*.png`) are in `vive-steamvr/hub/README.md` ("Round 2 review").
+- Lobby rebuilt (`HubLobbyDressing.cs`): tiled floor and medallion, reception, lounge, two scenario gallery walls with framed renders, CIST corner, "How it works" board, banners, plants, ten Rocketbox people. Two portal blurbs corrected after a reviewer found them inaccurate (Hydro is a heat exchanger; the Warehouse learner is a pedestrian).
+- Found and fixed: overlapping containers in the Warehouse (furniture inside one), near-black Sci-Fi containers and crates (tinted copies of the materials), barrels inside a boiler, a hard hat in a classroom, a 25-lamp grid in the Hydro room, work-light spots above the Resistor ceiling.
+- Render budget (editor Play mode counters, not a frame rate): SetPass calls fell from 251 / 1066 / 756 / 3196 / 1736 to 352 / 515 / 551 / 1301 / 787 (Lobby / Hydro / Refinery / Warehouse / Resistor, median, start view). Main cause was the pixel-light count (now 1, shadows 25 m with 2 cascades, set in `HubPolish`); the Warehouse mirror camera is throttled in the hub copy only. No headset and no Vive Pro 2 frame rate were measured.
+- Checked: all four portals load; Warehouse scripted self-test PASS; other flows ran to the end; people animate. Not checked: headset, hand play.
+- Decision for the owner: the hub copy of `WarehouseForklift.cs` now differs from project 03 (mirror camera drawn every third frame within 12 m). Copy the change to project 03 if you want them in step.
+

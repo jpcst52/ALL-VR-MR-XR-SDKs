@@ -949,7 +949,10 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         float d = to.magnitude;
         bool looking = d < 9f && Vector3.Angle(cam.forward, to) < 14f && Vector3.Dot(mirrorNormal, -to.normalized) > 0.25f;
         mirrorLook = looking ? mirrorLook + dt : Mathf.Max(0f, mirrorLook - dt * 2f);
-        mirrorCam.enabled = d < 16f; // render the mirror only when it is near
+        // Hub copy only (round 2 performance pass): the mirror camera is a second full render of the scene. It is switched off and drawn by
+        // hand, every third frame, only while the mirror is within 12 m and roughly in front of the head (it was on whenever within 16 m).
+        mirrorCam.enabled = false;
+        if (d < 12f && Vector3.Angle(cam.forward, to) < 75f && Time.frameCount % 3 == 0) mirrorCam.Render();
         if (!mirrorChecked && mirrorLook >= 1.5f)
         {
             mirrorChecked = true;
