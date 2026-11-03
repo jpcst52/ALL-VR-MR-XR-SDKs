@@ -23,6 +23,16 @@ The shared parts are generated from Three.js primitives. The room around the boa
 - VR here is emulator and desktop only; it has not been tried on a real headset.
 - Screenshots: [empty room](./screenshots/hydrotest-empty.png), [completed rig](./screenshots/hydrotest-rig.png), [second client](./screenshots/hydrotest-rig-client2.png).
 
+## Joining, leaving and keyboard use
+
+- **Join flow:** before joining, the panel shows three numbered steps. After joining, the name and room fields collapse into one line ("Room lab") with a **Leave room** button. The status line is colored when something needs attention (amber for a retry, red for an error).
+- **Errors say what to do:** a relay that is not running reads "Could not reach the room relay at host:port. Start it with npm start in the multi-player folder"; a full room says so and suggests another name. If an established connection drops, the page retries by itself up to 5 times (1, 2, 4, 8, 8 seconds) and says "Reconnected" on success. The relay keeps rooms only in memory, so after a relay restart the page tells you "The room was empty, so earlier parts are gone."
+- **Adding parts:** a part button adds one part at once and "arms" that part: click the board to add more, and press Esc to stop. Clicking an empty board with nothing armed adds nothing (it used to add a part by accident).
+- **Keyboard:** Tab to the board, then `[` and `]` choose the previous or next part, arrow keys move it 10 cm (Shift: 40 cm), R rotates, T toggles, Delete removes, Esc deselects. Every choice is announced in the status line. Touch: all panel buttons are at least 44 px tall.
+- **Who is in VR:** every browser joins as a plain browser page. A headset or phone AR session sends a one-time "mode" message when the session starts and ends, so only people really in a session carry a VR or AR chip on their name tag and in the roster. Before this fix, every visitor of the VR page was listed as VR.
+- **Avatars:** desktop participants who point at the same spot are spread along the board edge (at least about 1.3 m apart) instead of standing inside each other.
+- **Reduced motion:** with the operating-system setting on, the selection ring stops pulsing, camera damping is off and CSS transitions are removed.
+
 ## Look and branding
 
 The three pages share the Pitt palette, bundled fonts and the Pitt-Bradford + **CIST** brand bar from [brand-kit](../brand-kit/README.md) (logo when the git-ignored `branding/logo.png` is present, text wordmark otherwise). In the scene, name tags and part labels are backed pills, and a Pitt-Bradford + CIST plaque stands at the back edge of the shared board. On a phone the panel becomes a bottom sheet below the board. Checked with `node tools/vr-capture/ui-check.mjs` (desktop browser at 1440 x 900 and 390 x 844; no headset or real phone).
@@ -39,8 +49,8 @@ Each example now stands in a room instead of on a bare disc: a tiled electronics
   - *Desktop participants* have no pose, so their character stands at the board edge nearest their cursor, walks when the cursor moves, faces the board when still, and reaches while holding a part. A colored ring and a thin line show what they point at.
 - **Honest look:** the characters are cartoon-like. No CC0 realistic people were found that fit a Quest triangle budget, so these are friendly stand-ins, not photo-real staff. [CREDITS.md](./CREDITS.md) lists every model with author, source page and license.
 - **Fallbacks:** if a model cannot be loaded, the prop becomes a plain box or cylinder and the person becomes a primitive figure with a hard hat, and the page keeps working ([fallback screenshot](./screenshots/fallback-no-models.png)). Only the first 8 participants get the character model; later arrivals get the primitive figure to stay inside the triangle budget.
-- **Lite mode:** on a software renderer (no GPU) the page defaults to lite: no shadows and no glTF props, just the room and the people. Force it with `?lite=1` (or `?lite=0`); `?shadows=0|1` and `?props=0|1` override the two parts. Shadows are never drawn inside a headset.
-- **Protocol:** one new optional message. A client may send `{ "type": "pose", "head": [x,y,z], "yaw": r, "hands": [[x,y,z]|null, [x,y,z]|null] }` in board coordinates. The relay validates it, limits it to one per 30 ms and broadcasts `peer-pose`. A peer's profile gains an optional `pose` field only after that peer has sent one, so old clients and pages are unaffected. Tests cover the relay, validation, late joiners and the unchanged four-field profile.
+- **Lite mode:** on a software renderer (no GPU) the page defaults to lite, and says so in a note with a **Show the full scene** link (it adds `?lite=0`): no shadows and no glTF props, just the room and the people. Force it with `?lite=1` (or `?lite=0`); `?shadows=0|1` and `?props=0|1` override the two parts. Shadows are never drawn inside a headset.
+- **Protocol:** two optional messages. A client may send `{ "type": "mode", "mode": "web"|"vr"|"ar" }` when a headset or phone AR session starts or ends; the relay broadcasts `peer-mode` (leaving XR clears the stored pose). The second message: A client may send `{ "type": "pose", "head": [x,y,z], "yaw": r, "hands": [[x,y,z]|null, [x,y,z]|null] }` in board coordinates. The relay validates it, limits it to one per 30 ms and broadcasts `peer-pose`. A peer's profile gains an optional `pose` field only after that peer has sent one, so old clients and pages are unaffected. Tests cover the relay, validation, late joiners and the unchanged four-field profile.
 
 Screenshots: [Site Safety Layout](./screenshots/site-safety-avatars.png), [Test bay](./screenshots/test-bay-avatars.png), and an [emulated Quest 3](./screenshots/vr/02-quest-peer-seen-by-desktop.png) participant seen by a desktop user (the Quest view itself is in [01-circuit-lab-in-vr.png](./screenshots/vr/01-circuit-lab-in-vr.png)). The Quest captures come from the IWER emulator, not a real headset.
 
@@ -51,7 +61,7 @@ Measured with [`tools/shots.mjs`](./tools/shots.mjs) in desktop Chrome on a soft
 | Scene | Triangles | Draw calls | Room props loaded |
 |---|---|---|---|
 | Circuit Lab | 62k | 173 | 14 of 14 |
-| Site Safety Layout | 37k | 84 | 18 of 18 |
+| Site Safety Layout | 37k | 86 | 18 of 18 |
 | Hydrostatic Test Rig | 79k | 218 | 13 of 13 |
 | Circuit Lab with every model blocked (fallback) | 8.6k | 74 | 0 of 14 (14 primitives) |
 
@@ -117,7 +127,7 @@ The room field accepts an optional `?room=lab` query parameter. There are no acc
 - **Themes:** the relay validates part names per theme and keeps each theme's rooms separate; client-side theme modules decide how parts look and what the room-level summary says.
 - **XR-specific setup:** VR requests an `immersive-vr` session; AR requests `immersive-ar` and hit testing.
 
-This is a teaching sample, not a production networking stack. It has no login, moderation, persistence, reconnecting snapshot client, voice chat, lag compensation, or deployment automation. Anyone who can reach the server can join a room. Rooms and objects are kept in process memory and reset when everyone leaves or the server restarts.
+This is a teaching sample, not a production networking stack. It has no login, moderation, persistence (a reconnecting page rejoins and receives the current room, but a restarted relay has no rooms), voice chat, lag compensation, or deployment automation. Anyone who can reach the server can join a room. Rooms and objects are kept in process memory and reset when everyone leaves or the server restarts.
 
 ## AR alignment limitation
 
@@ -127,7 +137,7 @@ This requires both devices to agree on the same physical points and remain in th
 
 ## Tests
 
-`npm test` runs 31 tests: the relay (mixed VR/AR clients, snapshots and isolation, theme separation, toggle and rotate rules, exclusive object ownership, disconnect cleanup, invalid input, HTTP routes and path traversal), TLS certificates, the hydrostatic checklist, optional avatar poses (validation, relay, late joiners, old-client profile unchanged), and the asset checks: every model in `shared/models.json` exists as a GLB and has a CC0 entry and source link in `CREDITS.md`, no model is shipped unlisted, every prop used by a room layout and every avatar character is in the manifest, per-model and per-scene triangle budgets, deterministic avatar looks, and the fallback logic (a failing load gives the primitive, every layout prop maps to a primitive stand-in). The browser-side fallback is exercised by `ONLY=fallback node multi-player/tools/shots.mjs` (all model requests blocked). The headset session and AR camera/hit-test itself still need supported physical hardware for end-to-end testing.
+`npm test` runs 34 tests: the relay (mixed VR/AR clients, snapshots and isolation, theme separation, toggle and rotate rules, exclusive object ownership, disconnect cleanup, invalid input, HTTP routes and path traversal), TLS certificates, the hydrostatic checklist, the participant mode message and avatar spreading, optional avatar poses (validation, relay, late joiners, old-client profile unchanged), and the asset checks: every model in `shared/models.json` exists as a GLB and has a CC0 entry and source link in `CREDITS.md`, no model is shipped unlisted, every prop used by a room layout and every avatar character is in the manifest, per-model and per-scene triangle budgets, deterministic avatar looks, and the fallback logic (a failing load gives the primitive, every layout prop maps to a primitive stand-in). The browser-side fallback is exercised by `ONLY=fallback node multi-player/tools/shots.mjs` (all model requests blocked). The headset session and AR camera/hit-test itself still need supported physical hardware for end-to-end testing.
 
 The AR screenshot is explicitly a desktop fallback capture of the live AR page's scene. It is not a recording of camera passthrough or a physical AR session.
 

@@ -196,6 +196,14 @@ export function createRelay() {
           broadcast(room, { type: "peer-pose", id: peer.id, ...pose }, peer.id);
           break;
         }
+        case "mode": {
+          // A client reports how it is really connected (web page, headset VR, phone AR); it may change when an XR session starts or ends.
+          if (!["web", "vr", "ar"].includes(message.mode) || message.mode === peer.mode) return;
+          peer.mode = message.mode;
+          if (peer.mode === "web") peer.pose = null;
+          broadcast(room, { type: "peer-mode", id: peer.id, mode: peer.mode }, peer.id);
+          break;
+        }
         case "place": {
           if (room.objects.size >= MAX_OBJECTS) {
             send(peer, { type: "room-limit", message: "This room has reached its shared-part limit." });

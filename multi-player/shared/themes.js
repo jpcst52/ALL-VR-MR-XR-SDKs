@@ -30,9 +30,17 @@ function textSprite(text, color = "#f2f6fc", background = "#00205bdd", width = 0
     draw();
     const map = new THREE.CanvasTexture(canvas);
     fontsReady.then(() => { draw(); map.needsUpdate = true; });
-    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map, transparent: true }));
-    sprite.scale.set(width, width * 0.375, 1);
-    return sprite;
+    // Printed on the sign itself (a plane on each face), so it is never clipped by the sign's own board at an angle.
+    const sign = new THREE.Group();
+    const material = new THREE.MeshBasicMaterial({ map, transparent: true, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2 });
+    const geometry = new THREE.PlaneGeometry(width, width * 0.375);
+    const front = new THREE.Mesh(geometry, material);
+    front.position.z = 0.02;
+    const back = new THREE.Mesh(geometry, material);
+    back.position.z = -0.02;
+    back.rotation.y = Math.PI;
+    sign.add(front, back);
+    return sign;
   }
   const accent = /^#(f2f6fc|ffffff|dbeeff)$/i.test(color) ? PITT.gold : color;
   return tagSprite(text, { accent, status: null, worldHeight: Math.max(0.12, width * 0.44), depthTest: true });
@@ -208,7 +216,7 @@ export const circuits = {
   title: "Circuit Lab",
   pitch: "Snap batteries, switches, bulbs, resistors, wires, and motors together. Everyone sees the same live circuit.",
   sceneLabel: "Shared electrical circuit board",
-  controls: "Click a part to add it. Drag to move; rotate with R. Touch the gold ends of parts so they connect, close the switch (T), and light the bulb.",
+  controls: "Press a part button to add it (click the board for more, Esc to stop). Drag to move, or use [ ] and the arrow keys; rotate with R. Touch the gold ends of parts so they connect, close the switch (T), and light the bulb.",
   spawnSpacing: 1.15,
   toggleLabel: "Toggle switch",
   parts: [
@@ -358,7 +366,7 @@ export const safety = {
   title: "Site Safety Layout",
   pitch: "Lay out a shared work-area safety plan: exits, extinguishers, first aid, muster point, and barriers around hazards.",
   sceneLabel: "Shared site safety layout board",
-  controls: "Click a part to add it. Drag to move; rotate with R. Put a barrier next to each hazard beacon and toggle a beacon (T) to mark an active hazard.",
+  controls: "Press a part button to add it (click the board for more, Esc to stop). Drag to move, or use [ ] and the arrow keys; rotate with R. Put a barrier next to each hazard beacon and toggle a beacon (T) to mark an active hazard.",
   spawnSpacing: 0.85,
   toggleLabel: "Toggle hazard beacon",
   parts: [
@@ -522,7 +530,7 @@ export const hydrotest = {
   title: "Hydrostatic Test Rig",
   pitch: "Together, assemble a water-filled test rig for a shell-and-tube heat exchanger: cap the nozzles, vent the air, and plumb a fill line. Safety awareness practice, not a test procedure.",
   sceneLabel: "Shared hydrostatic test rig board",
-  controls: "Click a part to add it. Drag to move; rotate with R. Touch the grey port dots so parts connect, put a gold blind flange over each top nozzle, set the vent and valve open (T), then watch the checklist.",
+  controls: "Press a part button to add it (click the board for more, Esc to stop). Drag to move, or use [ ] and the arrow keys; rotate with R. Touch the grey port dots so parts connect, put a gold blind flange over each top nozzle, set the vent and valve open (T), then watch the checklist.",
   spawnSpacing: 0.95,
   toggleLabel: "Open / close valve",
   parts: [

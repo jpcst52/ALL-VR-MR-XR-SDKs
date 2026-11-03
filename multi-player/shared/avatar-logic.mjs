@@ -80,3 +80,30 @@ export async function loadWithFallback(load, fallback) {
     return { value: await fallback(error), usedFallback: true, error };
   }
 }
+
+// Desktop participants stand on a ring around the board at the angle of their cursor. Two people pointing at the same spot would
+// stand inside each other, so push neighbours apart until each pair is at least minGap radians apart (order is kept).
+export function spreadAngles(angles, minGap = 0.32, iterations = 40) {
+  const count = angles.length;
+  if (count < 2 || count * minGap >= Math.PI * 2) return [...angles];
+  const tau = Math.PI * 2;
+  const order = angles.map((angle, index) => ({ index, angle: ((angle % tau) + tau) % tau })).sort((a, b) => a.angle - b.angle);
+  for (let pass = 0; pass < iterations; pass += 1) {
+    let moved = false;
+    for (let i = 0; i < count; i += 1) {
+      const a = order[i];
+      const b = order[(i + 1) % count];
+      const gap = (i + 1 === count ? b.angle + tau : b.angle) - a.angle;
+      if (gap < minGap - 1e-6) {
+        const push = (minGap - gap) / 2;
+        a.angle -= push;
+        b.angle += push;
+        moved = true;
+      }
+    }
+    if (!moved) break;
+  }
+  const result = new Array(count);
+  for (const { index, angle } of order) result[index] = angle;
+  return result;
+}

@@ -56,3 +56,7 @@ See [../CREDITS-web-demos.md](../CREDITS-web-demos.md): sky photo `assets/skies/
 Desktop browser (Chrome, software GL) after selecting "Sky Prism". Phone-width view: [../screenshots/phone/](../screenshots/phone/a-frame-orbit-garden.png). The image below is from an **emulated** Quest 3 session (IWER), not a real headset.
 
 ![Orbit Garden in an emulated Quest 3 session](screenshots/a-frame-emulated-quest3.png)
+
+## Session setup review
+
+Fixed in the review: A-Frame 1.6 requires the `local-floor` reference space by default, which would stop the session on a runtime without floor tracking. The scene now sets `webxr="requiredFeatures: viewer; optionalFeatures: local-floor, bounded-floor"`. Checked with an emulated Quest 3 (`node tools/vr-capture/demos-sdk-check.mjs`): the session request has nothing floor-related required, the camera stands at headset height (not doubled by the 1.6 m rig offset), and the page recovers when the runtime ends the session. The distinctive A-Frame parts are the custom components (`garden-floor`, `lantern`, `fireflies`, `info-panel`) and `laser-controls`, `cursor` with a fuse, and `raycaster`.

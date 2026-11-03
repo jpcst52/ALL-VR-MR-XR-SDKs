@@ -276,7 +276,8 @@ async function createScene() {
   } catch (error) {
     console.warn("Immersive VR is unavailable; the desktop scene remains active.", error);
   }
-  statusEl.textContent = "Luminous Totem is ready. Drag to orbit, press C to change the hue.";
+  const xrNote = !("xr" in navigator) ? " This browser has no WebXR, so only the desktop view is available." : "";
+  statusEl.textContent = `Luminous Totem is ready. Drag to orbit, press C to change the hue.${xrNote}`;
   window.__demo = { ready: true, setHue, scene };
   return scene;
 }

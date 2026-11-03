@@ -41,7 +41,7 @@
       </details>
     </main>
 
-    <a-scene loading-screen="dotsColor: #ffb81c; backgroundColor: #00205b" renderer="antialias: true; toneMapping: ACESFilmic; exposure: 1.0" shadow="type: pcfsoft" cursor="rayOrigin: mouse" raycaster="objects: .lantern" device-orientation-permission-ui="enabled: false">
+    <a-scene webxr="requiredFeatures: viewer; optionalFeatures: local-floor, bounded-floor" loading-screen="dotsColor: #ffb81c; backgroundColor: #00205b" renderer="antialias: true; toneMapping: ACESFilmic; exposure: 1.0" shadow="type: pcfsoft" cursor="rayOrigin: mouse" raycaster="objects: .lantern" device-orientation-permission-ui="enabled: false">
       <a-assets timeout="15000">
         <img id="sky" src="../assets/skies/autumn-2k.jpg" alt="">
         <a-asset-item id="lantern-model" src="./assets/brass_diya_lantern/brass_diya_lantern_1k.gltf"></a-asset-item>

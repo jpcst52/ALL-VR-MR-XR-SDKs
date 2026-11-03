@@ -55,3 +55,7 @@ See [../CREDITS-web-demos.md](../CREDITS-web-demos.md): sky photo `assets/skies/
 Desktop browser (Chrome, software GL) after pressing **C**. The "VR not supported" button is the real desktop state, not a headset recording. A phone-width view is in [../screenshots/phone/](../screenshots/phone/threejs-prism-bloom.png). The image below is from an **emulated** Quest 3 session (IWER); it is not a real headset.
 
 ![Prism Bloom in an emulated Quest 3 session](screenshots/threejs-emulated-quest3.png)
+
+## Session setup review
+
+Checked in desktop Chrome with an emulated Quest 3 (`node tools/vr-capture/demos-sdk-check.mjs`): `VRButton` requests `immersive-vr` with nothing required and `local-floor`, `bounded-floor` and `layers` optional; the exhibit moves in front of the player on `sessionstart` and back on `sessionend`; the canvas follows a resize; Three.js restores its own context after a loss. Known gap, unverified: Three.js asks for the `local-floor` reference space without a fallback, so a runtime that refuses it would fail to start the session (Quest and SteamVR support it). The distinctive Three.js parts here are `MeshPhysicalMaterial` transmission and iridescence with an image-based light built by `PMREMGenerator`.

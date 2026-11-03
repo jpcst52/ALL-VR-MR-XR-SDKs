@@ -68,7 +68,9 @@ export function createAvatar({ id, name, mode, makeLabel }) {
   root.add(stand);
 
   const accent = look.hat.hex;
-  const label = makeLabel(`${name} · ${mode.toUpperCase()}`, accent);
+  // Only people really in a headset or phone AR session carry a VR or AR chip; everyone else is a plain name.
+  const labelText = (value) => (value === "vr" || value === "ar" ? `${name} · ${value.toUpperCase()}` : name);
+  let label = makeLabel(labelText(mode), accent);
   root.add(label);
 
   const gloves = [0, 1].map(() => {
@@ -99,13 +101,14 @@ export function createAvatar({ id, name, mode, makeLabel }) {
   const state = {
     id, look, root,
     x: 0, z: 0, yaw: 0, scale: 1, targetX: 0, targetZ: 0, targetYaw: 0, targetScale: 1,
-    pose: null, cursor: null, holding: false, moving: false,
+    pose: null, cursor: null, stationAngle: 0, mode, holding: false, moving: false,
     mixer: null, actions: {}, currentClip: null, arms: [], headY: 1.7, usesModel: false, placed: false,
     disposed: false,
   };
   // Until a cursor or pose arrives, spread newcomers along the board edge by id so they do not overlap.
   // They start on the back arc of the board (z < 0) so a newcomer never blocks the default camera view.
   const angle = Math.PI + 0.35 + ((hashString(id) % 1000) / 1000) * (Math.PI - 0.7);
+  state.stationAngle = angle;
   state.targetX = state.x = Math.cos(angle) * STATION_RADIUS;
   state.targetZ = state.z = Math.sin(angle) * STATION_RADIUS;
 
@@ -199,10 +202,28 @@ export function createAvatar({ id, name, mode, makeLabel }) {
     setCursor(position) {
       state.cursor = position;
       if (state.pose) return;
-      const [cx, cz] = position;
-      const length = Math.hypot(cx, cz) || 1;
-      state.targetX = (cx / length) * STATION_RADIUS;
-      state.targetZ = (cz / length) * STATION_RADIUS;
+      api.setStation(Math.atan2(position[1], position[0]));
+    },
+    // The angle (radians, board plane) this desktop participant wants to stand at, and the angle actually used after spreading.
+    get wantedAngle() { return state.cursor && !state.pose ? Math.atan2(state.cursor[1], state.cursor[0]) : state.stationAngle; },
+    get hasPose() { return Boolean(state.pose); },
+    setStation(radians) {
+      state.stationAngle = radians;
+      if (state.pose) return;
+      state.targetX = Math.cos(radians) * STATION_RADIUS;
+      state.targetZ = Math.sin(radians) * STATION_RADIUS;
+    },
+    setMode(next) {
+      if (state.mode === next) return;
+      state.mode = next;
+      if (next === "web" && state.pose) { state.pose = null; api.setStation(state.stationAngle); }
+      const old = label;
+      label = makeLabel(labelText(next), accent);
+      label.position.copy(old.position);
+      root.add(label);
+      root.remove(old);
+      old.material.map?.dispose();
+      old.material.dispose();
     },
     setPose(pose) {
       state.pose = pose;

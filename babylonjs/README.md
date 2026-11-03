@@ -56,3 +56,7 @@ See [../CREDITS-web-demos.md](../CREDITS-web-demos.md): sky photo `assets/skies/
 Desktop browser (Chrome, software GL) after pressing **C**. Phone-width view: [../screenshots/phone/](../screenshots/phone/babylonjs-luminous-totem.png). The image below is from an **emulated** Quest 3 session (IWER), not a real headset.
 
 ![Luminous Totem in an emulated Quest 3 session](screenshots/babylonjs-emulated-quest3.png)
+
+## Session setup review
+
+Checked with an emulated Quest 3 (`node tools/vr-capture/demos-sdk-check.mjs`): `createDefaultXRExperienceAsync` requests `immersive-vr` with nothing required and `local-floor` optional; the exhibit moves in front of the player when the state becomes `IN_XR` and back at `NOT_IN_XR`; the engine resizes with the window; Babylon.js restores its own context after a loss. If the browser has no WebXR the status line now says so. The distinctive Babylon.js parts are the default XR experience (pointer selection and floor-mesh teleportation), `PBRMaterial` with clear coat and iridescence, `GlowLayer` and the particle system. Teleportation was not exercised with a real controller.

@@ -120,12 +120,16 @@ void main(){
 const pointFS = HEAD + `in float vTw; uniform vec3 uA; out vec4 o;
 void main(){ float d = length(gl_PointCoord - 0.5) * 2.0; float a = smoothstep(1.0, 0.0, d); o = vec4(mix(uA, vec3(1.0), 0.6) * a * (0.5 + 0.5 * vTw), a * 0.9); }`;
 
-const programs = {
-  lit: program(meshVS, litFS),
-  sky: program(meshVS, skyFS),
-  floor: program(meshVS, floorFS),
-  points: program(pointVS, pointFS),
-};
+// GPU resources live in these variables so they can be rebuilt after a WebGL context loss (see the context handlers below).
+let programs, meshes, pointVao;
+function buildPrograms() {
+  programs = {
+    lit: program(meshVS, litFS),
+    sky: program(meshVS, skyFS),
+    floor: program(meshVS, floorFS),
+    points: program(pointVS, pointFS),
+  };
+}
 
 // ---------------------------------------------------------------------------------------------- geometry
 function makeMesh(positions, normals) {
@@ -183,10 +187,10 @@ function disc(radius, seg) {
   }
   return makeMesh(positions, normals);
 }
-const meshes = { gem: icosphere(1, true), orb: icosphere(2, false), sky: icosphere(2, false), ring: torus(1, 0.014, 160, 8), floor: disc(7, 96) };
-
 const POINTS = 420;
-const pointVao = gl.createVertexArray();
+function buildGeometry() {
+meshes = { gem: icosphere(1, true), orb: icosphere(2, false), sky: icosphere(2, false), ring: torus(1, 0.014, 160, 8), floor: disc(7, 96) };
+pointVao = gl.createVertexArray();
 gl.bindVertexArray(pointVao);
 {
   const seeds = new Float32Array(POINTS * 4);
@@ -200,6 +204,9 @@ gl.bindVertexArray(pointVao);
 gl.bindVertexArray(null);
 for (const p of [programs.lit, programs.sky, programs.floor]) { gl.bindAttribLocation(p, 0, "aPos"); gl.bindAttribLocation(p, 1, "aNormal"); gl.linkProgram(p); }
 gl.bindAttribLocation(programs.points, 0, "aSeed"); gl.linkProgram(programs.points);
+}
+buildPrograms();
+buildGeometry();
 
 // ---------------------------------------------------------------------------------------------- scene state
 const palettes = [{ name: "Aurora", hue: 0 }, { name: "Sunset", hue: 120 }, { name: "Meadow", hue: 190 }, { name: "Ocean", hue: 260 }];
@@ -343,6 +350,23 @@ speedControl.addEventListener("input", () => setSpeed(Number(speedControl.value)
 paletteButton.addEventListener("click", () => setPalette(paletteIndex + 1));
 if (reducedMotion) setSpeed(0.4);
 
+// ---------------------------------------------------------------------------------------------- context loss
+// A lost WebGL context (GPU reset, driver update, too many contexts) destroys every buffer and program. Stop drawing, tell the
+// person, and rebuild the resources when the browser gives the context back. An immersive session cannot survive it: end it.
+let contextLost = false;
+canvas.addEventListener("webglcontextlost", (event) => {
+  event.preventDefault(); // allow the browser to restore the context
+  contextLost = true;
+  statusEl.textContent = "The graphics context was lost. Waiting for the browser to restore it…";
+  if (activeSession) activeSession.end().catch(() => {});
+});
+canvas.addEventListener("webglcontextrestored", () => {
+  buildPrograms();
+  buildGeometry();
+  contextLost = false;
+  statusEl.textContent = "Graphics restored. You can enter VR again.";
+});
+
 // ---------------------------------------------------------------------------------------------- WebXR session
 let activeSession = null;
 let referenceSpace = null;
@@ -359,6 +383,7 @@ function drawXRFrame(_time, frame) {
   if (!activeSession) return;
   activeSession.requestAnimationFrame(drawXRFrame);
   tick();
+  if (contextLost) return;
   const pose = frame.getViewerPose(referenceSpace);
   if (!pose) return;
   const layer = activeSession.renderState.baseLayer;
@@ -443,6 +468,7 @@ function loop() {
   requestAnimationFrame(loop);
   if (activeSession) return; // the session's own frame callback draws while immersive
   tick();
+  if (contextLost) return;
   if (!reducedMotion && dragging.size === 0) { orbit.idle += 1; if (orbit.idle > 150) orbit.yaw += 0.0015 * Number(speedControl.value); }
   drawPreview();
 }

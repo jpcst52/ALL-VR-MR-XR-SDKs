@@ -39,7 +39,7 @@ The circuit model is a simplified teaching model: it checks whether the battery 
 ## Controls
 
 - Click a part button to spawn that part; click an empty place on the board to place the selected type.
-- On desktop, click a part to select it and drag it to move. **R** rotates, **T** toggles a switch, **Delete** removes it.
+- On desktop, click a part to select it and drag it to move. **R** rotates, **T** toggles a switch, **Delete** removes it. From the keyboard: Tab to the board, `[` and `]` choose a part, arrow keys move it, Esc deselects.
 - On a headset, select a part with the controller trigger to grab it. Select an empty board location to add the current part.
 - Use **Enter VR** while the page is in a user gesture and the headset/runtime is ready.
 - Join another browser in the same room to observe updates and presence.

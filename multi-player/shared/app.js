@@ -4,7 +4,7 @@ import { themes } from "./themes.js";
 import { PITT, tagSprite, brandPlate } from "../../brand-kit/panels.js";
 import { buildEnvironment } from "./world.js";
 import { createAvatar } from "./avatars.js";
-import { normalizePose } from "./avatar-logic.mjs";
+import { normalizePose, spreadAngles } from "./avatar-logic.mjs";
 
 const mode = document.body.dataset.mode === "ar" ? "ar" : "vr";
 const params = new URLSearchParams(location.search);
@@ -15,6 +15,8 @@ const roomInput = document.querySelector("#room");
 const joinButton = document.querySelector("#join");
 const enterXrButton = document.querySelector("#enter-xr");
 const status = document.querySelector("#status");
+const connection = document.querySelector(".connection");
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const workspace = document.querySelector("#workspace");
 const roster = document.querySelector("#roster");
 const deleteButton = document.querySelector("#delete-selected");
@@ -34,6 +36,25 @@ if (!("xr" in navigator)) {
   xrHint.hidden = false;
   xrHint.textContent = "WebXR is unavailable in this browser. You can still build together in desktop mode.";
 }
+
+// Join flow furniture, added here so the three pages share it: numbered steps, a note when the lite view is on, and a
+// compact "you are in room X" bar with a Leave button that replaces the name and room fields once connected.
+const heading = document.querySelector(".heading");
+const steps = document.createElement("ol");
+steps.className = "steps";
+steps.innerHTML = "<li>Pick a name and a room, then press <b>Join room</b>.</li><li>Ask others to open this page and join the same room (rooms are per example).</li><li>Add parts with the buttons, then drag them on the board. One person holds a part at a time.</li>";
+heading.after(steps);
+const roomBar = document.createElement("div");
+roomBar.className = "room-bar";
+const roomLine = document.createElement("span");
+roomLine.id = "room-line";
+const leaveButton = document.createElement("button");
+leaveButton.type = "button";
+leaveButton.id = "leave";
+leaveButton.textContent = "Leave room";
+roomBar.append(roomLine, leaveButton);
+connection.insertBefore(roomBar, status);
+leaveButton.addEventListener("click", () => leaveRoom());
 
 const scene = new THREE.Scene();
 const sceneColor = "#071433"; // deep Pitt navy
@@ -56,6 +77,14 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const gl = renderer.getContext();
 const gpuName = String(gl.getParameter(gl.getExtension("WEBGL_debug_renderer_info")?.UNMASKED_RENDERER_WEBGL ?? gl.RENDERER));
 const liteMode = params.has("lite") ? params.get("lite") === "1" : /swiftshader|llvmpipe|software/i.test(gpuName);
+if (liteMode && !params.has("lite")) {
+  const note = document.createElement("p");
+  note.className = "lite-note";
+  const fullUrl = new URL(location.href);
+  fullUrl.searchParams.set("lite", "0");
+  note.innerHTML = `Lite view: no graphics card was detected, so shadows and room props are off. <a href="${fullUrl.search}">Show the full scene</a> (slow without a GPU).`;
+  steps.after(note);
+}
 const flag = (name, fallback) => (params.has(name) ? params.get(name) === "1" : fallback);
 const shadowsWanted = flag("shadows", !liteMode);
 const propsWanted = flag("props", !liteMode);
@@ -63,10 +92,13 @@ renderer.shadowMap.enabled = shadowsWanted;
 if (mode === "ar") renderer.setClearColor(0x000000, 0);
 renderer.domElement.className = "scene";
 renderer.domElement.setAttribute("aria-label", theme.sceneLabel);
+renderer.domElement.setAttribute("role", "application");
+renderer.domElement.tabIndex = 0;
+renderer.domElement.setAttribute("aria-describedby", "controls");
 document.body.appendChild(renderer.domElement);
 
 const orbit = new OrbitControls(camera, renderer.domElement);
-orbit.enableDamping = true;
+orbit.enableDamping = !reducedMotion;
 orbit.target.set(0, 0.55, 0);
 
 scene.add(new THREE.HemisphereLight(0xdcecff, 0x4a4f58, 1.1));
@@ -140,6 +172,7 @@ board.add(selectionRing);
 let socket = null;
 let selfId = null;
 let selectedPart = theme.parts[0].id;
+let armedPart = null; // a part type waiting to be dropped by clicking the board (desktop); the headset always places on select
 let selectedObjectId = null;
 let drag = null;
 let pointerStart = null;
@@ -153,6 +186,7 @@ let arOrigin = null;
 let arDirection = null;
 let arCalibrationStep = 0;
 let lastCursorSent = 0;
+let lastMoveSent = 0;
 let objectSerial = 0;
 
 const reticle = new THREE.Mesh(
@@ -165,7 +199,7 @@ scene.add(reticle);
 
 // Name tags use the shared brand kit: a backed pill with a coloured chip, never bare floating text.
 function makeLabel(text, color) {
-  return tagSprite(text, { accent: color, status: "idle", worldHeight: 0.2, depthTest: true, maxChars: 28 });
+  return tagSprite(text, { accent: color, status: "idle", worldHeight: 0.27, depthTest: true, maxChars: 28 });
 }
 
 // Pitt-Bradford + CIST plaque standing at the back edge of the shared board.
@@ -253,7 +287,7 @@ function isConnected() {
 
 function send(message) {
   if (!isConnected()) {
-    status.textContent = "Join a room before changing the shared scene.";
+    setStatus("Join a room before changing the shared scene.", "warn");
     return false;
   }
   socket.send(JSON.stringify(message));
@@ -261,9 +295,9 @@ function send(message) {
 }
 
 function updateRoster() {
-  const participants = [...peers.values()]
-    .map((peer) => `${peer.name} (${peer.mode.toUpperCase()})`);
-  participants.unshift(`${nameInput.value.trim() || "You"} (${mode.toUpperCase()})`);
+  const tag = (value) => (value === "vr" || value === "ar" ? ` (${value.toUpperCase()})` : "");
+  const participants = [...peers.values()].map((peer) => `${peer.name}${tag(peer.mode)}`);
+  participants.unshift(`${nameInput.value.trim() || "You"} (you)${tag(renderer.xr.isPresenting ? mode : "web")}`);
   roster.textContent = `${participants.length} in room: ${participants.join(" · ")}`;
 }
 
@@ -293,9 +327,11 @@ function removePeer(id) {
   updateRoster();
 }
 
-function updateStatus(message) {
+function setStatus(message, state = "info") {
   status.textContent = message;
+  status.dataset.state = state;
 }
+function updateStatus(message) { setStatus(message); }
 
 function receive(message) {
   switch (message.type) {
@@ -306,10 +342,19 @@ function receive(message) {
       joinButton.disabled = true;
       enterXrButton.disabled = !("xr" in navigator);
       workspace.hidden = false;
+      connection.classList.add("joined");
+      roomLine.textContent = `Room "${message.room}"`;
       for (const object of message.objects) addSharedObject(object);
       for (const peer of message.peers) updatePeer(peer);
       updateRoster();
-      updateStatus(`Connected to room "${message.room}" (${theme.title}). Add a part to start building.`);
+      if (renderer.xr.isPresenting) send({ type: "mode", mode });
+      if (reconnect.attempts > 0) {
+        const lost = reconnect.objectCount > 0 && message.objects.length === 0;
+        updateStatus(`Reconnected to room "${message.room}".${lost ? " The room was empty, so earlier parts are gone." : ""}`);
+      } else {
+        updateStatus(message.objects.length ? `Joined room "${message.room}". ${message.objects.length} parts are already on the board.` : `Joined room "${message.room}". The board is empty: add a part to start.`);
+      }
+      reconnect.attempts = 0;
       break;
     case "peer-join":
       updatePeer(message.peer);
@@ -327,6 +372,15 @@ function receive(message) {
       const peer = peers.get(message.id);
       const pose = normalizePose(message);
       if (peer && pose) peer.avatar.setPose(pose);
+      break;
+    }
+    case "peer-mode": {
+      const peer = peers.get(message.id);
+      if (peer) {
+        peer.mode = message.mode;
+        peer.avatar.setMode(message.mode);
+        updateRoster();
+      }
       break;
     }
     case "peer-leave":
@@ -397,27 +451,38 @@ function receive(message) {
   }
 }
 
-function joinRoom() {
+// Close codes where the relay gave a reason (room full, bad name, wrong theme): show the reason, do not retry.
+const FINAL_CLOSE_CODES = new Set([1000, 1003, 1007, 1008, 1013]);
+const MAX_RECONNECTS = 5;
+const reconnect = { attempts: 0, timer: null, room: null, objectCount: 0 };
+let leaving = false;
+
+function friendlyClose(event) {
+  if (event.code === 1013) return `${event.reason || "The room is full."} Try another room name.`;
+  return event.reason || "Disconnected from the room. Join again to continue.";
+}
+
+function joinRoom(retry = false) {
   if (socket && socket.readyState !== WebSocket.CLOSED) return;
-  const room = roomInput.value.trim().toLowerCase();
+  clearTimeout(reconnect.timer);
+  const room = retry ? reconnect.room : roomInput.value.trim().toLowerCase();
   if (!roomPattern.test(room)) {
-    updateStatus("Room names must be 1-24 letters, numbers, or hyphens.");
+    setStatus("Room names must be 1-24 letters, numbers, or hyphens.", "error");
     roomInput.focus();
     return;
   }
-  socket = new WebSocket(`${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/ws`);
+  if (!retry) reconnect.attempts = 0;
+  reconnect.room = room;
+  leaving = false;
+  const ws = new WebSocket(`${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/ws`);
+  socket = ws;
   joinButton.disabled = true;
-  updateStatus("Connecting to the shared room...");
-  socket.addEventListener("open", () => {
-    socket.send(JSON.stringify({
-      type: "join",
-      room,
-      theme: theme.id,
-      name: nameInput.value.trim() || "Guest",
-      mode,
-    }));
+  setStatus(retry ? `Reconnecting to room "${room}" (try ${reconnect.attempts} of ${MAX_RECONNECTS})...` : "Connecting to the shared room...");
+  ws.addEventListener("open", () => {
+    // Everyone joins as a browser page; a headset or phone AR session announces itself with a "mode" message once it starts.
+    ws.send(JSON.stringify({ type: "join", room, theme: theme.id, name: nameInput.value.trim() || "Guest", mode: "web" }));
   });
-  socket.addEventListener("message", (event) => {
+  ws.addEventListener("message", (event) => {
     try {
       receive(JSON.parse(event.data));
     } catch (error) {
@@ -425,20 +490,43 @@ function joinRoom() {
       updateStatus("Received an invalid room update. Check the relay log.");
     }
   });
-  socket.addEventListener("error", () => {
-    updateStatus("Could not connect to the room relay. Check the server and secure connection.");
-  });
-  socket.addEventListener("close", (event) => {
+  // "error" always precedes "close" with no detail of its own, so the close handler explains what happened.
+  ws.addEventListener("close", (event) => {
+    if (socket !== ws) return;
+    const wasConnected = selfId !== null;
+    if (wasConnected) reconnect.objectCount = objects.size;
     selfId = null;
     nameInput.disabled = false;
     roomInput.disabled = false;
     joinButton.disabled = false;
     workspace.hidden = true;
+    connection.classList.remove("joined");
     for (const id of [...objects.keys()]) removeSharedObject(id);
     for (const id of [...peers.keys()]) removePeer(id);
     selectObject(null);
-    updateStatus(event.reason || "Disconnected from the room. Rejoin to continue.");
+    drag = null;
+    if (leaving) { setStatus("You left the room. Join again to continue."); return; }
+    if (FINAL_CLOSE_CODES.has(event.code)) { reconnect.attempts = 0; setStatus(friendlyClose(event), "error"); return; }
+    if (wasConnected || reconnect.attempts > 0) {
+      if (reconnect.attempts < MAX_RECONNECTS) {
+        reconnect.attempts += 1;
+        const seconds = Math.min(8, 2 ** (reconnect.attempts - 1));
+        setStatus(`Connection lost. Trying again in ${seconds} s (try ${reconnect.attempts} of ${MAX_RECONNECTS}). Press Join room to try now.`, "warn");
+        reconnect.timer = setTimeout(() => joinRoom(true), seconds * 1000);
+        return;
+      }
+      reconnect.attempts = 0;
+      setStatus("Could not reconnect. The relay may have stopped: start it with npm start in the multi-player folder, then press Join room.", "error");
+      return;
+    }
+    setStatus(`Could not reach the room relay at ${location.host}. Start it with npm start in the multi-player folder and check the address, then press Join room.`, "error");
   });
+}
+
+function leaveRoom() {
+  leaving = true;
+  clearTimeout(reconnect.timer);
+  if (socket && socket.readyState !== WebSocket.CLOSED) { releaseGrab(); socket.close(1000, "Leaving the room."); }
 }
 
 function spawnPart(part, position = [0, 0.08, 0]) {
@@ -524,7 +612,11 @@ function moveGrab(worldPoint) {
   const position = [local.x, local.y, local.z];
   const rotation = [object.group.rotation.x, object.group.rotation.y, object.group.rotation.z];
   setObjectPosition(object, position, rotation);
-  send({ type: "move", id: object.id, position, rotation });
+  const now = performance.now();
+  if (now - lastMoveSent >= 33) { // the release message carries the final position
+    lastMoveSent = now;
+    send({ type: "move", id: object.id, position, rotation });
+  }
 }
 
 function releaseGrab() {
@@ -582,7 +674,8 @@ function onPointerUp(event) {
       raycaster.setFromCamera(pointer, camera);
       const hit = findObjectHit();
       if (hit) selectObject(hit.object.id);
-      else if (isConnected()) spawnAt(selectedPart, point);
+      else if (isConnected() && armedPart) spawnAt(armedPart, point);
+      else selectObject(null);
     }
   }
   pointerStart = null;
@@ -608,8 +701,9 @@ for (const item of theme.parts) {
   button.textContent = `+ ${item.label}`;
   button.addEventListener("click", () => {
     selectedPart = item.id;
+    armedPart = item.id;
     partPalette.querySelectorAll("button").forEach((other) => other.setAttribute("aria-pressed", String(other === button)));
-    spawnPart(selectedPart);
+    if (spawnPart(selectedPart)) setStatus(`Added ${partName(item.id)}. Click the board to add another, or press Esc to stop adding.`);
   });
   partPalette.append(button);
 }
@@ -645,12 +739,12 @@ document.querySelector("h1").textContent = theme.title;
 document.querySelector(".heading > p:last-child").textContent = theme.pitch;
 document.querySelector("#controls").textContent = theme.controls;
 
-joinButton.addEventListener("click", joinRoom);
+joinButton.addEventListener("click", () => joinRoom(false));
 roomInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") joinRoom();
+  if (event.key === "Enter") joinRoom(false);
 });
 nameInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") joinRoom();
+  if (event.key === "Enter") joinRoom(false);
 });
 
 deleteButton.addEventListener("click", () => {
@@ -662,8 +756,45 @@ document.addEventListener("keydown", (event) => {
   if (event.key.toLowerCase() === "t") toggleSelected();
   if (event.key.toLowerCase() === "r") rotateSelected();
   if (event.key === "Delete" && selectedObjectId) send({ type: "delete", id: selectedObjectId });
-  if (event.key === "Escape") selectObject(null);
+  if (event.key === "Escape") {
+    armedPart = null;
+    partPalette.querySelectorAll("button").forEach((other) => other.setAttribute("aria-pressed", "false"));
+    selectObject(null);
+  }
+  keyboardMove(event);
 });
+
+// Keyboard control of the board: [ and ] choose the previous or next part, arrow keys nudge the chosen part (Shift: bigger step).
+function keyboardMove(event) {
+  if (!(event.target === document.body || event.target === renderer.domElement)) return;
+  if (!isConnected() || event.ctrlKey || event.metaKey || event.altKey) return;
+  const ids = [...objects.keys()];
+  if (event.key === "[" || event.key === "]") {
+    if (!ids.length) return;
+    const index = ids.indexOf(selectedObjectId);
+    const next = event.key === "]" ? (index + 1) % ids.length : (index <= 0 ? ids.length - 1 : index - 1);
+    selectObject(ids[next]);
+    const chosen = objects.get(ids[next]);
+    setStatus(`Selected ${partName(chosen.data.part)} (${next + 1} of ${ids.length}). Arrow keys move it, R rotates it.`);
+    event.preventDefault();
+    return;
+  }
+  const delta = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[event.key];
+  const object = objects.get(selectedObjectId);
+  if (!delta || !object) return;
+  event.preventDefault();
+  if (object.heldBy && object.heldBy !== selfId) { setStatus("That part is being held by another participant.", "warn"); return; }
+  const step = event.shiftKey ? 0.4 : 0.1;
+  const limit = 3.1;
+  const position = [object.group.position.x + delta[0] * step, 0.08, object.group.position.z + delta[1] * step];
+  const radius = Math.hypot(position[0], position[2]);
+  if (radius > limit) { position[0] *= limit / radius; position[2] *= limit / radius; }
+  const rotation = [object.group.rotation.x, object.group.rotation.y, object.group.rotation.z];
+  send({ type: "grab", id: object.id });
+  setObjectPosition(object, position, rotation);
+  send({ type: "move", id: object.id, position, rotation });
+  send({ type: "release", id: object.id, position, rotation });
+}
 
 for (let index = 0; index < 2; index += 1) {
   const controller = renderer.xr.getController(index);
@@ -856,8 +987,8 @@ vrStage.visible = false;
   vrStage.add(floorDisc, ring, pedestal);
   scene.add(vrStage);
 }
-renderer.xr.addEventListener("sessionstart", () => { environment.applyXr(true); environment.setShadows(false); vrStage.visible = mode === "vr"; });
-renderer.xr.addEventListener("sessionend", () => { environment.applyXr(false); environment.setShadows(shadowsWanted); vrStage.visible = false; });
+renderer.xr.addEventListener("sessionstart", () => { send({ type: "mode", mode }); updateRoster(); environment.applyXr(true); environment.setShadows(false); vrStage.visible = mode === "vr"; });
+renderer.xr.addEventListener("sessionend", () => { send({ type: "mode", mode: "web" }); updateRoster(); environment.applyXr(false); environment.setShadows(shadowsWanted); vrStage.visible = false; });
 renderer.xr.addEventListener("sessionend", () => {
   if (mode !== "vr") return;
   board.position.set(0, 0, 0);
@@ -896,6 +1027,12 @@ function updateAvatars(time) {
   lastFrameTime = time;
   const holders = new Set();
   for (const object of objects.values()) if (object.heldBy) holders.add(object.heldBy);
+  // Desktop participants who point at the same spot would stand inside each other: spread them along the board edge.
+  const standing = [...peers.values()].filter((peer) => !peer.avatar.hasPose);
+  if (standing.length > 1) {
+    const spread = spreadAngles(standing.map((peer) => peer.avatar.wantedAngle), 0.34);
+    standing.forEach((peer, index) => peer.avatar.setStation(spread[index]));
+  }
   for (const [id, peer] of peers) {
     peer.avatar.setHolding(holders.has(id));
     peer.avatar.update(dt);
@@ -913,7 +1050,7 @@ function onMessageFrame(time, frame) {
   const chosen = objects.get(selectedObjectId);
   if (chosen) {
     selectionRing.position.copy(chosen.group.position).setY(0.1);
-    selectionRing.scale.setScalar(1 + 0.06 * Math.sin(time / 180));
+    selectionRing.scale.setScalar(reducedMotion ? 1 : 1 + 0.06 * Math.sin(time / 180));
   }
 
   if (mode === "ar" && renderer.xr.isPresenting && frame) updateArHitTest(frame);
@@ -945,7 +1082,7 @@ window.addEventListener("resize", () => {
 });
 
 // Read-only handles for the capture and measurement scripts (tools/measure.mjs); nothing in the page depends on it.
-window.__mp = { renderer, scene, peers, environment, objects };
+window.__mp = { renderer, scene, camera, peers, environment, objects };
 
 window.addEventListener("beforeunload", () => {
   releaseGrab();
