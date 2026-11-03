@@ -543,6 +543,12 @@
       "title": "Slide decks (download)",
       "links": [
         {
+          "id": "repository-guide",
+          "title": "Repository guide (whole repo)",
+          "url": "Repository-Guide.pptx",
+          "note": "25-slide tour of every folder"
+        },
+        {
           "id": "deck-overview",
           "title": "Project overview",
           "url": "Project-Overview.pptx",

@@ -35,6 +35,7 @@ namespace PittBradford.XR
             g.GetComponent<Rigidbody>().isKinematic = true;
             g.Snapped = best;
             best.Occupant = g;
+            Sfx.Play("snap", best.transform.position, 0.8f);
             best.Snapped?.Invoke(best, g);
             return true;
         }

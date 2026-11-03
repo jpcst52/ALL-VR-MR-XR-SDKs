@@ -16,7 +16,7 @@ General safety-awareness practice only: none of the scenarios is a procedure, pe
 | Test on the real headsets | [demo-day/HARDWARE-TEST-SESSION.md](demo-day/HARDWARE-TEST-SESSION.md) |
 | Understand the research and study ideas | [research/README.md](research/README.md) |
 | Learn the terms (XR, WebXR, OpenXR, bake and adopt) and who each guide is for | [GLOSSARY.md](GLOSSARY.md) |
-| Pick up the work in a new session | [agents/AGENT-RULES.md](agents/AGENT-RULES.md) |
+| Pick up the work in a new session | [agents/AGENT-RULES.md](agents/AGENT-RULES.md); the Unity sound and effects API is in [agents/KIT-AUDIO-FX.md](agents/KIT-AUDIO-FX.md) |
 
 ## Running and testing
 
@@ -75,4 +75,4 @@ Single-SDK examples (each folder has its own README): [a-frame](../a-frame/READM
 
 ## Slide decks
 
-[Project-Overview.pptx](../Project-Overview.pptx), [Run-the-XR-Examples.pptx](../Run-the-XR-Examples.pptx), [Multiplayer-WebXR-Examples.pptx](../multi-player/Multiplayer-WebXR-Examples.pptx). Rebuild with `tools/decks` (see its README).
+[Repository-Guide.pptx](../Repository-Guide.pptx), [Project-Overview.pptx](../Project-Overview.pptx), [Run-the-XR-Examples.pptx](../Run-the-XR-Examples.pptx), [Multiplayer-WebXR-Examples.pptx](../multi-player/Multiplayer-WebXR-Examples.pptx). Rebuild with `tools/decks` (see its README).

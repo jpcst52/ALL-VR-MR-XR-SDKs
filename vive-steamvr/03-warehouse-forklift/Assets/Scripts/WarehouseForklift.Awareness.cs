@@ -398,6 +398,7 @@ public partial class WarehouseForklift
         if (!paused || qIndex >= questions.Count) return;
         var q = questions[qIndex];
         q.Chosen = option;
+        UiSound("ui_select", 0.8f);
         Debug.Log($"[awareness]   Q{qIndex + 1} answered \"{q.Options[option]}\" -> {(q.Right ? "matches" : "does not match")} the simulation ({q.Truth})");
         qIndex++;
         ShowQuestion();

@@ -2,6 +2,7 @@
 
 Rebuilds the project's PowerPoint decks from code, using the current screenshots in the repository:
 
+- `Repository-Guide.pptx` (a tour of the whole repository, 25 slides)
 - `Project-Overview.pptx`
 - `Run-the-XR-Examples.pptx`
 - `multi-player/Multiplayer-WebXR-Examples.pptx`

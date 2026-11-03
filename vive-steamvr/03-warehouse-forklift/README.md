@@ -105,7 +105,7 @@ Not simulated, or simplified:
 
 ## Baked scene
 
-`Assets/Scenes/WarehouseForklift.unity` is **baked**: the warehouse that `Start()` builds (shell, lights, floor markings, racking and cartons, cargo block, dock, signs and stands, PPE items, cones, mirror, hazards, the forklift in its start pose, and the co-worker event's staff door, loading-zone paint and stand) is saved in the scene as 627 ordinary GameObjects (628 in the scene file including the "Scenario" object), so you can see, select and edit them in the Hierarchy and Scene view. Generated materials and textures are in `Assets/Baked/WarehouseForklift/` (commit it with the scene). At Play the same `Start()` runs and the kit helpers adopt the saved objects instead of making new ones. How baking and adoption work, the editing rules (do not rename, re-parent or reorder baked objects; untick instead of deleting) and the menus **Pitt-Bradford > Bake scene (play mode)** / **Unbake scene** are described in the kit README: [../packages/com.pittbradford.xrtraining/README.md](../packages/com.pittbradford.xrtraining/README.md#baked-scenes-bake-and-adopt). Re-bake after changing the build code. **Set up project** does not replace a baked scene.
+`Assets/Scenes/WarehouseForklift.unity` is **baked**: the warehouse that `Start()` builds (shell, lights, floor markings, racking and cartons, cargo block, dock, signs and stands, PPE items, cones, mirror, hazards, the forklift in its start pose, and the co-worker event's staff door, loading-zone paint and stand) is saved in the scene as about 2,170 ordinary GameObjects after the round 3 rebake (627 before it), so you can see, select and edit them in the Hierarchy and Scene view. Generated materials and textures are in `Assets/Baked/WarehouseForklift/` (commit it with the scene). At Play the same `Start()` runs and the kit helpers adopt the saved objects instead of making new ones. How baking and adoption work, the editing rules (do not rename, re-parent or reorder baked objects; untick instead of deleting) and the menus **Pitt-Bradford > Bake scene (play mode)** / **Unbake scene** are described in the kit README: [../packages/com.pittbradford.xrtraining/README.md](../packages/com.pittbradford.xrtraining/README.md#baked-scenes-bake-and-adopt). Re-bake after changing the build code. **Set up project** does not replace a baked scene.
 
 Specific to this project:
 
@@ -135,6 +135,7 @@ The self-test turns off the head's `TrackedPoseDriver` for its run: with XR stop
 ## Files
 
 - `Assets/Scripts/WarehouseForklift.cs`: the scenario, rules and screenshot script.
+- `Assets/Scripts/WarehouseForklift.Detail.cs`: round 3 textures, set dressing, fixtures, probe and dust.
 - `Assets/Scripts/WarehouseForklift.Awareness.cs`: the optional co-worker event, awareness check, summary panel and self-test.
 - `Assets/Scripts/CoWorker.cs`: the walking co-worker built from primitives.
 - `Assets/Scripts/Forklift.cs`: the forklift, driver and its behavior (including the put-away at the racking and holding for the co-worker).
@@ -142,7 +143,7 @@ The self-test turns off the head's `TrackedPoseDriver` for its run: with XR stop
 - `Assets/Editor/ProjectSetup.cs`: the Pitt-Bradford menu items.
 - `Assets/Scenes`, `Assets/XR`, `Assets/Resources`, `ProjectSettings`: the baked scene, OpenXR settings and shader keepers (written by **Set up project**, committed).
 - `Assets/Baked/WarehouseForklift/`: materials and textures written by **Bake scene**; the baked scene refers to them (see "Baked scene").
-- `screenshots/`: the 14 desktop editor renders below.
+- `screenshots/`: the 21 desktop editor renders (14 below, 15 to 21 in "Detail, lighting and sound (round 3)").
 - Screenshots are made with `Unity.exe -projectPath <this folder> -executeMethod PittBradford.XR.EditorTools.CaptureRunner.Run -pbCapture <folder> -logFile <log>` (no `-batchmode`; it needs graphics). The editor enters play mode, the scenario's `Shots` coroutine stages and photographs views 01-09, then runs the co-worker self-test for views 10-13, and the editor exits. A built player also accepts `-pbCapture <folder>`.
 
 ## Screenshots
@@ -167,6 +168,26 @@ Desktop editor renders made by the capture run above (re-shot November 3, 2026).
 | 13 Summary with the awareness check (scripted answers, 2 of 3) | |
 | ![WHY THIS MATTERS panel after the crossing step](screenshots/14-why-this-matters.png) | |
 | 14 "Why this matters" after the crossing step (the driver also has to stop and sound the horn) | |
+
+## Detail, lighting and sound (round 3)
+
+Verified November 3, 2026 (desktop editor, emulated): 0 compile errors; scene unbaked then re-baked (2,168 objects, 5.6 MB scene file); the 21-view capture ran on the baked scene and the scripted co-worker self-test printed `[selftest] PASS`. The older numbers above (627 objects, 13 views, 0.35% pixel comparison) describe the November 2 state.
+
+Added November 3, 2026. All of it is built in code (primitives and generated textures) and baked with the scene; the project stays pack-free (no Asset Store content, no Rocketbox, no `assets-private`). Compiled and baked in the desktop editor; not played by a person, not tested on a headset, and no frame rate was measured (the scene file grew from 628 to about 2,180 objects, so expect it to cost more than before).
+
+**Scene detail** (`WarehouseForklift.Detail.cs`, plus edits in `WarehouseForklift.cs`): racking with frame ties, diagonal braces, base plates, barcode labels and coloured location tags on every beam, and varied loads (taped and labelled cartons, wrapped pallets, drum pairs, stacked crates); the cargo block stands on pallets under shrink-wrap with straps and labels; floor saw cuts, wheel-track decals along the forklift route, oil stains, a glossy spill pool, a painted charging bay with charger and guard rail, fire points; steel columns with hatched guards; ceiling ducts, a red sprinkler main with heads, a cable tray, conduit; light fixtures with frames and hangers; dock leveller, rubber seals, door guides, control box and traffic lamps, wheel chocks; yellow bollards at rack ends; staging (wrapped pallets, pallet stacks, drums, crates, three pallet jacks, a spill-kit bin); extinguishers with red signs, a first-aid cabinet and eyewash, exit signs; a break area (table, chairs, counter, microwave, coffee maker, vending machine, fridge, cooler, clock); lockers and a bench; tote shelving along the north wall; a notice board with pinned papers; aisle signs. New signs use the kit's `Ui.Panel`.
+
+**Models.** The forklift (`Forklift.cs`) now has hazard-striped skirts, fenders, cowl, dash with display and lamps, seat with headrest and armrests, levers, battery hood, tail lights, tow pin, overhead guard with work lamps, tyres with hubs and tread blocks that turn with the speed, mast with inner rails, hydraulic ram, sprockets and chains that shorten as the carriage rises, backrest, tapered fork tips, a wrapped and strapped load, a seated driver with legs, glasses and gloves, and a strobe beacon with a flashing vertex light. The co-worker (`CoWorker.cs`) gained neck, ears, nose, hair, safety glasses, hat peak and ribs, chin strap, belt, pockets, radio with antenna, ID badge, vest zip and pocket, gloves, soles and cuffs. The optional external-model hook (`CoWorker.ModelFactory`) is untouched.
+
+**Textures (generated, procedural).** Sealed concrete with aggregate and tone patches (tiles seamlessly), painted block wall with roller streaks and grime, corrugated cardboard, wood, shipping label with barcode, tyre marks, stain, soft dot. No normal maps (the bake saves textures as plain colour maps).
+
+**Lighting.** Dimmer ambient, warm ceiling fixtures against a cool daylight point light at the open dock door, additive light shafts (kit `Fx.LightShaft`), glowing light pools on the floor, dust motes (kit `Fx.Dust`), and one realtime reflection probe (kit `Fx.ReflectionProbe`, 128 px, rendered once a few frames after start) so the sealed floor and metal pick up the room. Pixel lights are capped at four; the break-area light and the beacon are vertex lights. Built-in render pipeline, no post-processing.
+
+**Sound** (kit `Sfx`; nothing plays during a bake). Synthesized in code: forklift engine loop (pitch and volume follow speed), reversing beeper (only while backing out of the rack), hydraulic whine at each lift and lowering, forklift horn (sounds when the forklift approaches the crossing and for the near miss), HVAC beds over the floor and the entry, plant drone at the north wall, wind at the dock door, button, UI confirm and error, answer select (still audible while the awareness check pauses audio), near-miss alarm sweep, radio clicks, mirror snap, cone thud, co-worker footsteps; the player's concrete footsteps come from the kit. Recorded CC0 samples used through the kit's automatic override: `pallet_drop` and `snap` (rubberduck, OpenGameArt, CC0; see `../packages/com.pittbradford.xrtraining/Runtime/Resources/Audio/CREDITS.md`). Levels were not auditioned by a person.
+
+Still plain: all forms are boxes and cylinders (no rounded bevels), the people are stiff, wall-mounted items are flat, vending and fridge fronts are simple, no normal or detail maps, and the dock opening is a bright flat panel.
+
+Screenshots 15 to 21 are new (desktop editor renders, not a headset): 15 racking aisle, 16 forklift close-up, 17 dock and staging, 18 break area, 19 light shafts, 20 lockers and first aid, 21 co-worker close-up. Files added: `Assets/Scripts/WarehouseForklift.Detail.cs`.
 
 ## Troubleshooting
 

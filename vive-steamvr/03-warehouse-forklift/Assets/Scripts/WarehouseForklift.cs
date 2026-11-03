@@ -71,7 +71,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
     {
         "A hard hat, vest and glasses guard your head and eyes and make you easy for drivers to see. They only help if they are on before you step onto the floor.",
         "A corner mirror shows traffic you cannot see around the bend. One second of looking costs less than walking out blind.",
-        "Eye contact and a full stop show the driver has seen you, and the stripes tell drivers where to expect walkers. The driver also has to stop and sound the horn at crossings, so the safety is shared.",
+        "A full stop and eye contact show the driver has seen you. Drivers also stop and sound the horn at crossings.",
         "A spill and a damaged rack are hazards for the next person. Cones keep others away until authorized crews fix them, and your radio call starts that.",
     };
 
@@ -82,6 +82,35 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
     {
         board.Complete(step, message);
         if (why != null && !staging) why.Show(StepWhy[step]);
+        if (!staging) Sfx.Play2D("ui_confirm", 0.8f);
+    }
+
+    int lastMistakes;
+
+    /// <summary>A 2D interface sound that still plays while the awareness check has paused the audio.</summary>
+    void UiSound(string name, float volume = 0.8f)
+    {
+        var s = Sfx.Play2D(name, volume);
+        if (s != null) s.ignoreListenerPause = true;
+    }
+
+    /// <summary>
+    /// Ambience beds (HVAC over the floor and the entry, a distant plant drone, wind at the dock door) as 3D loops with wide
+    /// rolloff. The kit keeps the loops out of the bake and plays nothing while baking.
+    /// </summary>
+    void BuildSound()
+    {
+        Sfx.Preload();
+        Transform At(string name, Vector3 pos)
+        {
+            var n = P.Node(name, transform).transform;
+            if (P.IsNew(n)) n.position = pos;
+            return n;
+        }
+        Sfx.Loop("hvac_loop", At("Ambience HVAC", new Vector3(0f, 6f, 7.5f)), 0.28f, 10f, 45f);
+        Sfx.Loop("hvac_loop", At("Ambience HVAC entry", new Vector3(-6f, 6f, -9f)), 0.2f, 6f, 30f);
+        Sfx.Loop("plant_drone_loop", At("Ambience machines", new Vector3(0f, 3f, 15.5f)), 0.22f, 8f, 40f);
+        Sfx.Loop("wind_loop", At("Ambience dock door", new Vector3(13.6f, 2f, 6f)), 0.14f, 3f, 14f);
     }
 
     // state
@@ -99,21 +128,24 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
     {
         baking = BakeSession;
         QualitySettings.shadows = ShadowQuality.All;
-        // ceiling / wall / floor ambient: brighter from the lit roof, darker bounce from the concrete
+        QualitySettings.pixelLightCount = 4; // the practical lights are many; the brightest four per object are per-pixel
+        // dim warehouse mood: darker ambient (roof a little brighter, floor bounce darkest); the fixtures and the cool
+        // dock daylight do the work
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
-        RenderSettings.ambientSkyColor = new Color(0.5f, 0.5f, 0.52f);
-        RenderSettings.ambientEquatorColor = new Color(0.42f, 0.43f, 0.45f);
-        RenderSettings.ambientGroundColor = new Color(0.26f, 0.26f, 0.27f);
+        RenderSettings.ambientSkyColor = new Color(0.36f, 0.37f, 0.40f);
+        RenderSettings.ambientEquatorColor = new Color(0.30f, 0.31f, 0.34f);
+        RenderSettings.ambientGroundColor = new Color(0.17f, 0.17f, 0.18f);
         RenderSettings.fog = true;
         RenderSettings.fogMode = FogMode.Linear;
-        RenderSettings.fogColor = new Color(0.5f, 0.53f, 0.57f);
-        RenderSettings.fogStartDistance = 28f;
-        RenderSettings.fogEndDistance = 70f;
+        RenderSettings.fogColor = new Color(0.36f, 0.38f, 0.42f);
+        RenderSettings.fogStartDistance = 22f;
+        RenderSettings.fogEndDistance = 62f;
 
         steel = P.Steel();
         darkSteel = P.DarkSteel();
         hazard = P.Hazard();
         concrete = P.Concrete();
+        InitDetailMaterials(); // textured floor (replaces concrete), wall, cardboard, wood and decal materials
 
         // Every world object is made through the kit helpers (P.Node, P.Box, P.Text, Ui.Panel ...). In a baked scene
         // (Pitt-Bradford > Bake scene) they return the saved objects instead, matched by parent, name and call order,
@@ -133,6 +165,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         BuildHazards();
         BuildCones();
         BuildRadio();
+        BuildDetail(); // round 3 set dressing, light fixtures, probe (WarehouseForklift.Detail.cs)
 
         var route = new[]
         {
@@ -150,6 +183,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         BuildBoard();
         BuildBrand();
         why = WhyCue.Create(transform);
+        BuildSound();
     }
 
     Transform NewRoot(string name) => P.Node(name, transform).transform;
@@ -260,7 +294,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
     {
         var root = NewRoot("Shell");
         P.Box(root, "Floor", new Vector3(0, -0.1f, 2f), new Vector3(28f, 0.2f, 28f), concrete);
-        var wall = P.Mat(new Color(0.78f, 0.79f, 0.8f), 0f, 0.2f);
+        var wall = mWall; // painted block texture with roller streaks and grime
         P.Box(root, "Wall south", new Vector3(0, 3.5f, -12.15f), new Vector3(28.6f, 7f, 0.3f), wall);
         P.Box(root, "Wall north", new Vector3(0, 3.5f, 16.15f), new Vector3(28.6f, 7f, 0.3f), wall);
         P.Box(root, "Wall west", new Vector3(-14.15f, 3.5f, 2f), new Vector3(0.3f, 7f, 28.6f), wall);
@@ -294,7 +328,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
                 l.transform.position = pos - Vector3.up * 0.5f;
                 l.type = LightType.Point;
                 l.range = 17f;
-                l.intensity = 0.85f;
+                l.intensity = 1.05f;
                 l.color = new Color(1f, 0.95f, 0.86f);
             }
         }
@@ -303,7 +337,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         if (P.IsNew(sunGo))
         {
             sun.type = LightType.Directional;
-            sun.intensity = 0.4f;
+            sun.intensity = 0.28f;
             sun.color = new Color(1f, 0.94f, 0.85f);
             sun.transform.rotation = Quaternion.Euler(60, -30, 0);
             sun.shadows = LightShadows.Soft;
@@ -439,13 +473,22 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         var beam = P.Mat(new Color(0.92f, 0.42f, 0.08f), 0.1f, 0.4f);
         var deck = P.Mat(new Color(0.2f, 0.2f, 0.22f), 0f, 0.3f);
         var guard = hazard;
-        var cardboard = new[]
-        {
-            P.Mat(new Color(0.72f, 0.56f, 0.36f), 0f, 0.2f),
-            P.Mat(new Color(0.62f, 0.47f, 0.3f), 0f, 0.2f),
-            P.Mat(new Color(0.8f, 0.7f, 0.55f), 0f, 0.2f),
-        };
+        var cardboard = new[] { mCard0, mCard1, mCard2 };
         float[] levels = { 0.25f, 1.55f, 2.85f };
+        var plateMat = P.Mat(new Color(0.2f, 0.21f, 0.24f), 0.7f, 0.4f);
+        var tagMat = new[] { P.Mat(new Color(0.95f, 0.5f, 0.05f), 0f, 0.4f), P.Mat(new Color(0.1f, 0.65f, 0.3f), 0f, 0.4f), P.Mat(new Color(0.95f, 0.85f, 0.1f), 0f, 0.4f) };
+        var blueDrum = P.Mat(new Color(0.1f, 0.3f, 0.65f), 0.5f, 0.55f);
+
+        // frame ties and a diagonal brace between the two uprights of each frame, base plates under every upright
+        for (int i = 0; i <= bays; i++)
+        {
+            float z = z0 + i * bay;
+            Bx(root, "Frame tie", new Vector3(cx, 0.6f, z), new Vector3(depth, 0.04f, 0.04f), upright);
+            Bx(root, "Frame tie", new Vector3(cx, 3.4f, z), new Vector3(depth, 0.04f, 0.04f), upright);
+            Bx(root, "Frame brace", new Vector3(cx, 2.0f, z), new Vector3(1.6f, 0.035f, 0.035f), upright, 0f, 0f, 60f);
+            Bx(root, "Base plate", new Vector3(cx - depth / 2f, 0.01f, z), new Vector3(0.2f, 0.02f, 0.2f), darkSteel);
+            Bx(root, "Base plate", new Vector3(cx + depth / 2f, 0.01f, z), new Vector3(0.2f, 0.02f, 0.2f), darkSteel);
+        }
 
         for (int i = 0; i <= bays; i++)
         {
@@ -479,14 +522,56 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
                 P.Box(root, "Beam", new Vector3(cx - depth / 2f, level, zm), new Vector3(0.06f, 0.12f, bay), beam, false);
                 P.Box(root, "Beam", new Vector3(cx + depth / 2f, level, zm), new Vector3(0.06f, 0.12f, bay), beam, false);
                 P.Box(root, "Deck", new Vector3(cx, level + 0.07f, zm), new Vector3(depth, 0.03f, bay - 0.1f), deck, false);
+                // beam label: a white barcode plate and a coloured location tag on the aisle-face beam
+                Bx(root, "Beam label", new Vector3(cx - depth / 2f - 0.034f, level, zm - bay * 0.3f), new Vector3(0.012f, 0.07f, 0.3f), mLabel);
+                Bx(root, "Beam tag", new Vector3(cx - depth / 2f - 0.034f, level, zm - bay * 0.3f + 0.2f), new Vector3(0.012f, 0.06f, 0.06f), tagMat[(b + (int)(level * 3f)) % 3]);
                 int n = rng.Next(0, 3);
+                // the west-wall bay the forklift puts its pallet in must hold only plain "Carton" objects (removed at Play)
+                bool plain = seed == 15 && Mathf.Approximately(level, 1.55f);
                 for (int k = 0; k < n; k++)
                 {
                     float w = 0.55f + (float)rng.NextDouble() * 0.3f;
                     float h = 0.4f + (float)rng.NextDouble() * 0.6f;
                     float l = Mathf.Min(bay - 0.3f, 0.6f + (float)rng.NextDouble() * 0.5f);
                     float zz = zm + (n == 1 ? 0f : (k == 0 ? -1 : 1) * (bay * 0.25f));
-                    P.Box(root, "Carton", new Vector3(cx, level + 0.085f + h / 2f, zz), new Vector3(w, h, l), cardboard[rng.Next(0, 3)]);
+                    int kind = plain ? 0 : rng.Next(0, 6);
+                    float yb = level + 0.085f;
+                    float yaw = ((float)rng.NextDouble() - 0.5f) * 8f;
+                    var carton = cardboard[rng.Next(0, 3)];
+                    if (kind == 3)
+                    {
+                        // a pair of drums
+                        Drum(root, "Drum", new Vector3(cx - 0.22f, yb, zz), blueDrum);
+                        Drum(root, "Drum", new Vector3(cx + 0.24f, yb, zz), blueDrum);
+                    }
+                    else if (kind == 4)
+                    {
+                        // two stacked plastic crates
+                        Bx(root, "Crate", new Vector3(cx, yb + 0.15f, zz), new Vector3(0.6f, 0.3f, Mathf.Min(l, 0.5f)), mCrate);
+                        Bx(root, "Crate", new Vector3(cx, yb + 0.46f, zz), new Vector3(0.6f, 0.3f, Mathf.Min(l, 0.5f)), mCrate2);
+                    }
+                    else if (kind == 5)
+                    {
+                        // a wrapped pallet load
+                        float lz = Mathf.Min(l + 0.2f, bay - 0.25f);
+                        float hh = 0.45f + (float)rng.NextDouble() * 0.4f;
+                        Bx(root, "Pallet", new Vector3(cx, yb + 0.06f, zz), new Vector3(0.95f, 0.12f, lz), mWood);
+                        Bx(root, "Pallet load", new Vector3(cx, yb + 0.12f + hh / 2f, zz), new Vector3(0.84f, hh, lz - 0.1f), carton);
+                        Bx(root, "Pallet wrap", new Vector3(cx, yb + 0.12f + hh / 2f, zz), new Vector3(0.88f, hh + 0.03f, lz - 0.05f), mWrap);
+                    }
+                    else
+                    {
+                        var c = P.Box(root, "Carton", new Vector3(cx, yb + h / 2f, zz), new Vector3(w, h, l), carton);
+                        if (P.IsNew(c)) c.transform.localRotation = Quaternion.Euler(0, kind == 0 ? 0f : yaw, 0);
+                        // tape across the top, and a label on the aisle face (children of the carton, so they go with it)
+                        Bx(c.transform, "Tape", new Vector3(0f, 0.5f + 0.002f, 0f), new Vector3(0.06f / w, 0.004f / h, 1.01f), mCard2);
+                        Bx(c.transform, "Carton label", new Vector3(-0.502f, 0.1f, 0.15f), new Vector3(0.004f / w, 0.22f / h, 0.4f / l), mLabel);
+                        if (kind == 2)
+                        {
+                            var c2 = P.Box(root, "Carton", new Vector3(cx, yb + h + 0.14f, zz), new Vector3(w * 0.8f, 0.28f, l * 0.8f), cardboard[rng.Next(0, 3)]);
+                            Bx(c2.transform, "Carton label", new Vector3(-0.502f, 0f, 0f), new Vector3(0.004f / (w * 0.8f), 0.4f, 0.4f), mLabel);
+                        }
+                    }
                 }
             }
         }
@@ -497,19 +582,24 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
     {
         var root = NewRoot("Cargo block");
         var rng = new System.Random(21);
-        var mats = new[]
-        {
-            P.Mat(new Color(0.72f, 0.56f, 0.36f), 0f, 0.2f),
-            P.Mat(new Color(0.62f, 0.47f, 0.3f), 0f, 0.2f),
-            P.Mat(new Color(0.3f, 0.45f, 0.7f), 0f, 0.3f),
-        };
+        var mats = new[] { mCard0, mCard1, P.Mat(new Color(0.3f, 0.45f, 0.7f), 0f, 0.3f) };
         float[] xs = { -8.35f, -7.2f, -6.05f };
         float[] zs = { -4.65f, -2.75f };
         float[] ys = { 0.6f, 1.85f };
+        // the stack stands on pallets and has shrink-wrap, strapping and labels (the east face is the one the player sees)
+        foreach (float x in xs)
+        foreach (float z in zs)
+            Pallet(root, "Cargo pallet", new Vector3(x, -0.0f, z), 0f, 1.1f, 1.5f);
         foreach (float x in xs)
         foreach (float z in zs)
         foreach (float y in ys)
-            P.Box(root, "Cargo", new Vector3(x, y, z), new Vector3(1.1f, 1.2f, 1.5f), mats[rng.Next(0, 3)]);
+        {
+            float yy = y + 0.14f;
+            P.Box(root, "Cargo", new Vector3(x, yy, z), new Vector3(1.1f, 1.2f, 1.5f), mats[rng.Next(0, 3)]);
+            Bx(root, "Cargo strap", new Vector3(x, yy, z), new Vector3(1.12f, 1.21f, 0.04f), mRubber);
+            Bx(root, "Cargo label", new Vector3(x + 0.556f, yy - 0.25f, z + 0.3f), new Vector3(0.012f, 0.2f, 0.32f), mLabel);
+            if (y > 1f) Bx(root, "Cargo wrap", new Vector3(x, yy, z), new Vector3(1.14f, 1.23f, 1.54f), mWrap);
+        }
         CombineStatic(root);
         // the sign is created after combining and outside the batched root (TextMesh has no MeshFilter)
         // Fixed to the stack's east face, readable from the walkway (+x). The old text faced -x, so it read mirrored.
@@ -522,7 +612,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
     {
         var root = NewRoot("Loading dock");
         float x = 13.82f;
-        P.Box(root, "Dock opening", new Vector3(x, 1.9f, 6f), new Vector3(0.06f, 3.8f, 4.6f), P.Glow(new Color(0.75f, 0.88f, 1f), 1.6f), false);
+        P.Box(root, "Dock opening", new Vector3(x, 1.9f, 6f), new Vector3(0.06f, 3.8f, 4.6f), P.Glow(new Color(0.6f, 0.78f, 1f), 1.1f), false);
         P.Box(root, "Dock frame N", new Vector3(x - 0.04f, 1.9f, 8.4f), new Vector3(0.14f, 3.9f, 0.2f), hazard, false);
         P.Box(root, "Dock frame S", new Vector3(x - 0.04f, 1.9f, 3.6f), new Vector3(0.14f, 3.9f, 0.2f), hazard, false);
         P.Box(root, "Dock frame top", new Vector3(x - 0.04f, 3.85f, 6f), new Vector3(0.14f, 0.2f, 5.0f), hazard, false);
@@ -558,7 +648,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         var b = P.Box(parent, name + " button", localPos, size, P.Glow(color, 0.9f));
         var p = P.Ensure<Pressable>(b);
         p.Label = name;
-        p.Pressed += h => onPress();
+        p.Pressed += h => { Sfx.Play("button", b.transform.position, 0.8f); onPress(); };
         return p;
     }
 
@@ -796,8 +886,19 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         if (fresh || rb.automaticCenterOfMass) rb.centerOfMass = new Vector3(0, -0.15f, 0);
         var g = P.Ensure<Grabbable>(go);
         g.SnapId = "cone";
+        g.Dropped += x => StartCoroutine(ConeLands(x));
         Register(g);
         cones.Add(g);
+    }
+
+    /// <summary>A dropped cone makes a plastic thud once it hits the floor and settles.</summary>
+    IEnumerator ConeLands(Grabbable cone)
+    {
+        var rb = cone != null ? cone.GetComponent<Rigidbody>() : null;
+        float t = 0f;
+        yield return new WaitForSeconds(0.15f);
+        while (cone != null && rb != null && t < 3f && rb.linearVelocity.sqrMagnitude > 0.2f) { t += Time.deltaTime; yield return null; }
+        if (cone != null && cone.transform.parent == null) Sfx.Play("cone_place", cone.transform.position, 0.9f);
     }
 
     void BuildRadio()
@@ -900,13 +1001,23 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
             return;
         }
         radioText.text = "SUPERVISOR: Copy. Spill and damaged\nupright reported. Crew on the way.";
-        Done(3, "Reported by radio: spill and damaged upright, both coned off.");
+        Sfx.Play("radio_click", new Vector3(-5.9f, 1.4f, 8.4f), 0.9f);
+        StartCoroutine(RadioReply());
+        Done(3,"Reported by radio: spill and damaged upright, both coned off.");
+    }
+
+    IEnumerator RadioReply()
+    {
+        yield return new WaitForSeconds(1.4f);
+        Sfx.Play("radio_click", new Vector3(-5.9f, 1.4f, 8.4f), 0.7f);
     }
 
     void NearMiss(string why)
     {
         nextNear = Time.time + 4f;
         board.Mistake(why, true);
+        lastMistakes = board.Mistakes; // the alarm below replaces the plain error sound
+        Sfx.Play2D("alarm_siren_rise", 0.6f);
         forklift.EmergencyStop(4f);
         flashT = 1.8f;
         rig.Right.Haptic(0.9f, 0.3f);
@@ -933,6 +1044,11 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         UpdateHazards(dt);
         UpdateFlash(dt);
         UpdateCoworkerEvent(zone, feet, dt);
+        if (board.Mistakes != lastMistakes)
+        {
+            if (board.Mistakes > lastMistakes) Sfx.Play2D("ui_error", 0.7f);
+            lastMistakes = board.Mistakes;
+        }
 
         prevZone = zone;
         if (board.AllDone && !finished)
@@ -974,6 +1090,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         {
             mirrorChecked = true;
             mirrorLampMat.SetColor("_EmissionColor", new Color(0.2f, 1f, 0.45f) * 1.4f);
+            Sfx.Play("mirror_snap", mirrorCenter, 0.8f);
             Done(1, "Mirror checked: forklift traffic comes from the west.");
         }
     }
@@ -1218,6 +1335,23 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         // blind-corner sign on the cargo stack (seen from the entry walkway) and the cone station sign
         yield return Snap(api, "08-blind-corner-sign", new Vector3(-3.4f, 1.7f, -5.8f), new Vector3(-5.4f, 1.9f, -3.2f), 55f);
         yield return Snap(api, "09-cone-station", new Vector3(-3.5f, 1.7f, 0.9f), new Vector3(-5.6f, 1.0f, 2.7f), 55f);
+
+        // round 3 views: racking detail, forklift close-up (forks raised), dock and staging, break area, light shafts,
+        // lockers and first aid, co-worker close-up
+        yield return Snap(api, "15-racking-aisle", new Vector3(1.2f, 1.7f, 1.3f), new Vector3(3.0f, 1.6f, 4.6f), 58f);
+        forklift.PoseLoading(new Vector3(1.6f, 0f, 0.2f), Vector3.right, 0.45f);
+        yield return Snap(api, "16-forklift-closeup", new Vector3(4.6f, 1.5f, -2.4f), new Vector3(2.5f, 1.1f, 0.2f), 52f);
+        forklift.PoseLoading(new Vector3(4f, 0f, 12f), Vector3.left, 0f);
+        yield return Snap(api, "17-dock-and-staging", new Vector3(8.8f, 2.0f, 11.8f), new Vector3(13.2f, 1.3f, 5.5f), 62f);
+        yield return Snap(api, "18-break-area", new Vector3(3.5f, 1.7f, -7.2f), new Vector3(11.0f, 1.1f, -10.0f), 60f);
+        yield return Snap(api, "19-light-shafts", new Vector3(0.5f, 1.6f, -8.5f), new Vector3(2.5f, 5.0f, 3.5f), 74f);
+        yield return Snap(api, "20-lockers-first-aid", new Vector3(-0.5f, 1.7f, -7.8f), new Vector3(0.8f, 1.4f, -11.8f), 62f);
+        if (coworker != null)
+        {
+            coworker.Pose(new Vector3(-4.2f, 0f, -9.2f), new Vector3(0.4f, 0f, -1f), 0.6f);
+            yield return Snap(api, "21-coworker-closeup", new Vector3(-4.6f, 1.5f, -11.2f), new Vector3(-4.2f, 1.2f, -9.2f), 38f);
+            coworker.gameObject.SetActive(false);
+        }
 
         // the co-worker event and awareness check, driven live by a scripted self-test (logs its score)
         yield return CoworkerShots(api);

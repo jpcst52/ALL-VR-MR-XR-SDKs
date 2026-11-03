@@ -63,6 +63,7 @@ namespace PittBradford.XR
         {
             if (index < 0 || index >= lines.Count || done[index]) return;
             done[index] = true;
+            Sfx.Play2D("ui_confirm", 0.6f);
             lines[index].text = lines[index].text.Replace($"{index + 1}.  ", "OK  ");
             if (message != null) Say(message, Done);
             int next = index + 1;
@@ -77,6 +78,7 @@ namespace PittBradford.XR
         {
             Mistakes++;
             if (critical) CriticalMisses++;
+            Sfx.Play2D(critical ? "error_buzz" : "ui_error", critical ? 0.7f : 0.6f);
             Say((critical ? "CRITICAL: " : "Mistake: ") + message, critical ? new Color(1f, 0.38f, 0.38f) : new Color(1f, 0.72f, 0.3f));
             UpdateFooter();
         }

@@ -130,6 +130,7 @@ The examples are built on published work about immersive training, and the open 
 
 ## Slide decks
 
+- [Repository guide](Repository-Guide.pptx): a 25-slide tour of every folder in the repository.
 - [Project overview](Project-Overview.pptx): what the project is, the five pathways, and how to explore it.
 - [Run the XR examples](Run-the-XR-Examples.pptx): launch steps and what to look for in each of the thirteen examples.
 - [Multiplayer WebXR examples](multi-player/Multiplayer-WebXR-Examples.pptx): Circuit Lab, Site Safety Layout, the relay protocol, and AR calibration.

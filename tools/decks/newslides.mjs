@@ -75,7 +75,7 @@ export async function demoDaySlide(pres, C, { section, eyebrow }) {
 }
 
 export async function researchSlide(pres, C, { section, eyebrow }) {
-  const slide = contentSlide(pres, { section, eyebrow, title: "Research basis: 76 references, checked against records" });
+  const slide = contentSlide(pres, { section, eyebrow, title: "Research basis: 77 references, checked against records" });
   const cols = [
     ["WHAT THE REVIEWS SUGGEST", C.accent1, [
       "Kaplan et al. (2021): XR training performs about as well as common methods overall, with a likely edge where danger or cost limits conventional training.",
@@ -192,7 +192,7 @@ export async function systemSlide(pres, C, { section, eyebrow }) {
     ["WEB PRACTICE LAB", C.accent1, ["17 hands-on safety-awareness scenarios", "Runs in any browser, and in Quest Browser", "Works offline from one lab PC"]],
     ["MULTIPLAYER WEBXR", C.accent2, ["Circuit Lab, Site Safety Layout, Hydrostatic Test Rig", "One small relay; people join by room name", "Other users appear as characters in hard hats"]],
     ["UNITY PROJECTS", C.accent3, ["Four scenario projects and a lobby hub", "Built for Vive Pro 2 on SteamVR (OpenXR)", "Plays in a desktop window with no headset"]],
-    ["RESEARCH", C.accent5, ["Bibliography of 76 references", "Three draft study designs", "Nothing has been measured yet"]],
+    ["RESEARCH", C.accent5, ["Bibliography of 77 references", "Three draft study designs", "Nothing has been measured yet"]],
   ];
   lanes.forEach(([head, color, items], i) => {
     const x = 0.6 + i * 3.08;

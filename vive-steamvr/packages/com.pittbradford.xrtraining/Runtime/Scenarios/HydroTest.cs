@@ -8,7 +8,7 @@ using PittBradford.XR;
 /// raises the test pressure, holds it from behind the line, and depressurizes in the right order.
 /// General safety-awareness practice only: it does not replace a site procedure or test permit.
 /// </summary>
-public class HydroTest : MonoBehaviour, IShotScript
+public partial class HydroTest : MonoBehaviour, IShotScript
 {
     /// <summary>When true the scenario skips its own walls, ceiling, and floor art so a scene can supply a real building around it.</summary>
     public bool ExternalShell;
@@ -78,17 +78,24 @@ public class HydroTest : MonoBehaviour, IShotScript
     void Start()
     {
         QualitySettings.shadows = ShadowQuality.All;
-        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-        RenderSettings.ambientLight = new Color(0.34f, 0.36f, 0.4f);
-        RenderSettings.fog = true;
-        RenderSettings.fogMode = FogMode.Linear;
-        RenderSettings.fogColor = new Color(0.55f, 0.58f, 0.62f);
-        RenderSettings.fogStartDistance = 14f;
-        RenderSettings.fogEndDistance = 38f;
+        Fx.PixelLightBudget = 4; // VR: at most four pixel lights; later practical lights are vertex lights
+        if (ExternalShell)
+        {
+            // the hub supplies its own building and keeps this scenario's original ambient and fog
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+            RenderSettings.ambientLight = new Color(0.34f, 0.36f, 0.4f);
+            RenderSettings.fog = true;
+            RenderSettings.fogMode = FogMode.Linear;
+            RenderSettings.fogColor = new Color(0.55f, 0.58f, 0.62f);
+            RenderSettings.fogStartDistance = 14f;
+            RenderSettings.fogEndDistance = 38f;
+        }
+        else Fx.ApplyMood(MoodPreset.IndoorBright);
 
         BuildBay();
         BuildExchanger();
         BuildUtilities();
+        BuildDetail();
         BuildBoardAndSigns();
         why = WhyCue.Create(transform);
 
@@ -96,6 +103,7 @@ public class HydroTest : MonoBehaviour, IShotScript
         rig.Area = new Bounds(new Vector3(0, 0, 0), new Vector3(11.4f, 1f, 10.6f));
         rig.Camera.backgroundColor = new Color(0.1f, 0.11f, 0.13f);
         rig.Camera.clearFlags = CameraClearFlags.SolidColor;
+        rig.FloorSurface = Surface.Concrete;
 
         weather = Weather.Fallback;
         UpdateWeatherText();
@@ -109,10 +117,10 @@ public class HydroTest : MonoBehaviour, IShotScript
     void BuildBay()
     {
         var root = P.Node("Bay").transform;
-        var concrete = P.Concrete();
+        var concrete = P.ConcreteFloor(8f);
         var floor = P.Box(root, "Floor", new Vector3(0, -0.1f, 0), new Vector3(14, 0.2f, 12), concrete);
         if (ExternalShell) floor.GetComponent<Renderer>().enabled = false; // keep the collider, show the building's floor instead
-        var wall = P.Mat(new Color(0.78f, 0.79f, 0.8f), 0f, 0.2f);
+        var wall = P.PaintedWall(new Color(0.78f, 0.79f, 0.8f), 3f);
         if (!ExternalShell)
         {
         P.Box(root, "Back wall", new Vector3(0, 3, 6.1f), new Vector3(14, 6, 0.3f), wall);
@@ -134,13 +142,7 @@ public class HydroTest : MonoBehaviour, IShotScript
         {
             var pos = new Vector3(ix * 3f, 5.62f, iz * 3.2f);
             P.Box(root, "Light panel", pos, new Vector3(1.6f, 0.06f, 0.5f), P.Glow(new Color(1f, 0.96f, 0.88f), 2.2f), false);
-            var lgo = P.Node("Point", root);
-            var l = P.Ensure<Light>(lgo);
-            if (P.IsNew(lgo))
-            {
-                l.transform.position = pos - Vector3.up * 0.4f;
-                l.type = LightType.Point; l.range = 11f; l.intensity = 0.9f; l.color = new Color(1f, 0.95f, 0.86f);
-            }
+            Fx.Practical(root, pos - Vector3.up * 0.4f, new Color(1f, 0.95f, 0.86f), 11f, 0.9f);
         }
         var sunGo = P.Node("Key light");
         var sun = P.Ensure<Light>(sunGo);
@@ -225,7 +227,7 @@ public class HydroTest : MonoBehaviour, IShotScript
         Ui.Tag(root, "TEST WATER", new Vector3(4.2f, 1.6f, C.z - 0.3f), new Vector3(0f, 0.75f, -0.25f), 0.07f, new Color(0.3f, 0.65f, 1f));
         // Pump skid
         P.Box(root, "Skid", new Vector3(2.6f, 0.1f, 1.2f), new Vector3(1.2f, 0.2f, 0.6f), P.DarkSteel());
-        P.Cyl(root, "Motor", new Vector3(2.3f, 0.45f, 1.2f), 0.2f, 0.5f, Vector3.right, P.Painted(P.Royal));
+        motorT = P.Cyl(root, "Motor", new Vector3(2.3f, 0.45f, 1.2f), 0.2f, 0.5f, Vector3.right, P.Painted(P.Royal)).transform;
         P.Ball(root, "Pump casing", new Vector3(2.85f, 0.42f, 1.2f), 0.22f, P.Painted(new Color(0.15f, 0.15f, 0.16f)));
         Pipe(root, new Vector3(2.85f, 0.45f, 1.2f), new Vector3(2.85f, 0.45f, C.z), 0.05f, steel);
         Ui.Tag(root, "TEST PUMP  P-101", new Vector3(2.85f, 0.62f, 1.2f), new Vector3(0f, 0.55f, -0.25f), 0.055f, P.Gold);
@@ -342,6 +344,7 @@ public class HydroTest : MonoBehaviour, IShotScript
     void ToggleValve(Valve v)
     {
         v.Open = !v.Open;
+        Sfx.Play("valve_turn", v.Wheel.position, 0.9f);
         PaintLamp(v);
         v.Toggled?.Invoke(v);
         OnValveChanged(v);
@@ -368,7 +371,7 @@ public class HydroTest : MonoBehaviour, IShotScript
         if (P.IsNew(b)) b.transform.rotation = Quaternion.Euler(90, 0, 0);
         var p = P.Ensure<Pressable>(b);
         p.Label = name;
-        p.Pressed += h => onPress();
+        p.Pressed += h => { Sfx.Play(name == "START" ? "switch" : "button", b.transform.position, 0.9f); onPress(); };
     }
 
     void MakeBlind(Vector3 pos)
@@ -409,12 +412,16 @@ public class HydroTest : MonoBehaviour, IShotScript
         if (fresh)
         {
             var main = ps.main;
-            main.startLifetime = 0.9f; main.startSpeed = 4f; main.startSize = 0.05f; main.gravityModifier = 0.8f;
+            main.startLifetime = 0.9f; main.startSpeed = 4f; main.startSize = 0.09f; main.gravityModifier = 0.8f;
             main.startColor = color; main.loop = true; main.playOnAwake = false;
             var em = ps.emission; em.rateOverTime = 90;
             var sh = ps.shape; sh.shapeType = ParticleSystemShapeType.Cone; sh.angle = 12f; sh.radius = 0.02f;
             // a runtime material; the bake saves it as an asset under Assets/Baked/<Scene>/, so baked jets keep theirs
-            go.GetComponent<ParticleSystemRenderer>().material = new Material(Shader.Find("Sprites/Default"));
+            go.GetComponent<ParticleSystemRenderer>().sharedMaterial = Fx.ParticleMat(false);
+            var fade = ps.colorOverLifetime; fade.enabled = true;
+            var g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) }, new[] { new GradientAlphaKey(0.9f, 0f), new GradientAlphaKey(0f, 1f) });
+            fade.color = new ParticleSystem.MinMaxGradient(g);
         }
         ps.Stop();
         return ps;
@@ -469,12 +476,13 @@ public class HydroTest : MonoBehaviour, IShotScript
         if (pressure > MaxPsi)
         {
             if (!reliefLifted) { reliefLifted = true; board.Mistake("Over-pressure: the relief valve lifted. Never exceed the test pressure.", true); }
+            if (!relief.isPlaying) { Sfx.Play2D("alarm_siren_rise", 0.5f); reliefHissAt = 0f; }
             relief.Play();
             pressure -= dt * 60f;
         }
         else if (relief.isPlaying) relief.Stop();
         bool open = blinds < 2 && pump && full;
-        if (open && !spray.isPlaying) spray.Play(); else if (!open && spray.isPlaying) spray.Stop();
+        if (open && !spray.isPlaying) { spray.Play(); Sfx.Play("spray", spray.transform.position, 0.7f); } else if (!open && spray.isPlaying) spray.Stop();
 
         // visuals
         needle.localRotation = Quaternion.Euler(0, 0, -Mathf.Lerp(-135f, 135f, pressure / 300f));
@@ -490,6 +498,7 @@ public class HydroTest : MonoBehaviour, IShotScript
         }
         for (int i = 0; i < 2; i++) if (zoneMarkers[i].enabled) zoneMarkers[i].transform.localScale = new Vector3(0.38f, 0.005f, 0.38f) * (1f + 0.1f * Mathf.Sin(Time.time * 5f));
 
+        UpdateDetail(dt, closedSystem, full, open);
         UpdateSteps(dt);
     }
 
@@ -520,6 +529,7 @@ public class HydroTest : MonoBehaviour, IShotScript
         if (board.AllDone && !done)
         {
             done = true;
+            Sfx.Play2D(board.CriticalMisses > 0 ? "ui_error" : "ding", 0.7f);
             board.Say(board.Summary(), board.CriticalMisses > 0 ? new Color(1f, 0.38f, 0.38f) : new Color(0.3f, 0.9f, 0.62f));
             board.SetFooter($"Mistakes: {board.Mistakes}   Critical: {board.CriticalMisses}");
             // the reasoning result is kept on its own line, apart from the procedure score above
@@ -563,14 +573,14 @@ public class HydroTest : MonoBehaviour, IShotScript
         why.Muted = true; // the staged steps below complete for real; keep their reasons off the original six views
         var look = new Vector3(0.4f, 1.0f, 2.6f);
         yield return api.Shot("01-test-bay", new Vector3(-5.6f, 3.1f, -4.6f), look, 60f);
-        yield return api.Shot("02-blind-flanges", new Vector3(-3.3f, 1.55f, -0.9f), new Vector3(-1.2f, 1.1f, 2.2f), 55f);
+        yield return api.Shot("02-blind-flanges", new Vector3(-4.5f, 1.4f, -1.0f), new Vector3(-2.4f, 0.7f, 0.5f), 55f);
         Stage(true, true, false, 0.55f, 0f, false, 2);
         yield return api.Shot("03-filling-and-venting", new Vector3(1.6f, 1.65f, 0.2f), new Vector3(1.0f, 1.0f, 2.5f), 60f);
         Stage(false, false, false, 1f, 150f, true, 2);
         yield return api.Shot("04-test-pressure", new Vector3(0.7f, 1.9f, 0.0f), new Vector3(0.2f, 1.55f, 2.4f), 52f);
         yield return api.Shot("05-hold-from-behind-the-line", new Vector3(-0.8f, 1.7f, -3.6f), new Vector3(0.3f, 1.2f, 2.6f), 62f);
         reliefLifted = true; Stage(false, false, false, 1f, 168f, true, 2); pressure = 168f;
-        yield return api.Shot("06-relief-valve-lifts", new Vector3(-1.2f, 1.95f, 0.1f), new Vector3(0f, 1.8f, 2.5f), 55f);
+        yield return api.Shot("06-relief-valve-lifts", new Vector3(-0.9f, 2.0f, 0.8f), new Vector3(-0.2f, 1.7f, 2.3f), 48f);
 
         // "Why this matters" after the vent-and-fill step, while the vessel fills
         reliefLifted = true; relief.Stop();
@@ -595,6 +605,16 @@ public class HydroTest : MonoBehaviour, IShotScript
         why.HideAll();
         Debug.Log("[why] board summary: " + board.Summary() + " | " + why.ReasoningLine);
         yield return api.Shot("10-summary-with-reasoning", new Vector3(-0.9f, 1.75f, -3.3f), new Vector3(-2.3f, 1.35f, -0.4f), 50f);
+
+        // round 3 views of the added detail (the run above is finished, so these show the idle bay)
+        Stage(false, false, false, 0f, 0f, false, 2);
+        yield return api.Shot("11-tool-board-and-ladder", new Vector3(-3.4f, 1.7f, -2.2f), new Vector3(-6.9f, 1.8f, 0.0f), 62f);
+        yield return api.Shot("12-safety-stations", new Vector3(3.6f, 1.5f, -3.6f), new Vector3(6.9f, 1.5f, -2.0f), 62f);
+        yield return api.Shot("17-eyewash-and-shower", new Vector3(5.6f, 1.5f, 0.2f), new Vector3(6.9f, 1.5f, 3.2f), 66f);
+        yield return api.Shot("13-pipe-rack-and-signs", new Vector3(0.5f, 1.8f, 0.4f), new Vector3(0.3f, 4.0f, 5.9f), 70f);
+        yield return api.Shot("14-pump-skid-and-tank", new Vector3(1.6f, 1.5f, -0.6f), new Vector3(3.3f, 0.7f, 1.9f), 62f);
+        yield return api.Shot("15-light-shafts-overview", new Vector3(5.8f, 2.4f, -5.0f), new Vector3(-1.0f, 2.2f, 3.0f), 72f);
+        yield return api.Shot("16-vessel-detail", new Vector3(-0.2f, 1.6f, -0.2f), new Vector3(-0.3f, 1.1f, 2.5f), 55f);
     }
 }
 

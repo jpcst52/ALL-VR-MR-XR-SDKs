@@ -33,6 +33,7 @@ namespace PittBradford.XR
                 transform.position = cam.position + cam.forward * 0.9f - cam.up * 0.15f;
             }
             hand.Haptic(0.5f, 0.1f);
+            Sfx.Play("grab", transform.position, 0.6f);
             Grabbed?.Invoke(this);
         }
 
@@ -41,6 +42,7 @@ namespace PittBradford.XR
             transform.SetParent(null, true);
             Dropped?.Invoke(this);
             if (SnapZone.TrySnap(this)) return;
+            Sfx.Play("release", transform.position, 0.5f);
             rb.isKinematic = false;
             rb.useGravity = UseGravity;
             rb.linearVelocity = hand.Velocity;

@@ -22,7 +22,12 @@ namespace PittBradford.XR
         /// <summary>Optional limits so a player cannot walk out of the training area.</summary>
         public Bounds? Area;
 
-        float pitch, yaw, snapCooldown;
+        /// <summary>Footsteps while walking (stick or keys): the surface decides which sound. Set to false to silence them.</summary>
+        public bool Footsteps = true;
+        public Surface FloorSurface = Surface.Concrete;
+
+        float pitch, yaw, snapCooldown, stepDistance;
+        Vector3 lastPosition;
 
         public static XRRig Create(Vector3 position, float yawDegrees = 0f)
         {
@@ -63,6 +68,14 @@ namespace PittBradford.XR
             if (Headset) HeadsetLocomotion();
             else DesktopLocomotion();
             ClampToArea();
+            var p = transform.position;
+            var moved = new Vector3(p.x - lastPosition.x, 0f, p.z - lastPosition.z).magnitude;
+            lastPosition = p;
+            if (Footsteps && moved > 0f && moved < 1f)
+            {
+                stepDistance += moved;
+                if (stepDistance >= 0.8f) { stepDistance = 0f; Sfx.Footstep(FeetPosition, FloorSurface, 0.4f); }
+            }
         }
 
         void HeadsetLocomotion()

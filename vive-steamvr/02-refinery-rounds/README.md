@@ -11,7 +11,9 @@ This is general safety-awareness practice. It is not a site procedure, a permit 
 | Item | Status (as of November 3, 2026) |
 |---|---|
 | Compiles in Unity 6000.3.20f1 | Yes, in scripted editor runs (November 1 and 2). |
-| Scripted capture run (thirteen staged views, the "why this matters" panels, the reasoning question, scoring) | Yes, in the desktop editor, unbaked and baked. This is emulated, not a headset. |
+| Scripted capture run (twenty staged views, the "why this matters" panels, the reasoning question, scoring) | Yes, in the desktop editor (round 3: November 3, 2026, `-pbOfflineWeather`, 0 compile errors, scene re-baked and the baked scene played through the whole scripted run). This is emulated, not a headset. |
+| Sound (round 3) | Wired to the kit's `Sfx` and compiled and run in the scripted capture (no errors logged). **Nobody has listened to it yet**: levels, balance and the siren are unheard. |
+| Frame rate / draw calls | **Not measured.** Round 3 more than doubled the object count (see below); detail objects are marked static for batching but this has not been profiled. |
 | Played through by a person | The owner has looked at it. It has not been played from the gate to the muster point by hand since the signage, "why this matters" and baking changes. |
 | Headset (Vive Pro 2, Quest or any other) | **Not tested.** |
 | Fresh clone opens and plays without running Set up project | Not tested. |
@@ -86,6 +88,22 @@ An outdoor process-unit edge built from primitives and the shared kit's procedur
 
 **Look.** Daylight ambient comes from sky, horizon and ground colours, and the sky is Unity's built-in procedural skybox when that shader is available (otherwise a flat sky colour). The task board floats a little to the right so it does not cover the gate and its signs.
 
+## Detail, lighting and sound (round 3)
+
+Round 3 (November 3, 2026) added detail, realism, lighting, effects and sound. Everything is built in code (`Assets/Scripts/RefineryDetail.cs`, a `partial` part of `RefineryRounds`), stays pack-free (no Asset Store or private assets) and has no colliders, so it never blocks the player. The muster point is still **upwind** of the unit by design; that logic was not touched.
+
+**Detail (about 540 new objects).** Pipe rack: cross-bracing, pipe shoes, a cable tray with hangers and cable bundles, a clad (insulated) line with bands, two gate valves with red handwheels, a pressure gauge, a drain and elbows on the branch line. Vessels: banding, a bolted manway, a grated platform with a yellow handrail and a gap at the ladder, ladder cage hoops, bollards, a relief valve with a vent line and a rack vent. Ground: yellow pad edge lines, white safe-route and walkway lines, scattered stones, puddles, oil stains, drain grates, a manhole cover and weeds along the fence. Safety: a safety shower and eyewash station, two fire extinguisher stands, four fence signs, drums on a pallet and a spill kit (all signs use the kit's `Ui.Panel`). Cabin: window frames with lit panes and blinds, door handle, kick plate and sign, wall lamp, rooftop AC unit and vent, conduit and a junction box. Flare: guy wires, red and white stack bands, a platform, ladder rails and a blinking aviation light. Muster point: a painted ring, two benches and a first aid box.
+
+**Realism.** New procedural textures made in code: corrugated rust-streaked cladding, open-mesh grating, an irregular oil stain with a soft edge and a rust patch (plus the kit's concrete, steel and gravel textures that were already there). Puddles are opaque and very glossy so they mirror the sky. No normal maps (the baker would lose their import type), so relief comes from geometry and colour only.
+
+**Lighting and effects.** A cooler, more overcast sky tint, a sun with softer shadow strength and a shorter shadow distance, trilight ambient, nearer fog, a pixel-light cap of 4, and a realtime reflection probe captured once at load. Four lighting poles with lit fixtures (two also carry a vertex-mode point light) and a wall lamp at the cabin. The flare flame flickers in colour, size and light; flare smoke and two steam plumes are particle systems pushed by the live wind; a drip falls at the flange during the weep. Heat shimmer and light shafts were not added (outdoors in daylight; shimmer needs a grab pass).
+
+**Sound.** All sounds come from the kit's `Sfx` (see [../../docs/agents/KIT-AUDIO-FX.md](../../docs/agents/KIT-AUDIO-FX.md); synthesized unless the kit lists a CC0 sample in its own credits file). This project adds no audio files. Loops: wind (volume follows the live wind speed), plant drone, flare roar, control-room HVAC. Events: gas monitor beeps (faster at high alarm), rising then wailing site siren and a falling sweep when the scenario ends, gas hiss at each release, button presses, radio clicks, confirm and error sounds on task steps and mistakes, a cone drop sound, a water drip at the weep, and footsteps (concrete on the pad, gravel outside) through the kit rig. The old sine siren and beep were removed.
+
+**Before and after.** Compare `screenshots/01-overview.png` and `07-start-view.png` with the November 1 versions in git history; new views are 14 to 20. All are desktop editor renders, not a headset.
+
+**Still plain.** The ground is a single tiled noise texture; the vessels and rack posts are still smooth primitives with little bevel; the sky has no clouds; there are no stairs; people and vehicles are absent.
+
 ## What is simulated and what is not
 
 Simulated: wind from live weather, a simple gas drift and concentration model, a gas monitor with bump test and alarms, a fixed detector, a barricade check (three cones, spread out, around the leak) and the rules above.
@@ -94,7 +112,7 @@ Not simulated: real gas physics (density, dilution, terrain, buildings), real in
 
 ## Baked scene
 
-**What "baked" means.** The world (ground, fence, rack, vessels, signs, lights, cones, the monitor; 392 baked objects, 393 GameObjects in the scene file including the "Scenario" object) is still described in `RefineryRounds.cs`, but it has been *baked* into `Assets/Scenes/RefineryRounds.unity`: every object is a normal GameObject in the saved scene, so you can see it in the Hierarchy and Scene view, select it, move it, rescale it or swap its material. The generated materials and textures are saved in `Assets/Baked/RefineryRounds/` (commit this folder together with the scene). The scenario object carries a small **Baked World** component that lists what was baked and when.
+**What "baked" means.** The world (ground, fence, rack, vessels, signs, lights, cones, the monitor and the round 3 detail; 933 baked objects, 934 GameObjects in the scene file including the "Scenario" object) is still described in `RefineryRounds.cs`, but it has been *baked* into `Assets/Scenes/RefineryRounds.unity`: every object is a normal GameObject in the saved scene, so you can see it in the Hierarchy and Scene view, select it, move it, rescale it or swap its material. The generated materials and textures are saved in `Assets/Baked/RefineryRounds/` (commit this folder together with the scene). The scenario object carries a small **Baked World** component that lists what was baked and when.
 
 **Pressing Play.** `Start()` runs exactly as before. Each kit helper call (`P.Node`, `P.Box`, `P.Cyl`, `P.Ball`, `P.Prim`, `P.Text`, `Ui.Panel`, `Ui.Tag`, `Ui.BrandPlate`) first looks for the saved object and *adopts* it, unchanged, instead of making a new one. The code then re-attaches what a scene file cannot hold: button and grab handlers, the script's fields (sock joints, lamps, cones ...), the generated sounds and the runtime font of the text. Objects are matched by **parent, name and call order**: the third `P.Box(root, "Table leg", ...)` call adopts the third child called "Table leg" under "Refinery unit".
 
@@ -108,18 +126,19 @@ Not simulated: real gas physics (density, dilution, terrain, buildings), real in
 
 **Unbake** (go back to building everything at Start): **Pitt-Bradford > Unbake scene** (or `-executeMethod PittBradford.XR.EditorTools.SceneBaker.UnbakeAndExit`). It deletes the baked objects and `Assets/Baked/RefineryRounds/` and restores the scene lighting; the scenario then runs exactly as it did before baking. For a clean bake that drops all scene edits, Unbake and then Bake. **Set up project** no longer replaces a baked scene with an empty one.
 
-**Verified (November 2, 2026, desktop editor only, emulated, not a headset):** the 13 capture shots were rendered with the scene unbaked and baked and compared pixel by pixel. Outside the animated wind sock, flame and flag, which differ between any two runs, the only differences are sub-pixel edges of the sign panels (their textures are now imported PNGs) and text glyph edges (the runtime font atlas is filled in a different order); under 0.3% of pixels differ by more than 8 of 255 levels in every shot. The scripted run completed in both cases (all tasks, scoring and the reasoning question, no script errors). A table moved in the saved scene appeared at its new position at Play. The baked scene file is about 970 KB and opens in under 0.1 s.
+**Verified (November 2, 2026, desktop editor only, emulated, not a headset):** the 13 capture shots were rendered with the scene unbaked and baked and compared pixel by pixel. Outside the animated wind sock, flame and flag, which differ between any two runs, the only differences are sub-pixel edges of the sign panels (their textures are now imported PNGs) and text glyph edges (the runtime font atlas is filled in a different order); under 0.3% of pixels differ by more than 8 of 255 levels in every shot. The scripted run completed in both cases (all tasks, scoring and the reasoning question, no script errors). A table moved in the saved scene appeared at its new position at Play. The baked scene file was about 970 KB then; after round 3 it is about 2.8 MB (not timed).
 
 ## Files
 
-- `Assets/Scripts/RefineryRounds.cs`: the whole scenario (`RefineryRounds : MonoBehaviour, IShotScript`), including the step reasons (`StepWhy`) and the rationale question.
+- `Assets/Scripts/RefineryRounds.cs`: the scenario (`partial class RefineryRounds : MonoBehaviour, IShotScript`), including the step reasons (`StepWhy`) and the rationale question.
+- `Assets/Scripts/RefineryDetail.cs`: round 3 detail, textures, effects, wind-driven particles and the `Sfx` sound wiring (other half of the partial class).
 - `../packages/com.pittbradford.xrtraining/Runtime/WhyCue.cs`: the shared "why this matters" panel and question used here and in the Hydrostatic Test Bay.
 - `Assets/Editor/ProjectSetup.cs`: the setup and build menu items.
 - `Assets/Scenes`, `Assets/XR`, `Assets/Resources`, `ProjectSettings`: the baked scene, OpenXR settings and shader keepers (written by **Set up project**, committed).
 - `Assets/Baked/RefineryRounds/`: materials and textures written by **Bake scene**; the baked scene refers to them (see "Baked scene").
-- `screenshots/`: the thirteen desktop editor renders below.
+- `screenshots/`: the twenty desktop editor renders below.
 - `Packages/manifest.json`: same dependencies as project 01 (the kit by `file:` path).
-- Screenshots are made with `Unity.exe -projectPath <this folder> -executeMethod PittBradford.XR.EditorTools.CaptureRunner.Run -pbCapture <folder> -logFile <log>` (no `-batchmode`; it needs graphics). The editor enters play mode, the scenario's `Shots` coroutine stages and photographs thirteen views, and the editor exits. A built player also accepts `-pbCapture <folder>`.
+- Screenshots are made with `Unity.exe -projectPath <this folder> -executeMethod PittBradford.XR.EditorTools.CaptureRunner.Run -pbCapture <folder> -logFile <log>` (no `-batchmode`; it needs graphics). The editor enters play mode, the scenario's `Shots` coroutine stages and photographs twenty views, and the editor exits. A built player also accepts `-pbCapture <folder>`.
 
 ## Screenshots
 
@@ -139,8 +158,16 @@ Desktop editor renders made by the capture run above (November 1, 2026). They ar
 | 09 Equipment labels | 10 Why this matters (after the bump test) |
 | ![The rationale question at the muster point](screenshots/11-rationale-question.png) | ![Feedback on every option, best answer in green](screenshots/12-rationale-feedback.png) |
 | 11 Rationale question | 12 Feedback on every option |
-| ![Final task board with the separate Reasoning line](screenshots/13-summary-with-reasoning.png) | |
-| 13 Summary with the separate Reasoning line (best answer, no mistakes) | |
+| ![Final task board with the separate Reasoning line](screenshots/13-summary-with-reasoning.png) | ![Pipe rack detail](screenshots/14-pipe-rack-detail.png) |
+| 13 Summary with the separate Reasoning line (best answer, no mistakes) | 14 Pipe rack: bracing, cable tray, clad line, valves, wet ground (round 3) |
+| ![Vessel platform](screenshots/15-vessel-platform-detail.png) | ![Cabin and lighting](screenshots/16-cabin-and-lighting.png) |
+| 15 V-101 platform handrail, bands, ladder and a lighting pole | 16 Cabin: lit windows, door, wall lamp, AC unit; lighting pole |
+| ![Safety shower](screenshots/17-safety-shower-and-extinguisher.png) | ![Flare smoke and sky](screenshots/18-flare-smoke-and-sky.png) |
+| 17 Safety shower and eyewash, extinguisher, guy wire | 18 Flare stack, guy wires, smoke and steam |
+| ![Ground detail](screenshots/19-ground-detail.png) | ![Steam and relief valve](screenshots/20-steam-and-relief-valve.png) |
+| 19 Ground: walkway lines, puddle, signs, weeds, drums | 20 Steam plume, relief valve and vent line |
+
+All images: desktop editor render, not a headset (round 3 set made November 3, 2026, on the baked scene).
 
 ## Troubleshooting
 

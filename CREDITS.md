@@ -28,6 +28,7 @@ Screenshots and gallery images in the repository that show the hub scenes are re
 
 ## 3D models, textures and skies (CC0)
 
+- [vive-steamvr/packages/com.pittbradford.xrtraining/Runtime/Resources/Audio/CREDITS.md](vive-steamvr/packages/com.pittbradford.xrtraining/Runtime/Resources/Audio/CREDITS.md): the Unity sound library (seven CC0 recordings by rubberduck from OpenGameArt; the rest is synthesized).
 - [assets/models/CREDITS.md](assets/models/CREDITS.md): Practice Lab props and people (Poly Haven, Quaternius via Poly Pizza, KayKit).
 - [multi-player/CREDITS.md](multi-player/CREDITS.md): multi-user demo models.
 - [CREDITS-web-demos.md](CREDITS-web-demos.md): the single-SDK web demos.

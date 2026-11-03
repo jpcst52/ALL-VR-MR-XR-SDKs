@@ -112,6 +112,142 @@ namespace PittBradford.XR
         public static Material Hazard() => Mat(Color.white, 0f, 0.3f, StripeTexture("hazard", new Color(1f, 0.78f, 0.1f), new Color(0.08f, 0.08f, 0.08f), 8), 1f);
         public static Material Painted(Color c) => Mat(c, 0.1f, 0.5f);
 
+        // ------------------------------------------------------------------ round 3: textures with structure
+
+        static readonly Dictionary<string, Texture2D> TexCache = new Dictionary<string, Texture2D>();
+
+        static Texture2D Make(string name, int size, System.Func<float, float, Color> px, bool mips = true, FilterMode filter = FilterMode.Trilinear)
+        {
+            if (TexCache.TryGetValue(name, out var cached) && cached) return cached;
+            var t = new Texture2D(size, size, TextureFormat.RGB24, mips) { name = name, wrapMode = TextureWrapMode.Repeat, filterMode = filter, anisoLevel = 8 };
+            var c = new Color[size * size];
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++) c[y * size + x] = px((x + 0.5f) / size, (y + 0.5f) / size);
+            t.SetPixels(c);
+            t.Apply(mips);
+            TexCache[name] = t;
+            return t;
+        }
+
+        static float Hash(int x, int y, int seed)
+        {
+            unchecked
+            {
+                uint h = (uint)(x * 374761393 + y * 668265263 + seed * 2246822519u);
+                h = (h ^ (h >> 13)) * 1274126177u;
+                return ((h ^ (h >> 16)) & 0xFFFF) / 65535f;
+            }
+        }
+
+        /// <summary>Sealed workshop floor: aggregate flecks, oil and water stains, scuff streaks, saw-cut joints (one slab per texture repeat).</summary>
+        public static Material ConcreteFloor(float tiling = 8f)
+        {
+            var tex = Make("floor-sealed", 512, (u, v) =>
+            {
+                float n = Mathf.PerlinNoise(u * 6f + 4f, v * 6f + 9f) * 0.55f + Mathf.PerlinNoise(u * 26f, v * 26f) * 0.3f + Mathf.PerlinNoise(u * 90f, v * 90f) * 0.15f;
+                float g = Mathf.Lerp(0.36f, 0.58f, n);
+                float fleck = Hash((int)(u * 512), (int)(v * 512), 3);
+                if (fleck > 0.985f) g += 0.12f; else if (fleck < 0.02f) g -= 0.1f;
+                var c = new Color(g, g, g * 1.02f);
+                float stain = Mathf.PerlinNoise(u * 3.1f + 21f, v * 3.1f + 5f);
+                if (stain > 0.6f) c = Color.Lerp(c, new Color(0.17f, 0.15f, 0.13f), Mathf.Clamp01((stain - 0.62f) * 1.2f));
+                float oil = Mathf.PerlinNoise(u * 5f + 60f, v * 5f + 30f);
+                if (oil > 0.72f) c = Color.Lerp(c, new Color(0.08f, 0.08f, 0.09f), Mathf.Clamp01((oil - 0.74f) * 1.6f));
+                float scuff = Mathf.PerlinNoise(u * 2f + 7f, v * 70f + 3f);
+                if (scuff > 0.7f) c = Color.Lerp(c, new Color(0.22f, 0.22f, 0.22f), (scuff - 0.7f) * 1.2f);
+                float jx = Mathf.Min(u, 1f - u), jy = Mathf.Min(v, 1f - v);
+                if (jx < 0.004f || jy < 0.004f) c *= 0.5f;
+                return c;
+            });
+            return Mat(Color.white, 0f, 0.3f, tex, tiling);
+        }
+
+        /// <summary>Painted wall with vertical roller marks, a little dirt and scuffing near the bottom of the texture.</summary>
+        public static Material PaintedWall(Color paint, float tiling = 3f)
+        {
+            var tex = Make("wall-" + ColorUtility.ToHtmlStringRGB(paint), 256, (u, v) =>
+            {
+                float roller = Mathf.PerlinNoise(u * 40f + 3f, v * 2.5f) * 0.5f + Mathf.PerlinNoise(u * 120f, v * 8f) * 0.5f;
+                float k = 0.92f + roller * 0.14f;
+                float dirt = Mathf.PerlinNoise(u * 5f + 11f, v * 5f + 2f);
+                k *= 1f - Mathf.Clamp01((dirt - 0.6f) * 0.22f) - Mathf.Clamp01(0.15f - v) * 0.15f;
+                return paint * k;
+            });
+            return Mat(Color.white, 0f, 0.22f, tex, tiling);
+        }
+
+        /// <summary>Weathered steel: dark base with orange-brown rust blooms, for old supports, grates and brackets.</summary>
+        public static Material Rusty()
+        {
+            var tex = Make("rusty-steel", 256, (u, v) =>
+            {
+                float n = Mathf.PerlinNoise(u * 4f + 2f, v * 4f + 8f) * 0.6f + Mathf.PerlinNoise(u * 18f, v * 18f) * 0.4f;
+                var steel = Color.Lerp(new Color(0.2f, 0.21f, 0.22f), new Color(0.32f, 0.33f, 0.35f), n);
+                float r = Mathf.Clamp01((Mathf.PerlinNoise(u * 6f + 40f, v * 6f + 17f) - 0.5f) * 3f);
+                return Color.Lerp(steel, Color.Lerp(new Color(0.42f, 0.2f, 0.08f), new Color(0.62f, 0.32f, 0.12f), n), r);
+            });
+            return Mat(Color.white, 0.4f, 0.25f, tex, 1f);
+        }
+
+        /// <summary>Tread (diamond) plate for walkways and platforms.</summary>
+        public static Material DiamondPlate(float tiling = 3f)
+        {
+            var tex = Make("diamond-plate", 256, (u, v) =>
+            {
+                float cu = Mathf.Repeat(u * 8f, 1f) - 0.5f, cv = Mathf.Repeat(v * 8f, 1f) - 0.5f;
+                int cell = (int)(u * 8f) + (int)(v * 8f);
+                bool flip = (cell & 1) == 0;
+                float d = flip ? Mathf.Abs(cu + cv) * 0.9f + Mathf.Abs(cu - cv) * 0.25f : Mathf.Abs(cu - cv) * 0.9f + Mathf.Abs(cu + cv) * 0.25f;
+                float lift = d < 0.3f ? 1f : 0f;
+                float n = Mathf.PerlinNoise(u * 20f, v * 20f);
+                float g = 0.42f + lift * 0.16f + n * 0.06f;
+                return new Color(g, g * 1.02f, g * 1.06f);
+            });
+            return Mat(Color.white, 0.8f, 0.4f, tex, tiling);
+        }
+
+        /// <summary>Floor grating (dark slots across a steel grid) for trenches and drains.</summary>
+        public static Material Grating(float tiling = 4f)
+        {
+            var tex = Make("grating", 128, (u, v) =>
+            {
+                float bar = Mathf.Repeat(u * 12f, 1f);
+                bool slot = bar > 0.28f && Mathf.Repeat(v * 3f, 1f) > 0.08f;
+                return slot ? new Color(0.03f, 0.03f, 0.035f) : new Color(0.38f, 0.4f, 0.43f);
+            }, true, FilterMode.Bilinear);
+            return Mat(Color.white, 0.7f, 0.4f, tex, tiling);
+        }
+
+        /// <summary>Wood boards with grain along the long side (pallets, benches).</summary>
+        public static Material Wood()
+        {
+            var tex = Make("wood-boards", 256, (u, v) =>
+            {
+                float grain = Mathf.PerlinNoise(u * 2f + 5f, v * 38f) * 0.65f + Mathf.PerlinNoise(u * 9f, v * 120f) * 0.35f;
+                var c = Color.Lerp(new Color(0.44f, 0.3f, 0.17f), new Color(0.66f, 0.5f, 0.3f), grain);
+                float board = Mathf.Repeat(v * 4f, 1f);
+                if (board < 0.03f) c *= 0.55f;
+                return c;
+            });
+            return Mat(Color.white, 0f, 0.18f, tex, 1f);
+        }
+
+        /// <summary>Corrugated cardboard.</summary>
+        public static Material Cardboard()
+        {
+            var tex = Make("cardboard", 128, (u, v) =>
+            {
+                float line = 0.5f + 0.5f * Mathf.Sin(v * 220f);
+                float n = Mathf.PerlinNoise(u * 12f, v * 12f);
+                float g = Mathf.Lerp(0.5f, 0.64f, n) * (0.94f + line * 0.06f);
+                return new Color(g * 1.05f, g * 0.82f, g * 0.55f);
+            });
+            return Mat(Color.white, 0f, 0.1f, tex, 1f);
+        }
+
+        public static Material Rubber() => Mat(new Color(0.05f, 0.05f, 0.055f), 0f, 0.15f);
+        public static Material Glass(float alpha = 0.18f) => Transparent(new Color(0.78f, 0.9f, 0.95f, alpha));
+
         // ------------------------------------------------------------------ baked scenes (adopt or create)
 
         /// <summary>
@@ -233,6 +369,7 @@ namespace PittBradford.XR
 
         // ------------------------------------------------------------------ audio
 
+        // Legacy bare sounds, kept so existing code keeps working. New code should call Sfx.Play / Sfx.Loop (see Sfx.cs).
         public static AudioClip Tone(string name, float frequency, float seconds, float volume = 0.4f, float decay = 4f)
         {
             int rate = 22050, n = (int)(rate * seconds);
