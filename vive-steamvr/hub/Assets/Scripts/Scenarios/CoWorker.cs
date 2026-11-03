@@ -19,7 +19,7 @@ public class CoWorker : MonoBehaviour
     public Vector3 ChestPosition => transform.position + Vector3.up * 1.25f;
 
     int target = 1;
-    float phase;
+    float phase, lastSin;
     Transform head, legL, legR, armL, armR;
     Animator animator;
 
@@ -127,6 +127,43 @@ public class CoWorker : MonoBehaviour
         head = P.Ball(t, "Head", new Vector3(0, 1.7f, 0), 0.115f, skin, false).transform;
         P.Prim(PrimitiveType.Sphere, t, "Hard hat", new Vector3(0, 1.78f, 0), new Vector3(0.27f, 0.16f, 0.29f), white, false);
         P.Cyl(t, "Hat brim", new Vector3(0, 1.74f, 0.02f), 0.15f, 0.012f, Vector3.up, white, false);
+
+        // round 3 detail (all primitives): neck, ears, nose, hair, safety glasses, hat peak and ridge ribs, chin strap
+        var hair = P.Mat(new Color(0.12f, 0.09f, 0.07f), 0f, 0.2f);
+        var dark = P.Mat(new Color(0.08f, 0.08f, 0.09f), 0f, 0.3f);
+        var denim = P.Mat(new Color(0.1f, 0.12f, 0.2f), 0f, 0.25f);
+        var glove = P.Mat(new Color(0.9f, 0.5f, 0.05f), 0f, 0.3f);
+        P.Cyl(t, "Neck", new Vector3(0, 1.58f, 0), 0.055f, 0.1f, Vector3.up, skin, false);
+        P.Ball(t, "Ear L", new Vector3(-0.115f, 1.7f, 0f), 0.025f, skin, false);
+        P.Ball(t, "Ear R", new Vector3(0.115f, 1.7f, 0f), 0.025f, skin, false);
+        P.Ball(t, "Nose", new Vector3(0, 1.69f, 0.112f), 0.022f, skin, false);
+        P.Ball(t, "Hair", new Vector3(0, 1.69f, -0.07f), 0.1f, hair, false);
+        P.Box(t, "Safety glasses", new Vector3(0, 1.715f, 0.118f), new Vector3(0.17f, 0.04f, 0.02f), P.Transparent(new Color(0.75f, 0.9f, 1f, 0.45f)), false);
+        P.Box(t, "Glasses frame", new Vector3(0, 1.738f, 0.122f), new Vector3(0.18f, 0.008f, 0.015f), dark, false);
+        P.Box(t, "Hat peak", new Vector3(0, 1.76f, 0.15f), new Vector3(0.22f, 0.012f, 0.09f), white, false);
+        for (int i = -1; i <= 1; i += 2) P.Box(t, "Hat rib", new Vector3(i * 0.045f, 1.855f, 0f), new Vector3(0.012f, 0.012f, 0.2f), white, false);
+        P.Box(t, "Chin strap", new Vector3(0, 1.64f, 0.1f), new Vector3(0.19f, 0.006f, 0.006f), dark, false);
+
+        // belt, trouser pockets, a radio on the vest with a short antenna, an ID badge, vest zip and pocket, shoulder straps
+        P.Box(t, "Belt", new Vector3(0, 0.96f, 0), new Vector3(0.33f, 0.045f, 0.2f), dark, false);
+        P.Box(t, "Belt buckle", new Vector3(0, 0.96f, 0.102f), new Vector3(0.05f, 0.035f, 0.01f), silver, false);
+        P.Box(t, "Cargo pocket", new Vector3(-0.175f, 0.75f, 0.0f), new Vector3(0.02f, 0.16f, 0.1f), denim, false);
+        P.Box(t, "Cargo pocket", new Vector3(0.175f, 0.75f, 0.0f), new Vector3(0.02f, 0.16f, 0.1f), denim, false);
+        P.Box(t, "Radio", new Vector3(-0.12f, 1.38f, 0.13f), new Vector3(0.05f, 0.09f, 0.03f), dark, false);
+        P.Cyl(t, "Radio antenna", new Vector3(-0.12f, 1.47f, 0.13f), 0.004f, 0.08f, Vector3.up, dark, false);
+        P.Box(t, "ID badge", new Vector3(0.11f, 1.3f, 0.135f), new Vector3(0.06f, 0.08f, 0.006f), P.Mat(Color.white, 0f, 0.4f), false);
+        P.Box(t, "Vest zip", new Vector3(0, 1.22f, 0.135f), new Vector3(0.012f, 0.48f, 0.005f), dark, false);
+        P.Box(t, "Vest pocket", new Vector3(-0.11f, 1.1f, 0.135f), new Vector3(0.09f, 0.08f, 0.006f), P.Mat(new Color(0.7f, 0.92f, 0.05f), 0f, 0.4f), false);
+        foreach (float sx in new[] { -0.1f, 0.1f }) P.Box(t, "Vest strap", new Vector3(sx, 1.47f, 0f), new Vector3(0.07f, 0.03f, 0.25f), lime, false);
+        P.Ball(t, "Shoulder L", new Vector3(-0.22f, 1.43f, 0f), 0.065f, shirt, false);
+        P.Ball(t, "Shoulder R", new Vector3(0.22f, 1.43f, 0f), 0.065f, shirt, false);
+        // gloves on the hands, boot soles, trouser cuffs
+        P.Ball(armL, "Glove", new Vector3(0, -0.6f, 0), 0.058f, glove, false);
+        P.Ball(armR, "Glove", new Vector3(0, -0.6f, 0), 0.058f, glove, false);
+        P.Box(legL, "Sole", new Vector3(0, -0.905f, 0.05f), new Vector3(0.14f, 0.02f, 0.28f), dark, false);
+        P.Box(legR, "Sole", new Vector3(0, -0.905f, 0.05f), new Vector3(0.14f, 0.02f, 0.28f), dark, false);
+        P.Box(legL, "Cuff", new Vector3(0, -0.8f, 0), new Vector3(0.155f, 0.03f, 0.155f), denim, false);
+        P.Box(legR, "Cuff", new Vector3(0, -0.8f, 0), new Vector3(0.155f, 0.03f, 0.155f), denim, false);
     }
 
     /// <summary>A limb hanging from a pivot: the capsule's centre is <paramref name="drop"/> below the pivot.</summary>
@@ -186,5 +223,9 @@ public class CoWorker : MonoBehaviour
         transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(dir, Vector3.up), 240f * dt);
         phase += dt * WalkSpeed * 4.2f;
         Swing(animator != null ? 1f : Mathf.Sin(phase));
+        // a footstep on the concrete each time the stride changes foot
+        float sn = Mathf.Sin(phase);
+        if (sn * lastSin < 0f) Sfx.Footstep(transform.position, Surface.Concrete, 0.45f);
+        lastSin = sn;
     }
 }

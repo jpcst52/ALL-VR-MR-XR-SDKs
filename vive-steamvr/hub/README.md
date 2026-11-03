@@ -147,3 +147,19 @@ All round 2 pictures are Unity editor desktop renders in Play mode, not a headse
 ## People (Microsoft Rocketbox, local only)
 
 The scenes can include realistic, animated people from the **Microsoft Rocketbox Avatar Library** (MIT license, https://github.com/microsoft/Microsoft-Rocketbox; cite Gonzalez-Franco et al. 2020, DOI 10.3389/frvir.2020.561558). The files (about 1.1 GB: 11 avatars plus walk, idle, talk and work animations) live in `Assets/Rocketbox`, which is git-ignored like the Asset Store packs, so nothing third-party is committed. To get them: sparse-checkout `Assets/Avatars/...` and `Assets/Animations/...` from that repository into `Assets/Rocketbox` (the avatars used are listed in `Assets/Editor/PeopleSetup.cs`). `Assets/Editor/Rocketbox/RocketboxImport.cs` (our own script) sets the import options, and **Pitt-Bradford > People > Set up Rocketbox controllers** builds the animation controllers. The MIT license text is kept at `Assets/Rocketbox/LICENSE.md`.
+
+## Round 3 detail pass and render cost (2026-11-03)
+
+The project scripts for Refinery Rounds, Warehouse Forklift and Resistor Bench were copied into `Assets/Scripts/Scenarios/` (the hub-only mirror-camera throttle in `WarehouseForklift.cs` was kept), the five scenes were rebuilt and re-baked, and the static-batch menu was run.
+
+Editor CPU counters in Play mode, median per frame (the same probe as round 2; these are **not** Vive frame rates and the editor Game view is mono):
+
+| Scene | Set-pass calls | Draw calls | Triangles | Round 2 set-pass / draw calls |
+|---|---|---|---|---|
+| Lobby | 353 | 433 | 284 k | 352 / 433 |
+| Hydrostatic Test Bay | 1,913 | 2,052 | 690 k | 515 / 636 |
+| Refinery Rounds | 1,290 | 1,807 | 448 k | 551 / 762 |
+| Warehouse Forklift | 3,543 | 4,295 | 359 k | 1,301 / 1,902 |
+| Resistor Bench | 1,924 | 2,497 | 611 k | 787 / 855 |
+
+**The detail pass roughly tripled the cost of the four scenario scenes.** The lobby is unchanged. A stereo headset renders everything twice, so these scenes are likely too heavy for a Vive Pro 2 as they stand; the frame rate has not been measured. The main cause is the number of distinct materials (each unique colour is its own material, so static batching cannot merge them), plus many shadow casters and lights. Next step: de-duplicate and quantise materials in the baker, cut shadow casters on small props, and cap lights, then measure again. Until then, treat the round 3 detail as a quality level that may need to be reduced for the headset.

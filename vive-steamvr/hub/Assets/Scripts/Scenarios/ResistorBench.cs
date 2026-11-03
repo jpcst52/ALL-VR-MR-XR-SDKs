@@ -52,13 +52,13 @@ public class ResistorBench : MonoBehaviour, IShotScript
     BenchProbe redProbe, blackProbe;
     BenchLed led1, led2;
     TextMesh meterText, psuText, psuState;
-    Transform jackRed, jackBlack;
+    Transform jackRed, jackBlack, meterRoot;
     Vector3 groundJack;
     LineRenderer strapCord, redLead, blackLead;
     Renderer switchRend;
     Material switchOn, switchOff;
-    AudioSource audioSrc;
-    AudioClip popClip, dingClip;
+
+
     readonly List<BenchResistor> resistors = new List<BenchResistor>();
     readonly List<ZoneMarker> markers = new List<ZoneMarker>();
     readonly HashSet<string> warned = new HashSet<string>();
@@ -108,14 +108,13 @@ public class ResistorBench : MonoBehaviour, IShotScript
     {
         QualitySettings.shadows = ShadowQuality.All;
         QualitySettings.shadowDistance = 12f;
+        QualitySettings.pixelLightCount = 5; // cap per-pixel lights (VR budget): the extra lights fall back to vertex lighting
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
         RenderSettings.ambientSkyColor = new Color(0.46f, 0.48f, 0.53f);
         RenderSettings.ambientEquatorColor = new Color(0.36f, 0.37f, 0.39f);
         RenderSettings.ambientGroundColor = new Color(0.2f, 0.2f, 0.21f);
 
-        audioSrc = P.Speaker(transform, null, false, 1f, 0f);
-        popClip = P.Noise("pop", 0.25f, 0.6f);
-        dingClip = P.Tone("ding", 880f, 0.4f, 0.3f);
+        // sound: the kit's Sfx library (no sound is played during a bake)
 
         BuildRoom();
         BuildBench();
@@ -127,8 +126,15 @@ public class ResistorBench : MonoBehaviour, IShotScript
         BuildSupply();
         BuildWallPanels();
         BuildTaskBoard();
+        BenchDetail.BuildAll(transform);
+        BuildMeterDetail();
+        BuildEffects();
 
         rig = XRRig.Create(new Vector3(0, 0, -0.35f), 0f);
+        rig.FloorSurface = Surface.Tile; // ESD floor tile
+        // lab ambience bed: a quiet fan and ventilation hum from the ceiling
+        var amb = new GameObject("Lab ambience"); amb.transform.SetParent(transform, false); amb.transform.position = new Vector3(0f, 3f, 0.6f);
+        Sfx.Loop("hvac_loop", amb.transform, 0.18f, 2f, 14f);
         why = WhyCue.Create(transform);
         // the bench top is between the player and anything 1.6 m ahead, so keep the panels above it and closer
         why.WhyDistance = 1.2f; why.WhyOffset = new Vector2(0f, 0.1f);
@@ -171,7 +177,7 @@ public class ResistorBench : MonoBehaviour, IShotScript
         var zone = P.Ensure<SnapZone>(z);
         zone.Id = id;
         if (P.IsNew(z)) zone.Radius = radius;
-        var marker = P.Cyl(z.transform, "Marker", Vector3.zero, markerRadius, 0.006f, Vector3.up, P.Glow(P.Gold, 1.2f), false);
+        var marker = P.Cyl(z.transform, "Marker", Vector3.zero, markerRadius * 0.55f, 0.003f, Vector3.up, P.Transparent(new Color(1f, 0.72f, 0.11f, 0.28f)), false);
         markers.Add(new ZoneMarker { Zone = zone, Rend = marker.GetComponent<Renderer>(), T = marker.transform, Base = marker.transform.localScale });
         return zone;
     }
@@ -204,9 +210,11 @@ public class ResistorBench : MonoBehaviour, IShotScript
             if (P.IsNew(lampGo))
             {
                 lamp.transform.position = new Vector3(i * 1.3f, 3.0f, 0.55f);
-                lamp.type = LightType.Point; lamp.range = 7f; lamp.intensity = 1.0f; lamp.color = new Color(1f, 0.97f, 0.92f);
+                // cool fluorescent white from the ceiling panels; the warm task lamp (BenchDetail) gives the contrast
+                lamp.type = LightType.Point; lamp.range = 7f; lamp.intensity = 0.85f; lamp.color = new Color(0.88f, 0.95f, 1f);
             }
         }
+        BenchDetail.Lighting(root);
         var fillGo = P.Node("Room fill", root);
         var fill = P.Ensure<Light>(fillGo);
         if (P.IsNew(fillGo))
@@ -271,8 +279,20 @@ public class ResistorBench : MonoBehaviour, IShotScript
         for (int sx = -1; sx <= 1; sx += 2)
             P.Box(root, "Foot rail", new Vector3(sx * 1.6f, 0.12f, 0.8f), new Vector3(0.04f, 0.04f, 0.7f), P.DarkSteel(), false);
         P.Box(root, "Shelf", new Vector3(0, 0.15f, 0.85f), new Vector3(3.14f, 0.025f, 0.6f), P.DarkSteel(), false);
-        var matTex = P.NoiseTexture("esd mat", new Color(0.13f, 0.27f, 0.24f), new Color(0.18f, 0.33f, 0.3f), 30f, 256, 1f, 33);
-        P.Box(root, "ESD mat", new Vector3(0, 0.903f, 0.8f), new Vector3(3.2f, 0.006f, 0.74f), P.Mat(Color.white, 0f, 0.12f, matTex, 4f), false);
+        // rubberised dissipative mat: fine dot grid, speckle, a few scratches and darker worn patches near the front edge
+        var matTex = BenchDetail.Paint("esd mat", 1024, 256, (x, y) =>
+        {
+            float n = Mathf.PerlinNoise(x * 0.03f + 4f, y * 0.03f) * 0.05f + Mathf.PerlinNoise(x * 0.4f, y * 0.4f) * 0.025f;
+            var c = new Color(0.14f + n * 0.4f, 0.28f + n, 0.25f + n);
+            if (x % 24 < 2 && y % 24 < 2) c *= 0.72f;                      // dot grid
+            float wear = Mathf.PerlinNoise(x * 0.012f + 9f, y * 0.04f);
+            if (y < 70 && wear > 0.55f) c += new Color(0.05f, 0.05f, 0.05f) * (wear - 0.55f) * 6f; // scuffed front edge
+            float sc = Mathf.Abs(Mathf.Sin((x * 0.8f + y * 2.3f) * 0.07f));
+            if (Mathf.PerlinNoise(x * 0.02f, y * 0.3f) > 0.78f && sc > 0.97f) c += new Color(0.12f, 0.12f, 0.12f); // light scratches
+            return c;
+        });
+        P.Box(root, "ESD mat", new Vector3(0, 0.903f, 0.8f), new Vector3(3.2f, 0.006f, 0.74f), P.Mat(Color.white, 0f, 0.28f, matTex, 1f), false);
+        P.Box(root, "Bench edge trim", new Vector3(0, 0.867f, 0.402f), new Vector3(3.4f, 0.05f, 0.012f), P.Steel(), false);
         MatLabel(root, "ESD-SAFE MAT\ngrounded through the hook", new Vector3(1.38f, 0.912f, 0.475f), 0.017f, new Color(0.3f, 0.75f, 0.45f));
     }
 
@@ -360,19 +380,27 @@ public class ResistorBench : MonoBehaviour, IShotScript
         col.size = new Vector3(bodyLen + 2f * leadLen, 0.03f, 0.03f);
 
         bool precision = spec.TolerancePct <= 2.0;
-        var bodyMat = P.Mat(precision ? new Color(0.45f, 0.62f, 0.78f) : new Color(0.84f, 0.72f, 0.5f), 0f, 0.45f);
-        var leadMat = P.Mat(new Color(0.8f, 0.8f, 0.82f), 0.9f, 0.6f);
-        P.Cyl(go.transform, "Body", Vector3.zero, bodyR, bodyLen, Vector3.right, bodyMat, false);
+        var bodyMat = P.Mat(precision ? new Color(0.45f, 0.62f, 0.78f) : new Color(0.84f, 0.72f, 0.5f), 0f, 0.5f);
+        var leadMat = P.Mat(new Color(0.8f, 0.8f, 0.82f), 0.95f, 0.65f);
+        // axial resistor: a barrel with slightly fatter end caps, tinned leads that each bend a little at the tip
+        P.Cyl(go.transform, "Body", Vector3.zero, bodyR * 0.9f, bodyLen, Vector3.right, bodyMat, false);
+        for (int e = -1; e <= 1; e += 2)
+        {
+            var cap = P.Ball(go.transform, "End cap", new Vector3(e * (bodyLen / 2f - 0.0015f * s), 0, 0), bodyR * 1.12f, bodyMat, false);
+            cap.transform.localScale = new Vector3(0.0085f * s, bodyR * 2.24f, bodyR * 2.24f);
+        }
         P.Cyl(go.transform, "Lead A", new Vector3(-(bodyLen / 2f + leadLen / 2f), 0, 0), 0.0025f, leadLen, Vector3.right, leadMat, false);
         P.Cyl(go.transform, "Lead B", new Vector3(bodyLen / 2f + leadLen / 2f, 0, 0), 0.0025f, leadLen, Vector3.right, leadMat, false);
+        for (int e = -1; e <= 1; e += 2)
+            P.Cyl(go.transform, "Lead bend", new Vector3(e * (bodyLen / 2f + leadLen + 0.0035f), -0.0012f, 0), 0.0025f, 0.009f, new Vector3(e, -0.35f, 0), leadMat, false);
 
         int[] bands = ResistorMath.ColorBands(spec.Ohms, spec.TolerancePct);
         if (bands != null)
         {
             for (int i = 0; i < bands.Length; i++)
             {
-                float x = (i < bands.Length - 1) ? (-0.021f + i * 0.0085f) * s : 0.021f * s;
-                P.Cyl(go.transform, "Band " + (i + 1), new Vector3(x, 0, 0), bodyR * 1.08f, 0.0045f * s, Vector3.right, P.Mat(BandColors[bands[i]], 0f, 0.4f), false);
+                float x = (i < bands.Length - 1) ? (-0.0165f + i * 0.0075f) * s : 0.0165f * s;
+                P.Cyl(go.transform, "Band " + (i + 1), new Vector3(x, 0, 0), bodyR * 0.97f, 0.0042f * s, Vector3.right, P.Mat(BandColors[bands[i]], 0f, 0.75f), false);
             }
         }
         if (spec.AntiSulfur)
@@ -436,6 +464,7 @@ public class ResistorBench : MonoBehaviour, IShotScript
     void BuildMeter()
     {
         var root = P.Node("Multimeter", transform).transform;
+        meterRoot = root;
         if (P.IsNew(root))
         {
             root.position = new Vector3(0.62f, 1.05f, 0.82f);
@@ -481,6 +510,12 @@ public class ResistorBench : MonoBehaviour, IShotScript
         var c = red ? new Color(0.85f, 0.1f, 0.1f) : new Color(0.06f, 0.06f, 0.06f);
         P.Cyl(go.transform, "Handle", new Vector3(0, 0, -0.03f), 0.014f, 0.12f, Vector3.forward, P.Mat(c, 0f, 0.5f), false);
         P.Cyl(go.transform, "Needle", new Vector3(0, 0, 0.075f), 0.0035f, 0.07f, Vector3.forward, P.Steel(), false);
+        // finger guard ring, knurled grip bands, tapered tip collar and a strain-relief boot at the lead end
+        P.Cyl(go.transform, "Finger guard", new Vector3(0, 0, 0.03f), 0.019f, 0.006f, Vector3.forward, P.Mat(c * 0.8f, 0f, 0.5f), false);
+        for (int i = 0; i < 4; i++)
+            P.Cyl(go.transform, "Grip band", new Vector3(0, 0, -0.01f - i * 0.016f), 0.0152f, 0.004f, Vector3.forward, P.Mat(c * 0.55f, 0f, 0.3f), false);
+        P.Cyl(go.transform, "Tip collar", new Vector3(0, 0, 0.045f), 0.0065f, 0.02f, Vector3.forward, P.Mat(c * 0.9f, 0f, 0.5f), false);
+        P.Cyl(go.transform, "Strain relief", new Vector3(0, 0, -0.1f), 0.0085f, 0.03f, Vector3.forward, P.Mat(new Color(0.05f, 0.05f, 0.06f), 0f, 0.3f), false);
         var tip = P.Node("Tip", go.transform).transform;
         if (P.IsNew(tip)) tip.localPosition = new Vector3(0, 0, 0.11f);
         var bp = P.Ensure<BenchProbe>(go);
@@ -496,12 +531,42 @@ public class ResistorBench : MonoBehaviour, IShotScript
     {
         var root = P.Node("Breadboard", transform).transform;
         P.Box(root, "Board", new Vector3(1.0f, 0.91f, 0.65f), new Vector3(0.5f, 0.02f, 0.3f), P.Mat(new Color(0.93f, 0.9f, 0.82f), 0f, 0.3f));
-        P.Box(root, "Plus rail", new Vector3(1.0f, 0.9205f, 0.775f), new Vector3(0.46f, 0.002f, 0.012f), P.Mat(new Color(0.85f, 0.15f, 0.15f)), false);
-        P.Box(root, "Minus rail", new Vector3(1.0f, 0.9205f, 0.525f), new Vector3(0.46f, 0.002f, 0.012f), P.Mat(new Color(0.15f, 0.25f, 0.85f)), false);
-        var hole = P.Mat(new Color(0.12f, 0.12f, 0.12f));
-        for (int ix = 0; ix < 14; ix++)
-        for (int iz = 0; iz < 4; iz++)
-            P.Box(root, "Hole", new Vector3(0.78f + ix * 0.03f, 0.9205f, iz < 2 ? 0.6f + iz * 0.02f : 0.69f + (iz - 2) * 0.02f), new Vector3(0.008f, 0.002f, 0.008f), hole, false);
+        // hole grid, power rails and centre channel are painted into one texture (28 columns, two 5-row groups, rails
+        // top and bottom; model scale, not the real 2.54 mm pitch); column numbers are small printed text
+        const int TW = 1024, TH = 614;
+        var boardTex = BenchDetail.Paint("breadboard top", TW, TH, (x, y) =>
+        {
+            float u = (float)x / TW * 0.5f, v = (float)y / TH * 0.3f;      // metres from the board corner
+            Color c = new Color(0.93f, 0.9f, 0.82f);
+            c += new Color(1, 1, 1) * (Mathf.PerlinNoise(x * 0.5f, y * 0.5f) * 0.02f - 0.01f);
+            float zc = 0.5f + v;
+            // rails
+            if (Mathf.Abs(zc - 0.525f) < 0.0035f) c = new Color(0.15f, 0.25f, 0.85f);
+            if (Mathf.Abs(zc - 0.775f) < 0.0035f) c = new Color(0.85f, 0.15f, 0.15f);
+            if (Mathf.Abs(zc - 0.6775f) < 0.006f) c = new Color(0.75f, 0.72f, 0.64f);      // centre channel
+            if (Mathf.Abs(zc - 0.6775f) < 0.0025f) c = new Color(0.55f, 0.52f, 0.46f);
+            float colX = (u + 0.75f - 0.7867f) / 0.0158f;                   // column index (fractional)
+            int col = Mathf.RoundToInt(colX);
+            float dx = (colX - col) * 0.0158f;
+            if (col >= 0 && col < 28)
+            {
+                bool rail = Mathf.Abs(zc - 0.525f) < 0.0035f || Mathf.Abs(zc - 0.775f) < 0.0035f;
+                float rowF = (zc - 0.60f) / 0.0145f;
+                int row = Mathf.RoundToInt(rowF);
+                float dz = (rowF - row) * 0.0145f;
+                bool main = (row >= 0 && row <= 4) || (row >= 7 && row <= 11) ? true : false;
+                if (zc > 0.69f) { rowF = (zc - 0.696f) / 0.0145f; row = Mathf.RoundToInt(rowF); dz = (rowF - row) * 0.0145f; main = row >= 0 && row <= 4; }
+                else { rowF = (zc - 0.60f) / 0.0145f; row = Mathf.RoundToInt(rowF); dz = (rowF - row) * 0.0145f; main = row >= 0 && row <= 4; }
+                if (main && dx * dx + dz * dz < 0.0017f * 0.0017f) c = new Color(0.1f, 0.1f, 0.1f);
+                else if (main && dx * dx + dz * dz < 0.0024f * 0.0024f) c = new Color(0.72f, 0.7f, 0.63f);
+                if (rail && (col % 6 != 5) && dx * dx + (zc - (zc > 0.65f ? 0.775f : 0.525f)) * (zc - (zc > 0.65f ? 0.775f : 0.525f)) < 0.0017f * 0.0017f) c = new Color(0.1f, 0.1f, 0.1f);
+            }
+            return c;
+        });
+        var boardTop = P.Prim(PrimitiveType.Quad, root, "Board top", new Vector3(1.0f, 0.9205f, 0.65f), new Vector3(0.5f, 0.3f, 1f), P.Mat(Color.white, 0f, 0.35f, boardTex, 1f), false);
+        if (P.IsNew(boardTop)) boardTop.transform.rotation = Quaternion.Euler(90, 0, 0);
+        foreach (int n in new[] { 1, 5, 10, 15, 20, 25, 28 })
+            FlatOnBench(P.Text(root, n.ToString(), new Vector3(0.7867f + (n - 1) * 0.0158f, 0.9215f, 0.6775f), 0.007f, new Color(0.2f, 0.2f, 0.22f), TextAnchor.MiddleCenter, true));
         boardResZone = MakeZone(root, "Resistor zone", new Vector3(0.9f, 0.93f, 0.65f), "part", 0.1f, 0.07f);
         ledZone = MakeZone(root, "LED zone", new Vector3(1.12f, 0.97f, 0.65f), "led", 0.1f, 0.05f);
         FlatOnBench(P.Text(root, "R1", new Vector3(0.9f, 0.923f, 0.58f), 0.026f, Color.black, TextAnchor.MiddleCenter, true));
@@ -532,13 +597,32 @@ public class ResistorBench : MonoBehaviour, IShotScript
         var col = go.AddComponent<BoxCollider>();
         col.center = new Vector3(0, 0.01f, 0);
         col.size = new Vector3(0.04f, 0.09f, 0.04f);
+        // a 5 mm LED: translucent epoxy dome and barrel over a glowing die, with the anvil / post pair visible inside
         var glow = P.Glow(new Color(1f, 0.1f, 0.08f), 0.2f);
-        P.Cyl(go.transform, "Body", new Vector3(0, 0.02f, 0), 0.012f, 0.03f, Vector3.up, glow, false);
-        var dome = P.Ball(go.transform, "Dome", new Vector3(0, 0.035f, 0), 0.012f, glow, false);
-        P.Cyl(go.transform, "Flange", new Vector3(0, 0.005f, 0), 0.015f, 0.004f, Vector3.up, glow, false);
+        var shellMat = BenchDetail.Glass(new Color(1f, 0.25f, 0.22f, 0.3f));
+        var dome = P.Ball(go.transform, "Dome", new Vector3(0, 0.03f, 0), 0.007f, glow, false);
+        var shellA = P.Cyl(go.transform, "Body", new Vector3(0, 0.02f, 0), 0.012f, 0.03f, Vector3.up, shellMat, false);
+        var shellB = P.Ball(go.transform, "Shell dome", new Vector3(0, 0.035f, 0), 0.012f, shellMat, false);
+        P.Cyl(go.transform, "Flange", new Vector3(0, 0.005f, 0), 0.015f, 0.004f, Vector3.up, shellMat, false);
         var metal = P.Mat(new Color(0.8f, 0.8f, 0.82f), 0.9f, 0.6f);
+        P.Box(go.transform, "Post", new Vector3(-0.0035f, 0.017f, 0), new Vector3(0.0018f, 0.026f, 0.0018f), metal, false);
+        P.Box(go.transform, "Anvil", new Vector3(0.0035f, 0.016f, 0), new Vector3(0.0018f, 0.022f, 0.0018f), metal, false);
+        P.Box(go.transform, "Anvil cup", new Vector3(0.0035f, 0.027f, 0), new Vector3(0.006f, 0.002f, 0.004f), metal, false);
         P.Cyl(go.transform, "Leg A", new Vector3(-0.005f, -0.02f, 0), 0.0015f, 0.05f, Vector3.up, metal, false);
-        P.Cyl(go.transform, "Leg B", new Vector3(0.005f, -0.02f, 0), 0.0015f, 0.05f, Vector3.up, metal, false);
+        P.Cyl(go.transform, "Leg B", new Vector3(0.005f, -0.019f, 0), 0.0015f, 0.048f, Vector3.up, metal, false);
+        // halo: a soft additive sprite (bloom stand-in) that faces the viewer and scales with the current
+        var haloMat = new Material(Shader.Find("Legacy Shaders/Particles/Additive") ?? Shader.Find("Sprites/Default")) { mainTexture = SoftDot() };
+        var halo = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        halo.name = "Halo";
+        Destroy(halo.GetComponent<Collider>());
+        halo.transform.SetParent(go.transform, false);
+        halo.transform.localPosition = new Vector3(0, 0.034f, 0);
+        halo.transform.localScale = Vector3.one * 0.09f;
+        var haloRend = halo.GetComponent<Renderer>();
+        haloRend.sharedMaterial = haloMat;
+        haloRend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        haloRend.receiveShadows = false;
+        haloRend.enabled = false;
         var lightGo = new GameObject("LED light");
         lightGo.transform.SetParent(go.transform, false);
         lightGo.transform.localPosition = new Vector3(0, 0.04f, 0);
@@ -549,7 +633,10 @@ public class ResistorBench : MonoBehaviour, IShotScript
         var led = go.AddComponent<BenchLed>();
         led.Dome = dome.GetComponent<Renderer>();
         led.Lamp = l;
+        led.Shell = shellMat;
+        led.Halo = haloRend;
         led.Smoke = MakeSmoke(go.transform);
+        led.Sparks = MakeSparks(go.transform);
         var g = go.AddComponent<Grabbable>();
         g.SnapId = "led";
         g.Grabbed += OnPartGrabbed;
@@ -590,9 +677,129 @@ public class ResistorBench : MonoBehaviour, IShotScript
         return ps;
     }
 
+    /// <summary>Orange sparks for the burn-out pop: a short, fast burst that falls under gravity.</summary>
+    ParticleSystem MakeSparks(Transform parent)
+    {
+        var go = new GameObject("Sparks");
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = new Vector3(0, 0.035f, 0);
+        var ps = go.AddComponent<ParticleSystem>();
+        var main = ps.main;
+        main.loop = false; main.playOnAwake = false;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(0.25f, 0.55f);
+        main.startSpeed = new ParticleSystem.MinMaxCurve(0.2f, 0.7f);
+        main.startSize = new ParticleSystem.MinMaxCurve(0.004f, 0.009f);
+        main.gravityModifier = 0.7f;
+        main.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.85f, 0.4f), new Color(1f, 0.4f, 0.1f));
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
+        var em = ps.emission; em.rateOverTime = 0f;
+        var sh = ps.shape; sh.shapeType = ParticleSystemShapeType.Sphere; sh.radius = 0.006f;
+        var pr = go.GetComponent<ParticleSystemRenderer>();
+        pr.material = new Material(Shader.Find("Legacy Shaders/Particles/Additive") ?? Shader.Find("Sprites/Default")) { mainTexture = SoftDot() };
+        var col = ps.colorOverLifetime; col.enabled = true;
+        var g = new Gradient();
+        g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(new Color(1f, 0.4f, 0.1f), 1f) },
+                  new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) });
+        col.color = g;
+        return ps;
+    }
+
+    /// <summary>
+    /// Runtime-only ambient effects: dust motes and a faint beam in the task-lamp cone, and a thin smoke wisp from the
+    /// soldering iron tip. Soft-edged sprites, tiny counts, no shadows.
+    /// </summary>
+    void BuildEffects()
+    {
+        var lamp = BenchDetail.LampHead;
+        var dir = (BenchDetail.LampTarget - lamp).normalized;
+        var dust = NewPs("Lamp dust", lamp + dir * 0.15f, Quaternion.LookRotation(dir));
+        var dm = dust.main;
+        dm.loop = true; dm.prewarm = true;
+        dm.startLifetime = 9f; dm.startSpeed = 0.01f;
+        dm.startSize = new ParticleSystem.MinMaxCurve(0.003f, 0.007f);
+        dm.startColor = new Color(1f, 0.9f, 0.7f, 0.55f);
+        dm.simulationSpace = ParticleSystemSimulationSpace.World;
+        dm.maxParticles = 90;
+        var de = dust.emission; de.rateOverTime = 10f;
+        var ds = dust.shape; ds.shapeType = ParticleSystemShapeType.Cone; ds.angle = 24f; ds.radius = 0.05f; ds.length = 0.9f; ds.shapeType = ParticleSystemShapeType.Cone;
+        var dn = dust.noise; dn.enabled = true; dn.strength = 0.02f; dn.frequency = 0.5f;
+        var dr = dust.GetComponent<ParticleSystemRenderer>();
+        dr.material = new Material(Shader.Find("Sprites/Default")) { mainTexture = SoftDot() };
+
+        // faint light shaft: a few large, very transparent, slow sprites spread along the cone
+        var beam = NewPs("Lamp beam", lamp + dir * 0.08f, Quaternion.LookRotation(dir));
+        var bm = beam.main;
+        bm.loop = true; bm.prewarm = true;
+        bm.startLifetime = 2.6f; bm.startSpeed = 0.22f;
+        bm.startSize = new ParticleSystem.MinMaxCurve(0.28f, 0.42f);
+        bm.startColor = new Color(1f, 0.8f, 0.5f, 0.3f);
+        bm.simulationSpace = ParticleSystemSimulationSpace.World;
+        bm.maxParticles = 60;
+        var be = beam.emission; be.rateOverTime = 18f;
+        var bs = beam.shape; bs.shapeType = ParticleSystemShapeType.Cone; bs.angle = 20f; bs.radius = 0.03f;
+        var bsz = beam.sizeOverLifetime; bsz.enabled = true; bsz.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 0.35f, 1f, 1.5f));
+        beam.GetComponent<ParticleSystemRenderer>().material = new Material(Shader.Find("Legacy Shaders/Particles/Additive") ?? Shader.Find("Sprites/Default")) { mainTexture = SoftDot() };
+
+        // soldering iron wisp
+        var wisp = NewPs("Iron smoke", new Vector3(3.1f, 1.04f, 0.83f), Quaternion.Euler(-90, 0, 0));
+        var wm = wisp.main;
+        wm.loop = true; wm.prewarm = true;
+        wm.startLifetime = 3f; wm.startSpeed = 0.05f;
+        wm.startSize = new ParticleSystem.MinMaxCurve(0.02f, 0.04f);
+        wm.startColor = new Color(0.8f, 0.8f, 0.82f, 0.12f);
+        wm.gravityModifier = -0.02f;
+        wm.simulationSpace = ParticleSystemSimulationSpace.World;
+        wm.maxParticles = 20;
+        var we = wisp.emission; we.rateOverTime = 4f;
+        var ws = wisp.shape; ws.shapeType = ParticleSystemShapeType.Cone; ws.angle = 6f; ws.radius = 0.003f;
+        var wn = wisp.noise; wn.enabled = true; wn.strength = 0.05f; wn.frequency = 0.8f;
+        var wsz = wisp.sizeOverLifetime; wsz.enabled = true; wsz.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 0.5f, 1f, 2.5f));
+        var wc = wisp.colorOverLifetime; wc.enabled = true;
+        var g = new Gradient();
+        g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                  new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.25f), new GradientAlphaKey(0f, 1f) });
+        wc.color = g;
+        wisp.GetComponent<ParticleSystemRenderer>().material = new Material(Shader.Find("Sprites/Default")) { mainTexture = SoftDot() };
+        dust.Play(); beam.Play(); wisp.Play();
+    }
+
+    ParticleSystem NewPs(string name, Vector3 pos, Quaternion rot)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(transform, false);
+        go.transform.position = pos;
+        go.transform.rotation = rot;
+        var ps = go.AddComponent<ParticleSystem>();
+        ps.Stop();
+        return ps;
+    }
+
+    /// <summary>Extra meter detail: rubber holster, range ticks, buttons, strain-relief boots at the jacks, backlight.</summary>
+    void BuildMeterDetail()
+    {
+        var root = meterRoot;
+        var rubber = P.Mat(new Color(0.12f, 0.12f, 0.13f), 0f, 0.3f);
+        P.Box(root, "Holster", new Vector3(0, 0, 0.012f), new Vector3(0.214f, 0.314f, 0.034f), rubber, false);
+        for (int sx = -1; sx <= 1; sx += 2)
+        for (int sy = -1; sy <= 1; sy += 2)
+            P.Ball(root, "Holster corner", new Vector3(sx * 0.105f, sy * 0.155f, 0.002f), 0.02f, rubber, false);
+        for (int i = 0; i < 10; i++)
+        {
+            float a = (-120f + i * 26.7f) * Mathf.Deg2Rad;
+            var tick = P.Box(root, "Range tick", new Vector3(Mathf.Sin(a) * 0.062f, -0.04f + Mathf.Cos(a) * 0.062f, -0.022f), new Vector3(0.003f, 0.01f, 0.002f), P.Mat(new Color(0.15f, 0.15f, 0.15f)), false);
+            if (P.IsNew(tick)) tick.transform.localRotation = Quaternion.Euler(0, 0, -a * Mathf.Rad2Deg);
+        }
+        for (int i = 0; i < 3; i++)
+            P.Box(root, "Meter button", new Vector3(-0.06f + i * 0.06f, 0.0f, -0.024f), new Vector3(0.04f, 0.014f, 0.006f), P.Mat(new Color(0.3f, 0.32f, 0.35f), 0f, 0.4f), false);
+        P.Box(root, "Backlight strip", new Vector3(0, 0.113f, -0.026f), new Vector3(0.15f, 0.003f, 0.002f), P.Glow(new Color(0.45f, 1f, 0.5f), 0.8f), false);
+        var black = P.Mat(new Color(0.05f, 0.05f, 0.06f), 0f, 0.3f);
+        P.Cyl(jackRed, "Red boot", new Vector3(0, -0.012f, -0.012f), 0.0085f, 0.03f, new Vector3(0, -1f, -0.4f), black, false);
+        P.Cyl(jackBlack, "Black boot", new Vector3(0, -0.012f, -0.012f), 0.0085f, 0.03f, new Vector3(0, -1f, -0.4f), black, false);
+    }
+
     static Texture2D softDot;
     /// <summary>Round, soft-edged particle texture so smoke reads as puffs instead of squares.</summary>
-    static Texture2D SoftDot()
+    public static Texture2D SoftDot()
     {
         if (softDot != null) return softDot;
         const int n = 64;
@@ -629,6 +836,21 @@ public class ResistorBench : MonoBehaviour, IShotScript
         var press = P.Ensure<Pressable>(sw);
         press.Label = "POWER";
         press.Pressed += h => OnPowerToggled();
+
+        // knobs with pointer marks, status LEDs, vent slots on top, rubber feet, carry-handle end caps
+        for (int i = 0; i < 2; i++)
+        {
+            float kx = 1.4f - 0.095f + i * 0.19f;
+            P.Cyl(root, "Supply knob", new Vector3(kx, 0.96f, 0.885f), 0.017f, 0.02f, Vector3.back, P.Mat(new Color(0.07f, 0.07f, 0.08f), 0.4f, 0.45f), false);
+            P.Box(root, "Supply knob mark", new Vector3(kx, 0.97f, 0.873f), new Vector3(0.003f, 0.012f, 0.002f), P.Mat(Color.white), false);
+        }
+        P.Ball(root, "Supply CV LED", new Vector3(1.4f - 0.125f, 1.012f, 0.895f), 0.004f, P.Glow(new Color(0.2f, 1f, 0.35f), 1.8f), false);
+        P.Ball(root, "Supply CC LED", new Vector3(1.4f + 0.125f, 1.012f, 0.895f), 0.004f, P.Mat(new Color(0.35f, 0.08f, 0.06f), 0f, 0.6f), false);
+        for (int i = 0; i < 6; i++)
+            P.Box(root, "Vent slot", new Vector3(1.4f - 0.1f + i * 0.04f, 1.0405f, 1.0f), new Vector3(0.012f, 0.001f, 0.15f), P.Mat(new Color(0.04f, 0.04f, 0.05f)), false);
+        for (int sx = -1; sx <= 1; sx += 2)
+        for (int sz = -1; sz <= 1; sz += 2)
+            P.Cyl(root, "Supply foot", new Vector3(1.4f + sx * 0.12f, 0.8985f, 1.0f + sz * 0.08f), 0.012f, 0.007f, Vector3.up, P.Mat(new Color(0.05f, 0.05f, 0.06f), 0f, 0.3f), false);
 
         var red = MakeLine("Supply plus wire", new Color(0.85f, 0.1f, 0.1f), 0.006f);
         if (P.IsNew(red))
@@ -769,7 +991,7 @@ public class ResistorBench : MonoBehaviour, IShotScript
     {
         if (strapZone.Occupant != null || strapWarned) return;
         strapWarned = true;
-        board.Mistake("You touched parts without the ESD strap on. Clip it to the hook first.");
+        Err("You touched parts without the ESD strap on. Clip it to the hook first.");
     }
 
     void OnProbeDropped(Grabbable g)
@@ -797,7 +1019,7 @@ public class ResistorBench : MonoBehaviour, IShotScript
         if (board.IsDone(1)) return;
         if (index != 1)
         {
-            board.Mistake("That is not what the bands say. Yellow-violet = 47, red = x100.");
+            Err("That is not what the bands say. Yellow-violet = 47, red = x100.");
             return;
         }
         answeredBands = true;
@@ -822,13 +1044,31 @@ public class ResistorBench : MonoBehaviour, IShotScript
         }
         else
         {
-            board.Mistake(c.Problems[0]);
+            Err(c.Problems[0]);
         }
     }
+
+    /// <summary>A mistake on the task board, with the error sound (the burn-out has its own pop instead).</summary>
+    void Err(string message, bool critical = false)
+    {
+        board.Mistake(message, critical);
+        if (!critical) Sfx.Play2D("ui_error", 0.6f);
+    }
+
+    AudioSource supplyLoop;
+    Transform supplyNode;
 
     void OnPowerToggled()
     {
         powerOn = !powerOn;
+        Sfx.Play("switch", new Vector3(1.4f, 0.94f, 0.9f), 0.9f); // relay / rocker click
+        if (powerOn)
+        {
+            if (supplyNode == null) { supplyNode = new GameObject("Supply hum").transform; supplyNode.SetParent(transform, false); supplyNode.position = new Vector3(1.4f, 0.97f, 1.0f); }
+            if (supplyLoop == null) supplyLoop = Sfx.Loop("pressure_tone", supplyNode, 0.07f, 0.4f, 5f);
+            if (supplyLoop != null) { supplyLoop.pitch = 0.62f; if (!supplyLoop.isPlaying) supplyLoop.Play(); }
+        }
+        else if (supplyLoop != null) supplyLoop.Stop();
         if (!powerOn) warned.Clear();
         psuText.text = powerOn ? "5.00 V" : "0.00 V";
         psuState.text = powerOn ? "OUTPUT ON" : "OUTPUT OFF";
@@ -839,13 +1079,14 @@ public class ResistorBench : MonoBehaviour, IShotScript
     {
         if (board.IsDone(index)) return;
         board.Complete(index, message);
-        audioSrc.PlayOneShot(dingClip);
+        Sfx.Play2D("ui_confirm", 0.7f);
+        if (index == 0) Sfx.Play("esd_click", strapZone.transform.position, 0.8f);
         if (why != null) why.Show(StepWhy[index]);
     }
 
     void Warn(string key, string message, bool critical)
     {
-        if (warned.Add(key)) board.Mistake(message, critical);
+        if (warned.Add(key)) Err(message, critical);
     }
 
     // ------------------------------------------------------------------------------------------------- rules
@@ -884,7 +1125,11 @@ public class ResistorBench : MonoBehaviour, IShotScript
         // meter
         var measured = FindMeasured();
         string reading = measured != null ? ResistorMath.FormatOhms(measured.Actual) : "OL";
-        if (meterText.text != reading) meterText.text = reading;
+        if (meterText.text != reading)
+        {
+            if (measured != null) Sfx.Play("meter_beep", meterRoot.position, 0.6f); // continuity / reading beep
+            meterText.text = reading;
+        }
         if (measured != null && measured == unknown) unknownMeasured = true;
 
         // step 2: bands read and confirmed by the meter
@@ -920,11 +1165,12 @@ public class ResistorBench : MonoBehaviour, IShotScript
         if (state == LedState.Burnt)
         {
             led.Burn();
-            audioSrc.PlayOneShot(popClip);
+            Sfx.Play("spark_pop", led.transform.position, 0.9f);
+            Sfx.Play("smoke_puff", led.transform.position, 0.5f);
             if (res == null)
-                board.Mistake("LED wired straight to 5 V with no series resistor. It burned out.", true);
+                Err("LED wired straight to 5 V with no series resistor. It burned out.", true);
             else
-                board.Mistake(ResistorMath.FormatOhms(res.Actual) + " ohm lets " + (amps * 1000.0).ToString("0") + " mA through, over the LED's 30 mA limit. The LED burned out.", true);
+                Err(ResistorMath.FormatOhms(res.Actual) + " ohm lets " + (amps * 1000.0).ToString("0") + " mA through, over the LED's 30 mA limit. The LED burned out.", true);
             return;
         }
 
@@ -1051,6 +1297,16 @@ public class ResistorBench : MonoBehaviour, IShotScript
         redProbe.Unclip();
         blackProbe.Unclip();
 
+        why.HideAll();
+        // round 3 views (set dressing, parts, lamp and effects), taken before the circuit is powered
+        yield return ShotAt(api, "11-parts-closeup", new Vector3(-0.95f, 1.28f, 0.62f), new Vector3(-0.96f, 0.93f, 1.0f), 42f);
+        yield return ShotAt(api, "12-instrument-cart", new Vector3(1.5f, 1.65f, -0.5f), new Vector3(2.7f, 1.2f, 1.0f), 66f);
+        board.gameObject.SetActive(false); // the task board would fill this view
+        yield return ShotAt(api, "13-shelves-and-drawers", new Vector3(-1.8f, 0.95f, -0.4f), new Vector3(-3.1f, 1.0f, 1.1f), 70f);
+        board.gameObject.SetActive(true);
+        yield return ShotAt(api, "14-task-lamp-breadboard", new Vector3(0.45f, 1.3f, 0.05f), new Vector3(1.0f, 0.97f, 0.7f), 55f);
+        yield return ShotAt(api, "15-room-wide", new Vector3(0.9f, 2.5f, -2.3f), new Vector3(0.6f, 1.0f, 1.0f), 78f);
+
         var good = FindPart(150, true, 0.125);
         Place(boardResZone, good.GetComponent<Grabbable>());
         Place(ledZone, led1.GetComponent<Grabbable>());
@@ -1124,8 +1380,11 @@ public class BenchLed : MonoBehaviour
 {
     public Renderer Dome;
     public Light Lamp;
-    public ParticleSystem Smoke;
+    public ParticleSystem Smoke, Sparks;
+    public Material Shell;
+    public Renderer Halo;
     public bool Burnt;
+    float flash, lastLevel;
 
     public void Show(float level)
     {
@@ -1135,11 +1394,22 @@ public class BenchLed : MonoBehaviour
         {
             m.color = new Color(0.08f, 0.05f, 0.04f);
             m.SetColor("_EmissionColor", Color.black);
-            Lamp.enabled = false;
+            if (Shell != null) Shell.color = new Color(0.12f, 0.1f, 0.09f, 0.55f);
+            if (Halo != null) Halo.enabled = false;
+            if (flash <= 0f) Lamp.enabled = false;
             return;
         }
+        if (lastLevel < 0.02f && level >= 0.02f) Sfx.Play("led_on", transform.position, 0.5f);
+        lastLevel = level;
         m.color = Color.Lerp(new Color(0.35f, 0.05f, 0.05f), bright, Mathf.Clamp01(level));
         m.SetColor("_EmissionColor", bright * (level * 2.4f));
+        if (Shell != null) Shell.color = Color.Lerp(new Color(1f, 0.25f, 0.22f, 0.3f), new Color(1f, 0.35f, 0.3f, 0.42f), Mathf.Clamp01(level));
+        if (Halo != null)
+        {
+            Halo.enabled = level > 0.02f;
+            Halo.sharedMaterial.color = new Color(1f, 0.2f, 0.12f, Mathf.Clamp01(level) * 0.85f);
+            Halo.transform.localScale = Vector3.one * (0.05f + 0.06f * Mathf.Clamp01(level));
+        }
         Lamp.intensity = level * 0.7f;
         Lamp.enabled = level > 0.01f;
     }
@@ -1149,5 +1419,23 @@ public class BenchLed : MonoBehaviour
         Burnt = true;
         Show(0f);
         Smoke.Emit(40);
+        if (Sparks != null) Sparks.Emit(28);
+        flash = 0.12f; // bright flash from the LED's own light for a moment
+        Lamp.color = new Color(1f, 0.7f, 0.4f); Lamp.intensity = 3f; Lamp.enabled = true;
+    }
+
+    void Update()
+    {
+        if (flash > 0f)
+        {
+            flash -= Time.deltaTime;
+            if (flash <= 0f) { Lamp.enabled = false; Lamp.color = new Color(1f, 0.15f, 0.1f); }
+        }
+    }
+
+    void LateUpdate()
+    {
+        if (Halo != null && Halo.enabled && Camera.main != null)
+            Halo.transform.rotation = Quaternion.LookRotation(Halo.transform.position - Camera.main.transform.position);
     }
 }

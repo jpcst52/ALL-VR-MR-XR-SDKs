@@ -9,7 +9,7 @@ using PittBradford.XR;
 /// Gas is drawn as drifting puffs that really move with the live wind, so "upwind" and "crosswind" are real.
 /// General safety-awareness practice only: it does not replace a site procedure, permit, or training.
 /// </summary>
-public class RefineryRounds : MonoBehaviour, IShotScript
+public partial class RefineryRounds : MonoBehaviour, IShotScript
 {
     // ------------------------------------------------------------------------------------------------- layout
     static readonly Vector3 Center = new Vector3(0f, 0f, 5f);            // middle of the unit
@@ -98,7 +98,8 @@ public class RefineryRounds : MonoBehaviour, IShotScript
     string markerText;
     Rigidbody monitorRb;
     Grabbable monitorGrab;
-    AudioSource monAudio, siren;
+    AudioSource sirenLoop;
+    Transform sirenNode;
     GameObject marker, weepVisual;
     LineRenderer tape;
     Transform toolBag;
@@ -205,14 +206,16 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         QualitySettings.shadows = ShadowQuality.All;
         // sky / horizon / ground ambient reads more like daylight than one flat colour
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
-        RenderSettings.ambientSkyColor = new Color(0.56f, 0.64f, 0.76f);
-        RenderSettings.ambientEquatorColor = new Color(0.5f, 0.52f, 0.54f);
-        RenderSettings.ambientGroundColor = new Color(0.3f, 0.28f, 0.25f);
+        RenderSettings.ambientSkyColor = new Color(0.5f, 0.57f, 0.68f);
+        RenderSettings.ambientEquatorColor = new Color(0.46f, 0.48f, 0.5f);
+        RenderSettings.ambientGroundColor = new Color(0.28f, 0.26f, 0.24f);
         RenderSettings.fog = true;
         RenderSettings.fogMode = FogMode.Linear;
-        RenderSettings.fogColor = new Color(0.66f, 0.76f, 0.86f);
-        RenderSettings.fogStartDistance = 70f;
-        RenderSettings.fogEndDistance = 190f;
+        RenderSettings.fogColor = new Color(0.68f, 0.74f, 0.8f);
+        RenderSettings.fogStartDistance = 45f;
+        RenderSettings.fogEndDistance = 160f;
+        QualitySettings.pixelLightCount = 4;
+        QualitySettings.shadowDistance = 70f;
 
         emitters = new[] { emitA, emitW, emitE };
         steel = P.Steel();
@@ -243,6 +246,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         BuildMarker(root);
         BuildAudio(root);
         BuildBrand(root);
+        BuildDetail(root);
 
         rig = XRRig.Create(new Vector3(0f, 0f, -14f), 0f);
         rig.Area = new Bounds(new Vector3(0f, 0f, 4f), new Vector3(64f, 1f, 56f));
@@ -253,16 +257,17 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         if (skyShader != null)
         {
             var sky = new Material(skyShader);
-            sky.SetFloat("_SunSize", 0.03f);
-            sky.SetFloat("_AtmosphereThickness", 0.85f);
-            sky.SetColor("_SkyTint", new Color(0.55f, 0.65f, 0.8f));
+            sky.SetFloat("_SunSize", 0.02f);
+            sky.SetFloat("_AtmosphereThickness", 1.1f);
+            sky.SetColor("_SkyTint", new Color(0.5f, 0.55f, 0.62f));
             sky.SetColor("_GroundColor", new Color(0.42f, 0.42f, 0.4f));
-            sky.SetFloat("_Exposure", 1.15f);
+            sky.SetFloat("_Exposure", 1.05f);
             RenderSettings.skybox = sky;
             rig.Camera.clearFlags = CameraClearFlags.Skybox;
         }
 
         BuildRadio();
+        BuildSound();
         why = WhyCue.Create(transform);
         // a little left of centre: the task board floats to the right of the view
         why.WhyOffset = new Vector2(-0.22f, -0.3f);
@@ -283,6 +288,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         drift = Mathf.Clamp(r.WindMph * 0.447f * 0.6f, 0.9f, 3.5f);
         PlaceMuster();
         UpdateWeatherText();
+        ApplyWindFx();
     }
 
     void UpdateWeatherText()
@@ -372,8 +378,9 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         if (P.IsNew(sunGo))
         {
             sun.type = LightType.Directional;
-            sun.intensity = 1.05f;
-            sun.color = new Color(1f, 0.96f, 0.88f);
+            sun.intensity = 1.0f;
+            sun.color = new Color(1f, 0.95f, 0.87f);
+            sun.shadowStrength = 0.85f;
             sun.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
             sun.shadows = LightShadows.Soft;
         }
@@ -684,7 +691,6 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         monitorGrab = P.Ensure<Grabbable>(go);
         monitorGrab.Grabbed += g => { monitorHeld = true; monitorClipped = false; };
         monitorGrab.Dropped += g => { monitorHeld = false; if (bumped) monitorClipped = true; };
-        monAudio = P.Speaker(monitor, P.Tone("beep", 2200f, 0.12f, 0.5f, 3f), false, 0.8f, 1f);
     }
 
     void BuildDetector(Transform root)
@@ -803,7 +809,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
             bc.size = V(0.32f, 0.4f, 0.32f);
             bc.center = V(0f, 0.2f, 0f);
         }
-        P.Ensure<Grabbable>(go);
+        P.Ensure<Grabbable>(go).Dropped += g => Sfx.Play("cone_place", go.transform.position, 0.7f);
         return rb;
     }
 
@@ -818,25 +824,10 @@ public class RefineryRounds : MonoBehaviour, IShotScript
 
     void BuildAudio(Transform root)
     {
+        // the siren sits on the control-room roof; the sound itself is the kit's looping alarm (see StartSiren)
         var go = P.Node("Site siren", root);
-        siren = P.Speaker(go.transform, MakeSiren(), true, 0.35f, 0f);
-    }
-
-    static AudioClip MakeSiren()
-    {
-        int rate = 22050, n = rate * 3;
-        var data = new float[n];
-        float ph = 0f;
-        for (int i = 0; i < n; i++)
-        {
-            float t = (float)i / rate;
-            float f = 600f + 250f * Mathf.Sin(2f * Mathf.PI * t / 1.5f);
-            ph += 2f * Mathf.PI * f / rate;
-            data[i] = Mathf.Sin(ph) * 0.35f;
-        }
-        var clip = AudioClip.Create("siren", n, 1, rate, false);
-        clip.SetData(data, 0);
-        return clip;
+        sirenNode = go.transform;
+        if (P.IsNew(go)) sirenNode.position = CabinPos + V(0f, 3.3f, 0f);
     }
 
     void BuildRadio()
@@ -959,6 +950,8 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         UpdateMonitor(dt);
         UpdateDetector();
         UpdateAlarmFx();
+        UpdateDetail();
+        rig.FloorSurface = Inside(rig.FeetPosition) ? Surface.Concrete : Surface.Gravel;
         if (marker.activeSelf) markerRing.localScale = V(2.2f, 0.02f, 2.2f) * (1f + 0.08f * Mathf.Sin(Time.time * 4f));
         if (!shotMode) RunScenario(dt);
     }
@@ -1005,7 +998,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         if (low && !shotMode)
         {
             beepTimer -= dt;
-            if (beepTimer <= 0f) { beepTimer = high ? 0.18f : 0.45f; monAudio.Play(); }
+            if (beepTimer <= 0f) { beepTimer = high ? 0.18f : 0.45f; Sfx.Play("gas_monitor_beep", monitor.position, high ? 0.9f : 0.7f); }
         }
     }
 
@@ -1110,6 +1103,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
     void Done(int step, string message)
     {
         board.Complete(step, message);
+        Sfx.Play2D("ui_confirm", 0.6f);
         why.Show(StepWhy[boardTask][step]);
     }
 
@@ -1118,6 +1112,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         totalMistakes++;
         if (critical) totalCritical++;
         board.Mistake(msg, critical);
+        Sfx.Play2D(critical ? "error_buzz" : "ui_error", 0.7f);
         RefreshFooter();
     }
 
@@ -1207,6 +1202,8 @@ public class RefineryRounds : MonoBehaviour, IShotScript
             if (task == 0) board.Say("Pick up the monitor (grip / E) and hold it at the station.", Warn);
             return;
         }
+        Sfx.Play("button", bumpPos, 0.8f);
+        Sfx.Play("gas_hiss", bumpPos, 0.5f);
         StartCoroutine(BumpRoutine());
     }
 
@@ -1267,6 +1264,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         emitA.Origin = releasePos;
         emitA.On = true;
         Burst(emitA, 5f);
+        Sfx.Play("gas_hiss", releasePos, 1f);
         alarmStartTime = Time.time;
         StartTask(1);
         board.Say("ALARM: your monitor reads gas. Act now.", Bad);
@@ -1315,6 +1313,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         emitW.Origin = FlangePos;
         emitW.On = true;
         Burst(emitW, 3f);
+        Sfx.Play("gas_hiss", FlangePos, 0.5f);
         StartTask(2);
         board.Say("You smell hydrocarbon: a weep at flange F-12.", Warn);
     }
@@ -1361,8 +1360,9 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         emitE.Origin = V(Center.x, 1.2f, Center.z);
         emitE.On = true;
         Burst(emitE, 6f);
+        Sfx.Play("gas_hiss", emitE.Origin, 1f);
         alarmActive = true;
-        siren.Play();
+        StartSiren();
         board.Say("SITE ALARM! Go to the muster point now.", Bad);
     }
 
@@ -1385,6 +1385,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
     void CheckInPress()
     {
         if (shotMode || task != 3 || done) return;
+        Sfx.Play("button", musterRoot.position + V(0f, 1.5f, 0f), 0.8f);
         if (!board.IsDone(0)) { board.Say("Walk to the muster point first.", Warn); return; }
         if (board.IsDone(1)) return;
         FinishScenario();
@@ -1396,7 +1397,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         Done(1, "Checked in. Everyone is accounted for.");
         done = true;
         alarmActive = false;
-        siren.Stop();
+        StopSiren(true);
         emitE.On = false;
         board.Say(FinalSummary(), totalCritical > 0 ? Bad : Good);
         var finalBoard = board;
@@ -1407,6 +1408,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
     void RadioPress(int id)
     {
         if (shotMode || done) return;
+        Sfx.Play2D("radio_click", 0.7f);
         switch (id)
         {
             case 0: // ENTERING
@@ -1607,7 +1609,7 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         // 7 the player's view at the start: pre-entry station, gate, conditions board, university plate
         ClearGas();
         alarmActive = false;
-        siren.Stop();
+        StopSiren(false);
         totalMistakes = 0;
         totalCritical = 0;
         StartTask(0);
@@ -1666,5 +1668,19 @@ public class RefineryRounds : MonoBehaviour, IShotScript
         why.HideAll();
         Debug.Log("[why] board summary: " + FinalSummary() + " | " + why.ReasoningLine);
         yield return Snap(api, "13-summary-with-reasoning", camPos, boardAnchor.position + V(0f, -0.55f, 0f), 50f);
+
+        // round 3 detail views (desktop editor renders)
+        board.gameObject.SetActive(false);
+        ClearGas();
+        alarmActive = false;
+        StopSiren(false);
+        yield return api.Wait(0.5f);
+        yield return Snap(api, "14-pipe-rack-detail", V(5f, 1.8f, -2.5f), V(-3f, 3.4f, 4f), 62f);
+        yield return Snap(api, "15-vessel-platform-detail", V(-12.5f, 3.2f, 2.5f), V(-7f, 5.5f, 10f), 62f);
+        yield return Snap(api, "16-cabin-and-lighting", V(-3.5f, 1.7f, -16f), V(-10f, 1.7f, -10f), 62f);
+        yield return Snap(api, "17-safety-shower-and-extinguisher", V(6.5f, 1.7f, -4.6f), V(10.7f, 1.4f, -1.5f), 62f);
+        yield return Snap(api, "18-flare-smoke-and-sky", V(7f, 1.8f, 0f), V(15f, 17f, 6f), 66f);
+        yield return Snap(api, "19-ground-detail", V(1f, 0.9f, -13.8f), V(-2.5f, 0.05f, -9.8f), 66f);
+        yield return Snap(api, "20-steam-and-relief-valve", V(3f, 1.8f, 3f), V(8.3f, 4.8f, 9f), 60f);
     }
 }

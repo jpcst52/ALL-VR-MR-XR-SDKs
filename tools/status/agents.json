@@ -494,8 +494,8 @@
       "watch": [
         "vive-steamvr/04-resistor-bench"
       ],
-      "ended": "2026-11-03T20:27:25.752Z",
-      "note": "Resistor Bench: detail, lighting, effects, Sfx wired; 929 baked objects; 15 shots; 0 compile errors; sound unheard, frame rate unmeasured"
+      "ended": "2026-11-03T20:43:08.128Z",
+      "note": "Resistor Bench follow-up: void walled, snap discs smaller, lamp beam brighter; 934 baked objects; 15 shots"
     }
   ]
 }
