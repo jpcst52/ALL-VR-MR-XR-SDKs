@@ -45,7 +45,8 @@ public static class HubPerfPass
     /// </summary>
     static readonly (string scene, string[] groups)[] StaticGroups =
     {
-        ("WarehouseForklift_Hub", new[] { "Scenario/Racking", "Scenario/Shell", "Scenario/Markings" }),
+        // Empty since round 4: the kit's render-budget pass (RenderBudget, run at the end of every bake) marks the groups the scenario declared
+        // with P.Static as batching-static, so nothing needs listing here. Kept as a way to add hub-only groups by hand.
     };
 
     [MenuItem("Pitt-Bradford/Hub: static-batch the baked scenes (run after baking)")]

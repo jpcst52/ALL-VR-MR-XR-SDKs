@@ -185,6 +185,12 @@ Run on November 3, 2026: every line below passed in a stand-alone .NET 9 console
 - `FormatOhms(4700)` -> `"4.7 k"`; `(150)` -> `"150"`; `(1e6)` -> `"1 M"`; `(150.4)` -> `"150.4"`; `(4731)` -> `"4.73 k"`
 - `WattsText(0.125)` -> `"1/8 W"`; `(0.0625)` -> `"1/16 W"`
 
+## Render cost
+
+Round 3 detail roughly tripled the render cost; round 4 cut it again with no object removed. Editor CPU counters in Play mode (median, mono editor Game view, measured on the hub copy of this scene because the hub runs the same scripts; **not** a Vive frame rate): set-pass calls 1,924 to **562**, draw calls 2,497 to **804**, triangles 611 k to **132 k**.
+
+How: the bake now runs the kit's `RenderBudget` pass (flags and settings only, nothing is merged on disk). Groups that never move are declared with `P.Static(...)` and become batching-static; small, thin, emissive and transparent parts stop casting shadows; at most two non-directional lights stay on with a shorter range (the rest are switched off but stay in the scene), with a little more ambient light to make up; the soft indoor key light no longer casts realtime shadows. Baked materials are colour-quantised and GPU-instanced. The look is close to before but slightly flatter, with less pooled light; re-shoot screenshots were compared by eye and not replaced. GPU time and the frame rate on a headset are **not measured**. Details and the full table: `../hub/README.md`.
+
 ## Troubleshooting
 
 - **Safe Mode prompt on open:** a script failed to compile. Send the first red Console message.

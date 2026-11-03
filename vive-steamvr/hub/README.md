@@ -148,18 +148,29 @@ All round 2 pictures are Unity editor desktop renders in Play mode, not a headse
 
 The scenes can include realistic, animated people from the **Microsoft Rocketbox Avatar Library** (MIT license, https://github.com/microsoft/Microsoft-Rocketbox; cite Gonzalez-Franco et al. 2020, DOI 10.3389/frvir.2020.561558). The files (about 1.1 GB: 11 avatars plus walk, idle, talk and work animations) live in `Assets/Rocketbox`, which is git-ignored like the Asset Store packs, so nothing third-party is committed. To get them: sparse-checkout `Assets/Avatars/...` and `Assets/Animations/...` from that repository into `Assets/Rocketbox` (the avatars used are listed in `Assets/Editor/PeopleSetup.cs`). `Assets/Editor/Rocketbox/RocketboxImport.cs` (our own script) sets the import options, and **Pitt-Bradford > People > Set up Rocketbox controllers** builds the animation controllers. The MIT license text is kept at `Assets/Rocketbox/LICENSE.md`.
 
-## Round 3 detail pass and render cost (2026-11-03)
+## Round 3 detail pass and render cost (2026-11-03), and the round 4 reduction
 
-The project scripts for Refinery Rounds, Warehouse Forklift and Resistor Bench were copied into `Assets/Scripts/Scenarios/` (the hub-only mirror-camera throttle in `WarehouseForklift.cs` was kept), the five scenes were rebuilt and re-baked, and the static-batch menu was run.
+The project scripts for Refinery Rounds, Warehouse Forklift and Resistor Bench were copied into `Assets/Scripts/Scenarios/` (the hub-only mirror-camera throttle was ported back into project 03), and the five scenes were rebuilt and re-baked. The round 3 detail pass tripled the render cost; round 4 brought it back down without removing any object.
 
-Editor CPU counters in Play mode, median per frame (the same probe as round 2; these are **not** Vive frame rates and the editor Game view is mono):
+Editor CPU counters in Play mode, median per frame, from `PerfProbe` (same probe and settings as before: Ultra quality level, mono editor Game view). These are **not** Vive frame rates:
 
-| Scene | Set-pass calls | Draw calls | Triangles | Round 2 set-pass / draw calls |
-|---|---|---|---|---|
-| Lobby | 353 | 433 | 284 k | 352 / 433 |
-| Hydrostatic Test Bay | 1,913 | 2,052 | 690 k | 515 / 636 |
-| Refinery Rounds | 1,290 | 1,807 | 448 k | 551 / 762 |
-| Warehouse Forklift | 3,543 | 4,295 | 359 k | 1,301 / 1,902 |
-| Resistor Bench | 1,924 | 2,497 | 611 k | 787 / 855 |
+| Scene | Set-pass calls (round 2 / round 3 / **now**) | Draw calls (round 3 / **now**) | Batches (round 3 / **now**) | Triangles (round 3 / **now**) | Shadow casters (round 3 / **now**) | Lights, non-directional (round 3 / **now**) |
+|---|---|---|---|---|---|---|
+| Lobby (not changed) | 352 / 353 / 353 | 433 / 433 | n/a | 284 k / 284 k | n/a | n/a |
+| Hydrostatic Test Bay | 515 / 1,913 / **341** | 2,052 / **394** | n/a / **354** | 690 k / **127 k** | 570 / **0** | 14 / **2** |
+| Refinery Rounds | 551 / 1,290 / **544** | 1,807 / **1,082** | n/a / **605** | 448 k / **287 k** | n/a / **105** | n/a / **2** |
+| Warehouse Forklift | 1,301 / 3,543 / **552** | 4,295 / **1,240** | 3,603 / **624** | 359 k / **97 k** | 1,542 / **0** | 9 / **2** |
+| Resistor Bench | 787 / 1,924 / **562** | 2,497 / **804** | n/a / **782** | 611 k / **132 k** | n/a / **0** | n/a / **1** |
 
-**The detail pass roughly tripled the cost of the four scenario scenes.** The lobby is unchanged. A stereo headset renders everything twice, so these scenes are likely too heavy for a Vive Pro 2 as they stand; the frame rate has not been measured. The main cause is the number of distinct materials (each unique colour is its own material, so static batching cannot merge them), plus many shadow casters and lights. Next step: de-duplicate and quantise materials in the baker, cut shadow casters on small props, and cap lights, then measure again. Until then, treat the round 3 detail as a quality level that may need to be reduced for the headset.
+Targets were set-pass <= 700, draw calls <= 1,200, shadow casters <= 400, non-directional lights <= 4, triangles <= 450 k. All are met except the **Warehouse draw calls (1,240, 3 % over)**. "n/a" means the round 3 value was not recorded.
+
+**What was found (measured, not guessed).** In the built-in forward pipeline every pixel light adds a pass for each object it reaches and makes neighbouring objects unbatchable (their light sets differ). Switching the Warehouse's point lights off took set-pass from 3,630 to about 1,130 by itself; even vertex lights cost about half of that. A shadow-casting directional light makes Unity render the whole scene's depth again, roughly doubling draw calls. Colour quantising alone changed little, because most materials are unique by texture, not colour. A bake that ran while objects were still marked static saved merged "Combined-Mesh" slices (812 such assets were found in the hub's baked folders) which are unreadable and cannot batch.
+
+**What changed (kit, so every project gets it).**
+- `RenderBudget` (kit Editor, runs at the end of every bake; menu *Pitt-Bradford > Render budget: apply to open scene*): (1) groups declared with `P.Static(...)` (kit component `StaticDetail`) are marked batching-static after the bake; interactive objects, scripts, lights, particles and animated parts are skipped; (2) small (< 1.3 m diagonal), thin, floating, emissive and transparent renderers stop casting shadows, as do particle and line renderers; (3) at most 2 non-directional lights stay on (most important first), their range is capped at 6 m and shortened until they reach under 380 renderers, their intensity is raised to compensate, the others are switched off (they stay in the scene, disabled), and the ambient light is raised by up to 35 % to make up for them; (4) directional lights up to intensity 0.7 (the soft indoor key lights) no longer cast realtime shadows, the bright refinery sun keeps its.
+- `SceneBaker`: clears the batching flags on the baked objects before a bake (so merged meshes are never saved), colours and smoothness are quantised to 5 bits / 0.05 so near-duplicate materials become one, and GPU instancing is on for baked materials.
+- Project scripts call `P.Static` for groups that never move (Warehouse `CombineStatic`, the Refinery fence, rack and process detail, the Resistor Bench `Detail` root, the Hydro vessel and floor detail). `HubPerfPass.StaticBatchBaked` is no longer needed.
+
+**Trade-offs you will see.** Rooms are slightly darker with less pooled light under the fixtures (the glow decals and light-shaft cones remain); the Warehouse is the most affected. The indoor scenes have no realtime shadows from the key light (the soft blob-shadow decals some scenes already had remain). Small props do not cast shadows. To get the old look back, raise `RenderBudget.PixelLights` / `KeyShadowMaxIntensity` and re-bake, at the cost of the numbers above.
+
+**Caveats.** These are editor CPU counters from a mono Game view. The frame rate on a Vive Pro 2 has **not** been measured, and neither has the GPU cost (pixel fill, MSAA, shader cost), which this work did not change. Draw calls and set-pass calls say nothing about GPU time. The standalone projects were re-baked and their capture runs pass, but their counters were not measured separately (the hub scenes run the same scripts).

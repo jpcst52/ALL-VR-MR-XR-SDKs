@@ -95,6 +95,7 @@ public partial class HydroTest
     void BuildVesselDetail()
     {
         var root = P.Node("Vessel detail", dRoot).transform;
+        P.Static(root.gameObject, "Flange bolt", "Header bolt", "Skid bolt", "Suction hose", "Motor fin", "Header flange", "Header support", "Header clamp", "Instrument tube", "Instrument tube elbow", "Nameplate");
         var dark = P.DarkSteel();
         var steel = P.Steel();
         var copper = P.Mat(new Color(0.72f, 0.42f, 0.24f), 0.9f, 0.55f);
@@ -198,6 +199,7 @@ public partial class HydroTest
     void BuildFloorDetail()
     {
         var root = P.Node("Floor detail", dRoot).transform;
+        P.Static(root.gameObject);
         var yellow = P.Mat(new Color(1f, 0.78f, 0.08f), 0f, 0.25f);
         var green = P.Mat(new Color(0.05f, 0.5f, 0.22f), 0f, 0.25f);
 

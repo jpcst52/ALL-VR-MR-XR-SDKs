@@ -96,6 +96,7 @@ public static class BenchDetail
     public static void BuildAll(Transform transform)
     {
         var root = P.Node("Detail", transform).transform;
+        P.Static(root.gameObject); // decoration that never moves: batched after a bake (interactive parts are skipped)
         Floor(P.Node("Floor detail", root).transform);
         WallDetail(P.Node("Wall detail", root).transform);
         Shelving(P.Node("Shelving", root).transform);

@@ -111,12 +111,37 @@ namespace PittBradford.XR.EditorTools
             }
             if (!exitWhenDone && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
             EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+            StripBatchingFlags();
             var state = new BakeState { ScenePath = path, ExitWhenDone = exitWhenDone, StartedAt = EditorApplication.timeSinceStartup };
             SessionState.SetString(StateKey, JsonUtility.ToJson(state));
             SessionState.SetString(StageKey, "play");
             waitFrames = 0;
             Debug.Log(Prefix + "baking " + path + ": entering play mode (time is frozen while the world is built)");
             EditorApplication.EnterPlaymode();
+        }
+
+        /// <summary>
+        /// The render-budget pass marks baked objects batching-static. If they were still static when play mode starts, Unity would merge
+        /// them into combined meshes and the bake would save those merged slices instead of the original meshes. The flags are put back by
+        /// the pass at the end of the bake.
+        /// </summary>
+        static void StripBatchingFlags()
+        {
+            var marker = Object.FindAnyObjectByType<BakedWorld>(FindObjectsInactive.Include);
+            if (marker == null) return;
+            int n = 0;
+            foreach (var root in marker.Roots)
+            {
+                if (root == null) continue;
+                foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                {
+                    var f = GameObjectUtility.GetStaticEditorFlags(t.gameObject);
+                    if ((f & StaticEditorFlags.BatchingStatic) == 0) continue;
+                    GameObjectUtility.SetStaticEditorFlags(t.gameObject, f & ~StaticEditorFlags.BatchingStatic);
+                    n++;
+                }
+            }
+            if (n > 0) Debug.Log(Prefix + "cleared batching-static on " + n + " baked objects before the bake (the render-budget pass sets it again)");
         }
 
         static void Tick()
@@ -357,6 +382,8 @@ namespace PittBradford.XR.EditorTools
             marker.LightingBefore = lightingBefore;
 
             if (state.Lighting != null) ApplyLighting(state.Lighting);
+            // flags only, after the meshes are saved (marking objects static before the bake corrupted saved meshes)
+            Debug.Log(RenderBudget.Apply(scene));
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
 
@@ -551,6 +578,7 @@ namespace PittBradford.XR.EditorTools
             {
                 if (materials.TryGetValue(src, out var done)) return done;
                 var copy = new Material(src);
+                Quantise(copy);
                 foreach (var prop in src.GetTexturePropertyNames())
                 {
                     var tex = src.GetTexture(prop);
@@ -574,6 +602,33 @@ namespace PittBradford.XR.EditorTools
                 else Object.DestroyImmediate(copy);
                 materials[src] = asset;
                 return asset;
+            }
+
+            /// <summary>
+            /// Snaps colours to 5 bits per channel and smoothness / metallic to steps of 0.05, so near-identical runtime materials become one
+            /// asset (fewer materials means bigger batches), and turns on GPU instancing. Differences are below what the eye can see.
+            /// </summary>
+            static void Quantise(Material m)
+            {
+                Color Q(Color c, bool hdr)
+                {
+                    if (hdr)
+                    {
+                        float max = Mathf.Max(c.r, c.g, c.b, 0.0001f);
+                        if (max <= 1f) return new Color(Mathf.Round(c.r * 31f) / 31f, Mathf.Round(c.g * 31f) / 31f, Mathf.Round(c.b * 31f) / 31f, 1f);
+                        float k = Mathf.Round(max * 4f) / 4f / max;
+                        return new Color(Mathf.Round(c.r * k * 31f) / 31f, Mathf.Round(c.g * k * 31f) / 31f, Mathf.Round(c.b * k * 31f) / 31f, 1f);
+                    }
+                    return new Color(Mathf.Round(c.r * 31f) / 31f, Mathf.Round(c.g * 31f) / 31f, Mathf.Round(c.b * 31f) / 31f, Mathf.Round(c.a * 20f) / 20f);
+                }
+                if (m.shader != null && m.shader.name == "Standard")
+                {
+                    if (m.HasProperty("_Color")) m.SetColor("_Color", Q(m.GetColor("_Color"), false));
+                    if (m.HasProperty("_EmissionColor") && m.IsKeywordEnabled("_EMISSION")) m.SetColor("_EmissionColor", Q(m.GetColor("_EmissionColor"), true));
+                    if (m.HasProperty("_Metallic")) m.SetFloat("_Metallic", Mathf.Round(m.GetFloat("_Metallic") * 20f) / 20f);
+                    if (m.HasProperty("_Glossiness")) m.SetFloat("_Glossiness", Mathf.Round(m.GetFloat("_Glossiness") * 20f) / 20f);
+                }
+                m.enableInstancing = true;
             }
 
             Texture ToTexture(Texture src)

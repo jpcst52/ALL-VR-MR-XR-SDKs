@@ -227,6 +227,7 @@ public partial class RefineryRounds : MonoBehaviour, IShotScript
         // (Pitt-Bradford > Bake scene) they return the saved objects instead, matched by parent, name and call order,
         // and the code below re-attaches handlers and fields. Do not rename baked objects that this script looks up.
         var root = P.Node("Refinery unit", transform).transform;
+        P.Static(root.gameObject, "Fence post", "Fence rail", "Fence mesh", "Ladder rung", "Rack beam", "Rack column", "Rack pipe", "Rack pipe low", "Pipe", "Pipe stand", "Flange bolt", "Table leg", "Sign back");
         gasRoot = P.Node("Gas cloud", transform).transform;
 
         BuildGround(root);

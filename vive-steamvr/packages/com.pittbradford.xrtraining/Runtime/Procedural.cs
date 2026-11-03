@@ -271,6 +271,15 @@ namespace PittBradford.XR
             return c != null ? c : go.AddComponent<T>();
         }
 
+        /// <summary>Declares that this group (or only its direct children with the given names) never moves; see <see cref="StaticDetail"/>. Returns the object.</summary>
+        public static GameObject Static(GameObject go, params string[] onlyChildNames)
+        {
+            if (go == null) return go;
+            var sd = Ensure<StaticDetail>(go);
+            if (onlyChildNames != null && onlyChildNames.Length > 0) sd.OnlyNames = onlyChildNames;
+            return go;
+        }
+
         /// <summary>
         /// True when the helper created the object this session; false when it was adopted from a baked scene. Guard code
         /// that sets up a fresh object (position, scale, component settings) so edits made in the scene are kept.

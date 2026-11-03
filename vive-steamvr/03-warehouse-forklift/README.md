@@ -189,6 +189,12 @@ Still plain: all forms are boxes and cylinders (no rounded bevels), the people a
 
 Screenshots 15 to 21 are new (desktop editor renders, not a headset): 15 racking aisle, 16 forklift close-up, 17 dock and staging, 18 break area, 19 light shafts, 20 lockers and first aid, 21 co-worker close-up. Files added: `Assets/Scripts/WarehouseForklift.Detail.cs`.
 
+## Render cost
+
+Round 3 detail roughly tripled the render cost; round 4 cut it again with no object removed. Editor CPU counters in Play mode (median, mono editor Game view, measured on the hub copy of this scene because the hub runs the same scripts; **not** a Vive frame rate): set-pass calls 3,543 to **552**, draw calls 4,295 to **1,240**, triangles 359 k to **97 k**.
+
+How: the bake now runs the kit's `RenderBudget` pass (flags and settings only, nothing is merged on disk). Groups that never move are declared with `P.Static(...)` and become batching-static; small, thin, emissive and transparent parts stop casting shadows; at most two non-directional lights stay on with a shorter range (the rest are switched off but stay in the scene), with a little more ambient light to make up; the soft indoor key light no longer casts realtime shadows. Baked materials are colour-quantised and GPU-instanced. The look is close to before but slightly flatter, with less pooled light; re-shoot screenshots were compared by eye and not replaced. GPU time and the frame rate on a headset are **not measured**. Details and the full table: `../hub/README.md`.
+
 ## Troubleshooting
 
 - **Safe Mode prompt on open:** a script failed to compile. Send the first red Console message.

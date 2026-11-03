@@ -208,7 +208,10 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
     /// <summary>Static batching merges meshes at runtime; never during a bake (the merged mesh must not be saved).</summary>
     static void CombineStatic(Transform root)
     {
-        if (!BakeSession) StaticBatchingUtility.Combine(root.gameObject);
+        P.Static(root.gameObject); // a baked scene gets the batching-static flags from the render-budget pass (see StaticDetail)
+        if (BakeSession) return;
+        var first = root.GetComponentInChildren<Renderer>();
+        if (first != null && !first.gameObject.isStatic) StaticBatchingUtility.Combine(root.gameObject);
     }
 
     // ------------------------------------------------------------------------------------------------- signage helpers
@@ -1085,7 +1088,10 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         float d = to.magnitude;
         bool looking = d < 9f && Vector3.Angle(cam.forward, to) < 14f && Vector3.Dot(mirrorNormal, -to.normalized) > 0.25f;
         mirrorLook = looking ? mirrorLook + dt : Mathf.Max(0f, mirrorLook - dt * 2f);
-        mirrorCam.enabled = d < 16f; // render the mirror only when it is near
+        // The mirror camera is a second full render of the scene: it is switched off and drawn by hand, every third frame, only while
+        // the mirror is within 12 m and roughly in front of the head.
+        mirrorCam.enabled = false;
+        if (d < 12f && Vector3.Angle(cam.forward, to) < 75f && Time.frameCount % 3 == 0) mirrorCam.Render();
         if (!mirrorChecked && mirrorLook >= 1.5f)
         {
             mirrorChecked = true;

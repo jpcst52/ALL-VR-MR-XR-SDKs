@@ -221,6 +221,9 @@ public partial class RefineryRounds
         BuildSafetyDetail(P.Node("Safety detail", detailRoot).transform, yellow, green, red, white, rubber, dsteel, bsteel);
         BuildPoles(P.Node("Lighting poles", detailRoot).transform, dsteel, lens);
         BuildCabinDetail(P.Node("Cabin detail", detailRoot).transform, dsteel, bsteel, rubber, lens, white);
+        // groups that never move are batched after a bake (the flare group is left out: its flame material changes at runtime)
+        foreach (Transform c in detailRoot)
+            if (c.name == "Rack detail" || c.name == "Vessel detail" || c.name == "Ground detail" || c.name == "Safety detail" || c.name == "Lighting poles" || c.name == "Cabin detail") P.Static(c.gameObject);
         BuildFlareDetail(P.Node("Flare detail", detailRoot).transform, dsteel, red, white);
         BuildMusterDetail(white, green, rack, dsteel);
         BuildEffects(soft);
