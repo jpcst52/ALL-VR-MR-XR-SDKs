@@ -13,7 +13,7 @@ Status on November 2, 2026: every automated suite below passes on the developmen
 | Multiplayer relay | `cd multi-player`, then `npm test` | 18 pass |
 | Web UI layout, desktop and phone width, logo blocked and allowed | start the relay (see HOW-TO-RUN section 1), then `node tools/vr-capture/ui-check.mjs` (set `UI_BASE` if the relay is not on port 8132) | 48 pass |
 | Offline check (no network, no external requests) | `node tools/vr-capture/offline-check.mjs` (`STATIC_BASE` and `RELAY_BASE` select the server) | all pages ok |
-| Launcher check | `node tools/vr-capture/launcher-check.mjs` | pass |
+| Launcher check | `node tools/vr-capture/launcher-check.mjs` (set `LAUNCHER_URL`, for example `http://localhost:8132/`, if the server is not on port 8101) | pass |
 | Unity compile | open each project; the Console shows no red errors | no errors |
 
 Record a result for the dashboard with `node tools/status/record-results.cjs "<suite>" <passed> <failed> <skipped>`.
@@ -50,7 +50,7 @@ Open each project in Unity Hub with editor **6000.3.20f1**, open the scene, pres
 
 | # | Check | Pass looks like | Result |
 |---|---|---|---|
-| B1 | Open a project scene (02, 03, 04, 01) and look at the Hierarchy before pressing Play | Hundreds of GameObjects are listed (for example 393 in 02, 628 in 03, 399 in 04, 217 in 01), not just a "Scenario" object | |
+| B1 | Open a project scene (02, 03, 04, 01) and look at the Hierarchy before pressing Play | Hundreds of GameObjects are listed (for example 393 in 02, 628 in 03, 399 in 04, 223 in 01), not just a "Scenario" object | |
 | B2 | Press Play | The scene looks and behaves as it did before baking; no new red errors in the Console | |
 | B3 | Stop; select a baked object (for example the table), move it, save, press Play | The object is at its new position at Play and there is no duplicate | |
 | B4 | **Pitt-Bradford > Unbake scene**, press Play, then **Bake scene (play mode)** again | Unbake leaves only the Scenario object and the scene still plays; re-bake restores the objects with no duplicates | |

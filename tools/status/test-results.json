@@ -1,5 +1,5 @@
 {
-  "updated": "11/2/2026, 12:02:42 AM",
+  "updated": "11/2/2026, 9:51:56 PM",
   "suites": [
     {
       "name": "Practice Lab scenarios",
@@ -106,11 +106,27 @@
       "note": ""
     },
     {
+      "name": "Web UI check (ui-check)",
+      "passed": 48,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/2/2026, 12:02:42 AM",
+      "note": ""
+    },
+    {
+      "name": "Practice Lab",
+      "passed": 20,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/2/2026, 9:51:55 PM",
+      "note": ""
+    },
+    {
       "name": "Brand kit",
       "passed": 16,
       "failed": 0,
       "skipped": 0,
-      "when": "11/2/2026, 12:02:42 AM",
+      "when": "11/2/2026, 9:51:56 PM",
       "note": ""
     },
     {
@@ -118,15 +134,15 @@
       "passed": 18,
       "failed": 0,
       "skipped": 0,
-      "when": "11/2/2026, 12:02:42 AM",
+      "when": "11/2/2026, 9:51:56 PM",
       "note": ""
     },
     {
-      "name": "Web UI check (ui-check)",
+      "name": "Web UI layout",
       "passed": 48,
       "failed": 0,
       "skipped": 0,
-      "when": "11/2/2026, 12:02:42 AM",
+      "when": "11/2/2026, 9:51:56 PM",
       "note": ""
     }
   ]

@@ -123,6 +123,8 @@ public class HydroTest : MonoBehaviour, IShotScript
         // Wainscot stripe in Pitt blue for a clean, branded look
         P.Box(root, "Blue band back", new Vector3(0, 0.9f, 5.93f), new Vector3(13.9f, 1.8f, 0.05f), P.Mat(P.Royal, 0.1f, 0.4f), false);
         P.Box(root, "Gold band back", new Vector3(0, 1.85f, 5.93f), new Vector3(13.9f, 0.08f, 0.05f), P.Mat(P.Gold, 0.3f, 0.5f), false);
+        // University and CIST plate on the back wall (the hub places its own, so only the stand-alone project gets this one)
+        Ui.BrandPlate(root, new Vector3(0f, 3.5f, 5.78f), 2.4f);
         }
         // Roof beams and light panels
         var beam = P.DarkSteel();

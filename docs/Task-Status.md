@@ -30,7 +30,7 @@ Legend: ✅ done · 🔄 in progress · ⏳ waiting on a prerequisite · 👤 ne
 | B9 | Project 03: Warehouse and forklift safety | 🔄 | compiles, plays in the editor, 0 console errors; two mirrored signs fixed (SAFETY CONES sign not checked); no headset |
 | B10 | Project 04: KOA resistor selection bench | 🔄 | compiles and plays in the editor, 0 console errors; not played through; no headset |
 | B11 | README and screenshots for each Vive project | ✅ | READMEs plus editor renders for 01 (6 shots) and 02-04 and the hub; desktop only, no headset |
-| B13 | Professional-look pass (panels, tags, logo, no bare floating text) | 🔄 | kit now has rounded panels, name tags with leader lines, depth-correct text shader, logo + CIST plate in every hub scene; done in Hydrostatic Test Bay and lobby. Still to convert: 02-04 text (about 85 call sites), web UI review, lite projects show text wordmark only (logo is git-ignored) |
+| B13 | Professional-look pass (panels, tags, logo, no bare floating text) | 🔄 👤 | rounded panels, name tags, depth-correct text and the logo + CIST plate are in all four projects and every hub scene (project 01 got its own plate on Nov 2); launcher image and README screenshots re-shot after the bake. Still: your eyes-on review in the editor and headset (text size, glare) |
 | B12 | Test on the real Vive Pro 2 | ⏳ 👤 | needs lab time before Nov 13 |
 
 ## C. Quest and multi-user
