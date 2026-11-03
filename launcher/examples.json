@@ -408,6 +408,12 @@
           "id": "sdk-list",
           "title": "SDK list",
           "url": "SDK-list.md"
+        },
+        {
+          "id": "compliance",
+          "title": "Naming and credits sweep",
+          "url": "docs/COMPLIANCE-SWEEP.md",
+          "note": "partner-name rule, licenses, private files"
         }
       ]
     },
@@ -505,6 +511,18 @@
           "id": "research-studies",
           "title": "Study designs and instruments",
           "url": "docs/research/STUDY-DESIGNS.md"
+        },
+        {
+          "id": "research-verification",
+          "title": "Citation verification",
+          "url": "docs/research/VERIFICATION.md",
+          "note": "every bibliography entry checked"
+        },
+        {
+          "id": "research-content",
+          "title": "Scenario content review",
+          "url": "docs/research/CONTENT-REVIEW.md",
+          "note": "safety statements checked against public sources"
         }
       ]
     },

@@ -38,6 +38,7 @@ General safety-awareness practice only: none of the scenarios is a procedure, pe
 | [Task-Status.md](Task-Status.md) | The task list the dashboard reads (done, in progress, waiting, needs the owner) |
 | [PROJECT-STATUS.md](PROJECT-STATUS.md) | Narrative status: decisions, caveats, what was verified and what was not |
 | [status-dashboard-guide.md](status-dashboard-guide.md) | How the local dashboard works (`npm run status`) |
+| [COMPLIANCE-SWEEP.md](COMPLIANCE-SWEEP.md) | Sweep for partner names, slogan titles, third-party credits and private files, with the findings left for the owner |
 
 ## Research
 

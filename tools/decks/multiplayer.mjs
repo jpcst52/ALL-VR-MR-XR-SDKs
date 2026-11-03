@@ -144,7 +144,7 @@ export async function buildMultiplayer(file) {
   {
     const slide = contentSlide(pres, { section: "Verify", eyebrow: "08 / TESTS AND VR CHECKS", title: "What is tested, and what still needs a headset" });
     card(slide, C, { x: 0.6, y: 1.75, w: 5.6, h: 4.95, name: "Tests card" });
-    label(slide, C, "AUTOMATED TESTS (npm test, 31 pass)", { x: 0.85, y: 1.95, w: 5.1, color: C.accent5, name: "Tests label" });
+    label(slide, C, "AUTOMATED TESTS (npm test, 34 pass)", { x: 0.85, y: 1.95, w: 5.1, color: C.accent5, name: "Tests label" });
     bullets(slide, C, ["Mixed VR and AR clients share a room", "Snapshots for late joiners; rooms stay isolated", "Theme separation and part catalogs", "Single-owner grabs; disconnect cleanup", "Toggle and rotate rules", "Invalid input and path traversal are rejected"], { x: 0.85, y: 2.4, w: 5.1, h: 3.0, size: 13.5, gap: 6, name: "Tests points" });
     text(slide, "Headset sessions and AR camera hit testing still need physical hardware.", { x: 0.85, y: 5.65, w: 5.1, h: 0.9, fontSize: 13, color: C.accent3, objectName: "Hardware note" });
     await shot(slide, C, img("multi-player/screenshots/vr/01-circuit-lab-in-vr.png"), { x: 6.45, y: 1.75, w: 6.3, h: 4.0, caption: "Emulated Quest 3 (Meta IWER) with a scripted session", name: "Emulated VR screenshot" });

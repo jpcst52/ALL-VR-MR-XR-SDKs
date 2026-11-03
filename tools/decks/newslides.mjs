@@ -133,7 +133,7 @@ export async function verifiedSlide(pres, C, { section, eyebrow, title = "What i
   label(slide, C, "RUN AND CHECKED", { x: 0.85, y: 1.95, w: 5.4, color: C.accent5, name: "Verified label" });
   bullets(slide, C, [
     "Browser demos and the Practice Lab (17 scenarios) on a desktop browser",
-    "Automated suites pass on a development PC: Practice Lab 27, brand kit 16, relay 31, web layout checks 48",
+    "Automated suites pass on a development PC: Practice Lab 36, brand kit 16, relay 34, web layout checks 48",
     "Multiplayer relay with automated tests; two-client rooms",
     "Unity projects 01 to 04 and the five hub scenes compile and run in the editor (desktop mode); scripted self-tests pass",
     "Emulated Quest 3 captures (Meta IWER in Chrome)",

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { drawSignLines } from "../brand-kit/panels.js";
 
 // Procedural "dollhouse" rooms for the indoor work areas: a floor, a back wall and two side walls with textures drawn
 // on a canvas (no files, no licences), plus a few wall fittings. Without a room, the indoor stations float on a navy
@@ -210,11 +211,7 @@ function signArt(text, bg, fg, w = 256, h = 96) {
   ctx.strokeStyle = fg;
   ctx.lineWidth = 6;
   ctx.strokeRect(5, 5, w - 10, h - 10);
-  ctx.fillStyle = fg;
-  ctx.font = `700 ${Math.round(h * 0.5)}px Roboto, Arial, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(text, w / 2, h / 2 + 3);
+  drawSignLines(ctx, [text], { fg, maxSize: Math.round(h * 0.5) }); // brand-kit sign text: brand sans, scaled to fit
   return art;
 }
 

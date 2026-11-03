@@ -8,12 +8,16 @@ Status on November 2, 2026: every automated suite below passes on the developmen
 
 | Suite | Command | Expected today |
 |---|---|---|
-| Practice Lab (catalog, scenarios, biology draft, why-this-matters, thumbnails) | `cd training-simulations`, then `node --test test/*.test.mjs` | 27 pass |
+| Practice Lab (catalog, scenarios, biology draft, why-this-matters, thumbnails) | `cd training-simulations`, then `node --test test/*.test.mjs` | 36 pass |
 | Brand kit (brand bar, text fitting, sky logic, logo rules) | `cd brand-kit`, then `npm test` | 16 pass |
-| Multiplayer relay | `cd multi-player`, then `npm test` | 31 pass |
+| Multiplayer relay | `cd multi-player`, then `npm test` | 34 pass |
 | Web UI layout, desktop and phone width, logo blocked and allowed | start the relay (see HOW-TO-RUN section 1), then `node tools/vr-capture/ui-check.mjs` (set `UI_BASE` if the relay is not on port 8132) | 48 pass |
 | Offline check (no network, no external requests) | `node tools/vr-capture/offline-check.mjs` (`STATIC_BASE` and `RELAY_BASE` select the server) | all pages ok |
 | Launcher check (tiles, guide links, in-menu viewer, search box and keyboard) | `node tools/vr-capture/launcher-check.mjs` (set `LAUNCHER_URL`, for example `http://localhost:8132/`, if the server is not on port 8101) | pass |
+| Four single-SDK demos (offline, assets credited, size and triangle budgets) | `node tools/vr-capture/demos-check.mjs` (set `STATIC_BASE`) | 12 pass |
+| Four demos in an emulated Quest 3 session (trigger changes the scene) | `node tools/vr-capture/demos-xr-check.mjs` | 4 of 4 |
+| Four demos use their named SDK correctly (session request, resize, context loss) | `node tools/vr-capture/demos-sdk-check.mjs` | 26 pass |
+| Multiplayer rooms end to end (2-3 browser contexts, relay down, room full, reconnect) | `node tools/vr-capture/mp-check.mjs` (starts its own relay; `MP_PORT`) | 81 pass |
 | Documentation (every link, anchor, launcher path, docs index, and the pass counts above against a fresh run) | `npm run docs-check` (add `--no-run` to skip running the suites) | ok |
 | Unity compile | open each project; the Console shows no red errors | no errors |
 

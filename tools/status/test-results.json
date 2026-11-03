@@ -1,5 +1,5 @@
 {
-  "updated": "11/3/2026, 3:10:07 AM",
+  "updated": "11/3/2026, 5:07:30 AM",
   "suites": [
     {
       "name": "Practice Lab scenarios",
@@ -114,14 +114,6 @@
       "note": ""
     },
     {
-      "name": "Brand kit",
-      "passed": 16,
-      "failed": 0,
-      "skipped": 0,
-      "when": "11/2/2026, 9:51:56 PM",
-      "note": ""
-    },
-    {
       "name": "Launcher check (20 tiles, 31 guides, 39 viewer pages)",
       "passed": 1,
       "failed": 0,
@@ -154,19 +146,90 @@
       "note": ""
     },
     {
-      "name": "Practice Lab",
-      "passed": 27,
+      "name": "Demos check (4 demos)",
+      "passed": 12,
       "failed": 0,
       "skipped": 0,
       "when": "11/3/2026, 3:10:07 AM",
       "note": ""
     },
     {
-      "name": "Multiplayer relay",
-      "passed": 31,
+      "passed": null,
+      "failed": null,
+      "skipped": 0,
+      "when": "11/3/2026, 3:53:09 AM",
+      "note": ""
+    },
+    {
+      "name": "Multiplayer relay npm test",
+      "passed": 34,
       "failed": 0,
       "skipped": 0,
-      "when": "11/3/2026, 3:10:07 AM",
+      "when": "11/3/2026, 4:03:34 AM",
+      "note": ""
+    },
+    {
+      "name": "mp-check (3 examples, real WS, 3 contexts)",
+      "passed": 81,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/3/2026, 4:03:34 AM",
+      "note": ""
+    },
+    {
+      "name": "demos-sdk-check",
+      "passed": 26,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/3/2026, 4:03:34 AM",
+      "note": ""
+    },
+    {
+      "name": "ui-check",
+      "passed": 48,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/3/2026, 4:03:34 AM",
+      "note": ""
+    },
+    {
+      "name": "Practice Lab (node --test)",
+      "passed": 36,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/3/2026, 4:17:22 AM",
+      "note": ""
+    },
+    {
+      "name": "ui-check --only lab",
+      "passed": 36,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/3/2026, 4:17:22 AM",
+      "note": ""
+    },
+    {
+      "name": "Practice Lab",
+      "passed": 36,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/3/2026, 5:07:30 AM",
+      "note": ""
+    },
+    {
+      "name": "Multiplayer relay",
+      "passed": 34,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/3/2026, 5:07:30 AM",
+      "note": ""
+    },
+    {
+      "name": "Brand kit",
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/3/2026, 5:07:30 AM",
       "note": ""
     },
     {
@@ -174,15 +237,23 @@
       "passed": 48,
       "failed": 0,
       "skipped": 0,
-      "when": "11/3/2026, 3:10:07 AM",
+      "when": "11/3/2026, 5:07:30 AM",
       "note": ""
     },
     {
-      "name": "Demos check (4 demos)",
-      "passed": 12,
+      "name": "Multiplayer end-to-end (mp-check)",
+      "passed": 81,
       "failed": 0,
       "skipped": 0,
-      "when": "11/3/2026, 3:10:07 AM",
+      "when": "11/3/2026, 5:07:30 AM",
+      "note": ""
+    },
+    {
+      "name": "Demo SDK check",
+      "passed": 26,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/3/2026, 5:07:30 AM",
       "note": ""
     }
   ]
