@@ -1,8 +1,38 @@
 # Pitt-Bradford XR Training Kit (`com.pittbradford.xrtraining`)
 
-Shared Unity package used by the Vive / SteamVR example projects (01-04 and the hub) through a `file:` reference in each project's `Packages/manifest.json`. It provides the OpenXR rig with a desktop fallback (`XRRig`, `Hand`, `Pressable`, `Grabbable`, `SnapZone`), procedural materials, shapes, text and audio (`P` in `Procedural.cs`), signage (`Ui` in `Signage.cs`), the task board, the "why this matters" panels (`WhyCue`), live weather, seasonal skies, the headless screenshot runner (`CaptureDriver`, `CaptureRunner`) and project setup (`Configurator`).
+Shared Unity package used by the Vive / SteamVR example projects (01-04 and the hub) through a `file:` reference in each project's `Packages/manifest.json`. It provides the OpenXR rig with a desktop fallback (`XRRig`, `Hand`, `Pressable`, `Grabbable`, `SnapZone`), procedural materials, shapes, text and audio (`P` in `Procedural.cs`), signage (`Ui` in `Signage.cs`), the task board, the "why this matters" panels (`WhyCue`), live weather, seasonal skies, the screenshot runner (`CaptureDriver`, `CaptureRunner`; it needs graphics, so it runs without `-batchmode`) and project setup (`Configurator`).
 
 Editing a file here changes every project that uses the kit, including the hub. After a change, open at least one other project headlessly (`Unity.exe -batchmode -quit -projectPath <project> -logFile <log>`) and check the log for `error CS`.
+
+## Where it is used and what has been tested
+
+| Project | Uses |
+|---|---|
+| [01 Hydrostatic Test Bay](../../01-hydrostatic-test/README.md) | Rig, hands, snap zones, signage, task board, `WhyCue`, weather; the scenario itself (`Runtime/Scenarios/HydroTest.cs`) lives in this package. |
+| [02 Refinery Rounds](../../02-refinery-rounds/README.md) | Rig, hands, grabbing, signage, task board, `WhyCue`, weather. |
+| [03 Warehouse and Forklift](../../03-warehouse-forklift/README.md) | Rig, hands, snap zones, signage, task board. No `WhyCue`. |
+| [04 Resistor Bench](../../04-resistor-bench/README.md) | Rig, hands, snap zones, signage, task board. No `WhyCue`. |
+| [Hub](../../hub/README.md) | All of the above, the seasonal sky and the lobby. |
+
+Tested: the package compiles in Unity 6000.3.20f1 inside each project (scripted editor runs, November 1 and 2, 2026) and the desktop fallback ran in the scripted capture runs. Not tested: any headset. The controller bindings (`<XRController>{LeftHand/RightHand}` trigger, grip and primary 2D axis) are written for the OpenXR Vive, Index and Touch profiles that **Pitt-Bradford > Set up project** enables; they have not been run on a Vive Pro 2 or a Quest. The package declares Unity 6000.0 and Input System 1.8.1 as minimums; the projects are pinned to 6000.3.20f1 and Input System 1.20.1 and only that combination has been run.
+
+## Desktop fallback (when no headset is active)
+
+`XRRig.Headset` is true when an XR device is active (`XRSettings.isDeviceActive`); otherwise the rig uses the desktop controls. These are what the scenario READMEs and [../../../docs/TESTING.md](../../../docs/TESTING.md) describe:
+
+| Action | Input | Source |
+|---|---|---|
+| Move | W A S D, 2 m/s, relative to the view direction, clamped to the scenario's play area | `XRRig.cs` |
+| Look | Hold the right mouse button and move the mouse (pitch limited to 80 degrees) | `XRRig.cs` |
+| Press | Left click; the pointer is the centre of the view, range 4 m | `Hand.cs` |
+| Grab | Hold E; the object under the centre of the view within 3.2 m; release E to drop | `Hand.cs` |
+| Answer a `WhyCue` question | Click, or press 1, 2 or 3 | `WhyCue.cs` |
+
+In a headset: left stick or trackpad moves, the right stick snaps 30 degrees, the trigger presses and the grip grabs.
+
+## Branding
+
+`Ui.BrandPlate` (`Signage.cs`) shows the University of Pittsburgh at Bradford shield logo and the CIST line. The approved logo is shipped in this package at `Runtime/Resources/Branding/pitt-bradford.png` (published with the owner's approval on November 2, 2026). Without that file the plate shows a text wordmark. The brand guidelines PDF, other logo variants and licensed assets are not part of the repository.
 
 ## Baked scenes (bake and adopt)
 

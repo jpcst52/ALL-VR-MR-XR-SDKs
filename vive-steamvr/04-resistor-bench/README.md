@@ -1,69 +1,66 @@
-# Resistor Selection and Check Bench (Vive Pro 2 / SteamVR, with desktop fallback)
+# Resistor Selection and Check Bench (Unity, desktop and Vive Pro 2 / SteamVR)
 
-**Status (November 1, 2026): set up and opened as its own project in Unity 6000.3.20f1; compiles with no errors; the scripted screenshot run plays the scenario in the editor (desktop, no headset) and stages each step with no scenario errors in the console. A person has not played it through by hand, and it has not been tested on a Vive Pro 2 or any headset.**
+A Unity 6 (`6000.3.20f1`, built-in render pipeline) training example, inspired by the kind of work done by makers of passive electronic components (resistors including current-sense and anti-sulfur types, fuses, varistors, thermal sensors). You stand at an electronics bench, ground yourself, read a resistor color code, measure the part, choose the resistor for an LED circuit, and fit a part suited to a sulfur-rich atmosphere.
+
+It is **generic education only**: it makes no claims about any company's real processes, products or datasheets. The derating curve, the pad size and the LED limits are illustrative numbers invented for the exercise. This is general awareness practice, not a procedure, a qualification or a certification.
+
+Everything is built from Unity primitives by code (no imported art); the static world is baked into the scene file (see "Baked scene"). It uses the shared kit in [`../packages/com.pittbradford.xrtraining`](../packages/com.pittbradford.xrtraining).
 
 ![Bench overview: desktop editor render, not a headset](screenshots/01-bench-overview.png)
 
-## Screenshots
+## What is verified and what is not
 
-All pictures are **desktop editor renders** made by the scenario's scripted capture (`-pbCapture`), not headset captures. The scripted run places parts directly (it does not use the hands), so the pictures show the scene and its responses, not a hand-played session. Name tags turn to face the viewer, so they look slightly different from each viewpoint.
-
-| | |
+| Item | Status (as of November 3, 2026) |
 |---|---|
-| ![ESD strap clipped to the ground hook](screenshots/02-esd-station.png) | ![Tiered parts rack, answer panel and the unknown part](screenshots/03-color-code-reading.png) |
-| 2. ESD strap clipped to the ground hook (desktop editor render) | 3. Tiered parts rack with bin labels, answer panel, unknown part (desktop editor render) |
-| ![Both probes on the unknown part; the meter reads 4.7 k](screenshots/04-measuring.png) | ![Anti-sulfur 150 ohm part in R1, LED lit at 5 V](screenshots/05-led-lit.png) |
-| 4. Both probes on the unknown part; meter reads 4.7 k (desktop editor render) | 5. Anti-sulfur 150 ohm part in R1, LED lit (desktop editor render) |
-| ![47 ohm part powered: the LED burns out with a puff of smoke](screenshots/06-burnt-led-mistake.png) | ![Wall references and the university plate](screenshots/07-wall-references.png) |
-| 6. 47 ohm part powered: LED burned out, smoke puff (desktop editor render) | 7. Color-code poster, circuit / datasheet / environment cards, university plate (desktop editor render) |
+| Compiles in Unity 6000.3.20f1 | Yes, in scripted editor runs (November 1 and 2). |
+| Scripted capture run (seven views: strap, meter reading, LED lit, LED burned out) | Yes, in the desktop editor, unbaked and baked. The script places parts directly; it does not use the hands. This is emulated, not a headset. |
+| `ResistorMath.cs` (color bands, E24, Ohm's law, derating, part check) | **Run on November 3, 2026**: every line of the test list below passed (71 assertions) in a stand-alone .NET 9 console program that compiles `ResistorMath.cs` outside Unity. That program is not committed. It does not test the scene. |
+| Played through by a person | **No.** Nobody has played the four steps by hand, with the mouse and E key or with controllers. |
+| Headset (Vive Pro 2, Quest or any other) | **Not tested.** |
+| Fresh clone opens and plays without running Set up project | Not tested. |
 
-### Look and signage
+The hand-test table is [../../docs/TESTING.md](../../docs/TESTING.md) section 2 (checks D1 to D5, D12, D13, B1 to B4), with exact steps and the expected text.
 
-Signs and labels use the shared kit's signage helpers (`Ui.Panel`, `Ui.Tag`, `Ui.BrandPlate` in `Signage.cs`) instead of bare floating text:
+## How to open and run
 
-- **Rounded panels** with a border, accent bar and soft shadow for the answer panel, the CHECK PART sign (both on a thin steel backing), the color-code poster and the three wall cards.
-- **Name tags with leader lines** that turn to face the player for the ground hook, parts drawer, multimeter, LED test board and 5 V supply.
-- **Laminated labels lying flat on the mat** for the wrist strap, selection tray, meter probes, spare LEDs, the anti-sulfur legend and the ESD mat.
-- **Bin label cards** tipped back on the front of each bin; the back row of bins stands on a riser so its labels are not hidden.
-- A **university / CIST plate** on the wall above the cards. The Pitt-Bradford logo appears only in local builds that have the git-ignored file `Resources/Branding/pitt-bradford`; otherwise it shows a text wordmark (as in the screenshots).
-- Text printed on objects (meter and supply displays, button faces, breadboard silkscreen, the reading card) is left as it was.
-- Cheap realism: concrete floor, painted wall with a base trim, ceiling tiles and fixture frames, wood-grain bench top with an apron, foot rails and a lower shelf, textured ESD mat, a light under each ceiling fixture plus a fill and one shadow-casting key light, soft round smoke puffs.
+Requirements: Unity **6000.3.20f1** (built-in render pipeline; no extra assets), Windows, and a **full clone** of this repository (the project loads the shared kit from `../packages/com.pittbradford.xrtraining` by a relative `file:` path in `Packages/manifest.json`). OpenXR 1.19.0 and the Input System come from the same file. Add the Windows Build Support module only for the optional player build.
 
-A Unity 6 (`6000.3.20f1`, built-in render pipeline) VR training example, inspired by the kind of work done by makers of passive electronic components (resistors including current-sense and anti-sulfur types, fuses, varistors, thermal sensors). It is **generic education only**: it makes no claims about any company's real processes, products, or datasheets. The derating curve, the pad size, and the LED limits are illustrative numbers invented for the exercise.
+**Desktop (no headset).**
 
-Everything is built from Unity primitives by code (no imported art); the static world is baked into the scene file (see "Baked scenes"). It uses the shared kit in [`../packages/com.pittbradford.xrtraining`](../packages/com.pittbradford.xrtraining).
+1. Unity Hub > **Add > Add project from disk** > `vive-steamvr/04-resistor-bench`. The first open imports and compiles (not timed; allow several minutes). A Safe Mode prompt means a script error: send the first red message.
+2. Open `Assets/Scenes/ResistorBench.unity`. The scene and the OpenXR settings are committed. If the scene is missing or only holds a "Scenario" object, run **Pitt-Bradford > Set up project** once (it keeps a baked scene; restart the editor once if it asks about the input handling change).
+3. Close SteamVR, press **Play**, then click once in the Game view.
 
-## Learning goals
+**Headset (untested).** Set SteamVR as the active OpenXR runtime (SteamVR > Settings > Developer > Set SteamVR as OpenXR runtime), start SteamVR with the Vive Pro 2, then press Play.
 
-- Ground yourself (ESD strap) before handling parts.
-- Read a resistor color code and confirm it with a meter, including the tolerance band.
-- Use Ohm's law to size an LED series resistor, pick the nearest standard (E24) value, and choose tolerance and power rating.
-- Use a derating card: a part's usable power falls with temperature, so a rated 1/8 W part is not a 1/8 W part at 85 C. Reject both an under-rated part and an oversize "bigger is safer" part.
-- Match the part type to the environment: in a sulfur-rich atmosphere pick an anti-sulfur type.
-- See what happens when a clearly wrong part is powered (dim LED, or a burned-out LED).
-
-## Scenario and steps
-
-You stand at an electronics bench. On it: an ESD mat with a wrist-strap hook, a two-tier parts rack ("parts drawer") with six labelled bins, a color-code poster on the wall, an unknown resistor on a card, a multimeter with two probes, a small circuit board with places for one resistor and one LED, a 5 V supply, a selection tray with a CHECK PART button, and three wall cards (LED circuit, generic datasheet with a derating line, environment).
-
-1. **ESD strap.** Grab the wrist strap and release it near the hook (it snaps on). Touching parts first is a mistake.
-2. **Read and measure.** Read the bands of the unknown resistor (poster), press the matching answer (470 ohm / 4.7 k ohm / 47 k ohm / 4.7 M ohm), then put both probes on its two leads. The meter shows a simulated reading within the part's tolerance. The step completes when the answer is right and the meter has read that part.
-3. **Choose the LED resistor.** The circuit card gives 5 V, 2 V LED drop, 20 mA. R = (5 - 2) / 0.020 = 150 ohm, which is a standard value. Power = 0.02 x 0.02 x 150 = 0.06 W. The datasheet card derates a rated power linearly from 100% at 70 C to 0 at 155 C; at the board's 85 C that is 82%, so a 1/8 W part is good for about 0.103 W (enough), a 1/16 W part for 0.051 W (not enough), and a 1/2 W body is oversize for the pads. Take a part from a bin, put it in the selection tray, press CHECK PART. A wrong value, loose tolerance, too little derated power, or an oversize body is a mistake.
-4. **Sulfur-rich air.** The environment card says the station air is sulfur-rich. Install an **anti-sulfur** 150 ohm part (green dot on the body, "ANTI-SULFUR" on the bin label) in the board's R1 place, put an LED in LED1, and switch on the supply. The LED lights at about 20 mA. A wrong value dims the LED or burns it out with a puff of smoke; powering with a clearly wrong part (over 30 mA, or no resistor at all) is a **critical miss**. A standard (non-anti-sulfur) part or an overheating part is a mistake. A spare LED is on the bench.
-
-The task board tracks mistakes and critical misses like the other examples.
+**Optional player build.** **Pitt-Bradford > Build Windows player** writes `Builds/ResistorBench/ResistorBench.exe` (not committed; not tried by a person).
 
 ## Controls
 
-| | Vive wands (SteamVR) | Desktop fallback |
+| | Vive wands (untested) | Desktop |
 |---|---|---|
-| Move | Left trackpad / stick | W A S D |
-| Turn | Right trackpad / stick (snap turn) | Hold right mouse and move |
-| Press (buttons, switch, answers) | Point + trigger | Left click on the crosshair |
-| Grab | Grip near the object | E (object under the crosshair) |
-| Release | Let go of grip | Release E |
+| Move | Left trackpad or stick | W A S D |
+| Turn | Right stick snap turn (30 degrees) | Hold the right mouse button and move the mouse |
+| Press (buttons, switch, answers) | Point + trigger | Aim with the centre of the view, left click (range about 4 m) |
+| Grab | Grip near the object | Aim at it and hold **E** (range about 3 m) |
+| Release | Let go of the grip | Release **E** |
 
-Probes: you can hold one in each hand and touch the leads, or release a probe near a lead and it clips on (needed on the desktop, where only one object can be held at a time).
+Probes: in a headset you can hold one in each hand and touch the leads. On the desktop only one object can be held at a time, so release a probe with its tip within about 12 cm of a lead and it clips on. Yellow glowing discs mark where a part, the strap or an LED snaps. No crosshair dot is drawn on the desktop: the pointer is the centre of the view.
+
+## Task list and why
+
+On the bench: an ESD mat with a wrist-strap hook, a two-tier parts rack ("parts drawer") with six labelled bins of three parts each, a color-code poster on the wall, an unknown resistor on a card, a multimeter with two probes, a small circuit board with places for one resistor (R1) and one LED (LED1), a 5 V supply with a switch, a selection tray with a CHECK PART button, and three wall cards (LED circuit, generic datasheet with a derating line, environment). The bins hold 150 ohm 5% 1/8 W standard; 150 ohm 1% 1/8 W anti-sulfur; 150 ohm 1% 1/2 W standard; 150 ohm 5% 1/16 W standard; 47 ohm 1% 1/8 W standard; 330 ohm 1% 1/8 W anti-sulfur.
+
+| # | Step (as on the board) | What completes it | Why this matters |
+|---|---|---|---|
+| 1 | Clip on the ESD strap before touching parts | Grab the wrist strap and release it near the ground hook (it snaps on). Grabbing any part before that is a mistake | Static charge can damage electronic parts. Grounding yourself first drains it. |
+| 2 | Read the bands of the unknown part, measure it, answer | Press the matching answer (470 ohm / 4.7 k ohm / 47 k ohm / 4.7 M ohm), then put both probes on the part's two leads. The meter shows a simulated reading within half the part's tolerance. The step completes when the answer is right and the meter has read that part | The color code gives the nominal value and tolerance; a meter confirms it. Always confirm with a meter. |
+| 3 | Work out the LED resistor; test a part in the tray | The circuit card gives 5 V, 2 V LED drop, 20 mA. R = (5 - 2) / 0.020 = 150 ohm, a standard (E24) value. Power = 0.02 x 0.02 x 150 = 0.06 W. The datasheet card derates a rated power linearly from 100% at 70 C to 0 at 155 C; at the board's 85 C that is 82%, so a 1/8 W part is good for about 0.103 W (enough), a 1/16 W part for 0.051 W (not enough), and a 1/2 W body is oversize for the pads. Take a part from a bin, put it in the tray, press CHECK PART. A wrong value, loose tolerance (looser than 5%), too little derated power, or an oversize body is a mistake | A part must have the right value, enough power rating at the real temperature, and fit the board. A bigger rating is not automatically safer. |
+| 4 | Sulfur-rich air: fit an anti-sulfur part, switch on | The environment card says the station air is sulfur-rich. Install an **anti-sulfur** 150 ohm part (green dot on the body, "ANTI-SULFUR" on the bin label) in R1, put an LED in LED1, and switch on the supply. The LED lights at about 20 mA. Step 3 must be done first: otherwise the board says "Test the part in the selection tray first (step 3)." | In a sulfur-rich atmosphere, a standard part's terminations can be attacked; anti-sulfur types are built to resist it. |
+
+The "why" sentences in this table are written for this README from the scenario's cards. Unlike the Hydrostatic Test Bay and Refinery Rounds, this scenario does not show "why this matters" panels or a reasoning question.
+
+**What the rules count.** A wrong value dims the LED (below about 16.5 mA) or sets it above the design current (above about 23.5 mA): a mistake. Powering with a clearly wrong part (over 30 mA, for example the 47 ohm part, or no resistor at all) burns the LED out with a puff of smoke: a **critical miss**. A standard (non-anti-sulfur) part, or one that would overheat at 85 C, is a mistake. A spare LED is on the bench. The board summary reads "STRONG PRACTICE: no mistakes.", "Complete with N mistakes." or "CRITICAL SAFETY MISS (n). Review before real work.".
 
 ## What is simulated and what is not
 
@@ -71,40 +68,57 @@ Simulated: color-code mapping and reading, a meter reading with a small repeatab
 
 Not simulated: real ESD physics, meter loading and in-circuit measurement, temperature rise, real sulfur corrosion, real datasheet curves, current-sense (low-value) resistors, fuses, varistors, thermal sensors, or any manufacturer's processes. The strap is clipped to a bench hook instead of being worn. Sulfur and ambient temperature are fixed by the cards.
 
-This is general awareness practice, not a procedure, qualification, or certification.
+## Look and signage
 
-## Setup
+Signs and labels use the shared kit's signage helpers (`Ui.Panel`, `Ui.Tag`, `Ui.BrandPlate` in `Signage.cs`) instead of bare floating text:
 
-1. Install Unity Hub and Unity **6000.3.20f1** (Windows Build Support).
-2. Open `vive-steamvr/04-resistor-bench` in Unity Hub (the shared kit is referenced by a local `file:` package in `Packages/manifest.json`; it resolves on first open).
-3. Run the menu **Pitt-Bradford > Set up project** (configures OpenXR and the Input System, creates `Assets/Scenes/ResistorBench.unity`). Restart the editor once if it asks about the input handling change.
-4. Set **SteamVR as the OpenXR runtime** (SteamVR > Settings > Developer > Set SteamVR as OpenXR runtime), start SteamVR with the Vive Pro 2, then press **Play**. With no headset it runs on the desktop controls.
-5. Optional build: **Pitt-Bradford > Build Windows player** writes `Builds/ResistorBench/ResistorBench.exe`.
-6. Screenshots (optional), with the project closed in the editor (do not pass `-batchmode`; it needs graphics):
-   `Unity.exe -projectPath <absolute path to 04-resistor-bench> -executeMethod PittBradford.XR.EditorTools.CaptureRunner.Run -pbCapture <absolute screenshots folder> -logFile <log>`.
-   It enters play mode, takes seven shots (`01-bench-overview`, `02-esd-station`, `03-color-code-reading`, `04-measuring`, `05-led-lit`, `06-burnt-led-mistake`, `07-wall-references`) and exits. For the capture only, the scenario stops any OpenXR session that started (the editor may start the OpenXR Mock runtime, which otherwise tilts the pictures and blocks the field of view), hides the desktop hands, and moves the hidden player to each camera position so the name tags face the picture.
+- **Rounded panels** with a border, accent bar and soft shadow for the answer panel, the CHECK PART sign (both on a thin steel backing), the color-code poster and the three wall cards.
+- **Name tags with leader lines** that turn to face the player for the ground hook, parts drawer, multimeter, LED test board and 5 V supply.
+- **Laminated labels lying flat on the mat** for the wrist strap, selection tray, meter probes, spare LEDs, the anti-sulfur legend and the ESD mat.
+- **Bin label cards** tipped back on the front of each bin; the back row of bins stands on a riser so its labels are not hidden.
+- A **university / CIST plate** on the wall above the cards. It shows the approved shield logo that the kit ships in `Runtime/Resources/Branding/pitt-bradford.png` (as in the screenshots); without that file it shows a text wordmark.
+- Text printed on objects (meter and supply displays, button faces, breadboard silkscreen, the reading card) is left as it was.
+- Cheap realism: concrete floor, painted wall with a base trim, ceiling tiles and fixture frames, wood-grain bench top with an apron, foot rails and a lower shelf, textured ESD mat, a light under each ceiling fixture plus a fill and one shadow-casting key light, soft round smoke puffs.
 
-## Baked scenes
+## Baked scene
 
-`Assets/Scenes/ResistorBench.unity` is **baked**: the room, lights, bench, parts rack and bins with their label cards, mat labels, reading card and answer panel, selection tray and CHECK PART button, multimeter body and jacks, breadboard, power supply and its switch, wall poster and cards, name tags, the university plate, the wrist strap, both meter probes, the snap zones and the wires (398 objects) are normal GameObjects in the saved scene, so you can see, select, move and restyle them in the editor. Their generated materials and textures are in `Assets/Baked/ResistorBench/` (93 materials and 42 textures, about 0.95 MB; identical materials are saved once, so the 12 color-band swatches are 12 assets). Commit that folder with the scene. `Start()` still runs: the kit helpers adopt the saved objects (matched by parent, name and call order) and the script re-attaches the button and grab handlers, the snap zones, the meter and supply displays, and the leads.
+`Assets/Scenes/ResistorBench.unity` is **baked**: the room, lights, bench, parts rack and bins with their label cards, mat labels, reading card and answer panel, selection tray and CHECK PART button, multimeter body and jacks, breadboard, power supply and its switch, wall poster and cards, name tags, the university plate, the wrist strap, both meter probes, the snap zones and the wires (398 objects; 399 GameObjects in the scene file including the "Scenario" object) are normal GameObjects in the saved scene, so you can see, select, move and restyle them in the editor. Their generated materials and textures are in `Assets/Baked/ResistorBench/` (93 materials and 42 textures, about 0.95 MB; identical materials are saved once, so the 12 color-band swatches are 12 assets). Commit that folder with the scene. `Start()` still runs: the kit helpers adopt the saved objects (matched by parent, name and call order) and the script re-attaches the button and grab handlers, the snap zones, the meter and supply displays, and the leads.
 
 **Still created at runtime (on purpose):** the resistors (all 19, including the unknown part), the two LEDs with their light and smoke, the XR rig and hands, and the task board. The parts move between bins, tray, meter and board, carry their simulated measured value, and the LEDs change colour and burn out, so they are rebuilt each play and are not in the scene.
 
-Edits to baked objects are kept at Play (for example, moving the multimeter in the scene moves it in play, and the probe leads follow its jacks). Do not rename, re-parent or reorder baked objects; to hide one, untick it instead of deleting it. After changing the script, re-bake with **Pitt-Bradford > Bake scene (play mode)**; **Pitt-Bradford > Unbake scene** goes back to building everything at Start. Headless: `Unity.exe -projectPath <this folder> -executeMethod PittBradford.XR.EditorTools.SceneBaker.BakeAndExit -logFile <log>` (no `-batchmode`). How it works and the conversion recipe: [kit README, "Baked scenes"](../packages/com.pittbradford.xrtraining/README.md#baked-scenes-bake-and-adopt).
+Edits to baked objects are kept at Play (for example, moving the multimeter in the scene moves it in play, and the probe leads follow its jacks). Do not rename, re-parent or reorder baked objects; to hide one, untick it instead of deleting it. After changing the script, re-bake with **Pitt-Bradford > Bake scene (play mode)**; **Pitt-Bradford > Unbake scene** goes back to building everything at Start. Headless: `Unity.exe -projectPath <this folder> -executeMethod PittBradford.XR.EditorTools.SceneBaker.BakeAndExit -logFile <log>` (no `-batchmode`). How it works and the conversion recipe: [kit README, "Baked scenes"](../packages/com.pittbradford.xrtraining/README.md#baked-scenes-bake-and-adopt). **Set up project** does not replace a baked scene.
 
 **Verified (November 2, 2026, desktop editor only, not a headset):** the seven capture shots were rendered with the scene unbaked and baked (`-pbOfflineWeather`) and compared pixel by pixel; at most 0.54% of pixels differ by more than 8 of 255 levels in any shot. The differences are text glyph edges (the runtime font atlas fills in a different order), sub-pixel edges of the sign panels (their textures are now imported PNGs), the random smoke puff in shot 6, and the resting place of the probes after they are unclipped and fall back onto the bench in shots 5 and 6 (they land slightly differently; repeated baked runs match each other exactly there). In both runs the scripted capture completed: the strap snapped to the hook, the meter read 4.7 k on the unknown part, the anti-sulfur 150 ohm part lit the LED, and the 47 ohm part burned out the second LED, with no script errors. The baked scene file is about 1 MB and opens in under 0.1 s.
 
-## Code layout
+## Files
 
 - `Assets/Scripts/ResistorBench.cs`: the scenario (`ResistorBench : MonoBehaviour, IShotScript`) plus the small components `BenchResistor` and `BenchLed`.
 - `Assets/Scripts/BenchProbe.cs`: the meter probe component (in its own file so the baked scene can save it).
 - `Assets/Scripts/ResistorMath.cs`: pure C# (no Unity types): color bands, E24, Ohm's law, derating, simulated measurement, part check.
 - `Assets/Baked/ResistorBench/`: materials and textures written by **Bake scene**; the baked scene refers to them.
 - `Assets/Editor/ProjectSetup.cs`: the menu items.
+- `Assets/Scenes`, `Assets/XR`, `Assets/Resources`, `ProjectSettings`: the baked scene, OpenXR settings and shader keepers (written by **Set up project**, committed).
+- `screenshots/`: the seven desktop editor renders below.
+- Screenshots (optional), with the project closed in the editor (do not pass `-batchmode`; it needs graphics): `Unity.exe -projectPath <absolute path to 04-resistor-bench> -executeMethod PittBradford.XR.EditorTools.CaptureRunner.Run -pbCapture <absolute screenshots folder> -logFile <log>`. It enters play mode, takes seven shots (`01-bench-overview` to `07-wall-references`) and exits. For the capture only, the scenario stops any OpenXR session that started (the editor may start the OpenXR Mock runtime, which otherwise tilts the pictures and blocks the field of view), hides the desktop hands, and moves the hidden player to each camera position so the name tags face the picture. The Mock Runtime feature is switched off in the committed OpenXR settings.
+
+## Screenshots
+
+All pictures are **desktop editor renders** made by the scenario's scripted capture (`-pbCapture`), not headset captures. The scripted run places parts directly (it does not use the hands), so the pictures show the scene and its responses, not a hand-played session. Name tags turn to face the viewer, so they look slightly different from each viewpoint. The yellow ellipses in views 3 to 5 are the glowing snap spots for the tray, R1 and the strap.
+
+| | |
+|---|---|
+| ![ESD strap clipped to the ground hook](screenshots/02-esd-station.png) | ![Tiered parts rack, answer panel and the unknown part](screenshots/03-color-code-reading.png) |
+| 2. ESD strap clipped to the ground hook | 3. Tiered parts rack with bin labels, answer panel, unknown part, CHECK PART and tray |
+| ![Both probes on the unknown part; the meter reads 4.7 k](screenshots/04-measuring.png) | ![Anti-sulfur 150 ohm part in R1, LED lit at 5 V](screenshots/05-led-lit.png) |
+| 4. Both probes on the unknown part; meter reads 4.7 k | 5. Anti-sulfur 150 ohm part in R1, LED lit, supply showing 5.00 V OUTPUT ON |
+| ![47 ohm part powered: the LED burns out with a puff of smoke](screenshots/06-burnt-led-mistake.png) | ![Wall references and the university plate](screenshots/07-wall-references.png) |
+| 6. 47 ohm part powered: LED burned out (dark), smoke puff | 7. Color-code poster, circuit / datasheet / environment cards, university plate |
+
+The overview (view 1) is at the top of this page.
 
 ## Plain C# test list (`ResistorMath`)
 
-Not yet run. Each line is input, then expected output.
+Run on November 3, 2026: every line below passed in a stand-alone .NET 9 console program (not committed) that compiles `Assets/Scripts/ResistorMath.cs` outside Unity. Each line is input, then expected output. The round trip was run for 47, 100, 150, 330, 470, 1 000, 4 700, 47 000, 1 M and 4.7 M ohm at 1% and 5%, which includes every value stocked in the bins.
 
 - `ColorBands(150, 5)` -> `[1,5,1,10]` (brown green brown gold)
 - `ColorBands(150, 1)` -> `[1,5,0,0,1]` (brown green black black brown)
@@ -131,6 +145,18 @@ Not yet run. Each line is input, then expected output.
 - `CheckPart(150 ohm 10% 1/8 W, ...)`: `ToleranceOk` false
 - `FormatOhms(4700)` -> `"4.7 k"`; `(150)` -> `"150"`; `(1e6)` -> `"1 M"`; `(150.4)` -> `"150.4"`; `(4731)` -> `"4.73 k"`
 - `WattsText(0.125)` -> `"1/8 W"`; `(0.0625)` -> `"1/16 W"`
+
+## Troubleshooting
+
+- **Safe Mode prompt on open:** a script failed to compile. Send the first red Console message.
+- **Keys or mouse do nothing in Play:** click inside the Game view first. If the Console shows OpenXR messages, close SteamVR and press Play again. With no headset the project is expected to fall back to desktop controls; this was not checked with SteamVR running.
+- **The view snaps back while you mouse-look:** this is check D2; report it if you see it in normal play.
+- **"You touched parts without the ESD strap on":** clip the strap to the ground hook first (step 1). Grabbing any resistor or LED counts as touching a part.
+- **The meter keeps reading "OL":** both probe tips must be on the two leads of the same part. Release each probe within about 12 cm of a lead so it clips on.
+- **CHECK PART says "Put a resistor in the selection tray first.":** release the part with E while it is over the yellow disc of the tray.
+- **The LED does not light:** the supply must read "5.00 V" and "OUTPUT ON", R1 needs a part and LED1 needs a (not burned out) LED.
+- **Cyan or pink materials in the first seconds:** the editor is still compiling shader variants. Wait a moment.
+- **Red Console lines or repeated errors during play:** copy the first one.
 
 ## Research
 
