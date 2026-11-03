@@ -46,7 +46,7 @@ Legend: ✅ done · 🔄 in progress · ⏳ waiting on a prerequisite · 👤 ne
 | # | Task | Status | Notes |
 |---|---|---|---|
 | D1 | Pitt-Bradford launcher UI | ✅ | index.html + launcher/; launcher-check passes on :8101; not tried on the relay or a Quest |
-| D2 | Web realism pass on hero scenes | ✅ | shared scene lighting, shadows, tone mapping, procedural textures; 5/5 tests; 3 of 16 screenshots re-shot; Quest frame rate untested |
+| D2 | Web realism pass on hero scenes | ✅ | shared scene lighting, shadows, tone mapping, procedural textures; 5/5 tests; 3 of 16 screenshots re-shot; Quest frame rate untested. Nov 3: CC0 glTF props (Poly Haven) + animated people (Quaternius) added offline with primitive fallback, credits in assets/models/CREDITS.md, 27 lab tests; desktop only |
 | D3 | Circulation Builder for Orin James | ✅ ❓ | draft built (Practice Lab scenario 17, labelled "Draft for faculty review"); 11/11 lab tests pass; desktop play-through only, no VR emulator or headset run; needs his review |
 | D4 | Zippo lighter-test details | ✅ | decision Nov 1: scenario stays generic, no Zippo process details |
 | D5 | Permission to name the partner companies on slides | ✅ | decision Nov 1: no names; slides say "inspired by regional industry" |

@@ -1,5 +1,5 @@
 {
-  "updated": "11/3/2026, 12:21:11 AM",
+  "updated": "11/3/2026, 3:10:07 AM",
   "suites": [
     {
       "name": "Practice Lab scenarios",
@@ -114,14 +114,6 @@
       "note": ""
     },
     {
-      "name": "Practice Lab",
-      "passed": 20,
-      "failed": 0,
-      "skipped": 0,
-      "when": "11/2/2026, 9:51:55 PM",
-      "note": ""
-    },
-    {
       "name": "Brand kit",
       "passed": 16,
       "failed": 0,
@@ -130,11 +122,51 @@
       "note": ""
     },
     {
-      "name": "Multiplayer relay",
-      "passed": 18,
+      "name": "Launcher check (20 tiles, 31 guides, 39 viewer pages)",
+      "passed": 1,
       "failed": 0,
       "skipped": 0,
-      "when": "11/2/2026, 9:51:56 PM",
+      "when": "11/3/2026, 12:21:11 AM",
+      "note": ""
+    },
+    {
+      "name": "Practice Lab node tests",
+      "passed": 27,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/3/2026, 2:26:32 AM",
+      "note": ""
+    },
+    {
+      "name": "Multiplayer relay + assets",
+      "passed": 31,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/3/2026, 2:58:53 AM",
+      "note": ""
+    },
+    {
+      "name": "Web UI layout (ui-check)",
+      "passed": 48,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/3/2026, 2:58:53 AM",
+      "note": ""
+    },
+    {
+      "name": "Practice Lab",
+      "passed": 27,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/3/2026, 3:10:07 AM",
+      "note": ""
+    },
+    {
+      "name": "Multiplayer relay",
+      "passed": 31,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/3/2026, 3:10:07 AM",
       "note": ""
     },
     {
@@ -142,15 +174,15 @@
       "passed": 48,
       "failed": 0,
       "skipped": 0,
-      "when": "11/3/2026, 12:21:11 AM",
+      "when": "11/3/2026, 3:10:07 AM",
       "note": ""
     },
     {
-      "name": "Launcher check (20 tiles, 31 guides, 39 viewer pages)",
-      "passed": 1,
+      "name": "Demos check (4 demos)",
+      "passed": 12,
       "failed": 0,
       "skipped": 0,
-      "when": "11/3/2026, 12:21:11 AM",
+      "when": "11/3/2026, 3:10:07 AM",
       "note": ""
     }
   ]

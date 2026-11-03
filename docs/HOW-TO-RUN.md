@@ -122,8 +122,8 @@ Run from the repository root unless noted. Each prints pass and fail counts; the
 
 | What | Command | Expected today |
 |---|---|---|
-| Practice Lab scenario data | `cd training-simulations`, then `node --test test/*.test.mjs` | 20 pass |
-| Multiplayer relay | `cd multi-player`, then `npm test` | 18 pass |
+| Practice Lab scenario data | `cd training-simulations`, then `node --test test/*.test.mjs` | 27 pass |
+| Multiplayer relay | `cd multi-player`, then `npm test` | 31 pass |
 | Brand kit | `cd brand-kit`, then `npm test` | 16 pass |
 | Offline check (no network) | `node tools/vr-capture/offline-check.mjs` | all pages ok |
 | Launcher check | `node tools/vr-capture/launcher-check.mjs` | pass |

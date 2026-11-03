@@ -365,6 +365,63 @@
       ],
       "ended": "2026-11-03T06:43:32.159Z",
       "note": "Warehouse + Refinery hub scenes dressed (8 people each), Rocketbox co-worker verified in editor, all 5 scenes re-baked"
+    },
+    {
+      "id": "dressB",
+      "name": "Dress B",
+      "task": "Dress Hydro, Lobby, ResistorBench hub scenes",
+      "state": "done",
+      "started": "2026-11-03T06:44:17.803Z",
+      "watch": [
+        "vive-steamvr/hub/Assets/Editor"
+      ],
+      "ended": "2026-11-03T07:34:47.856Z",
+      "note": "Hydro, Lobby, Resistor dressed (6/6/4 people) and all five scenes re-baked; edit-mode tris 77k-189k; self-tests OK; committed, not pushed"
+    },
+    {
+      "id": "webLab",
+      "name": "Practice Lab realism",
+      "task": "Practice Lab realism",
+      "state": "done",
+      "started": "2026-11-03T06:47:42.196Z",
+      "watch": [],
+      "ended": "2026-11-03T07:26:32.791Z",
+      "note": "Practice Lab realism pass committed: 5 Quaternius people + 20 Poly Haven props (CC0, 9.6 MB), 27/27 tests; <=55k tris/scene; desktop only"
+    },
+    {
+      "id": "webDemos",
+      "name": "Single-SDK web demos polish",
+      "task": "Single-SDK web demos polish",
+      "state": "done",
+      "started": "2026-11-03T06:47:42.316Z",
+      "watch": [],
+      "ended": "2026-11-03T07:32:44.675Z",
+      "note": "4 web demos upgraded; demos-check 12/12 pass, emulated-XR check 4/4"
+    },
+    {
+      "id": "docAudit",
+      "name": "docAudit",
+      "task": "Docs audit, check script, launcher search",
+      "state": "done",
+      "started": "2026-11-03T06:48:30.549Z",
+      "watch": [
+        "docs",
+        "launcher"
+      ],
+      "ended": "2026-11-03T06:56:18.047Z",
+      "note": "docs-check added; 2 doc problems fixed; glossary, quick start, menu search; launcher-check ok"
+    },
+    {
+      "id": "webMulti",
+      "name": "webMulti",
+      "task": "Upgrade multiplayer WebXR assets/avatars",
+      "state": "done",
+      "started": "2026-11-03T06:48:31.878Z",
+      "watch": [
+        "multi-player"
+      ],
+      "ended": "2026-11-03T07:59:04.326Z",
+      "note": "Multiplayer upgraded: CC0 props + KayKit avatars, pose message, credits, 31 tests pass, ui-check 48/48; commit d109ff9"
     }
   ]
 }
