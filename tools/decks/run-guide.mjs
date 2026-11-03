@@ -1,4 +1,4 @@
-import { demoDaySlide, launcherSlide, verifiedSlide, viveProjectsSlide, viveSetupSlide } from "./newslides.mjs";
+import { avatarsSlide, demoDaySlide, hubSlide, launcherSlide, realismSlide, verifiedSlide, viveProjectsSlide, viveSetupSlide } from "./newslides.mjs";
 import { applyDeckTheme, bullets, callout, card, chip, code, contentSlide, entries, img, label, newDeck, section, shot, steps, text } from "./lib.mjs";
 
 const WEB = [
@@ -84,7 +84,7 @@ export async function buildRunGuide(file) {
     chip(slide, C, "Multiplayer", { x: 4.5, y: 5.4, w: 1.6, color: C.accent5, name: "Chip multiplayer" });
     chip(slide, C, "Unity", { x: 6.25, y: 5.4, w: 1.3, color: C.accent2, name: "Chip Unity" });
     chip(slide, C, "Android + visionOS", { x: 0.7, y: 6.0, w: 2.3, color: C.accent3, name: "Chip native" });
-    text(slide, "Separate samples. Real SDKs. Hardware where required.", { x: 3.2, y: 6.0, w: 4.4, h: 0.42, fontSize: 13, bold: true, color: C.background1, valign: "middle", objectName: "Tagline" });
+    text(slide, "Hardware needed only where noted.", { x: 3.2, y: 6.0, w: 4.4, h: 0.42, fontSize: 13, bold: true, color: C.background1, valign: "middle", objectName: "Tagline" });
     await shot(slide, C, img("screenshots/threejs-prism-bloom.png"), { x: 7.9, y: 0.6, w: 4.85, h: 3.2, caption: "Three.js · Prism Bloom", name: "Title web screenshot" });
     await shot(slide, C, img("training-simulations/screenshots/vr/04-selecting-hotspots.png"), { x: 7.9, y: 3.95, w: 4.85, h: 3.2, caption: "Practice Lab in an emulated Quest 3 session", name: "Title VR screenshot" });
   }
@@ -145,8 +145,8 @@ export async function buildRunGuide(file) {
   // 8-9 Practice lab
   section(pres, "Practice Lab");
   {
-    const slide = contentSlide(pres, { section: "Practice Lab", eyebrow: "BROWSER / TRAINING", title: "Fieldwork XR Practice Lab | 16 hands-on scenarios" });
-    text(slide, "Business, research, industrial, and manufacturing-quality runs. Enter a name, pick a scenario, and carry out each task in the 3D scene.", { x: 0.6, y: 1.4, w: 12, h: 0.35, fontSize: 14, color: C.background2, objectName: "Subtitle" });
+    const slide = contentSlide(pres, { section: "Practice Lab", eyebrow: "BROWSER / TRAINING", title: "Fieldwork XR Practice Lab | 17 hands-on scenarios" });
+    text(slide, "Business, research, industrial, manufacturing-quality, and one draft life-science scenario. Enter a name, pick a scenario, and carry out each task in the 3D scene.", { x: 0.6, y: 1.4, w: 12, h: 0.35, fontSize: 14, color: C.background2, objectName: "Subtitle" });
     card(slide, C, { x: 0.6, y: 1.95, w: 4.6, h: 4.75, name: "Lab instructions card" });
     label(slide, C, "RUN FROM THE REPOSITORY ROOT", { x: 0.85, y: 2.15, w: 4, color: C.accent2, name: "Lab run label" });
     code(slide, C, "python -m http.server 8000\nhttp://localhost:8000/\n  training-simulations/", { x: 0.85, y: 2.5, w: 4.1, h: 1.1, size: 12, name: "Lab command" });
@@ -225,6 +225,7 @@ export async function buildRunGuide(file) {
 
   section(pres, "Vive, launcher, and demo day");
   await viveProjectsSlide(pres, C, { section: "Vive, launcher, and demo day", eyebrow: "UNITY / VIVE PRO 2 + STEAMVR" });
+  await hubSlide(pres, C, { section: "Vive, launcher, and demo day", eyebrow: "UNITY / HUB AND LOBBY" });
   await viveSetupSlide(pres, C, { section: "Vive, launcher, and demo day", eyebrow: "UNITY / RUN A PROJECT" });
   await launcherSlide(pres, C, { section: "Vive, launcher, and demo day", eyebrow: "LAUNCHER" });
   await demoDaySlide(pres, C, { section: "Vive, launcher, and demo day", eyebrow: "DEMO DAY / ONE-COMMAND START" });
@@ -249,7 +250,7 @@ export async function buildRunGuide(file) {
     text(slide, "Use the captured screenshots as references; always verify immersive behavior on the target runtime.", { x: 0.6, y: 1.4, w: 12, h: 0.35, fontSize: 14, color: C.background2, objectName: "Subtitle" });
     card(slide, C, { x: 0.6, y: 1.95, w: 6.0, h: 4.0, name: "Tested card" });
     label(slide, C, "TESTED ON DESKTOP / EMULATOR", { x: 0.9, y: 2.15, w: 5.4, color: C.accent5, name: "Tested label" });
-    bullets(slide, C, ["Four browser demos served and rendered; controls exercised", "Practice Lab: 16 scenarios on desktop (VR captures not refreshed for the 4 newest); scenario tests pass", "Multiplayer relay: automated tests (npm test); two-client rooms", "VR sessions in an emulated Quest 3 with a scripted controller"], { x: 0.9, y: 2.55, w: 5.4, h: 3.2, size: 13.5, gap: 8, name: "Tested points" });
+    bullets(slide, C, ["Four browser demos served and rendered; controls exercised", "Practice Lab: 17 scenarios on desktop (VR captures not refreshed for the 5 newest); automated suites pass (Practice Lab 27, brand kit 16, relay 31, web layout 48)", "Multiplayer relay: automated tests (npm test); two-client rooms", "VR sessions in an emulated Quest 3 with a scripted controller"], { x: 0.9, y: 2.55, w: 5.4, h: 3.2, size: 13.5, gap: 8, name: "Tested points" });
     card(slide, C, { x: 6.75, y: 1.95, w: 6.0, h: 4.0, name: "Needs device card" });
     label(slide, C, "NEEDS HARDWARE / A TOOLCHAIN", { x: 7.05, y: 2.15, w: 5.4, color: C.accent3, name: "Device label" });
     bullets(slide, C, ["Headset VR/AR sessions need supported devices and runtimes", "Real controller input in the Practice Lab and Circuit Lab", "Quest camera needs permission and physical hardware", "ARCore needs a supported Android camera device", "visionOS builds need macOS + Xcode; Unity examples need package setup"], { x: 7.05, y: 2.55, w: 5.4, h: 3.2, size: 13.5, gap: 8, name: "Device points" });

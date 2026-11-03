@@ -2,7 +2,9 @@
 
 Everything needed to run the advisory-board demo from one lab PC.
 
-Status: the start script, certificate generation, URL list and QR page were run on a development PC (Node 22, Windows 11). **No Meta Quest or HTC Vive was used in any test.** Every hardware step in these documents is marked "verify at rehearsal".
+Status: the start script, certificate generation, URL list and QR page were run on a development PC (Node 22, Windows 11). **No Meta Quest or HTC Vive was used in any test.** Every hardware step in these documents is marked "verify at rehearsal". Screenshots in the repo are desktop browser captures, Unity editor renders (desktop) or an emulated Quest 3.
+
+What the one server serves: the main menu (launcher), the Practice Lab (17 scenarios), and the three multiplayer themes (Circuit Lab, Site Safety Layout, Hydrostatic Test Rig). It does **not** serve the Unity projects: those run from the Unity editor on the Vive PC.
 
 ## The one-command start
 
@@ -25,7 +27,7 @@ Manual equivalent: `cd multi-player`, `npm install`, `npm start`. Set `INSECURE_
 | Vive Pro 2 PC | desktop Chrome/Edge page, or the Unity project | see [VIVE-SETUP.md](VIVE-SETUP.md) |
 | Status dashboard | the address it prints (a free port is chosen automatically) | optional, for the presenter only |
 
-Everyone in an activity uses the same **room name**. Rooms are separate for Circuit Lab and Site Safety Layout.
+Everyone in an activity uses the same **room name**. Rooms are separate for each of the three multiplayer themes.
 
 ## Documents
 
@@ -34,5 +36,11 @@ Everyone in an activity uses the same **room name**. Rooms are separate for Circ
 - [QUEST-SETUP.md](QUEST-SETUP.md), [VIVE-SETUP.md](VIVE-SETUP.md)
 - [BACKUP-PLAN.md](BACKUP-PLAN.md), [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 - [TALK-TRACK.md](TALK-TRACK.md) 15-minute outline
+
+## Unity hub scenes are local only
+
+The Unity hub (lobby and its five scenes) uses Asset Store props and Rocketbox people that are not in git. A fresh clone shows no art. For the Vive part of the demo, use the hub project folder as it exists on the development PC (copy the whole folder, including `Assets/Scenes/Local` and `Assets/Baked`), or open projects 01 to 04, which run from primitives in a fresh clone. Check this at rehearsal.
+
+The Refinery Rounds project reads live wind from Open-Meteo when online and uses a simulated value when offline; everything else in the demo needs no internet.
 
 Scenario content is general safety-awareness practice, not a procedure or certification.

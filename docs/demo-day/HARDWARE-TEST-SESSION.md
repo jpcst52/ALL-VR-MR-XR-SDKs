@@ -18,7 +18,7 @@ Open the project in Unity 6000.3.20f1 with the headset on and SteamVR running, p
 |---|---|---|---|---|---|
 | A1 | P1 | Hub project, scene **Lobby**: headset view shows the hall, both controllers visible | stereo view, head tracking follows, controller models track | run with desktop mouse and keyboard mode; note what is wrong | |
 | A2 | P1 | Walk with the left stick; snap turn with the right stick | moves smoothly, no sickness spike, turns in 30 degree steps | note which stick or binding is wrong | |
-| A3 | P1 | Stand on a portal pad for about 1.5 s | scenario loads | press 1 to 4 on the keyboard | |
+| A3 | P1 | Stand on a portal pad for about 1.4 s | scenario loads | press 1 to 4 on the keyboard | |
 | A4 | P1 | In a scenario, hold both grips for 1.5 s | returns to the lobby | press Backspace | |
 | A5 | P1 | Hydrostatic Test Bay: point and press trigger on a valve; grab a blind flange with the grip; run the pump to 150 psi | valves turn, flange grabs and snaps, gauge climbs, hold timer runs | note which interaction fails | |
 | A6 | P1 | Text legibility: can you read the task board, name tags and the logo plate without leaning in? | readable at arm's length | note which texts are too small | |

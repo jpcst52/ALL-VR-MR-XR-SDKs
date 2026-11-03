@@ -7,7 +7,7 @@
 1. PC and Quest on the same Wi-Fi network. Start the demo with `scripts\start-demo.cmd`.
 2. In Quest Browser open `https://<PC-address>:8443/` using an address printed in the PC window (or scan a code from `https://localhost:8443/multi-player/qr.html`).
 3. The first time, the browser warns that the certificate is not trusted because it is self-signed. Choose the Advanced option and proceed. Verify at rehearsal how Quest Browser words and remembers this choice.
-4. Open Circuit Lab or Site Safety Layout, enter a name and the shared room name, press Enter VR / Enter AR. Verify at rehearsal that the headset grants the immersive session.
+4. Open the Practice Lab, Circuit Lab, Site Safety Layout or Hydrostatic Test Rig, enter a name (and the shared room name on the multiplayer pages), press Enter VR / Enter AR. Verify at rehearsal that the headset grants the immersive session.
 5. If the PC's address changes (new network), the certificate is regenerated and each headset needs to accept it again.
 
 Why HTTPS: WebXR is only available in secure contexts, so a headset reaching the PC by an IP address needs HTTPS.

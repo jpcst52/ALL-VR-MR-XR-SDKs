@@ -20,13 +20,13 @@ Only one OpenXR runtime is active at a time. If another runtime (for example a Q
 
 ## 3. Unity projects
 
-The projects are in `vive-steamvr/` (`hub/` and `01-hydrostatic-test/`) and use the shared package `vive-steamvr/packages/com.pittbradford.xrtraining`. `hub` is set to Unity `6000.3.20f1` (see `hub/ProjectSettings/ProjectVersion.txt`); install that editor version in Unity Hub.
+The projects are in `vive-steamvr/`: `hub/` (a lobby with four portals and five scenes) and `01-hydrostatic-test/`, `02-refinery-rounds/`, `03-warehouse-forklift/`, `04-resistor-bench/`. The hub's props and people are local-only; see [README.md](README.md). They use the shared package `vive-steamvr/packages/com.pittbradford.xrtraining`. `hub` is set to Unity `6000.3.20f1` (see `hub/ProjectSettings/ProjectVersion.txt`); install that editor version in Unity Hub.
 
 1. Start SteamVR first (headset awake and tracked), then open the project in Unity Hub.
 2. First open imports assets and can take several minutes. Do this the day before.
 3. Check Edit > Project Settings > XR Plug-in Management has OpenXR enabled for the Windows platform. Unity's documentation: https://docs.unity3d.com/6000.2/Documentation/Manual/com.unity.xr.openxr.html
-4. Press Play. Verify at rehearsal that the headset view and controllers work in the Editor and in a built player. The Unity code in this repo has not been compiled or tested on a headset by the agents.
+4. Press Play. Verify at rehearsal that the headset view and controllers work in the Editor and in a built player. The projects compile and run in the editor in desktop mode and passed scripted self-tests there; nothing has been run on a headset.
 
 ## 4. Web version on the Vive PC
 
-Open `https://localhost:8443/multi-player/vr/` in desktop Chrome or Edge (accept the certificate warning once). Whether the browser enters WebXR through SteamVR on this PC is a rehearsal check: verify at rehearsal. The desktop 2D view works without a headset.
+Open `https://localhost:8443/training-simulations/` (the Practice Lab) or `https://localhost:8443/multi-player/vr/` in desktop Chrome or Edge (accept the certificate warning once). Whether the browser enters WebXR through SteamVR on this PC is a rehearsal check: verify at rehearsal. The desktop 2D view works without a headset.

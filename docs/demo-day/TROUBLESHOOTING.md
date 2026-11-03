@@ -11,9 +11,11 @@ Items marked (verify) have not been confirmed on a real headset.
 | Warning returns every time or after a network change | certificate was regenerated for new addresses | accept again; delete `multi-player/.certs/` to force a fresh certificate |
 | Quest cannot open the page at all | different network, guest Wi-Fi client isolation, or Windows Firewall (verify) | same network; allow Node.js on Private networks; mark the network Private; or use the USB `adb reverse` path |
 | Page loads but Enter VR is missing | not HTTPS, or the page was opened by an address not in the certificate (verify) | use an https:// address printed at start; restart so the certificate covers the current address |
-| Two users do not see each other | different room names or different example (rooms are per example) | same room name, same example |
+| Two users do not see each other | different room names or different example (rooms are per example: the three multiplayer themes are separate) | same room name, same example |
 | WebSocket will not connect | page opened over https but relay on http, or the other way round | use the single server started by the script; do not mix |
 | SteamVR does not start the Unity view | SteamVR is not the active OpenXR runtime (verify) | see [VIVE-SETUP.md](VIVE-SETUP.md) section 2 |
+| Unity hub scenes empty or without props or people | the pack and Rocketbox files are not in git | use the hub folder copied from the development PC; or use projects 01 to 04, which need no packs |
+| Refinery Rounds wind says "simulated (no network)" | no internet; this is the built-in fallback | expected offline; nothing to fix |
 | Unity project slow on first open | first asset import | open it the day before |
 | Dashboard address unknown | started without `/dashboard`; the port is automatic, see tools/status/.dashboard-url | rerun with `/dashboard` or `npm run status` in the repo root |
 
