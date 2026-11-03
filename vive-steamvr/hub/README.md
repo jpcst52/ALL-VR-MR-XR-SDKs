@@ -79,3 +79,7 @@ Every hub scene (`Lobby`, `HydrostaticTest_Hub`, `RefineryRounds_Hub`, `Warehous
 
 - The shell is about 39 m by 37 m, much larger than the test area, so the equipment sits in the middle of a big empty hall. Lighting, audio and post-processing have not been tuned yet.
 - Desktop editor screenshots only; nothing here has been run on a headset.
+
+## People (Microsoft Rocketbox, local only)
+
+The scenes can include realistic, animated people from the **Microsoft Rocketbox Avatar Library** (MIT license, https://github.com/microsoft/Microsoft-Rocketbox; cite Gonzalez-Franco et al. 2020, DOI 10.3389/frvir.2020.561558). The files (about 1.1 GB: 11 avatars plus walk, idle, talk and work animations) live in `Assets/Rocketbox`, which is git-ignored like the Asset Store packs, so nothing third-party is committed. To get them: sparse-checkout `Assets/Avatars/...` and `Assets/Animations/...` from that repository into `Assets/Rocketbox` (the avatars used are listed in `Assets/Editor/PeopleSetup.cs`). `Assets/Editor/Rocketbox/RocketboxImport.cs` (our own script) sets the import options, and **Pitt-Bradford > People > Set up Rocketbox controllers** builds the animation controllers. The MIT license text is kept at `Assets/Rocketbox/LICENSE.md`.

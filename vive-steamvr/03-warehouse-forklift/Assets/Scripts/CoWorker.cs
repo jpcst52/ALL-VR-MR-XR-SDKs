@@ -21,6 +21,14 @@ public class CoWorker : MonoBehaviour
     int target = 1;
     float phase;
     Transform head, legL, legR, armL, armR;
+    Animator animator;
+
+    /// <summary>
+    /// Optional: returns a finished, animated person (a model whose Animator has a float "Speed" that switches idle and
+    /// walk) to use instead of the primitive figure. Left null in the stand-alone project; the hub sets it when it has
+    /// real character models, so this project needs no extra assets.
+    /// </summary>
+    public static System.Func<GameObject> ModelFactory;
 
     /// <summary>
     /// Builds the co-worker (hidden until <see cref="Begin"/>). Always made at runtime: it appears and walks during
@@ -69,6 +77,16 @@ public class CoWorker : MonoBehaviour
     void BuildModel()
     {
         var t = transform;
+        var external = ModelFactory?.Invoke();
+        if (external != null)
+        {
+            external.transform.SetParent(t, false);
+            external.transform.localPosition = Vector3.zero;
+            external.transform.localRotation = Quaternion.identity;
+            animator = external.GetComponentInChildren<Animator>();
+            head = FindDeep(external.transform, "Bip01 Head") ?? t;
+            return;
+        }
         var shirt = P.Mat(new Color(0.16f, 0.24f, 0.4f), 0f, 0.3f);
         var trousers = P.Mat(new Color(0.12f, 0.12f, 0.14f), 0f, 0.3f);
         var boots = P.Mat(new Color(0.22f, 0.14f, 0.07f), 0f, 0.3f);
@@ -121,8 +139,16 @@ public class CoWorker : MonoBehaviour
         return pivot;
     }
 
+    static Transform FindDeep(Transform t, string name)
+    {
+        if (t.name == name) return t;
+        for (int i = 0; i < t.childCount; i++) { var f = FindDeep(t.GetChild(i), name); if (f != null) return f; }
+        return null;
+    }
+
     void Swing(float s)
     {
+        if (animator != null) { animator.SetFloat("Speed", Mathf.Abs(s) > 0f ? 1f : 0f); return; }
         float leg = 24f * s, arm = 18f * s;
         legL.localRotation = Quaternion.Euler(leg, 0, 0);
         legR.localRotation = Quaternion.Euler(-leg, 0, 0);
@@ -159,6 +185,6 @@ public class CoWorker : MonoBehaviour
         transform.position = pos + Velocity * dt;
         transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(dir, Vector3.up), 240f * dt);
         phase += dt * WalkSpeed * 4.2f;
-        Swing(Mathf.Sin(phase));
+        Swing(animator != null ? 1f : Mathf.Sin(phase));
     }
 }
