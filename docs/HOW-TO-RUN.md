@@ -168,3 +168,7 @@ The sky images are public-domain stand-ins in a regional style; **they are not p
 ## 8. What is verified
 
 Run on a development PC: the web demo and tests (desktop browsers, emulated Quest 3), the Unity projects in the editor in desktop mode, the hub lobby in the editor. **Not run:** any real Vive Pro 2 or Quest, a built Windows player of the hub, phones (only Chrome emulation). Scenario 17 has not been reviewed by a biologist. The reasons and questions have not been reviewed by a subject-matter expert. The new features have been exercised by scripted runs and screenshots, not played by hand end to end.
+
+## Open every project at once (VS Code)
+
+`XR-Training.code-workspace` in the repository root opens each project as its own folder: the web projects, the five Unity projects and the shared kit, the six native SDK samples, tools, scripts and docs. In VS Code use **File > Open Workspace from File...** and pick it. The Unity editors are opened separately from Unity Hub (**Add > Add project from disk**) with Unity 6000.3.20f1: `vive-steamvr/01-hydrostatic-test`, `02-refinery-rounds`, `03-warehouse-forklift`, `04-resistor-bench` and `hub` (the hub needs the local Asset Store packs and Rocketbox). The native samples (`unity-xri`, `openxr`, `steamvr`, `meta-xr`) hold only an `Assets` folder and notes, not full Unity projects.

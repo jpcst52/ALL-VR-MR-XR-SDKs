@@ -1,0 +1,71 @@
+{
+  // Opens every project in the repository as its own folder in one VS Code window.
+  // File > Open Workspace from File... > XR-Training.code-workspace
+  "folders": [
+    { "name": "00 Repository root (docs, tools, scripts)", "path": "." },
+
+    { "name": "Web: Practice Lab", "path": "training-simulations" },
+    { "name": "Web: Multiplayer relay + rooms", "path": "multi-player" },
+    { "name": "Web: A-Frame demo", "path": "a-frame" },
+    { "name": "Web: Three.js demo", "path": "threejs" },
+    { "name": "Web: Babylon.js demo", "path": "babylonjs" },
+    { "name": "Web: raw WebXR demo", "path": "webxr" },
+    { "name": "Web: brand kit", "path": "brand-kit" },
+    { "name": "Web: launcher (main menu)", "path": "launcher" },
+
+    { "name": "Unity 01 Hydrostatic Test Bay", "path": "vive-steamvr/01-hydrostatic-test" },
+    { "name": "Unity 02 Refinery Rounds", "path": "vive-steamvr/02-refinery-rounds" },
+    { "name": "Unity 03 Warehouse Forklift", "path": "vive-steamvr/03-warehouse-forklift" },
+    { "name": "Unity 04 Resistor Bench", "path": "vive-steamvr/04-resistor-bench" },
+    { "name": "Unity hub lobby (local assets)", "path": "vive-steamvr/hub" },
+    { "name": "Unity shared kit package", "path": "vive-steamvr/packages/com.pittbradford.xrtraining" },
+
+    { "name": "Native: Unity XRI", "path": "unity-xri" },
+    { "name": "Native: OpenXR", "path": "openxr" },
+    { "name": "Native: SteamVR", "path": "steamvr" },
+    { "name": "Native: Meta XR", "path": "meta-xr" },
+    { "name": "Native: ARCore (Android)", "path": "arcore-android" },
+    { "name": "Native: Apple visionOS", "path": "apple-spatial" },
+
+    { "name": "Tools", "path": "tools" },
+    { "name": "Scripts (builds, demo start)", "path": "scripts" },
+    { "name": "Docs", "path": "docs" }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/Library": true,
+      "**/Temp": true,
+      "**/Logs": true,
+      "**/obj": true,
+      "**/UserSettings": true,
+      "**/node_modules": true,
+      "**/site": true,
+      "**/builds": true
+    },
+    "search.exclude": {
+      "**/Library": true,
+      "**/Baked": true,
+      "**/node_modules": true,
+      "**/vendor": true,
+      "**/site": true,
+      "**/*.unity": true,
+      "**/*.pptx": true
+    },
+    "files.watcherExclude": {
+      "**/Library/**": true,
+      "**/Temp/**": true,
+      "**/node_modules/**": true,
+      "**/Baked/**": true
+    },
+    "files.eol": "\n",
+    "editor.formatOnSave": false
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-dotnettools.csharp",
+      "visualstudiotoolsforunity.vstuc",
+      "dbaeumer.vscode-eslint",
+      "bierner.markdown-preview-github-styles"
+    ]
+  }
+}
