@@ -102,7 +102,7 @@ Edits to baked objects are kept at Play (for example, moving the multimeter in t
 - `Assets/Baked/ResistorBench/`: materials and textures written by **Bake scene**; the baked scene refers to them.
 - `Assets/Editor/ProjectSetup.cs`: the menu items.
 - `Assets/Scenes`, `Assets/XR`, `Assets/Resources`, `ProjectSettings`: the baked scene, OpenXR settings and shader keepers (written by **Set up project**, committed).
-- `screenshots/`: the seven desktop editor renders below.
+- `screenshots/`: the ten desktop editor renders below (re-shot November 3, 2026).
 - Screenshots (optional), with the project closed in the editor (do not pass `-batchmode`; it needs graphics): `Unity.exe -projectPath <absolute path to 04-resistor-bench> -executeMethod PittBradford.XR.EditorTools.CaptureRunner.Run -pbCapture <absolute screenshots folder> -logFile <log>`. It enters play mode, takes seven shots (`01-bench-overview` to `07-wall-references`) and exits. For the capture only, the scenario stops any OpenXR session that started (the editor may start the OpenXR Mock runtime, which otherwise tilts the pictures and blocks the field of view), hides the desktop hands, and moves the hidden player to each camera position so the name tags face the picture. The Mock Runtime feature is switched off in the committed OpenXR settings.
 
 ## Screenshots
@@ -117,6 +117,8 @@ All pictures are **desktop editor renders** made by the scenario's scripted capt
 | 4. Both probes on the unknown part; meter reads 4.7 k | 5. Anti-sulfur 150 ohm part in R1, LED lit, supply showing 5.00 V OUTPUT ON |
 | ![47 ohm part powered: the LED burns out with a puff of smoke](screenshots/06-burnt-led-mistake.png) | ![Wall references and the university plate](screenshots/07-wall-references.png) |
 | 6. 47 ohm part powered: LED burned out (dark), smoke puff | 7. Color-code poster, circuit / datasheet / environment cards, university plate |
+| ![Why this matters after the anti-sulfur step](screenshots/08-why-this-matters.png) | ![Rationale question with feedback on every option](screenshots/10-rationale-feedback.png) |
+| 8. "Why this matters" after the last step (also shot as 09, the question before answering) | 10. The question after a not-best answer: feedback on every option and a reasoning line |
 
 The overview (view 1) is at the top of this page.
 

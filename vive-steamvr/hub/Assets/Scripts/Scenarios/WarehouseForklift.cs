@@ -1190,6 +1190,10 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         forklift.Acknowledge(60f);
         // from the crossing, looking west down the lane at the stopped forklift (the cargo stack hides it from the walkway)
         yield return Snap(api, "03-crossing-forklift-stopped", new Vector3(-3.4f, 1.7f, -1.1f), new Vector3(-8.5f, 1.3f, 0.2f), 62f);
+        // the "why this matters" panel for the crossing step (the staging flag keeps Done() from showing it by itself)
+        why.Show(StepWhy[2]);
+        yield return Snap(api, "14-why-this-matters", new Vector3(-3.4f, 1.7f, -1.1f), new Vector3(-8.5f, 1.3f, 0.2f), 62f);
+        why.HideReason();
 
         yield return Snap(api, "04-corner-mirror", new Vector3(-4f, 1.7f, -4.2f), new Vector3(-5.15f, 1.9f, -2.25f), 40f);
 

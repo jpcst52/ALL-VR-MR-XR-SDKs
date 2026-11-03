@@ -130,6 +130,9 @@ public class ResistorBench : MonoBehaviour, IShotScript
 
         rig = XRRig.Create(new Vector3(0, 0, -0.35f), 0f);
         why = WhyCue.Create(transform);
+        // the bench top is between the player and anything 1.6 m ahead, so keep the panels above it and closer
+        why.WhyDistance = 1.2f; why.WhyOffset = new Vector2(0f, 0.1f);
+        why.AskDistance = 1.2f; why.AskOffset = new Vector2(0f, 0.15f); why.AskScale = 0.6f;
         rig.Area = new Bounds(new Vector3(0, 0, -0.4f), new Vector3(5f, 1f, 1.1f));
         rig.Camera.backgroundColor = new Color(0.1f, 0.11f, 0.13f);
         rig.Camera.clearFlags = CameraClearFlags.SolidColor;
@@ -1065,6 +1068,18 @@ public class ResistorBench : MonoBehaviour, IShotScript
         yield return ShotAt(api, "06-burnt-led-mistake", new Vector3(1.0f, 1.25f, 0.1f), new Vector3(1.05f, 0.98f, 0.7f), 50f);
 
         yield return ShotAt(api, "07-wall-references", new Vector3(0.45f, 1.75f, -0.55f), new Vector3(0.45f, 1.85f, 1.28f), 72f);
+
+        // "why this matters" after the last step, then the rationale question and its feedback
+        why.Show(StepWhy[3]);
+        yield return ShotAt(api, "08-why-this-matters", new Vector3(-0.2f, 1.75f, -1.0f), new Vector3(-0.1f, 1.0f, 0.9f), 68f);
+        why.HideReason();
+        why.Muted = true; // open the question at once
+        why.Ask(Question, best => { });
+        why.Muted = false;
+        yield return ShotAt(api, "09-rationale-question", new Vector3(-0.2f, 1.75f, -1.0f), new Vector3(-0.1f, 1.0f, 0.9f), 68f);
+        why.Answer(0); // a not-best answer, so the feedback shows the chosen, the best and the other option
+        yield return ShotAt(api, "10-rationale-feedback", new Vector3(-0.2f, 1.75f, -1.0f), new Vector3(-0.1f, 1.0f, 0.9f), 68f);
+        why.HideAll();
     }
 
     // ------------------------------------------------------------------------------------------------- shared small types

@@ -410,6 +410,12 @@
           "url": "SDK-list.md"
         },
         {
+          "id": "credits",
+          "title": "Third-party credits",
+          "url": "CREDITS.md",
+          "note": "fonts, Open-Meteo weather, Rocketbox people, packs, models"
+        },
+        {
           "id": "compliance",
           "title": "Naming and credits sweep",
           "url": "docs/COMPLIANCE-SWEEP.md",

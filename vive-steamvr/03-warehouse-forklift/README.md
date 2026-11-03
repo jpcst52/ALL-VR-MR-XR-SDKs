@@ -142,12 +142,12 @@ The self-test turns off the head's `TrackedPoseDriver` for its run: with XR stop
 - `Assets/Editor/ProjectSetup.cs`: the Pitt-Bradford menu items.
 - `Assets/Scenes`, `Assets/XR`, `Assets/Resources`, `ProjectSettings`: the baked scene, OpenXR settings and shader keepers (written by **Set up project**, committed).
 - `Assets/Baked/WarehouseForklift/`: materials and textures written by **Bake scene**; the baked scene refers to them (see "Baked scene").
-- `screenshots/`: the 13 desktop editor renders below.
+- `screenshots/`: the 14 desktop editor renders below.
 - Screenshots are made with `Unity.exe -projectPath <this folder> -executeMethod PittBradford.XR.EditorTools.CaptureRunner.Run -pbCapture <folder> -logFile <log>` (no `-batchmode`; it needs graphics). The editor enters play mode, the scenario's `Shots` coroutine stages and photographs views 01-09, then runs the co-worker self-test for views 10-13, and the editor exits. A built player also accepts `-pbCapture <folder>`.
 
 ## Screenshots
 
-Desktop editor renders made by the capture run above (November 1, 2026). They are not headset captures. Views 01-09 are staged by the script (the forklift is placed and frozen, cones are dropped by the script). Views 10-13 are taken during the scripted self-test while the event plays live, with a script standing in for the learner. None of them is a recorded play-through by a person.
+Desktop editor renders made by the capture run above (re-shot November 3, 2026). They are not headset captures. Views 01-09 are staged by the script (the forklift is placed and frozen, cones are dropped by the script). Views 10-13 are taken during the scripted self-test while the event plays live, with a script standing in for the learner. None of them is a recorded play-through by a person.
 
 | | |
 |---|---|
@@ -165,6 +165,8 @@ Desktop editor renders made by the capture run above (November 1, 2026). They ar
 | 11 Awareness check, question 1 (learner's view) | 12 Driver holding for the co-worker |
 | ![End-of-scenario summary with the awareness check result](screenshots/13-summary.png) | |
 | 13 Summary with the awareness check (scripted answers, 2 of 3) | |
+| ![WHY THIS MATTERS panel after the crossing step](screenshots/14-why-this-matters.png) | |
+| 14 "Why this matters" after the crossing step (the driver also has to stop and sound the horn) | |
 
 ## Troubleshooting
 
