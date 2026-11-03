@@ -1,0 +1,48 @@
+/* Shared HUD for the four single-SDK web demos (threejs/, a-frame/, babylonjs/, webxr/).
+   Needs ../brand-kit/brand.css first (palette tokens + bundled fonts). Offline: no network. */
+:root { color-scheme: dark; --hud-bg: rgba(0, 32, 91, 0.86); --hud-edge: rgba(219, 238, 255, 0.35); --hud-ink: #f4f8ff; --hud-muted: #c9d9f2; }
+html, body { margin: 0; height: 100%; background: #00122e; color: var(--hud-ink); font: 16px/1.5 var(--pitt-font); }
+body { overflow: hidden; }
+
+.demo-bar { position: fixed; z-index: 20; inset: 0 0 auto 0; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .35rem 1rem; background: linear-gradient(90deg, var(--pitt-royal), var(--pitt-navy)); border-bottom: 3px solid var(--pitt-gold); box-shadow: 0 2px 14px rgba(0, 0, 0, .35); }
+.demo-bar__sdk { font: 400 1.5rem/1 var(--pitt-display); letter-spacing: .06em; color: var(--pitt-gold); text-transform: uppercase; white-space: nowrap; }
+
+.demo-panel { position: fixed; z-index: 10; left: 1rem; bottom: 1rem; width: min(25rem, calc(100vw - 2rem)); box-sizing: border-box; padding: 1rem 1.15rem 1.05rem; border-radius: .9rem; background: var(--hud-bg); border: 1px solid var(--hud-edge); border-top: 4px solid var(--pitt-gold); backdrop-filter: blur(8px); box-shadow: 0 10px 34px rgba(0, 0, 0, .45); }
+.demo-panel h1 { margin: 0; font: 400 2.5rem/1 var(--pitt-display); letter-spacing: .03em; text-transform: uppercase; }
+.demo-panel .kicker { margin: 0 0 .15rem; font-size: .78rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--pitt-gold); }
+.demo-panel p { margin: .4rem 0 0; color: var(--hud-muted); font-family: var(--pitt-serif); font-size: .92rem; line-height: 1.55; }
+.demo-panel .status { min-height: 1.5em; margin-top: .6rem; font: 500 .92rem/1.4 var(--pitt-font); color: #fff; }
+.demo-panel .actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
+.demo-panel button, .demo-btn { min-height: 44px; min-width: 44px; padding: .45rem .95rem; border: 2px solid var(--pitt-gold); border-radius: .55rem; background: rgba(0, 53, 148, .9); color: #fff; font: 700 .95rem var(--pitt-font); cursor: pointer; }
+.demo-panel button:hover, .demo-btn:hover { background: var(--pitt-royal); }
+.demo-panel button.primary, .demo-btn.primary { background: var(--pitt-gold); color: var(--pitt-navy); }
+.demo-panel button:disabled { opacity: .55; cursor: not-allowed; }
+.demo-panel button:focus-visible, .demo-btn:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid var(--pitt-sky); outline-offset: 2px; }
+.demo-panel details { margin-top: .75rem; border-top: 1px solid var(--hud-edge); padding-top: .55rem; }
+.demo-panel summary { cursor: pointer; min-height: 32px; font-weight: 700; font-size: .9rem; color: var(--pitt-sky); }
+.demo-panel ul { margin: .4rem 0 0; padding: 0; list-style: none; font-size: .9rem; color: var(--hud-muted); }
+.demo-panel li { display: flex; gap: .6rem; align-items: baseline; padding: .12rem 0; }
+.demo-panel li span:first-child { flex: 0 0 8.2rem; }
+kbd { display: inline-block; min-width: 1.4em; padding: .02rem .4rem; border: 1px solid var(--hud-edge); border-bottom-width: 2px; border-radius: .3rem; background: rgba(255, 255, 255, .12); color: #fff; font: 500 .82rem var(--pitt-font); text-align: center; }
+.demo-note { margin: .6rem 0 0; font: 400 .74rem/1.4 var(--pitt-font) !important; color: #a9bddf !important; }
+.demo-credit { position: fixed; z-index: 10; right: .8rem; bottom: .6rem; max-width: 24rem; text-align: right; font-size: .72rem; line-height: 1.35; color: rgba(255, 255, 255, .78); text-shadow: 0 1px 3px #000; }
+.demo-credit a { color: var(--pitt-sky); }
+.demo-toast { position: fixed; z-index: 30; left: 50%; top: 4.2rem; transform: translateX(-50%); max-width: min(34rem, calc(100vw - 2rem)); padding: .55rem .9rem; border-radius: .6rem; background: rgba(0, 32, 91, .94); border: 1px solid var(--pitt-gold); color: #fff; font-size: .9rem; }
+
+@media (max-width: 640px) {
+  .demo-bar { padding: .3rem .6rem; }
+  .demo-bar__sdk { font-size: 1.2rem; }
+  .demo-panel { left: .5rem; right: .5rem; bottom: .5rem; width: auto; padding: .75rem .85rem; }
+  .demo-panel h1 { font-size: 2rem; }
+  .demo-panel > p:not(.status):not(.kicker) { display: none; }
+  .demo-panel .kicker { display: none; }
+  .demo-panel li span:first-child { flex-basis: 6.2rem; }
+  .demo-credit { display: none; }
+}
+@media (max-width: 420px) { .demo-bar__sdk { display: none; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+
+/* Library-made 'Enter VR' buttons (VRButton, Babylon's WebXR button) move to the top right, out of the way of the panel. */
+.demo-vr-slot { position: fixed; z-index: 15; top: 4.1rem; right: 1rem; }
+#VRButton { top: 4.1rem !important; right: 1rem !important; left: auto !important; bottom: auto !important; z-index: 15 !important; font-family: var(--pitt-font) !important; width: auto !important; padding: .35rem .8rem !important; min-height: 40px; }
+.demo-panel button:disabled.primary { background: #6b7f9f; color: #0a1a3c; border-color: #9fb3d4; opacity: 1; }

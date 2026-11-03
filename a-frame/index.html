@@ -4,46 +4,78 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>A-Frame — Orbit Garden</title>
-    <script src="../vendor/aframe/aframe.min.js"></script>
+    <link rel="stylesheet" href="../brand-kit/brand.css">
+    <link rel="stylesheet" href="../demo-ui/hud.css">
     <style>
-      body { margin: 0; font: 16px/1.5 system-ui, sans-serif; color: #f5f3ff; background: #171326; }
-      header { position: fixed; z-index: 2; top: 1rem; left: 1rem; max-width: 26rem; padding: .8rem 1rem; border-radius: .7rem; background: #171326e8; }
-      h1, p { margin: 0; }
-      p { color: #d6cfee; }
-      #status { min-height: 1.5em; margin-top: .4rem; font-size: .9rem; }
-      a-scene { height: 100vh; }
+      .a-enter-vr, .a-enter-ar { top: 4.2rem !important; bottom: auto !important; right: 1rem !important; z-index: 15 !important; height: 40px !important; }
+      .a-orientation-modal { z-index: 40; }
+      .lantern-list { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
+      .lantern-list button[aria-pressed="true"] { background: var(--pitt-gold); color: var(--pitt-navy); }
     </style>
+    <script src="../vendor/aframe/aframe.min.js"></script>
+    <script type="module" src="../brand-kit/brand.js"></script>
   </head>
   <body>
-    <header>
+    <div class="demo-bar">
+      <div data-pitt-brand="compact"></div>
+      <span class="demo-bar__sdk">A-Frame 1.6 · WebXR</span>
+    </div>
+    <main class="demo-panel" aria-label="Orbit Garden controls">
+      <p class="kicker">Single-SDK example</p>
       <h1>Orbit Garden</h1>
-      <p>Look around the garden and gaze at a lantern to select it. Enter VR with the headset icon.</p>
-      <p id="status" role="status" aria-live="polite">Orbit Garden is ready. Select a lantern to learn about it.</p>
-    </header>
-    <a-scene background="color: #171326" renderer="colorManagement: true">
-      <a-entity light="type: ambient; color: #b8c8ff; intensity: 0.8"></a-entity>
-      <a-entity light="type: directional; color: #fff1cf; intensity: 1.4" position="-2 4 3"></a-entity>
-      <a-cylinder position="0 -0.12 0" radius="3" height="0.2" color="#253b47" material="roughness: 0.9"></a-cylinder>
-      <a-sky color="#171326"></a-sky>
-      <a-entity position="0 1.6 -4" animation="property: rotation; to: 0 360 0; loop: true; dur: 18000; easing: linear">
-        <a-sphere class="lantern" data-name="Moon Bloom" position="-1.4 0 0" radius="0.4" color="#f6a6ff" material="emissive: #673b75" animation="property: position; dir: alternate; dur: 1800; loop: true; to: -1.4 0.5 0"></a-sphere>
-        <a-octahedron class="lantern" data-name="Sky Prism" position="0.4 0.5 0.3" radius="0.55" color="#8be9fd" material="emissive: #245c72" animation="property: rotation; to: 360 360 0; loop: true; dur: 6000; easing: linear"></a-octahedron>
-        <a-torus-knot class="lantern" data-name="Sun Knot" position="1.6 -0.2 -0.4" radius="0.32" radius-tubular="0.08" color="#ffcf70" material="emissive: #80622d" animation="property: scale; dir: alternate; dur: 1500; loop: true; to: 1.25 1.25 1.25"></a-torus-knot>
+      <p>Three lanterns circle an autumn garden. Select one to light it: click it, gaze at it for a moment, or use the buttons. Enter VR with the headset icon.</p>
+      <p class="status" id="status" role="status" aria-live="polite">Loading the garden…</p>
+      <div class="lantern-list" role="group" aria-label="Lanterns">
+        <button type="button" data-lantern="0" aria-pressed="false">1 · Moon Bloom</button>
+        <button type="button" data-lantern="1" aria-pressed="false">2 · Sky Prism</button>
+        <button type="button" data-lantern="2" aria-pressed="false">3 · Sun Knot</button>
+      </div>
+      <details>
+        <summary>Controls and credits</summary>
+        <ul>
+          <li><span>Look around</span><span>Drag or move the mouse with a click / turn your head in VR</span></li>
+          <li><span>Walk</span><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys</span></li>
+          <li><span>Select a lantern</span><span>Click, tap, gaze for 1 s, <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd>, or point and press the trigger in VR</span></li>
+        </ul>
+        <p class="demo-note">Photo sky: Poly Haven (CC0). Lantern model: "Brass Diya Lantern" by Bhargav Kubal, Poly Haven (CC0). Details in CREDITS-web-demos.md. Safety-awareness style demo content only; not a procedure or certification.</p>
+      </details>
+    </main>
+
+    <a-scene loading-screen="dotsColor: #ffb81c; backgroundColor: #00205b" renderer="antialias: true; toneMapping: ACESFilmic; exposure: 1.0" shadow="type: pcfsoft" cursor="rayOrigin: mouse" raycaster="objects: .lantern" device-orientation-permission-ui="enabled: false">
+      <a-assets timeout="15000">
+        <img id="sky" src="../assets/skies/autumn-2k.jpg" alt="">
+        <a-asset-item id="lantern-model" src="./assets/brass_diya_lantern/brass_diya_lantern_1k.gltf"></a-asset-item>
+      </a-assets>
+
+      <a-sky src="#sky" rotation="0 -40 0" material="fog: false"></a-sky>
+
+      <a-entity light="type: hemisphere; color: #dbeeff; groundColor: #2a1f3a; intensity: 0.9"></a-entity>
+      <a-entity light="type: directional; color: #ffe2b0; intensity: 1.5; castShadow: true; shadowMapWidth: 2048; shadowMapHeight: 2048; shadowCameraLeft: -5; shadowCameraRight: 5; shadowCameraTop: 5; shadowCameraBottom: -5; shadowCameraFar: 20; shadowBias: -0.0005; shadowRadius: 4" position="-3 6 3"></a-entity>
+
+      <!-- garden floor and a ring of low stones -->
+      <a-entity id="floor" garden-floor position="0 0 -2.4"></a-entity>
+      <a-entity stone-ring="count: 20; radius: 4.2" position="0 0 -2.4"></a-entity>
+
+      <!-- the orbiting lanterns -->
+      <a-entity id="orbit" position="0 1.6 -2.6" animation="property: rotation; to: 0 360 0; loop: true; dur: 24000; easing: linear">
+        <a-entity class="lantern" data-name="Moon Bloom" data-note="Floats up and down as it circles the garden." lantern="color: #e056fd; shape: sphere" position="-1.3 0 0"></a-entity>
+        <a-entity class="lantern" data-name="Sky Prism" data-note="Spins slowly on every axis." lantern="color: #22d3ee; shape: octahedron" position="0.4 0.5 0.4"></a-entity>
+        <a-entity class="lantern" data-name="Sun Knot" data-note="Breathes in and out as it travels." lantern="color: #ffb81c; shape: knot" position="1.4 -0.2 -0.4"></a-entity>
       </a-entity>
-      <a-entity camera look-controls wasd-controls position="0 1.6 0">
-        <a-cursor color="#ffffff" scale="0.6 0.6 0.6" fuse="true" fuse-timeout="900" raycaster="objects: .lantern"></a-cursor>
+
+      <!-- a panel that stays in the world, readable in VR -->
+      <a-entity id="readout" info-panel position="0 3.3 -4.4"></a-entity>
+
+      <a-entity fireflies="count: 110"></a-entity>
+
+      <a-entity id="rig" position="0 0 -0.4">
+        <a-entity id="head" camera look-controls wasd-controls="acceleration: 40" position="0 1.6 0">
+          <a-cursor color="#ffffff" scale="0.55 0.55 0.55" fuse="true" fuse-timeout="1000" raycaster="objects: .lantern; far: 30" material="opacity: 0.85"></a-cursor>
+        </a-entity>
+        <a-entity laser-controls="hand: left; model: false" raycaster="objects: .lantern; far: 30; lineColor: #ffb81c; lineOpacity: 0.7"></a-entity>
+        <a-entity laser-controls="hand: right; model: false" raycaster="objects: .lantern; far: 30; lineColor: #ffb81c; lineOpacity: 0.7"></a-entity>
       </a-entity>
     </a-scene>
-    <script>
-      const status = document.querySelector("#status");
-      const lanterns = [...document.querySelectorAll(".lantern")];
-      lanterns.forEach((lantern) => {
-        lantern.addEventListener("click", () => {
-          lanterns.forEach((item) => item.setAttribute("scale", "1 1 1"));
-          lantern.setAttribute("scale", "1.25 1.25 1.25");
-          status.textContent = `${lantern.dataset.name} selected. Follow its motion through the garden.`;
-        });
-      });
-    </script>
+    <script src="./main.js"></script>
   </body>
 </html>

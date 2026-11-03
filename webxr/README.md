@@ -1,30 +1,55 @@
 # WebXR Color Field
 
-A small, framework-free demo using the browser's WebXR Device API directly. It shows an animated, layered fallback preview with an adjustable animation speed and, when available, opens an immersive VR session that clears each XR view with a changing color.
+The WebXR Device API used directly, with no engine and no library: the page requests an `immersive-vr` session, makes its own WebGL2 context XR-compatible, creates an `XRWebGLLayer`, and draws every frame from `XRFrame` viewer and controller poses. A hand-written WebGL2 renderer (about 400 lines in `main.js`) draws the same scene into the desktop preview and into the headset's two eye views.
+
+## What changed in this version
+
+- **Before:** the immersive session only cleared each eye to a changing colour. **Now** it renders a real stereo scene: a faceted gem with an inner core, three orbiting rings with satellites, a glowing grid floor with ripples, a colour-shifting sky with aurora-like bands and stars, and rising sparkles, all in code with its own GLSL shaders (no models, no textures, no third-party code).
+- **WebXR specifics:** `requestSession("immersive-vr", { optionalFeatures: ["local-floor"] })` with a fallback to the `local` reference space (assuming a 1.5 m eye height), per-view viewport and projection from the session, `inputSources` grip and target-ray poses drawn as markers and rays, and the `select` event (trigger) changing the palette.
+- **HUD:** the shared brand bar and panel; Enter VR button (same states as before: checking, enter, unavailable), Change palette, speed slider, live status, collapsible controls.
+- **Access:** drag/touch orbit, wheel or pinch zoom, arrow keys, `C` palette, `+`/`-` speed, `R` reset; `prefers-reduced-motion` starts at the slowest speed and stops the idle camera drift.
 
 ## Prerequisites
 
-- A current browser that implements WebXR immersive VR (for example, a compatible Chromium-based browser).
-- A WebXR-capable VR device/runtime for headset use. Browser and device support varies.
-- A local static web server. WebXR requires a secure context: `http://localhost` is treated as trustworthy for local development; access from another device generally requires HTTPS.
+- A browser with WebGL2. For immersive VR, a WebXR browser, runtime and headset.
 
 ## Launch
 
-From the repository root, run `python -m http.server 8000`, then open <http://localhost:8000/webxr/> in the browser. Adjust **Color-field speed** to change the preview and immersive color transition. Click **Enter VR** from the page to request the session; session requests must be triggered by a user gesture.
+These pages load libraries, fonts and sky photos from elsewhere in the repository (`../vendor`, `../brand-kit`, `../assets`), so serve the **repository root**, not this folder. No internet is needed.
+
+```
+python -m http.server 8000                     # from the repository root
+node tools/vr-capture/static-server.mjs 8000   # alternative that copes with many parallel requests
+```
+
+Open <http://localhost:8000/webxr/>. WebXR needs a secure context: `localhost` qualifies; another device needs HTTPS with a certificate it trusts.
+
+Drag to orbit the preview; select **Enter VR** where the browser reports support (the button explains when it does not).
+
+## Checks that were run
+
+- `node tools/vr-capture/demos-check.mjs` (all four demos, desktop and 390 px phone, every non-local request blocked): no console or page errors, no failed requests, no horizontal scroll, buttons at least 40 px tall, brand bar present, every loaded asset exists and is credited, assets under 8 MB, glTF triangles under 100k.
+- `node tools/vr-capture/demos-xr-check.mjs`: enters an **emulated** Meta Quest 3 immersive session (Meta's IWER runtime inside desktop Chrome), pulls the emulated trigger and checks for errors. This shows the code path runs. **It is not a headset test; nothing here has been run on a real Quest or Vive Pro 2.**
 
 ## Limitations
 
-- Immersive VR support differs by browser, operating system, runtime, and headset. Unsupported browsers still show the preview.
-- WebXR is restricted to secure contexts. `localhost` works for local development; serving to a headset over a network requires HTTPS with a certificate trusted by that device.
-- This intentionally minimal sample renders only a changing clear color, not a 3D scene or controller input.
+- Immersive VR depends on browser, OS, runtime and headset; unsupported browsers still show the preview.
+- The renderer is deliberately small: one directional light, no shadows, no controller models, no hand tracking.
+- Stereo rendering in the emulator looks right, but projection, comfort and performance on real hardware are untested.
+
+## Credits
+
+Everything is generated in code; there are no third-party assets. Fonts and the brand bar come from `vendor/fonts` and `brand-kit` (see [../CREDITS-web-demos.md](../CREDITS-web-demos.md)).
 
 ## Upstream
 
 - [WebXR Device API specification](https://immersive-web.github.io/webxr/)
 - [MDN: WebXR Device API](https://developer.mozilla.org/docs/Web/API/WebXR_Device_API)
 
-## Screenshot
+## Screenshots
 
-![WebXR color field preview with the Enter VR button, speed slider, and status message](screenshots/webxr-color-field.png)
+![Color Field in a desktop browser: a gem with orbiting rings above a glowing grid floor under a coloured sky](screenshots/webxr-color-field.png)
 
-Captured from the running example in a desktop browser. The immersive session was not available in the capture environment, so this shows the preview and unsupported-browser state, not a headset recording.
+Desktop browser (Chrome, software GL). The "Immersive VR unavailable" button is the real desktop state. Phone-width view: [../screenshots/phone/](../screenshots/phone/webxr-color-field.png). The image below is from an **emulated** Quest 3 session (IWER), not a real headset.
+
+![Color Field in an emulated Quest 3 session](screenshots/webxr-emulated-quest3.png)

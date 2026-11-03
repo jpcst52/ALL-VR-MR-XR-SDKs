@@ -4,25 +4,44 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Babylon.js — Luminous Totem</title>
+    <link rel="stylesheet" href="../brand-kit/brand.css">
+    <link rel="stylesheet" href="../demo-ui/hud.css">
     <style>
-      html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #101923; color: #edf6ff; font: 16px/1.5 system-ui, sans-serif; }
-      #renderCanvas { width: 100%; height: 100%; display: block; touch-action: none; }
-      #info { position: fixed; z-index: 1; top: 1rem; left: 1rem; max-width: 25rem; padding: .75rem 1rem; border-radius: .7rem; background: #101923e8; }
-      h1, p { margin: 0; }
-      p { color: #c3d4df; }
-      button { margin-top: .75rem; border: 1px solid #75e6d3; border-radius: .45rem; padding: .45rem .7rem; background: #17313c; color: #edf6ff; font: inherit; cursor: pointer; }
-      #status { min-height: 1.5em; margin-top: .35rem; font-size: .9rem; }
+      #renderCanvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
+      .xr-button-overlay { position: fixed !important; top: 4.2rem !important; right: 1rem !important; bottom: auto !important; left: auto !important; z-index: 15 !important; }
+      .babylonVRicon { height: 44px !important; }
     </style>
     <script src="../vendor/babylon/babylon.js"></script>
+    <script src="./lib/babylonjs.loaders.min.js"></script>
+    <script type="module" src="../brand-kit/brand.js"></script>
   </head>
   <body>
-    <header id="info">
+    <div class="demo-bar">
+      <div data-pitt-brand="compact"></div>
+      <span class="demo-bar__sdk">Babylon.js 7.42 · WebXR</span>
+    </div>
+    <canvas id="renderCanvas" tabindex="0" aria-label="Luminous Totem 3D scene. Drag to orbit, scroll or pinch to zoom."></canvas>
+    <main class="demo-panel" aria-label="Luminous Totem controls">
+      <p class="kicker">Single-SDK example</p>
       <h1>Luminous Totem</h1>
-      <p>Orbit the glowing totem. Cycle its color or explore the three orbiting beacons.</p>
-      <button id="change-hue" type="button">Change totem hue</button>
-      <p id="status" role="status" aria-live="polite">Luminous Totem is ready to explore.</p>
-    </header>
-    <canvas id="renderCanvas"></canvas>
+      <p>A glowing crystal on a brass-ringed pedestal, rendered with Babylon's physically based materials, image-based lighting, a glow layer and soft shadows. Orbit it, change its hue, or enter VR.</p>
+      <p class="status" id="status" role="status" aria-live="polite">Loading the scene…</p>
+      <div class="actions">
+        <button id="change-hue" class="primary" type="button">Change totem hue</button>
+        <button id="toggle-motion" type="button" aria-pressed="false">Pause motion</button>
+        <button id="reset-view" type="button">Reset view</button>
+      </div>
+      <details>
+        <summary>Controls and credits</summary>
+        <ul>
+          <li><span>Orbit / zoom</span><span>Drag or one finger / wheel or pinch</span></li>
+          <li><span>Change hue</span><span><kbd>C</kbd>, click the totem, or press the trigger on it in VR</span></li>
+          <li><span>Pause motion</span><span><kbd>Space</kbd></span></li>
+          <li><span>Reset view</span><span><kbd>R</kbd> · arrow keys also orbit</span></li>
+        </ul>
+        <p class="demo-note">Photo sky: Poly Haven (CC0). Models: "Bronze Ray Statue" by Tina and "Ceramic Pot" by Aron Łyczek, Poly Haven (CC0). glTF loader: babylonjs-loaders 7.42.0 (Apache-2.0). Details in CREDITS-web-demos.md. Safety-awareness style demo content only; not a procedure or certification.</p>
+      </details>
+    </main>
     <script src="./main.js"></script>
   </body>
 </html>

@@ -1,32 +1,57 @@
 # Three.js Prism Bloom
 
-A compact Three.js scene with a faceted animated prism, orbiting emissive satellites, desktop orbit controls, a prism color control, and Three.js's WebXR VR entry button.
+A glass prism lit by a real photo sky, built with Three.js r169 and its WebXR support: physically based materials (transmission, iridescence, clear coat), image-based lighting from an equirectangular sky, soft shadows, light satellites, and the Three.js `VRButton` for immersive VR.
+
+## What changed in this version
+
+- **Look:** the flat-shaded prism is now a transmissive, iridescent glass gem around a glowing core, on a brass-rimmed platform. The scene is lit by the summer sky photo (as background and as a PMREM environment map), a shadow-casting sun with soft PCF shadows, ACES tone mapping, additive glow sprites and drifting sparkles.
+- **Models:** two CC0 Poly Haven vases (brass and ceramic, about 11.6k triangles in total, counted from the glTF files) stand on the platform; a primitive vase replaces either one if the glTF fails to load.
+- **HUD:** the shared brand bar and panel (`demo-ui/hud.css`, `brand-kit`) with large buttons (Change glow, Pause motion, Reset view), a live status line, and collapsible controls and credits. The brand plate and a help panel are in the 3D scene (via `brand-kit/panels.js`); the help panel shows in VR.
+- **Access:** keyboard (`C` glow, `Space` pause, `R` reset, arrow keys orbit), mouse, touch (drag, pinch), screen-reader status line; `prefers-reduced-motion` starts paused.
+- **VR:** the exhibit is placed 2.6 m in front of a standing player; the controller trigger changes the glow; controller rays are drawn. Unverified on hardware (see below).
 
 ## Prerequisites
 
-- A modern browser with WebGL and JavaScript modules.
-- For immersive VR, a compatible WebXR browser, VR runtime, and device; support varies.
-- Network access to load the pinned Three.js 0.169.0 CDN modules.
-- A local static server. WebXR requires a secure context: `localhost` works locally; other devices need HTTPS.
+- A modern browser with WebGL2 and JavaScript modules.
+- For immersive VR, a WebXR browser, runtime and headset.
 
 ## Launch
 
-From this folder, run `python -m http.server 8002` and open <http://localhost:8002>. Drag to orbit, use **Change prism glow** to cycle the prism palette, and select **ENTER VR** when it appears to request an immersive session.
+These pages load libraries, fonts and sky photos from elsewhere in the repository (`../vendor`, `../brand-kit`, `../assets`), so serve the **repository root**, not this folder. No internet is needed.
+
+```
+python -m http.server 8000                     # from the repository root
+node tools/vr-capture/static-server.mjs 8000   # alternative that copes with many parallel requests
+```
+
+Open <http://localhost:8000/threejs/>. WebXR needs a secure context: `localhost` qualifies; another device needs HTTPS with a certificate it trusts.
+
+Drag to orbit, press **C** (or the button) to cycle the glow, and select **ENTER VR** (top right) where the browser supports it.
+
+## Checks that were run
+
+- `node tools/vr-capture/demos-check.mjs` (all four demos, desktop and 390 px phone, every non-local request blocked): no console or page errors, no failed requests, no horizontal scroll, buttons at least 40 px tall, brand bar present, every loaded asset exists and is credited, assets under 8 MB, glTF triangles under 100k.
+- `node tools/vr-capture/demos-xr-check.mjs`: enters an **emulated** Meta Quest 3 immersive session (Meta's IWER runtime inside desktop Chrome), pulls the emulated trigger and checks for errors. This shows the code path runs. **It is not a headset test; nothing here has been run on a real Quest or Vive Pro 2.**
 
 ## Limitations
 
-- The VR button and immersive session require browser, OS, runtime, and headset WebXR compatibility.
-- WebXR requires a secure context. `localhost` qualifies for local development; network access from a headset requires HTTPS with a trusted certificate.
-- CDN modules require an internet connection; no bundler or local dependency installation is included.
+- The VR button and session depend on browser, OS, runtime and headset support. Without them you get the desktop scene.
+- The transmissive glass is the most expensive material here; a standalone headset may need a lower pixel ratio.
+- The sky is a regional-style stand-in photo, not a photo of Bradford.
+
+## Credits
+
+See [../CREDITS-web-demos.md](../CREDITS-web-demos.md): sky photo `assets/skies/summer-2k.jpg` (Poly Haven, CC0); models `brass_vase_03` (Rico Cilliers) and `ceramic_vase_04` (James Ray Cock), Poly Haven, CC0. Three.js is MIT.
 
 ## Upstream
 
 - [Three.js documentation](https://threejs.org/docs/)
 - [Three.js WebXR guide](https://threejs.org/manual/#en/webxr-basics)
-- [Three.js repository](https://github.com/mrdoob/three.js)
 
-## Screenshot
+## Screenshots
 
-![Prism Bloom running in a desktop browser with the Change prism glow button and ENTER VR control](screenshots/threejs-prism-bloom.png)
+![Prism Bloom in a desktop browser: a teal glass prism with orbiting satellites above a blue platform and two vases](screenshots/threejs-prism-bloom.png)
 
-Captured from the running example in a desktop browser after pressing **Change prism glow**. Immersive VR was not available in the capture environment, so this is the desktop fallback, not a headset recording.
+Desktop browser (Chrome, software GL) after pressing **C**. The "VR not supported" button is the real desktop state, not a headset recording. A phone-width view is in [../screenshots/phone/](../screenshots/phone/threejs-prism-bloom.png). The image below is from an **emulated** Quest 3 session (IWER); it is not a real headset.
+
+![Prism Bloom in an emulated Quest 3 session](screenshots/threejs-emulated-quest3.png)

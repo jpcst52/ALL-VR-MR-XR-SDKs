@@ -1,32 +1,58 @@
 # Babylon.js Luminous Totem
 
-A small Babylon.js scene with a floating emissive polyhedron, animated halo, three orbiting beacons, a desktop orbit camera, a totem color control, and Babylon's default WebXR experience UI.
+A Babylon.js 7.42 scene: a faceted PBR crystal with clear coat and iridescence floats over a brass-ringed pedestal in a snowy field, with a glow layer, soft shadows, a particle system, and Babylon's default WebXR experience (`createDefaultXRExperienceAsync`) for VR entry, teleport and pointer selection.
+
+## What changed in this version
+
+- **Look:** PBR materials, image-based lighting and a photo dome from the winter sky photo, ACES tone mapping, a directional light with PCF shadows, a glow layer on the emissive parts, a particle system of sparkles, a soft-edged ground, a glossy pedestal with a brass rim.
+- **Models:** two CC0 Poly Haven props, "Bronze Ray Statue" (1.8k triangles) and "Ceramic Pot" (3.6k), loaded with Babylon's glTF loader (`lib/babylonjs.loaders.min.js`, the official 7.42.0 npm build, Apache-2.0); a primitive replaces either one on failure.
+- **HUD:** the shared brand bar and panel, buttons (Change totem hue, Pause motion, Reset view), live status, collapsible controls and credits; a readout panel in the world shows the current hue (also in VR).
+- **Access:** keyboard (`C` hue, `Space` pause, `R` reset, arrow keys orbit), mouse, touch (drag, pinch), click the totem to change hue, screen-reader status line; `prefers-reduced-motion` starts paused.
+- **VR:** the exhibit moves 2.8 m in front of a standing player; pointing a controller at the totem and pressing the trigger changes the hue. Hand tracking and controller models are switched off so the page never needs the network. Unverified on hardware.
 
 ## Prerequisites
 
-- A current WebGL-capable browser.
-- A compatible WebXR browser, VR runtime, and device for immersive VR; availability varies.
-- Network access for Babylon.js 7.42.0 from the official Babylon.js CDN.
-- A local static server. WebXR is available only in secure contexts; `localhost` qualifies for local work, while other devices need HTTPS.
+- A current WebGL2-capable browser.
+- For immersive VR, a WebXR browser, runtime and headset.
 
 ## Launch
 
-From this folder, run `python -m http.server 8003` and open <http://localhost:8003>. Orbit with pointer/touch, use **Change totem hue** to cycle its emissive color, and use the Babylon.js VR button when available.
+These pages load libraries, fonts and sky photos from elsewhere in the repository (`../vendor`, `../brand-kit`, `../assets`), so serve the **repository root**, not this folder. No internet is needed.
+
+```
+python -m http.server 8000                     # from the repository root
+node tools/vr-capture/static-server.mjs 8000   # alternative that copes with many parallel requests
+```
+
+Open <http://localhost:8000/babylonjs/>. WebXR needs a secure context: `localhost` qualifies; another device needs HTTPS with a certificate it trusts.
+
+Orbit with mouse or touch, change the hue with **C** or the button, and use Babylon's headset button (top right) where available.
+
+## Checks that were run
+
+- `node tools/vr-capture/demos-check.mjs` (all four demos, desktop and 390 px phone, every non-local request blocked): no console or page errors, no failed requests, no horizontal scroll, buttons at least 40 px tall, brand bar present, every loaded asset exists and is credited, assets under 8 MB, glTF triangles under 100k.
+- `node tools/vr-capture/demos-xr-check.mjs`: enters an **emulated** Meta Quest 3 immersive session (Meta's IWER runtime inside desktop Chrome), pulls the emulated trigger and checks for errors. This shows the code path runs. **It is not a headset test; nothing here has been run on a real Quest or Vive Pro 2.**
 
 ## Limitations
 
-- Immersive VR support depends on browser, operating system, runtime, and headset compatibility. The desktop scene remains usable when XR initialization is unavailable.
-- WebXR requires a secure context. `localhost` is trusted for local development; serving to a headset over a network requires HTTPS with a trusted certificate.
-- The demo uses the Babylon.js CDN and therefore needs an internet connection.
+- Immersive VR support depends on browser, OS, runtime and headset; the desktop scene remains usable without it.
+- No controller models are shown in VR (they would come from controllers.babylonjs.com); rays and the teleport marker are drawn instead.
+- The glow layer and shadows cost GPU time; a standalone headset may need them reduced.
+- The sky is a regional-style stand-in photo, not a photo of Bradford.
+
+## Credits
+
+See [../CREDITS-web-demos.md](../CREDITS-web-demos.md): sky photo `assets/skies/winter-2k.jpg` (Poly Haven, CC0); models `bronze_ray_statue` (Tina) and `ceramic_pot` (Aron Łyczek), Poly Haven, CC0. Babylon.js and its loaders are Apache-2.0.
 
 ## Upstream
 
 - [Babylon.js documentation](https://doc.babylonjs.com/)
 - [Babylon.js WebXR documentation](https://doc.babylonjs.com/features/featuresDeepDive/webXR/)
-- [Babylon.js repository](https://github.com/BabylonJS/Babylon.js)
 
-## Screenshot
+## Screenshots
 
-![Luminous Totem running in a desktop browser with orbiting beacons](screenshots/babylonjs-luminous-totem.png)
+![Luminous Totem in a desktop browser: a violet crystal with a glowing halo above a blue pedestal, a bronze ray statue, a ceramic pot and a readout panel](screenshots/babylonjs-luminous-totem.png)
 
-Captured from the running example in a desktop browser after pressing **Change totem hue**. This is the desktop fallback, not a headset recording.
+Desktop browser (Chrome, software GL) after pressing **C**. Phone-width view: [../screenshots/phone/](../screenshots/phone/babylonjs-luminous-totem.png). The image below is from an **emulated** Quest 3 session (IWER), not a real headset.
+
+![Luminous Totem in an emulated Quest 3 session](screenshots/babylonjs-emulated-quest3.png)
