@@ -1,5 +1,5 @@
 {
-  "updated": "11/3/2026, 5:07:30 AM",
+  "updated": "11/3/2026, 9:36:10 AM",
   "suites": [
     {
       "name": "Practice Lab scenarios",
@@ -254,6 +254,22 @@
       "failed": 0,
       "skipped": 0,
       "when": "11/3/2026, 5:07:30 AM",
+      "note": ""
+    },
+    {
+      "name": "Practice Lab unit tests",
+      "passed": 36,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/3/2026, 9:36:10 AM",
+      "note": ""
+    },
+    {
+      "name": "Brand kit unit tests",
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/3/2026, 9:36:10 AM",
       "note": ""
     }
   ]

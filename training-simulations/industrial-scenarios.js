@@ -37,7 +37,7 @@ export const industrialScenarios = [
         "Connect only to a rated anchor and inspect fall-arrest equipment before each use.", [
           ok("harness", "Harness", [-0.2, 1.35, 0.25], "Webbing, stitching, buckles, and shock absorber are undamaged and in date."),
           bad("rail", "Handrail", [0.3, 1.2, 0.38], "A handrail is not rated for fall arrest. It can bend or detach under a fall load.", { critical: true }),
-          bad("tube", "Scaffold tube", [-0.65, 1.4, -0.38], "Scaffold tubing that is not a designated anchor can fail or pull the scaffold over.", { critical: true }),
+          bad("tube", "Scaffold tube", [-0.65, 1.4, -0.38], "Scaffold tubing is not an anchor unless a competent person has said it is. It can fail or pull the scaffold over.", { critical: true }),
           ok("anchor", "Overhead anchor beam", [0.0, 1.75, 0.0], "You connect to the rated overhead anchor. Your lanyard now stops a fall.", {
             after: ["harness"], tether: true, early: "Inspect the harness before you rely on it.",
           }),
@@ -94,7 +94,7 @@ export const industrialScenarios = [
         "Safeguards are bypassed only through the authorized process.", [
           ok("decline", "Coworker", [0.0, 1.05, 0.5], "You decline. Protective trips are only bypassed through the approved process."),
           bad("bypass", "Trip bypass switch", [-0.52, 1.5, -0.1], "An unauthorized bypass leaves the unit unprotected and can be forgotten.", { critical: true }),
-          ok("moc", "Bypass request form", [0.7, 1.0, 0.1], "You open the formal request so authorized people can assess the risk and set compensating measures.", { after: ["decline"] }),
+          ok("moc", "Formal bypass request", [0.7, 1.0, 0.1], "You open the formal request so authorized people can assess the risk and set compensating measures.", { after: ["decline"] }),
           ok("record", "Shift log", [-0.7, 1.0, 0.1], "The request and your decision are recorded for the next shift.", { after: ["moc"] }),
         ]),
     ],
@@ -111,15 +111,15 @@ export const industrialScenarios = [
     steps: [
       task("You are about to start outdoor rounds. Prepare before entering the unit.",
         "Know the wind, your exit, and your PPE before entering the unit.", [
-          ok("wind", "Wind sock", [-1.35, 1.0, 0.5], "Wind is from the west. Stay upwind of equipment when you can."),
-          ok("muster", "Muster point sign", [1.05, 0.75, 0.55], "The muster point is east of the unit and the route is clear."),
+          ok("wind", "Wind sock", [-1.35, 1.0, 0.5], "Wind is from the east. Stay upwind of equipment when you can."),
+          ok("muster", "Muster point sign", [1.05, 0.75, 0.55], "The muster point is east of the unit, upwind of any release, and the route is clear."),
           ok("monitor", "Gas monitor", [0.55, 0.75, 0.45], "The personal monitor passes the bump test."),
           ok("radio", "Radio", [0.1, 0.5, 0.85], "The control room logs that you are entering.", { after: ["wind", "muster", "monitor"] }),
           bad("enter", "Enter now", [-0.2, 0.15, 0.9], "You entered without checking wind, escape route, or monitor. A hidden hazard can disable you quickly.", { critical: true }),
         ]),
       task("Your gas monitor alarms during rounds. React.",
         "A gas alarm means move to safety first, then report.", [
-          ok("move", "Upwind route", [-1.35, 0.5, 0.75], "You move away from the source toward the upwind side."),
+          ok("move", "Upwind route", [0.9, 0.4, 0.9],"You move away from the source toward the upwind side."),
           ok("warn", "Nearby workers", [-0.2, 0.5, 0.75], "You alert nearby workers by radio and hand signal.", { after: ["move"] }),
           ok("report", "Radio", [0.5, 0.9, 0.75], "The control room starts the gas-release response.", { after: ["warn"] }),
           bad("search", "Look for the source", [-0.55, 0.5, 0.0], "Walking toward the source risks exposure. Trained responders investigate.", { critical: true }),

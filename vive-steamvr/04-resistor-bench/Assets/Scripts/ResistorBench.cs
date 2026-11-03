@@ -63,6 +63,37 @@ public class ResistorBench : MonoBehaviour, IShotScript
     readonly List<ZoneMarker> markers = new List<ZoneMarker>();
     readonly HashSet<string> warned = new HashSet<string>();
 
+    // "Why this matters": one plain-language reason per step, shown after the step is done (generic education, not a
+    // procedure). The rationale question at the end checks a reason whose purpose is easy to miss.
+    static readonly string[] StepWhy =
+    {
+        "Static from your body can damage sensitive parts with no visible sign. The strap drains it safely to ground before you touch them.",
+        "Colour bands are read by eye and can be misread. A meter reading that matches the bands confirms the part is the one you think it is.",
+        "An LED has no current limit of its own. The resistor sets the current, and it must also handle the power it will dissipate without overheating.",
+        "Sulfur in the air can attack the silver in standard chip resistors until they stop conducting. An anti-sulfur part is made to resist that.",
+    };
+
+    static readonly RationaleQuestion Question = new RationaleQuestion
+    {
+        Topic = "why measure a part you have already read",
+        Prompt = "You read the bands as 4.7 k ohm. Why also measure the part with the meter before you use it?",
+        Options = new[]
+        {
+            "Colour bands are always wrong, so the meter replaces them.",
+            "Bands are read by eye and can be misread or faded, so the meter confirms the real value.",
+            "Only parts with four bands need to be measured.",
+        },
+        Feedback = new[]
+        {
+            "Bands are normally right. The meter is a cross-check, not a replacement for reading them.",
+            "A misread band gives the wrong resistor. A matching measurement shows the reading was correct.",
+            "The number of bands does not matter. Any value read by eye can be mistaken, so a quick measurement helps.",
+        },
+        Best = 1,
+    };
+
+    WhyCue why;
+
     // rules state
     bool powerOn, strapWarned, answeredBands, unknownMeasured, finished;
 
@@ -98,6 +129,7 @@ public class ResistorBench : MonoBehaviour, IShotScript
         BuildTaskBoard();
 
         rig = XRRig.Create(new Vector3(0, 0, -0.35f), 0f);
+        why = WhyCue.Create(transform);
         rig.Area = new Bounds(new Vector3(0, 0, -0.4f), new Vector3(5f, 1f, 1.1f));
         rig.Camera.backgroundColor = new Color(0.1f, 0.11f, 0.13f);
         rig.Camera.clearFlags = CameraClearFlags.SolidColor;
@@ -805,6 +837,7 @@ public class ResistorBench : MonoBehaviour, IShotScript
         if (board.IsDone(index)) return;
         board.Complete(index, message);
         audioSrc.PlayOneShot(dingClip);
+        if (why != null) why.Show(StepWhy[index]);
     }
 
     void Warn(string key, string message, bool critical)
@@ -861,6 +894,9 @@ public class ResistorBench : MonoBehaviour, IShotScript
         {
             finished = true;
             board.Say(board.Summary(), board.CriticalMisses > 0 ? new Color(1f, 0.38f, 0.38f) : new Color(0.3f, 0.9f, 0.62f));
+            var finalBoard = board;
+            why.Ask(Question, best => { if (finalBoard) finalBoard.SetResultLine(why.ReasoningLine, why.ReasoningColor); });
+            board.SetResultLine(why.ReasoningLine, why.ReasoningColor);
         }
     }
 

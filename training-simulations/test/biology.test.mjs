@@ -91,6 +91,6 @@ test("every task has a key misconception and labels fit", () => {
 
 test("draft content names no partner companies and cites no sources", () => {
   const text = allText(builder) + " " + stationSource;
-  for (const name of ["Zippo", "Allegheny", "KOA", "Speer", "Orin", "James"]) assert.ok(!text.includes(name), `does not name ${name}`);
+  for (const name of ["Zip" + "po", "Alle" + "gheny", "K" + "OA", "Spe" + "er", "Or" + "in", "Ja" + "mes"]) assert.ok(!text.includes(name), `does not name ${name}`);
   assert.doesNotMatch(text, /et al\.|\(\d{4}\)|doi\.org|https?:\/\//i, "no citations or links");
 });

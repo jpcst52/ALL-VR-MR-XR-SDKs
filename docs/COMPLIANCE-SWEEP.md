@@ -4,21 +4,14 @@ Scope: partner and company names, slogan-style titles, licenses and credits, pri
 
 ## 1. Partner and company names
 
-Searched for Zippo, KOA, Speer, Allegheny Bradford Corporation, ARG, and "Orin James" (faculty name) across all tracked files.
+Searched all tracked files for the names of local employers, the owner's employer, and the biology faculty partner.
 
-Result: **no company name appears in any public-facing file** (README, web page, scenario text, Unity on-screen text, deck slide or deck notes). The three .pptx files were unzipped and checked: no hits in slide text or notes. Remaining hits are internal or neutral:
+Result: **no company name appears in any public-facing file** (README, web page, scenario text, Unity on-screen text, deck slide or deck notes). The three .pptx files were unzipped and checked: no hits in slide text or notes.
 
-| File:line | Hit | Kind | Recommendation |
+Update, 2026-11-03: at the owner's request the names were also removed from the status docs (`docs/PROJECT-STATUS.md`, `docs/Task-Status.md`, `tools/status/agents.json`, the activity log and the research notes), which now say "local employers" and "biology faculty". `CLAUDE.md` holds the owner's working notes with those names, so it is no longer tracked: it is in `.gitignore` and stays on the owner's machine only. Earlier commits in the public history still contain the old text; removing it would mean rewriting history and force-pushing, which has not been done.
+
+| File | Hit | Kind | Note |
 |---|---|---|---|
-| `CLAUDE.md:7-8` | "works at ARG"; employer list (Zippo, Allegheny Bradford Corporation, KOA Speer) | Internal owner notes, but the repo is public | Acceptable as agent notes, but the file is world-readable on GitHub. Owner decides: keep, or reword to "local employers" and drop the names |
-| `docs/PROJECT-STATUS.md:57` | "Vive project 04: KOA resistor selection bench / Based on KOA Speer's product range" | Internal task list, public repo | Reword to "Vive project 04: resistor selection bench / generic, inspired by component makers" |
-| `docs/PROJECT-STATUS.md:62` | "KOA resistor selection" in new-scenarios row | same | "resistor selection" |
-| `docs/PROJECT-STATUS.md:63, 77, 109` | "Orin James" (faculty) | Internal; names a person | Reword to "biology faculty partner" (the lab README and code comments already use that wording) |
-| `docs/PROJECT-STATUS.md:78, 80, 108` | "Zippo process", "Naming companies on slides... Zippo, Allegheny Bradford, KOA Speer", decision row "Zippo lighter test" | Internal decision log | Keep as history, or reword once the questions are closed. The decision rows are the record of the Nov 1 decision |
-| `docs/Task-Status.md:31` | B10 "Project 04: KOA resistor selection bench" | Internal, shown on the local dashboard | "Project 04: resistor selection bench" |
-| `docs/Task-Status.md:50-51` | D3 "Circulation Builder for Orin James"; D4 "Zippo lighter-test details" | Internal task names | "Circulation Builder for biology faculty"; "Lighter-test details (kept generic)" |
-| `tools/status/agents.json:109` | agent id `vive-koa` (also lines 159 and 167 name Orin James) | Internal dashboard record | Rename id to `vive-resistor`; "biology faculty" |
-| `docs/agents/AGENT-RULES.md:14` | "Company names appear only as 'inspired by' unless the main session says otherwise" | Internal rule, now out of date | "No company names; say 'inspired by regional industry' (owner decision, Nov 1, 2026)" |
 | `training-simulations/test/biology.test.mjs:94` | Test asserts the names are NOT present in scenario text | Legitimate guard test | Keep. It lists the names as test data only |
 | `assets/skies/CREDITS.md:36`, `docs/research/UNIVERSITY-VR-AR-LANDSCAPE.md` | "Allegheny National Forest" (geography); research authors | Not a partner | None |
 
@@ -26,7 +19,7 @@ Generic wording that is fine as is (no name, says "inspired by"): `training-simu
 
 Optional hardening (owner's call, other agents' files):
 
-- **Lighter scenario title.** "Sample and test a lighter lot" (`training-simulations/partner-scenarios.js:15`, `training-simulations/README.md:9` and `:175`, `reasons.js:295`, id `lighter-lot-sampling`, thumbnails, `tools/vr-capture/readme-shots.mjs:70`, `test/scenarios.test.mjs:28`) points at one well-known local lighter maker even though no name is used. If the owner wants the Zippo link to be fully invisible: title "Sample and test a product lot" and "ignition-source" wording. Changing the id touches tests, thumbnails and capture scripts, so only the visible title/description would be the low-risk change.
+- **Lighter scenario title.** "Sample and test a lighter lot" (`training-simulations/partner-scenarios.js:15`, `training-simulations/README.md:9` and `:175`, `reasons.js:295`, id `lighter-lot-sampling`, thumbnails, `tools/vr-capture/readme-shots.mjs:70`, `test/scenarios.test.mjs:28`) points at one well-known local lighter maker even though no name is used. If the owner wants the link to any one local maker to be fully invisible: title "Sample and test a product lot" and "ignition-source" wording. Changing the id touches tests, thumbnails and capture scripts, so only the visible title/description would be the low-risk change.
 - **"inspired by heat-exchanger and filter-housing makers"** (`multi-player/README.md:22`, `multi-player/hydrotest/index.html:54`) and **"makers of passive electronic components"** (`vive-steamvr/04-resistor-bench/README.md:32`) narrow the field to one or two local firms. Proposed text on the public page: "Inspired by regional industry; generic parts only." The deck slides already use this wording.
 - **File and variable names** `partner-scenarios.js`, `partner-stations.js` (`training-simulations/`) say "partner" but contain no company. Harmless; rename only if the owner prefers `manufacturing-scenarios.js`.
 
@@ -41,7 +34,7 @@ In the decks (fixed): "A learning gallery, not a single XR product" became "What
 ## 3. Licenses and credits
 
 | Item | Where it is credited | Status |
-|---|---|---|
+|---|---|---|---|
 | Rocketbox (MIT, Microsoft) | `vive-steamvr/hub/README.md` "People" section: license, source URL, citation (Gonzalez-Franco 2020), license text kept at `Assets/Rocketbox/LICENSE.md` locally | Present. Suggest also adding one line to the root README credits so a reader of the public repo finds it (files are not committed, so the notice is informational) |
 | Poly Haven (CC0) | `assets/models/CREDITS.md`, `assets/skies/CREDITS.md`, `multi-player/CREDITS.md`, `CREDITS-web-demos.md`, per-demo READMEs | Present, per-model author and URL |
 | Quaternius (CC0) | `assets/models/CREDITS.md` | Present |

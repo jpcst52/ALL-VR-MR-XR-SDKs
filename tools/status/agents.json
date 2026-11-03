@@ -106,7 +106,7 @@
       "note": "03 warehouse forklift written; uncompiled, untested"
     },
     {
-      "id": "vive-koa",
+      "id": "vive-resistor",
       "name": "Vive 04 Resistor bench",
       "task": "Unity project 04-resistor-bench (uncompiled draft)",
       "state": "done",
@@ -156,7 +156,7 @@
     {
       "id": "circ-builder",
       "name": "Circulation Builder",
-      "task": "Draft web circulation trainer for Orin James (D3)",
+      "task": "Draft web circulation trainer for biology faculty (D3)",
       "state": "done",
       "started": "2026-11-02T03:24:59.449Z",
       "watch": [
@@ -164,7 +164,7 @@
         "docs/Task-Status.md"
       ],
       "ended": "2026-11-02T03:35:27.271Z",
-      "note": "D3 built: scenario 17, 11 lab tests + 18 relay pass, desktop only; needs Orin James review"
+      "note": "D3 built: scenario 17, 11 lab tests + 18 relay pass, desktop only; needs faculty review"
     },
     {
       "id": "ui-04",

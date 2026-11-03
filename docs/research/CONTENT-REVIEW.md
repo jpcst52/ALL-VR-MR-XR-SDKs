@@ -40,7 +40,7 @@ An independent check of the safety, quality, research-ethics and anatomy stateme
 | Hydrostatic test | "The test pressure is on the test pack ... never exceed it" | Plausible | Test pressure is set by the governing code; the scenario gives no number, which is right for awareness | None |
 | Refinery rounds (web and Unity) | A bump test shows the sensors react to gas; "an untested monitor may stay silent" | Correct | OSHA gas monitors: gas reaches the sensor and alarms work; before each day's use | Optional: add "it does not measure accuracy" to the rationale feedback |
 | Refinery rounds (web) | Reason: "Released gas drifts downwind, so you move upwind" | Correct, nuance | General; no source opened | Unity says "upwind or crosswind", which is the better wording. Some vapours are heavier than air and settle low. Suggest "Released gas is carried by the wind, and heavy vapours can pool low" |
-| Refinery rounds (web) | Wind from the west, "The muster point is east of the unit", route "upwind of the release" | **Check** | Internal consistency | With wind from the west, a muster point east of the unit is **downwind**. Either move the muster text or the wind. The Unity script places the muster at `Center - windDir*26`, which is upwind if `windDir` is the blow-toward direction, and its text says "upwind side". But `vive-steamvr/hub/README.md` says "muster point (26 m downwind)". Owner: decide which is right and align the web text, the hub README and the model |
+| Refinery rounds (web) | Wind, muster point and route direction | **Fixed 2026-11-03** | Internal consistency | The web scenario had wind from the west and the muster point east, which is downwind. It now has wind from the east, the wind sock pointing west and the muster point east, so the muster is upwind of any release, as in Unity (`Center - windDir*26`, where `windDir` is the blow-toward direction, so 26 m upwind). The hub README and code comments that said "26 m downwind" were wrong and now say upwind |
 | Refinery rounds | Gas alarm: move away first, warn others, then report; do not walk toward the source | Correct | General alarm response; consistent with SHIB use of the monitor alarm | None |
 | Refinery rounds | "keep ignition sources such as phones and tools away" from a leak | Plausible | Phones are restricted in classified areas by site rule | None |
 | Refinery rounds | "A rag can spread the problem" | Plausible | General | Optional: oily rags are also a fire risk |
@@ -98,7 +98,7 @@ These scenarios make no numeric or technical claims that need an outside source.
 
 ## C. Circulation Builder (biology draft)
 
-The scenario stays labelled **draft for faculty review**: `draft: true`, the first briefing line reads "Draft for faculty review: general biology only, not clinical or medical guidance", and the setting repeats it. No change is needed there. Orin James (biology) has not reviewed it.
+The scenario stays labelled **draft for faculty review**: `draft: true`, the first briefing line reads "Draft for faculty review: general biology only, not clinical or medical guidance", and the setting repeats it. No change is needed there. The biology faculty partner has not reviewed it.
 
 | Statement | Verdict | Source | Suggested correction |
 |---|---|---|---|
@@ -122,12 +122,12 @@ Teaching notes for the faculty reviewer, not errors: the "pulmonary circuit" ste
 
 No other file under `training-simulations/` or `vive-steamvr/` was edited.
 
-## E. Decisions for the owner
+## E. Decisions for the owner (all applied 2026-11-03)
 
-1. **Refinery muster point direction** (row A, "Check"). Wind from the west and a muster point east of the unit puts the muster downwind in the web scenario; the Unity text says upwind and the hub README says downwind. Choose one and align all three. This is the only item that is a factual inconsistency rather than a wording choice.
-2. **Scaffold tube anchor wording** (suggestion: "is not an anchor unless a competent person has said it is").
-3. **Forklift crossing wording**: add that the operator also stops and sounds the horn.
-4. **"MOC" label** for the bypass request form in the control room scenario.
-5. **Design values to disclose** in the READMEs: 200 kg tag, 6 m near-miss distance, 1.5 s mirror check, the sampling plan, and the green-dot anti-sulfur marking are scenario conventions.
-6. **Partner review** before learners use the manufacturing scenarios (hydrostatic test, pipe spool, lighter lot, resistor selection): the standards behind them were not opened (see Scope).
-7. **Biology**: send the Circulation Builder to Orin James; replace the secondary blood-colour source with an NIH or textbook page.
+1. **Refinery muster point direction**: aligned to upwind in the web scenario, Unity and the hub README (see row A). The owner chose "26 m downwind" while the question was framed as three inconsistent texts; the Unity code has always placed the muster upwind, and assembling upwind or crosswind of a release is the usual teaching, so the scenario was aligned to that and the owner is told so. Revert if site practice says otherwise.
+2. **Scaffold tube**: now "Scaffold tubing is not an anchor unless a competent person has said it is. It can fail or pull the scaffold over."
+3. **Forklift crossing**: the "why this matters" panel for step three now says the driver also has to stop and sound the horn at crossings.
+4. **"MOC" label**: the hotspot reads "Formal bypass request".
+5. **Design values**: disclosed in the READMEs of the Practice Lab, project 03 and project 04.
+6. **Review status of the manufacturing scenarios**: the Practice Lab README now says they have not been reviewed by an industry expert.
+7. **Biology**: the faculty partner's name is removed from public files and the scenario stays "draft for faculty review". Replacing the secondary blood-colour source with an NIH or textbook page is still open.

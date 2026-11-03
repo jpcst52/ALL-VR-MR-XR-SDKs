@@ -11,7 +11,7 @@ General safety-awareness practice only: none of the scenarios is a procedure, pe
 | An employer or advisory-board member | The main menu, then [demo-day/TALK-TRACK.md](demo-day/TALK-TRACK.md) | A short demo path: the browser practice lab, a shared multi-user bench and the Unity training scenes, with the limits stated |
 | A faculty member (industrial, energy, biology) | [research/README.md](research/README.md) and the scenario list in [../training-simulations/README.md](../training-simulations/README.md) | What each scenario teaches, what is a draft for review, and study ideas |
 | A student or instructor who will run it | [HOW-TO-RUN.md](HOW-TO-RUN.md) | The three-step quick start and the full run guide |
-| A developer extending it | [../CLAUDE.md](../CLAUDE.md), [README.md](README.md) and [../SDK-list.md](../SDK-list.md) | Repository conventions, the documentation index and the SDK samples |
+| A developer extending it | [agents/AGENT-RULES.md](agents/AGENT-RULES.md), [README.md](README.md) and [../SDK-list.md](../SDK-list.md) | Repository conventions, the documentation index and the SDK samples |
 | Setting up a headset | [demo-day/VIVE-SETUP.md](demo-day/VIVE-SETUP.md) or [demo-day/QUEST-SETUP.md](demo-day/QUEST-SETUP.md) | Steps for the first hardware session (still to be run) |
 
 ## Terms

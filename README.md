@@ -158,3 +158,7 @@ A local, live page (`npm run status`, then open the address it prints) shows pro
 ![Status dashboard, light theme](docs/images/status-dashboard.png)
 
 ![Status dashboard, dark theme](docs/images/status-dashboard-dark.png)
+
+## Credits
+
+Fonts, live weather (Open-Meteo), the Rocketbox people, Asset Store packs, 3D models and libraries are credited in [CREDITS.md](CREDITS.md).

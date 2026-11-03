@@ -251,7 +251,7 @@ public static class HubSceneDressing
 
     /// <summary>
     /// Refinery Rounds: props outside the fence and in the corners, kept within about 22 m of the unit centre (0, 5) so
-    /// they stay clear of the muster point (26 m downwind). Fence is x -12..12, z -6..14, gate at z -6, cabin at (-10, -10).
+    /// they stay clear of the muster point (26 m upwind). Fence is x -12..12, z -6..14, gate at z -6, cabin at (-10, -10).
     /// </summary>
     public static void DressRefinery()
     {

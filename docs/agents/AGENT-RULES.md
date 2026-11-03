@@ -1,6 +1,6 @@
 # Rules for sub-agents working in this repository
 
-Every agent reads this file and [CLAUDE.md](../../CLAUDE.md) before starting. The main session coordinates, reviews, updates the dashboard, and commits.
+Every agent reads this file and the owner's local working notes (`CLAUDE.md`, kept private) before starting. The main session coordinates, reviews, updates the dashboard, and commits.
 
 ## Ownership and collisions
 - **Stay inside your assigned files and folders.** Each task lists what you own. Do not edit anything else.

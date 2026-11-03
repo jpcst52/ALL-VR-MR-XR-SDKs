@@ -43,3 +43,6 @@ tools/status/activity-log.jsonl
 multi-player/.certs/
 tools/status/.dashboard-url
 tools/status/.server.out
+
+# Owner working notes (private)
+CLAUDE.md

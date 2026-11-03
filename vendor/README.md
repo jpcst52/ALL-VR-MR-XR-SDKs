@@ -7,7 +7,7 @@ Everything the demos need to run is stored here so the examples work with **no i
 | `three/` | [Three.js](https://threejs.org) (`three.module.js` and the add-ons used by the examples) | 0.169.0 | MIT (`three/LICENSE`) |
 | `babylon/` | [Babylon.js](https://www.babylonjs.com) | 7.42.0 | Apache-2.0 (`babylon/LICENSE.md`) |
 | `aframe/` | [A-Frame](https://aframe.io) | 1.6.0 | MIT (`aframe/LICENSE`) |
-| `fonts/` | Roboto, Merriweather, League Gothic (Latin subsets, via Fontsource) | see below | SIL Open Font License 1.1 |
+| `fonts/` | Roboto, Merriweather, League Gothic (Latin subsets, via Fontsource) | see below | SIL Open Font License 1.1 (League Gothic, Merriweather); Apache 2.0 (Roboto). See [../CREDITS.md](../CREDITS.md) |
 
 The fonts are the approved web fonts from the University of Pittsburgh brand guidelines (League Gothic is the approved substitute for Alternate Gothic Compressed).
 

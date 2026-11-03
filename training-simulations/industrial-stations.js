@@ -144,7 +144,7 @@ export function createBatteryStation() {
   part(group, cyl(0.04, 0.05, 1.75, 10), "#8a99a8", [1.2, 0.875, -0.2], { metal: 0.5 });
   const flame = part(group, new THREE.ConeGeometry(0.07, 0.22, 10), "#ff9d59", [1.2, 1.85, -0.2], { basic: true });
   part(group, cyl(0.02, 0.02, 0.9, 8), "#c5d4de", [-1.4, 0.45, 0.5], { metal: 0.5 });
-  const sock = part(group, new THREE.ConeGeometry(0.07, 0.3, 10, 1, true), "#ff9d59", [-1.28, 0.88, 0.5], { rot: [0, 0, -Math.PI / 2 + 0.1] });
+  const sock = part(group, new THREE.ConeGeometry(0.07, 0.3, 10, 1, true), "#ff9d59", [-1.52, 0.88, 0.5], { rot: [0, 0, Math.PI / 2 - 0.1] });
   sock.material.side = THREE.DoubleSide;
   part(group, cyl(0.025, 0.025, 0.55, 8), "#92a9ba", [0.55, 0.28, 0.45]);
   const monitor = part(group, box(0.14, 0.12, 0.08), "#f2c94c", [0.55, 0.6, 0.45]);
@@ -166,7 +166,7 @@ export function createBatteryStation() {
   group.userData.tick = (time) => {
     monitor.material.color.set(alarmed && Math.sin(time * 9) > 0 ? "#ff3b3b" : "#f2c94c");
     flame.scale.set(1, 0.85 + Math.sin(time * 9) * 0.18, 1);
-    sock.rotation.z = -Math.PI / 2 + 0.1 + Math.sin(time * 1.6) * 0.12;
+    sock.rotation.z = Math.PI / 2 - 0.1 + Math.sin(time * 1.6) * 0.12;
   };
   return group;
 }

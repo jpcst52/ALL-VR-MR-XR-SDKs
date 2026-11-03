@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// Keeps a group of people at a fixed spot relative to a named scene object that moves at runtime (for example the
-/// refinery's muster point, which is placed downwind of the unit when the scene starts).
+/// refinery's muster point, which is placed upwind of the unit when the scene starts).
 /// </summary>
 public class FollowTarget : MonoBehaviour
 {

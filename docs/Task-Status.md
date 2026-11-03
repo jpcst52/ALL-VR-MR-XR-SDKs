@@ -29,7 +29,7 @@ Legend: ✅ done · 🔄 in progress · ⏳ waiting on a prerequisite · 👤 ne
 | B7 | Realism pass on Hydrostatic Test Bay | 🔄 👤 | done in hub: ambient + room tone + pump hum, tone-mapping/bloom/vignette (key P toggles), work lights, broken StandingLight shader fixed. Still: hall is 39 x 37 m and dark/noisy; headset frame rate untested |
 | B8 | Project 02: Refinery battery-limits rounds (live weather) | 🔄 | compiles and plays in the editor, 0 console errors; not played through; no headset |
 | B9 | Project 03: Warehouse and forklift safety | 🔄 | compiles, plays in the editor, 0 console errors; two mirrored signs fixed (SAFETY CONES sign not checked); no headset |
-| B10 | Project 04: KOA resistor selection bench | 🔄 | compiles and plays in the editor, 0 console errors; not played through; no headset |
+| B10 | Project 04: resistor selection bench | 🔄 | compiles and plays in the editor, 0 console errors; not played through; no headset |
 | B11 | README and screenshots for each Vive project | ✅ | READMEs plus editor renders for 01 (6 shots) and 02-04 and the hub; desktop only, no headset |
 | B13 | Professional-look pass (panels, tags, logo, no bare floating text) | 🔄 👤 | rounded panels, name tags, depth-correct text and the logo + CIST plate are in all four projects and every hub scene (project 01 got its own plate on Nov 2); launcher image and README screenshots re-shot after the bake. Still: your eyes-on review in the editor and headset (text size, glare) |
 | B12 | Test on the real Vive Pro 2 | ⏳ 👤 | needs lab time before Nov 13 |
@@ -48,8 +48,8 @@ Legend: ✅ done · 🔄 in progress · ⏳ waiting on a prerequisite · 👤 ne
 |---|---|---|---|
 | D1 | Pitt-Bradford launcher UI | ✅ | index.html + launcher/; launcher-check passes on :8101; not tried on the relay or a Quest |
 | D2 | Web realism pass on hero scenes | ✅ | shared scene lighting, shadows, tone mapping, procedural textures; 5/5 tests; 3 of 16 screenshots re-shot; Quest frame rate untested. Nov 3: CC0 glTF props (Poly Haven) + animated people (Quaternius) added offline with primitive fallback, credits in assets/models/CREDITS.md, 27 lab tests; desktop only |
-| D3 | Circulation Builder for Orin James | ✅ ❓ | draft built (Practice Lab scenario 17, labelled "Draft for faculty review"); 11/11 lab tests pass; desktop play-through only, no VR emulator or headset run; needs his review |
-| D4 | Zippo lighter-test details | ✅ | decision Nov 1: scenario stays generic, no Zippo process details |
+| D3 | Circulation Builder for biology faculty | ✅ ❓ | draft built (Practice Lab scenario 17, labelled "Draft for faculty review"); 11/11 lab tests pass; desktop play-through only, no VR emulator or headset run; needs faculty review |
+| D4 | Lighter-test details (kept generic) | ✅ | decision Nov 1: scenario stays generic, no process details |
 | D5 | Permission to name the partner companies on slides | ✅ | decision Nov 1: no names; slides say "inspired by regional industry" |
 
 ## E. Documentation, decks, and research
@@ -81,3 +81,4 @@ Legend: ✅ done · 🔄 in progress · ⏳ waiting on a prerequisite · 👤 ne
 | G1 | Real-looking people (Microsoft Rocketbox avatars, MIT) in the hub scenes | ✅ | All five hub scenes have animated Rocketbox people: Warehouse 8 (+ the walking co-worker, scripted self-test PASS), Refinery 8, Hydro 6, Lobby 6, Resistor 4. People play their activity in Play mode (no T-pose; animator times advance). Unity editor desktop only: no headset, no hand play |
 | G2 | Dress the hub scenes with many more pack props (refinery, warehouse, resistor bench, lobby, hydro) | ✅ | All five scenes dressed from code (HubSceneDressing.cs) and re-baked; editor renders in docs/images/hub-dressed-*.png. Edit-mode triangle counts (baked scene, before static batching): Lobby 125 k, Hydro 149 k, Resistor 77 k, Warehouse 125 k, Refinery 189 k (the earlier 1.4-1.5 M figures were most likely read in Play mode, where static batching merges meshes, and should be disregarded). No frame rate measured on a Vive Pro 2; nothing run on a headset |
 | G3 | Hub round 2: critical review, richer lobby, perf pass on the five hub scenes | ✅ 👤 | Lobby rebuilt (tiles, gallery walls, reception, lounge, CIST corner, 10 people), fixes in Warehouse/Refinery/Hydro/Resistor, portal blurbs corrected; SetPass (editor Play mode, median) 352 / 515 / 551 / 1301 / 787 for Lobby / Hydro / Refinery / Warehouse / Resistor, all under 2,000. Editor desktop only: no headset, no frame rate. Owner: look at it in the editor |
+| G4 | Owner decisions applied (Nov 3): muster direction, names scrubbed, credits, why panels in 03 and 04, scenario wording | ✅ 👤 | Muster aligned to **upwind** (see CONTENT-REVIEW A and E); names removed from status docs and CLAUDE.md untracked; CREDITS.md added; WHY THIS MATTERS panels in projects 03 and 04 (kit unchanged); project 03 manifest gained the animation module (fixes a compile error); 04 compiles headless, 03 needs a re-run; not hand-played |

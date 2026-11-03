@@ -65,6 +65,25 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
     // cached materials (P.Steel and friends build textures on every call)
     Material steel, darkSteel, hazard, concrete;
 
+    // "Why this matters": one plain-language reason per step, shown after the step is done (general safety awareness,
+    // not a procedure). The scenario summary already ends with the awareness check, so there is no extra question here.
+    static readonly string[] StepWhy =
+    {
+        "A hard hat, vest and glasses guard your head and eyes and make you easy for drivers to see. They only help if they are on before you step onto the floor.",
+        "A corner mirror shows traffic you cannot see around the bend. One second of looking costs less than walking out blind.",
+        "Eye contact and a full stop show the driver has seen you, and the stripes tell drivers where to expect walkers. The driver also has to stop and sound the horn at crossings, so the safety is shared.",
+        "A spill and a damaged rack are hazards for the next person. Cones keep others away until authorized crews fix them, and your radio call starts that.",
+    };
+
+    WhyCue why;
+
+    /// <summary>Completes a step of the board and shows why it matters (not while screenshots are being staged).</summary>
+    void Done(int step, string message)
+    {
+        board.Complete(step, message);
+        if (why != null && !staging) why.Show(StepWhy[step]);
+    }
+
     // state
     Zone prevZone = Zone.Entry;
     bool baking; // set in Start: this Play is the editor's bake session (see BakeSession)
@@ -130,6 +149,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         BuildFlash();
         BuildBoard();
         BuildBrand();
+        why = WhyCue.Create(transform);
     }
 
     Transform NewRoot(string name) => P.Node(name, transform).transform;
@@ -880,7 +900,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
             return;
         }
         radioText.text = "SUPERVISOR: Copy. Spill and damaged\nupright reported. Crew on the way.";
-        board.Complete(3, "Reported by radio: spill and damaged upright, both coned off.");
+        Done(3, "Reported by radio: spill and damaged upright, both coned off.");
     }
 
     void NearMiss(string why)
@@ -939,7 +959,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
     void UpdatePpe()
     {
         UpdatePpeText(false);
-        if (allPpe && !board.IsDone(0)) board.Complete(0, "PPE on: hard hat, vest and safety glasses.");
+        if (allPpe && !board.IsDone(0)) Done(0, "PPE on: hard hat, vest and safety glasses.");
     }
 
     void UpdateMirror(float dt)
@@ -954,7 +974,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         {
             mirrorChecked = true;
             mirrorLampMat.SetColor("_EmissionColor", new Color(0.2f, 1f, 0.45f) * 1.4f);
-            board.Complete(1, "Mirror checked: forklift traffic comes from the west.");
+            Done(1, "Mirror checked: forklift traffic comes from the west.");
         }
     }
 
@@ -1016,7 +1036,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         if (!inLane && wasLane)
         {
             if (prevZone == Zone.Crossing && zone == Zone.Walk && feet.z > 0f && !board.IsDone(2))
-                board.Complete(2, crossingValid ? "Crossed at the stripes after eye contact and a full stop." : "Crossed, but eye contact and a full stop come first.");
+                Done(2, crossingValid ? "Crossed at the stripes after eye contact and a full stop." : "Crossed, but eye contact and a full stop come first.");
             crossingValid = false;
         }
     }

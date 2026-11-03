@@ -56,7 +56,7 @@ Four steps on the task board. The steps may be done in any order, but the order 
 | 3 | Signal the driver, wait for the stop, cross at the stripes | Look at the driver, press SIGNAL on the "SIGNAL THE DRIVER" post within 8 seconds (the driver waves and the forklift stops for about 14 seconds), wait until it has stopped, cross at the striped crossing and leave it on the north side | A driver who has seen you and stopped will not drive into your path. Crossing only at the stripes is where drivers expect pedestrians. |
 | 4 | Cone the spill and the bent rack upright, then radio | Place a cone near each hazard (within 2 m), then press RADIO at the supervisor station | Marking a hazard warns others and the report gets it fixed. |
 
-The "why" sentences in this table are written for this README. Unlike the Hydrostatic Test Bay and Refinery Rounds, this scenario does not show "why this matters" panels. Its reasoning element is the awareness check below.
+After each step a **WHY THIS MATTERS** panel shows a one-sentence reason for a few seconds (added November 3, 2026; the same kit panel Refinery Rounds uses). The reasons are general safety awareness, not a procedure. The scenario summary still ends with the awareness check, so there is no extra reasoning question. Compiled in the editor; not hand-played, not tested on a headset.
 
 **Mistakes counted on the board.** A **critical miss** (near miss) happens when you step into a forklift lane while the forklift is within about 6 m and not stopped for you. It triggers a red screen flash with "NEAR MISS Forklift within 6 m", a horn, haptics, and the forklift brakes hard. Other mistakes include entering the floor without full PPE, walking outside the green walkways (after about 1.2 seconds), entering a lane away from the crossing, crossing without checking the mirror, without eye contact or without a full stop, and radioing before both hazards are coned. The board summary reads "STRONG PRACTICE: no mistakes.", "Complete with N mistakes." or "CRITICAL SAFETY MISS (n). Review before real work.".
 
@@ -85,6 +85,10 @@ Limits: one scripted co-worker on a fixed route, once per run; directions are ju
 Nothing is plain text floating in the air. Signs are rounded, shadowed panels with a metal back (the kit's `Ui.Panel`): the yellow PPE sign on the entry gantry, RECEIVING AND STORAGE on the north wall, WATCH FOR FORKLIFTS on the west wall (above the racking, where the old text was hidden behind it), the dock sign, the BLIND CORNER sign on the cargo stack, the SAFETY CONES plate on its post, and the PPE, signal and radio stands. The task board hangs in a fixed place, so it also has a solid back. The forklift driver's message is a white speech-bubble panel above the cab that turns to face you. The University of Pittsburgh at Bradford and CIST plate (`Ui.BrandPlate`) hangs from the gantry beside the task board, in view from the start; it shows the approved shield logo that the kit ships in `Runtime/Resources/Branding/pitt-bradford.png` (without that file it shows a text wordmark). Painted floor words and the text on buttons are unchanged.
 
 The BLIND CORNER text used to face into the cargo stack, so from the walkway it read mirrored; it now reads correctly from the walkway (see screenshot 08). The SAFETY CONES text sits on a plate (screenshot 09). Ambient light comes from separate ceiling, wall and floor colours instead of one flat colour.
+
+## Design values
+
+These are scenario conventions chosen for the exercise, not standards: the **6 m** near-miss distance, the **1.5 s** mirror look, the **8 s** window after pressing SIGNAL, and the forklift speed of about 2.2 m/s. The step three sentence also says the driver has to stop and sound the horn at crossings, so the practice does not suggest the walker carries the whole responsibility.
 
 ## What is simulated and what is not
 

@@ -54,13 +54,13 @@ Last updated: November 1, 2026 (evening).
 | Realism pass on Hydrostatic Test Bay using the packs | Real wall/floor/steel materials, office furniture for a supervisor corner, lighting, post-processing, audio; legible task board; smaller floor text |
 | Vive project 02: Refinery battery-limits rounds (live weather API) | Online API is acceptable on the Vive PCs |
 | Vive project 03: Warehouse / forklift safety | Uses the warehouse, construction, and container packs in the hub; lite version from primitives |
-| Vive project 04: KOA resistor selection bench | Based on KOA Speer's product range |
+| Vive project 04: resistor selection bench | Generic education, inspired by passive-component makers |
 | README and screenshots for each Vive project | Screenshots via the windowed Unity capture runner after the editor is closed |
 | Quest projects | Options: Unity Android builds of the lite projects; Quest web multiplayer "Hydrotest Builder"; MR Site Safety Layout. Asset-pack scenes are too heavy for a Quest without optimisation |
 | Pitt-Bradford launcher UI | One home page with tiles per example and a recommended demo path; one-command start for the lab PC |
 | Realism pass on web "hero" scenes | CC0 PBR textures/HDRIs, glTF models, quality switch, attribution file |
-| New Practice Lab scenarios | Lighter lot sampling, heat-exchanger hydrostatic test, refinery pipe-spool welding, KOA resistor selection |
-| Circulation Builder for Orin James | Draft built Nov 1 as Practice Lab scenario 17 (`biology-scenarios.js`, `biology-stations.js`, new "Life science (draft for faculty review)" group): place the four chambers, connect the pulmonary and systemic circuits in order, colour vessels oxygen-rich/poor. General biology only, no citations, labelled "Draft for faculty review" and "not clinical or medical guidance". 11/11 lab tests; desktop play-through only (no VR emulator or headset run). Needs his review of content and level |
+| New Practice Lab scenarios | Lighter lot sampling, heat-exchanger hydrostatic test, refinery pipe-spool welding, resistor selection |
+| Circulation Builder for biology faculty | Draft built Nov 1 as Practice Lab scenario 17 (`biology-scenarios.js`, `biology-stations.js`, new "Life science (draft for faculty review)" group): place the four chambers, connect the pulmonary and systemic circuits in order, colour vessels oxygen-rich/poor. General biology only, no citations, labelled "Draft for faculty review" and "not clinical or medical guidance". 11/11 lab tests; desktop play-through only (no VR emulator or headset run). Needs faculty review of content and level |
 | Multi-user training in the style of WaterWorks | Approach to decide; WaterWorks does not work on the Vive (owner-confirmed) |
 | Self-signed HTTPS start script for the lab PC | As in the owner's WaterWorks project |
 | Advanced README and board-facing deck | After the projects exist |
@@ -74,10 +74,10 @@ Last updated: November 1, 2026 (evening).
 | Courtyard errors | Confirm in the Courtyard Unity window that the 37 errors cleared after the `ugui` fix |
 | Hub setup | Run **Pitt-Bradford > Set up hub project** in the hub editor (after it recompiles), then restart if asked |
 | Vive WebXR check | Try `http://localhost:8000/training-simulations/` in Chrome/Edge with SteamVR running and report what happens |
-| Orin James's project | A few lines on what he is building for his students |
-| Zippo process | A line on how lighters are tested, or a page that loads |
+| Biology faculty project | A few lines on what the faculty partner is building for students |
+| Lighter-test process | A line on how lighters are tested, or a page that loads |
 | Hardware testing time | A slot on the real Vive Pro 2 and Quest before Nov 13 |
-| Naming companies on slides | Comfort naming Zippo, Allegheny Bradford, and KOA Speer, or keep it "inspired by" |
+| Naming companies on slides | Comfort naming local employers on slides, or keep it "inspired by" |
 | Publishing | Whether to push commits; whether the logo may appear in the public repo |
 
 ## Known limitations and honest caveats
@@ -105,8 +105,8 @@ Last updated: November 1, 2026 (evening).
 | Question | Decision |
 |---|---|
 | Name partner companies on slides | No; say "inspired by regional industry" |
-| Zippo lighter test | Stays generic; no process details |
-| Orin James's Circulation Builder | Build a draft from public general-biology knowledge, flagged for his review |
+| Lighter test | Stays generic; no process details |
+| Circulation Builder for biology faculty | Build a draft from public general-biology knowledge, flagged for faculty review |
 | Unity multi-user and Unity Android builds | Future work; the demo uses the web multiplayer and the web Practice Lab in Quest Browser |
 | Lab time | Owner has Vive Pro 2 and Quest access this week |
 
