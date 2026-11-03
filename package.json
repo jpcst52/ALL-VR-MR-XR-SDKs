@@ -4,6 +4,9 @@
   "description": "Repository-level scripts. Each example has its own package.json.",
   "scripts": {
     "status": "node tools/status/server.cjs",
-    "docs-check": "node tools/docs-check/check.mjs"
+    "docs-check": "node tools/docs-check/check.mjs",
+    "build:site": "node scripts/build-webxr.mjs",
+    "check:site": "node tools/pages/site-check.mjs",
+    "build:vive": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-vive.ps1"
   }
 }

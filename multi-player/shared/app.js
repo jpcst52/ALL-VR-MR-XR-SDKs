@@ -462,6 +462,19 @@ function friendlyClose(event) {
   return event.reason || "Disconnected from the room. Join again to continue.";
 }
 
+// Where the relay is. Normally the page and the relay are the same server. On GitHub Pages (static files only) there is no relay;
+// ?relay=wss://host:8443 points the page at one. Browsers refuse ws:// from an https page and refuse a wss:// relay whose
+// certificate they do not trust, so the lab PC's own https address (which serves this page and the relay) is the simple route.
+const onPages = /github\.io$/i.test(location.hostname);
+const relayParam = params.get("relay");
+const relayUrl = /^wss?:\/\/[^/\s]+$/i.test(relayParam ?? "") ? `${relayParam}/ws` : `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/ws`;
+if (onPages && !relayParam) {
+  const note = document.createElement("p");
+  note.className = "lite-note";
+  note.textContent = "This copy is on GitHub Pages, which serves static files only, so there is no shared-room relay here and Join room cannot connect. Open this page from the relay on the lab PC (its https address, port 8443), or add ?relay=wss://host:8443 if you run a relay with a trusted certificate.";
+  steps.after(note);
+}
+
 function joinRoom(retry = false) {
   if (socket && socket.readyState !== WebSocket.CLOSED) return;
   clearTimeout(reconnect.timer);
@@ -474,7 +487,7 @@ function joinRoom(retry = false) {
   if (!retry) reconnect.attempts = 0;
   reconnect.room = room;
   leaving = false;
-  const ws = new WebSocket(`${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/ws`);
+  const ws = new WebSocket(relayUrl);
   socket = ws;
   joinButton.disabled = true;
   setStatus(retry ? `Reconnecting to room "${room}" (try ${reconnect.attempts} of ${MAX_RECONNECTS})...` : "Connecting to the shared room...");

@@ -105,7 +105,13 @@
 
     // relay hint: multiplayer pages need the relay, which serves this same site on its own port
     var port = String(data.meta.relayPort);
-    if (location.protocol !== "file:" && location.port !== port) {
+    if (/github\.io$/i.test(location.hostname)) {
+      // GitHub Pages: static files only, so the relay-based tiles cannot connect from here.
+      var pn = document.getElementById("relay-note");
+      pn.appendChild(document.createTextNode("This is the GitHub Pages copy (static files only). The multiplayer tiles load but cannot join a room, because the relay runs on the lab PC. Open the lab PC's own address (https, port " + port + ") for those. Everything else works here. "));
+      pn.appendChild(el("a", { href: "launcher/doc.html?f=docs%2FGITHUB-PAGES.md", text: "What works on Pages" }));
+      pn.hidden = false;
+    } else if (location.protocol !== "file:" && location.port !== port) {
       var url = location.protocol + "//" + location.hostname + ":" + port + "/";
       var note = document.getElementById("relay-note");
       note.appendChild(document.createTextNode("Multiplayer tiles need the relay. This page is not served by it, so open the launcher from "));

@@ -2,32 +2,6 @@
   "outputDir": "",
   "agents": [
     {
-      "id": "hydro-web",
-      "name": "Web Hydrotest Builder (multi-user)",
-      "task": "New hydrotest theme for the multiplayer relay and page (port 8453)",
-      "state": "done",
-      "started": "2026-11-02T00:30:56.286Z",
-      "watch": [
-        "../../multi-player/hydrotest",
-        "../../multi-player/shared/themes.js",
-        "../../multi-player/test"
-      ],
-      "ended": "2026-11-02T00:37:49.283Z",
-      "note": "hydrotest multiplayer theme, 6 tests, desktop only"
-    },
-    {
-      "id": "research",
-      "name": "Research expansion",
-      "task": "More verified references and study designs",
-      "state": "done",
-      "started": "2026-11-02T00:30:56.347Z",
-      "watch": [
-        "../../docs/research"
-      ],
-      "ended": "2026-11-02T00:39:47.452Z",
-      "note": "36 bib entries, STUDY-DESIGNS.md; several 'to confirm' items flagged"
-    },
-    {
       "id": "vive-refinery",
       "name": "Vive 02 Refinery rounds",
       "task": "Unity project 02-refinery-rounds (uncompiled draft)",
@@ -496,6 +470,32 @@
       ],
       "ended": "2026-11-03T20:43:08.128Z",
       "note": "Resistor Bench follow-up: void walled, snap discs smaller, lamp beam brighter; 934 baked objects; 15 shots"
+    },
+    {
+      "id": "r4-perf",
+      "name": "Render cost optimisation",
+      "task": "Cut draw calls, set-pass, shadow casters and lights across the kit baker, projects 01-04 and the hub; re-bake and re-shoot",
+      "state": "running",
+      "started": "2026-11-03T20:58:00.110Z",
+      "watch": [
+        "vive-steamvr"
+      ]
+    },
+    {
+      "id": "r4-pages",
+      "name": "Builds and GitHub Pages",
+      "task": "Vive exe build script, WebXR site build, Pages workflow, docs",
+      "state": "done",
+      "started": "2026-11-03T20:58:00.174Z",
+      "watch": [
+        "scripts",
+        ".github",
+        "tools/pages",
+        "docs/GITHUB-PAGES.md",
+        "docs/BUILDS.md"
+      ],
+      "ended": "2026-11-03T21:10:18.704Z",
+      "note": "Vive build script (dry run only), WebXR site build 129.7 MB, Pages workflow, site check passes under sub-path; real Unity builds and live site untested"
     }
   ]
 }

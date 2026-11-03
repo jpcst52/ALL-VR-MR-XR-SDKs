@@ -99,6 +99,10 @@ Use `Ctrl+C` to stop the server. The libraries are bundled in `vendor/`, so the 
 | Site Safety Layout | Calibrate a shared board origin using hit testing, then edit a shared safety layout with a live checklist. |
 | Fieldwork XR Practice Lab | Enter a name, pick one of seventeen scenarios, and carry out each task by selecting hotspots in a 3D work area. |
 
+## GitHub Pages (WebXR on a headset browser)
+
+The browser examples are published as a static site at `https://jpcst52.github.io/ALL-VR-MR-XR-SDKs/` (workflow `.github/workflows/pages.yml`; build with `npm run build:site`, check with `npm run check:site`). Type the address or scan the QR code in a Quest, HoloLens 2, Vive XR or phone browser. The relay-based multiplayer pages load but cannot join a room on Pages. Not yet live and not tested on any headset: see [docs/GITHUB-PAGES.md](docs/GITHUB-PAGES.md). Windows player builds of the Unity projects for the VR Stage PC: [docs/BUILDS.md](docs/BUILDS.md).
+
 ## Multiplayer examples
 
 The two multiplayer WebXR examples share a small WebSocket relay. In a terminal, run:

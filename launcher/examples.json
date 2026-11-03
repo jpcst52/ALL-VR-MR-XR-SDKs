@@ -416,6 +416,18 @@
           "note": "why content looks small, how to measure and fit it"
         },
         {
+          "id": "github-pages",
+          "title": "GitHub Pages (WebXR on headsets)",
+          "url": "docs/GITHUB-PAGES.md",
+          "note": "the static site, QR code, what works without the relay"
+        },
+        {
+          "id": "builds",
+          "title": "Vive player builds",
+          "url": "docs/BUILDS.md",
+          "note": "scripts/build-vive.cmd for the VR Stage PC"
+        },
+        {
           "id": "credits",
           "title": "Third-party credits",
           "url": "CREDITS.md",

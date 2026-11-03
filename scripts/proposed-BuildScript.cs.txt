@@ -1,0 +1,21 @@
+// PROPOSED (not applied; the author of scripts\build-vive.ps1 may not edit vive-steamvr\).
+// Projects 01-04 already have a CLI-callable build method:
+//     ProjectSetup.BuildWindows  ->  Configurator.BuildWindows("Builds/<Name>/<Name>.exe")
+// and scripts\build-vive.ps1 calls it. The hub (vive-steamvr\hub) has NO such method (only the Set up / Build hub menu items).
+// To let  scripts\build-vive.ps1 -IncludeHub  build it, save this as vive-steamvr\hub\Assets\Editor\HubBuild.cs
+// (close the hub editor first or let it recompile; this is uncompiled code written against the kit's real signature
+// Configurator.BuildWindows(string outputExe), which uses the scenes enabled in Build Settings: Lobby first).
+//
+// The script finds the method by looking in Assets\Editor for a static void X() => Configurator.BuildWindows("...") line,
+// so keep that one-line form.
+//
+// The hub build contains Asset Store packs and Rocketbox people: copy it to the lab PC only, never publish it.
+
+using PittBradford.XR.EditorTools;
+using UnityEditor;
+
+public static class HubBuild
+{
+    [MenuItem("Pitt-Bradford/Build Windows player (hub)")]
+    public static void BuildWindows() => Configurator.BuildWindows("Builds/XRTrainingHub/XRTrainingHub.exe");
+}

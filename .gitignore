@@ -46,3 +46,6 @@ tools/status/.server.out
 
 # Owner working notes (private)
 CLAUDE.md
+
+builds/
+site/
