@@ -25,6 +25,7 @@ General safety-awareness practice only: none of the scenarios is a procedure, pe
 | [../CREDITS.md](../CREDITS.md) | Third-party credits: fonts, Open-Meteo weather, Rocketbox people, Asset Store packs, models |
 | [GLOSSARY.md](GLOSSARY.md) | Plain-language terms and a who-is-this-for table, for the advisory board and faculty |
 | [HOW-TO-RUN.md](HOW-TO-RUN.md) | One page for everything: a three-step quick start for demo day, the demo server, Unity projects (desktop and headset), the hub lobby, tests, screenshots, decks, troubleshooting |
+| [HOLOLENS-AR-NOTES.md](HOLOLENS-AR-NOTES.md) | Why content looks small on a HoloLens (small additive display), how to measure it and fit content to it; untested on a HoloLens |
 | [TESTING.md](TESTING.md) | The automated suites with expected counts, and hands-on check tables (desktop Unity D1-D14, baked scenes B1-B4, lobby L1-L6, web W1-W6) |
 | [demo-day/HARDWARE-TEST-SESSION.md](demo-day/HARDWARE-TEST-SESSION.md) | Pass/fail sheet for the first lab run on the Vive Pro 2 and Quest |
 

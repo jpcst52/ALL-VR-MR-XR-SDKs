@@ -410,6 +410,12 @@
           "url": "SDK-list.md"
         },
         {
+          "id": "hololens",
+          "title": "HoloLens notes",
+          "url": "docs/HOLOLENS-AR-NOTES.md",
+          "note": "why content looks small, how to measure and fit it"
+        },
+        {
           "id": "credits",
           "title": "Third-party credits",
           "url": "CREDITS.md",
