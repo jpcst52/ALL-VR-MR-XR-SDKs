@@ -16,3 +16,11 @@ A native visionOS immersive-space example built with SwiftUI and RealityKit. Ent
 - [SwiftUI `ImmersiveSpace`](https://developer.apple.com/documentation/swiftui/immersivespace)
 - [RealityKit `RealityView`](https://developer.apple.com/documentation/realitykit/realityview)
 - [RealityKit `AnchorEntity`](https://developer.apple.com/documentation/realitykit/anchorentity)
+
+## Run it
+
+Toolchain: a Mac with Xcode 16 or later and the visionOS 2 SDK. Open `SpatialAtlas.xcodeproj`, choose the `SpatialAtlas` scheme and a visionOS destination, press Run, then **Enter the immersive atlas**.
+
+## What was verified
+
+The project settings were read (visionOS SDK, deployment target 2.0, Swift 5). It was **not built or run here: this repository is worked on Windows, which cannot build visionOS projects, and no Apple Vision Pro was used.**

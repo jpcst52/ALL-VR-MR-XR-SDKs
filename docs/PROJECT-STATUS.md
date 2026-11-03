@@ -126,3 +126,9 @@ Last updated: November 1, 2026 (evening).
 - The warehouse co-worker is a Rocketbox avatar through `CoWorker.ModelFactory` (`PeopleLibrary`). Verified in the editor: walks in the Walk state, freezes at the awareness pause, scripted self-test PASS (`ShotRunner`). Not verified: headset, frame rate, hand play.
 - Found and fixed: `HubDressing.Spawn` reset the prefab root scale, so the 100x Courtyard props (generator, floodlights) came out about 100 m wide. It now keeps the prefab scale (also affects the Hydro scene's props, which should be re-checked).
 - Open: the Sci-Fi shipping containers render near black; the IG container was used in the warehouse. Triangle count is about 1.4-1.5 M per scene; optimise before relying on a Vive Pro 2 frame rate. Screenshots are editor desktop renders.
+
+## Documentation audit (November 3, 2026)
+
+- `npm run docs-check` (tools/docs-check/check.mjs) checks every relative Markdown link, image and anchor, every launcher path, that docs/README.md links every guide under docs/, and that the pass counts quoted in TESTING.md and HOW-TO-RUN.md equal a fresh run of the three unit suites (20, 16, 18). First run found one broken anchor (HOW-TO-RUN) and stale counts (brand kit 5 vs 16); both fixed.
+- New: docs/GLOSSARY.md (terms and who-is-this-for), "Quick start for demo day" at the top of HOW-TO-RUN.md, and "Run it" / "What was verified" sections in the six native SDK sample READMEs. None of those samples was compiled or run on hardware in this pass.
+- Main menu: search box (client-side, works offline), keyboard navigation (`/`, arrows, Esc), a status legend; launcher-check.mjs now tests them and refreshed docs/images/launcher*.png (plus launcher-search.png).

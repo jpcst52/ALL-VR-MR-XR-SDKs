@@ -27,3 +27,11 @@ Official references:
 5. Run with a connected headset/controller or the XR Device Simulator sample. Select/grab the cube to see the color feedback.
 
 The component subscribes to XRI 3.0's `selectEntered` and `selectExited` events. It does not create an XR Origin, interaction manager, input actions, or platform loader automatically.
+
+## Run it
+
+Toolchain: Unity 2022.3 LTS or newer (the shared training projects in this repository use 6000.3.20f1) plus the packages above. Follow Setup, press Play with the XR Device Simulator, and grab the cube; it turns green and returns to its original color on release.
+
+## What was verified
+
+Only the script source and this setup text were reviewed. The script was **not compiled or run in a Unity project here, and nothing was run on a headset.** XR Interaction Toolkit 3.x moved interactable classes into namespaces such as `UnityEngine.XR.Interaction.Toolkit.Interactables`; if your XRI version reports a missing type, add that `using` line or let Unity's API Updater fix it.

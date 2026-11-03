@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>XR Training Launcher · Pitt-Bradford CIST</title>
+  <title>XR Training Main Menu · Pitt-Bradford CIST</title>
   <meta name="description" content="Launch the Pitt-Bradford XR training examples: browser demos, multiplayer, Vive and Quest.">
   <link rel="stylesheet" href="brand-kit/brand.css">
   <link rel="stylesheet" href="launcher/launcher.css">
@@ -14,13 +14,28 @@
   <header class="top">
     <div class="wrap top-inner">
       <div class="brand" data-pitt-brand></div>
-      <h1>XR Training Launcher</h1>
+      <h1>XR Training Main Menu</h1>
       <p class="lede" id="subtitle">Pitt-Bradford XR training examples. Pick a tile to launch it.</p>
       <nav class="jump" aria-label="Sections" id="jump"></nav>
     </div>
   </header>
 
   <div id="relay-note" class="wrap relay-note" hidden role="note"></div>
+
+  <div class="wrap finder" role="search">
+    <label for="q">Search examples and guides</label>
+    <div class="finder-row">
+      <input type="search" id="q" placeholder="for example: forklift, Quest, glossary" autocomplete="off" aria-controls="sections tools" disabled>
+      <button type="button" id="clear" hidden>Clear</button>
+    </div>
+    <p id="count" class="count" role="status" aria-live="polite"></p>
+    <ul class="legend" aria-label="What the status badges mean">
+      <li><span class="badge status ready">Ready on desktop</span> runs in a desktop browser now</li>
+      <li><span class="badge status pending">Pending</span> tested in the editor or an emulator; the headset test is still to do</li>
+      <li><span class="badge status planned">Needs its native toolchain</span> source sample, not served here</li>
+    </ul>
+    <p class="hint">Keyboard: <kbd>/</kbd> jumps to search, <kbd>Esc</kbd> clears it, arrow keys move between results, <kbd>Enter</kbd> opens. Nothing is tested on a physical headset yet.</p>
+  </div>
 
   <main id="main" class="wrap">
     <noscript><p class="noscript">This launcher needs JavaScript to list the examples. The folders a-frame, threejs, babylonjs, webxr, training-simulations and multi-player can still be opened directly.</p></noscript>

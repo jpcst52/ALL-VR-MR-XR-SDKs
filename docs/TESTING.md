@@ -13,7 +13,8 @@ Status on November 2, 2026: every automated suite below passes on the developmen
 | Multiplayer relay | `cd multi-player`, then `npm test` | 18 pass |
 | Web UI layout, desktop and phone width, logo blocked and allowed | start the relay (see HOW-TO-RUN section 1), then `node tools/vr-capture/ui-check.mjs` (set `UI_BASE` if the relay is not on port 8132) | 48 pass |
 | Offline check (no network, no external requests) | `node tools/vr-capture/offline-check.mjs` (`STATIC_BASE` and `RELAY_BASE` select the server) | all pages ok |
-| Launcher check | `node tools/vr-capture/launcher-check.mjs` (set `LAUNCHER_URL`, for example `http://localhost:8132/`, if the server is not on port 8101) | pass |
+| Launcher check (tiles, guide links, in-menu viewer, search box and keyboard) | `node tools/vr-capture/launcher-check.mjs` (set `LAUNCHER_URL`, for example `http://localhost:8132/`, if the server is not on port 8101) | pass |
+| Documentation (every link, anchor, launcher path, docs index, and the pass counts above against a fresh run) | `npm run docs-check` (add `--no-run` to skip running the suites) | ok |
 | Unity compile | open each project; the Console shows no red errors | no errors |
 
 Record a result for the dashboard with `node tools/status/record-results.cjs "<suite>" <passed> <failed> <skipped>`.

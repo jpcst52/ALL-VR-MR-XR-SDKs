@@ -24,3 +24,11 @@ Official references:
 5. Bind the configured Boolean action to a controller button using the SteamVR Input binding UI. Pressing it toggles the object's color.
 
 The script polls `SteamVR_Action_Boolean.GetStateDown(SteamVR_Input_Sources)` and does not define a binding or action asset itself; those remain user-configured in SteamVR Input.
+
+## Run it
+
+Toolchain: a Unity version supported by your SteamVR Unity Plugin release, the plugin, and SteamVR running on a Windows PC with a SteamVR headset. Follow Setup, press Play, and press the bound controller button; the target renderer toggles color.
+
+## What was verified
+
+Only the script source and this setup text were reviewed. The script was **not compiled or run here, and no Vive or other SteamVR hardware was used.** The shared training projects in `vive-steamvr/` use OpenXR with SteamVR as the runtime, not this plugin.

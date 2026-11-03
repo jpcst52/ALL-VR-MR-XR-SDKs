@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "XR Training Launcher",
+    "title": "XR Training Main Menu",
     "subtitle": "Main menu for the Pitt-Bradford XR training examples: demos, Unity projects, native SDK samples, guides and decks.",
     "relayPort": 8443,
     "dashboardUrl": "tools/status/README.md"
@@ -387,6 +387,12 @@
           "note": "every guide and what it is for"
         },
         {
+          "id": "glossary",
+          "title": "Glossary and who this is for",
+          "url": "docs/GLOSSARY.md",
+          "note": "XR, WebXR, OpenXR, Quest, Vive, bake and adopt in plain words"
+        },
+        {
           "id": "how-to-run",
           "title": "How to run everything",
           "url": "docs/HOW-TO-RUN.md",
@@ -563,6 +569,12 @@
           "id": "vendor",
           "title": "Offline libraries",
           "url": "vendor/README.md"
+        },
+        {
+          "id": "agent-rules",
+          "title": "Rules for AI helpers",
+          "url": "docs/agents/AGENT-RULES.md",
+          "note": "how automated agents share this repository"
         },
         {
           "id": "sky-credits",

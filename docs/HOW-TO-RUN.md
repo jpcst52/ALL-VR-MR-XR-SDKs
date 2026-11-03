@@ -2,11 +2,21 @@
 
 One page for running every part of this repository. Pick the row that matches what you want to do, then follow that section. Status as of November 1, 2026: **all of this has been run on a Windows development PC, in the Unity editor, in desktop browsers and in an emulated Quest 3. Nothing has been run on a real Vive Pro 2 or Quest yet**; use [demo-day/HARDWARE-TEST-SESSION.md](demo-day/HARDWARE-TEST-SESSION.md) for that first run.
 
+## Quick start for demo day
+
+Three steps on the demo PC (Windows, Node.js 22 or newer installed, `npm install` already done once while online):
+
+1. Double-click `scripts\start-demo.cmd`. It starts one HTTPS server on port 8443 and opens the main menu at `https://localhost:8443/`. (Add `/dashboard` to also open the status dashboard.)
+2. On a Quest or phone on the same Wi-Fi, open one of the `https://<PC address>:8443/` addresses the window prints and accept the certificate warning once. For the Vive, start SteamVR, then open the same page in desktop Chrome or Edge.
+3. Everyone who shares an activity types the same room name. Stop with Ctrl+C in the server window.
+
+If the web demo does not start, open [demo-day/BACKUP-PLAN.md](demo-day/BACKUP-PLAN.md). Verified: the script and server were run on the development PC and in an emulated Quest 3; the headset steps have not been tried on real hardware.
+
 | I want to... | Go to |
 |---|---|
 | Find any guide, status page or deck | The **main menu** (the launcher that opens with the demo) or [README.md](README.md), the documentation index |
 | Run the demo for people (launcher, Practice Lab, multiplayer) | [1. Run the demo](#1-run-the-demo-web-launcher-practice-lab-multiplayer) |
-| Try the Unity training projects at a desk or on the Vive | [2. Unity projects](#2-unity-projects-01-04) |
+| Try the Unity training projects at a desk or on the Vive | [2. Unity projects](#2-unity-projects-01-to-04) |
 | Walk through the lobby with portals | [3. The hub lobby](#3-the-hub-lobby-local-only) |
 | Use a headset (Vive Pro 2 or Quest) | [4. Headsets](#4-headsets) |
 | Check that nothing broke | [5. Tests](#5-tests-and-checks) and the full [TESTING.md](TESTING.md) checklist |
@@ -112,12 +122,12 @@ Run from the repository root unless noted. Each prints pass and fail counts; the
 
 | What | Command | Expected today |
 |---|---|---|
-| Practice Lab scenario data | `cd training-simulations`, then `node --test test/scenarios.test.mjs test/biology.test.mjs` (plus any other file in `test/`) | all pass |
+| Practice Lab scenario data | `cd training-simulations`, then `node --test test/*.test.mjs` | 20 pass |
 | Multiplayer relay | `cd multi-player`, then `npm test` | 18 pass |
-| Brand kit | `cd brand-kit`, then `npm test` | 5 pass |
+| Brand kit | `cd brand-kit`, then `npm test` | 16 pass |
 | Offline check (no network) | `node tools/vr-capture/offline-check.mjs` | all pages ok |
 | Launcher check | `node tools/vr-capture/launcher-check.mjs` | pass |
-| Web UI layout check (desktop and phone width) | `node tools/vr-capture/ui-check.mjs` | all pass |
+| Web UI layout check (desktop and phone width) | `node tools/vr-capture/ui-check.mjs` | 48 pass |
 | Unity compile | open the project; the Console must show no red errors | no errors |
 
 Some checks start their own server on a free port; stop a leftover server by its process ID if a port is busy (see section 7). To record a result for the dashboard: `node tools/status/record-results.cjs "<suite>" <passed> <failed> <skipped>`.

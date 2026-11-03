@@ -24,3 +24,11 @@ The build has been verified to produce an APK (JDK 17, SDK Platform 35). Running
 - [ARCore Android quickstart](https://developers.google.com/ar/develop/java/quickstart)
 - [ARCore SDK for Android](https://developers.google.com/ar/develop/java)
 - [ARCore releases](https://github.com/google-ar/arcore-android-sdk/releases)
+
+## Run it
+
+Toolchain: Android Studio (or JDK 17 plus the Android SDK) and a physical ARCore-supported phone. Open `arcore-android`, run `app`, scan the floor, tap to place the cube.
+
+## What was verified in this repository
+
+The Gradle build producing an APK is the author's earlier result (JDK 17, SDK Platform 35), not re-run in the latest documentation pass. Plane detection was **not verified on a physical device or a working emulator**, and no AR headset is involved.

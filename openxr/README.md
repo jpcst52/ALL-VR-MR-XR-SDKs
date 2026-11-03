@@ -27,3 +27,11 @@ Official references:
 6. Build and run with a headset connected and the intended OpenXR runtime active. The Unity Console/player log should report the instance creation callback.
 
 No scene object is needed: OpenXR features are selected in project settings and invoked by the OpenXR provider. This sample is intentionally limited to that callback; it does not implement input, rendering, or runtime selection.
+
+## Run it
+
+Toolchain: Unity 2022.3 LTS or newer with the OpenXR Plugin and XR Plug-in Management. After Setup, enter Play or build a PC player with the headset connected, and look in the Console or player log for the instance-created message from the feature.
+
+## What was verified
+
+Only the script source and this setup text were reviewed. The feature was **not compiled or run in a Unity project here, and no OpenXR runtime or headset was used.** The `[OpenXRFeature]` attribute only registers the feature in the editor, so it appears in the feature list only after Unity has compiled the script.

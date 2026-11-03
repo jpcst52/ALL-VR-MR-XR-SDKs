@@ -99,6 +99,41 @@ console.table(rows);
   await context.close();
 }
 
+// 4. search, keyboard and legend
+{
+  const { context, page } = await load({ width: 1200, height: 900 });
+  const total = data.examples.length;
+  const vis = () => page.locator(".tile:not([hidden])").count();
+  const guidesVis = () => page.locator("#tools li:not([hidden])").count();
+  if (await page.locator(".legend li").count() !== 3) problems.push("search: status legend should list 3 kinds");
+  if (await page.locator("#q").isDisabled()) problems.push("search: box is disabled after load");
+  await page.keyboard.press("/");
+  if (!(await page.evaluate(() => document.activeElement && document.activeElement.id === "q"))) problems.push("search: '/' does not focus the box");
+  await page.keyboard.type("forklift");
+  const hits = await vis();
+  const expected = data.examples.filter((e) => [e.title, e.summary, e.note ?? "", e.status, e.badges.join(" "), e.id].join(" ").toLowerCase().includes("forklift")).length;
+  if (hits !== expected || hits === 0 || hits >= total) problems.push(`search: 'forklift' shows ${hits} tiles, expected ${expected} of ${total}`);
+  if (!/match/.test(await page.locator("#count").innerText())) problems.push("search: the result count is not announced");
+  if (!(await page.locator("#path").isHidden())) problems.push("search: demo path should hide while filtering");
+  await page.keyboard.press("ArrowDown");
+  if (!(await page.evaluate(() => !!document.activeElement.closest(".tile")))) problems.push("search: ArrowDown does not move into the results");
+  await page.keyboard.press("Escape");
+  await page.focus("#q");
+  await page.keyboard.type("zzzznothing");
+  if ((await vis()) !== 0 || (await guidesVis()) !== 0 || !/Nothing matches/.test(await page.locator("#count").innerText())) problems.push("search: a miss should show no tiles and say so");
+  await page.keyboard.press("Escape");
+  if ((await vis()) !== total || (await page.inputValue("#q")) !== "") problems.push("search: Escape does not restore all tiles");
+  await page.fill("#q", "glossary");
+  if ((await guidesVis()) < 1) problems.push("search: 'glossary' finds no guide");
+  console.log(`search: forklift=${hits}/${total} tiles, glossary guides=${await guidesVis()}`);
+  if (shots) {
+    await page.fill("#q", "quest");
+    await page.screenshot({ path: join(repo, "docs", "images", "launcher-search.png"), fullPage: false });
+    console.log("wrote docs/images/launcher-search.png");
+  }
+  await context.close();
+}
+
 await browser.close();
 if (problems.length) { console.log("FAIL"); problems.forEach((p) => console.log("  " + p)); failed = 1; } else console.log("ok: launcher loads offline with no console errors, all web-served paths return 200");
 process.exit(failed);

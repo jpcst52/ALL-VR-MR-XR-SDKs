@@ -15,13 +15,15 @@ General safety-awareness practice only: none of the scenarios is a procedure, pe
 | Prepare for demo day (Nov 13, 2026) | [demo-day/README.md](demo-day/README.md) |
 | Test on the real headsets | [demo-day/HARDWARE-TEST-SESSION.md](demo-day/HARDWARE-TEST-SESSION.md) |
 | Understand the research and study ideas | [research/README.md](research/README.md) |
+| Learn the terms (XR, WebXR, OpenXR, bake and adopt) and who each guide is for | [GLOSSARY.md](GLOSSARY.md) |
 | Pick up the work in a new session | [../CLAUDE.md](../CLAUDE.md) and [agents/AGENT-RULES.md](agents/AGENT-RULES.md) |
 
 ## Running and testing
 
 | Guide | What it covers |
 |---|---|
-| [HOW-TO-RUN.md](HOW-TO-RUN.md) | One page for everything: the demo server, Unity projects (desktop and headset), the hub lobby, tests, screenshots, decks, troubleshooting |
+| [GLOSSARY.md](GLOSSARY.md) | Plain-language terms and a who-is-this-for table, for the advisory board and faculty |
+| [HOW-TO-RUN.md](HOW-TO-RUN.md) | One page for everything: a three-step quick start for demo day, the demo server, Unity projects (desktop and headset), the hub lobby, tests, screenshots, decks, troubleshooting |
 | [TESTING.md](TESTING.md) | The automated suites with expected counts, and hands-on check tables (desktop Unity D1-D14, baked scenes B1-B4, lobby L1-L6, web W1-W6) |
 | [demo-day/HARDWARE-TEST-SESSION.md](demo-day/HARDWARE-TEST-SESSION.md) | Pass/fail sheet for the first lab run on the Vive Pro 2 and Quest |
 

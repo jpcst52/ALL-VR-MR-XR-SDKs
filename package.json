@@ -3,6 +3,7 @@
   "private": true,
   "description": "Repository-level scripts. Each example has its own package.json.",
   "scripts": {
-    "status": "node tools/status/server.cjs"
+    "status": "node tools/status/server.cjs",
+    "docs-check": "node tools/docs-check/check.mjs"
   }
 }

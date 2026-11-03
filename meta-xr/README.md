@@ -27,3 +27,11 @@ Official references:
 5. Deploy to a supported Quest device, grant camera permission when prompted, and verify the UI reports that the camera is streaming.
 
 The script waits for `PassthroughCameraAccess.IsPlaying`, then assigns `GetTexture()` to the preview. It does not request permission itself; configure the app permission and use the documented Meta permission flow. No camera texture is available in the Editor simulator.
+
+## Run it
+
+Toolchain: Unity 6000.0.38f1 or newer, MRUK v81 or newer, Android build support, and a Quest 3 or 3S on Horizon OS v74 or newer. Follow Setup, build and run to the headset, grant the camera permission, and the preview shows the passthrough camera stream.
+
+## What was verified
+
+Only the script source and this setup text were reviewed against Meta's documentation. The script was **not compiled or run here, and nothing was run on a Quest.** The XR Simulator cannot test it.

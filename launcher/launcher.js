@@ -40,6 +40,7 @@
       el("span", { class: "go", text: ex.webServed === false ? "Open the project notes" : "Launch" })
     ]);
     var a = el("a", { class: "tile", href: /\.md$/i.test(ex.url) ? "launcher/doc.html?f=" + encodeURIComponent(ex.url) : ex.url, id: "tile-" + ex.id }, [shot, body]);
+    a.setAttribute("data-search", [ex.title, ex.summary, ex.note, ex.status, ex.badges.join(" "), ex.id].join(" ").toLowerCase());
     a.setAttribute("aria-label", ex.title + ". " + ex.status + ". " + ex.badges.join(", ") + (ex.note ? ". " + ex.note : ""));
     return a;
   }
@@ -95,7 +96,7 @@
       var ul = el("ul");
       g.links.forEach(function (t) {
         var href = /\.md$/i.test(t.url) ? "launcher/doc.html?f=" + encodeURIComponent(t.url) : t.url;
-        var a = el("a", { href: href, id: "guide-" + t.id }, [document.createTextNode(t.title), t.note ? el("small", { text: t.note }) : null]);
+        var a = el("a", { href: href, id: "guide-" + t.id, "data-search": [t.title, t.note || "", g.title, t.id].join(" ").toLowerCase() }, [document.createTextNode(t.title), t.note ? el("small", { text: t.note }) : null]);
         ul.appendChild(el("li", {}, [a]));
       });
       groups.appendChild(el("section", { class: "group", "aria-labelledby": "g-" + g.id }, [el("h3", { id: "g-" + g.id, text: g.title }), ul]));
@@ -114,12 +115,53 @@
     }
   }
 
+  // Search / filter: client-side only. Tiles and guide links carry a data-search string.
+  function setupFinder() {
+    var q = document.getElementById("q"), clear = document.getElementById("clear"), count = document.getElementById("count");
+    var links = [].slice.call(document.querySelectorAll("#sections .tile, #tools .group a"));
+    var path = document.getElementById("path");
+    q.disabled = false;
+
+    function apply() {
+      var terms = q.value.toLowerCase().split(/\s+/).filter(Boolean), shown = 0;
+      links.forEach(function (a) {
+        var hay = a.getAttribute("data-search"), ok = terms.every(function (t) { return hay.indexOf(t) >= 0; });
+        var holder = a.classList.contains("tile") ? a : a.parentNode; // guide links sit in an li
+        holder.hidden = !ok;
+        if (ok) shown++;
+      });
+      [].forEach.call(document.querySelectorAll("section.block[id^=sec-], .group"), function (sec) {
+        sec.hidden = !!terms.length && !sec.querySelector(sec.classList.contains("group") ? "li:not([hidden])" : ".tile:not([hidden])");
+      });
+      path.hidden = !!terms.length;
+      document.getElementById("tools").hidden = !!terms.length && !document.querySelector("#tools li:not([hidden])");
+      clear.hidden = !terms.length;
+      count.textContent = terms.length ? (shown ? shown + " match" + (shown === 1 ? "" : "es") + " for “" + q.value.trim() + "”." : "Nothing matches “" + q.value.trim() + "”. Try a shorter word.") : "";
+    }
+    function visible() { return links.filter(function (a) { return !a.closest("[hidden]"); }); }
+
+    q.addEventListener("input", apply);
+    clear.addEventListener("click", function () { q.value = ""; apply(); q.focus(); });
+    document.addEventListener("keydown", function (e) {
+      var tag = (e.target.tagName || "").toLowerCase();
+      if (e.key === "/" && tag !== "input" && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); q.focus(); q.select(); return; }
+      if (e.key === "Escape" && (q.value || document.activeElement === q)) { q.value = ""; apply(); q.blur(); return; }
+      var list = visible(), i = list.indexOf(document.activeElement), k = e.key;
+      if (e.target === q && k === "ArrowDown" && list.length) { e.preventDefault(); list[0].focus(); return; }
+      if (i < 0) return;
+      var next = k === "ArrowRight" || k === "ArrowDown" ? i + 1 : k === "ArrowLeft" || k === "ArrowUp" ? i - 1 : k === "Home" ? 0 : k === "End" ? list.length - 1 : null;
+      if (next === null) return;
+      e.preventDefault();
+      if (next < 0) q.focus(); else if (list[next]) list[next].focus();
+    });
+  }
+
   // The Pitt-Bradford + CIST brand bar is built by brand-kit/brand.js (logo if the local file exists, else a wordmark).
 
   fetch("launcher/examples.json").then(function (r) {
     if (!r.ok) throw new Error("HTTP " + r.status);
     return r.json();
-  }).then(render).catch(function (err) {
+  }).then(function (data) { render(data); setupFinder(); }).catch(function (err) {
     document.getElementById("sections").appendChild(el("p", { class: "noscript", text: "Could not load launcher/examples.json (" + err.message + "). Serve this folder over http, for example python -m http.server 8101." }));
   });
 })();
