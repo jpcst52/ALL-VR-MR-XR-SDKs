@@ -43,7 +43,7 @@ function decorateDelivery(group) {
   hiddenPart(group, "quarantine", quarantine);
   addPerson(group, [-1.4, 0.0, 0.5], "#ff9d59"); // manager
   part(group, box(0.22, 0.14, 0.16), "#1b2530", [0.9, 0.2, 0.4], { metal: 0.3 }); // camera
-  part(group, box(0.9, 0.9, 0.04), "#8c9aa8", [-1.5, 0.45, 0.0], { metal: 0.4 }); // shelving
+  part(group, box(0.9, 0.9, 0.04), "#8c9aa8", [-1.5, 0.45, 0.0], { metal: 0.4 }).userData.hideWhenDressed = "props/steel_frame_shelves_01.glb"; // shelving (the shelf unit replaces it)
 }
 
 function decorateConsent(group) {

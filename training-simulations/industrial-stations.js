@@ -46,11 +46,17 @@ export function hiddenPart(group, name, object) {
   return object;
 }
 
-export function addPerson(group, [x, y, z], vest = "#ff9d59") {
-  part(group, cyl(0.09, 0.1, 0.4), "#3b5a78", [x, y + 0.2, z]);
-  part(group, box(0.24, 0.22, 0.17), vest, [x, y + 0.5, z], { rough: 0.7 });
-  part(group, ball(0.085), "#e0b99a", [x, y + 0.74, z]);
-  part(group, new THREE.SphereGeometry(0.095, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), "#ffd23f", [x, y + 0.77, z]);
+// A stand-in person built from primitives. dressing.js swaps it for a real character once the model has loaded
+// (opts: scale < 1 for people on a raised deck, facing = y rotation, anim "idle"|"walk", speed); if it never loads, the doll stays.
+export function addPerson(group, [x, y, z], vest = "#ff9d59", opts = {}) {
+  const doll = new THREE.Group();
+  doll.userData.person = { pos: [x, y, z], vest, ...opts };
+  part(doll, cyl(0.09, 0.1, 0.4), "#3b5a78", [x, y + 0.2, z]);
+  part(doll, box(0.24, 0.22, 0.17), vest, [x, y + 0.5, z], { rough: 0.7 });
+  part(doll, ball(0.085), "#e0b99a", [x, y + 0.74, z]);
+  part(doll, new THREE.SphereGeometry(0.095, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), "#ffd23f", [x, y + 0.77, z]);
+  group.add(doll);
+  return doll;
 }
 
 export function createHeightStation() {
@@ -67,7 +73,7 @@ export function createHeightStation() {
   for (const x of [-0.65, 0.65]) part(group, box(0.02, 0.9, 0.025), "#aeb9c4", [x, 0.45, 0], { rot: [0, 0, 0.0], metal: 0.4 });
   part(group, box(1.4, 0.05, 0.05), "#ffd23f", [0, 1.75, 0], { rough: 0.5 });
   for (const x of [-0.7, 0.7]) part(group, box(0.05, 0.4, 0.05), "#ffd23f", [x, 1.58, 0]);
-  addPerson(group, [-0.2, deckY + 0.03, 0.05]);
+  addPerson(group, [-0.2, deckY + 0.03, 0.05], "#ff9d59", { scale: 0.5, facing: 0.5 });
   part(group, box(0.26, 0.04, 0.2), "#ff9d59", [-0.2, deckY + 0.55, 0.05], { basic: true });
   link(group, [-0.2, deckY + 0.75, 0.05], [-0.2, 1.75, 0], "#ff9d59", 0.014);
   const ladder = new THREE.Group();
@@ -183,7 +189,7 @@ export function createFacadeStation() {
   for (const z of [-0.17, 0.17]) part(cradle, box(1.0, 0.03, 0.025), "#ff9d59", [0, 0.28, z]);
   for (const x of [-0.5, 0.5]) part(cradle, box(0.03, 0.3, 0.36), "#ff9d59", [x, 0.15, 0]);
   part(cradle, cyl(0.07, 0.06, 0.12, 12), "#4aa0d0", [0.32, 0.09, 0.05]);
-  addPerson(cradle, [-0.15, 0.03, 0.02], "#ff9d59");
+  addPerson(cradle, [-0.15, 0.03, 0.02], "#ff9d59", { scale: 0.5, facing: 0.3 });
   link(cradle, [-0.5, 0.3, 0], [-0.5, 1.06, -0.2], "#f2f6fc", 0.012);
   link(cradle, [0.5, 0.3, 0], [0.5, 1.06, -0.2], "#f2f6fc", 0.012);
   link(cradle, [-0.15, 0.78, 0.02], [0.05, 1.06, -0.2], "#ff9d59", 0.014);
@@ -193,7 +199,7 @@ export function createFacadeStation() {
   for (const x of [-0.3, 0.5]) part(zone, new THREE.ConeGeometry(0.07, 0.3, 4), "#ff9d59", [x, 0.15, 0.8]);
   hiddenPart(group, "zone", zone);
   const walker = new THREE.Group();
-  addPerson(walker, [0, 0, 0], "#7ab6ff");
+  addPerson(walker, [0, 0, 0], "#7ab6ff", { scale: 0.5, anim: "walk", speed: 0.5, facing: Math.PI / 2 });
   walker.position.set(-1.3, 0, 0.95);
   hiddenPart(group, "walker", walker);
   let amplitude = 0.06;

@@ -68,10 +68,10 @@ Business and research tasks work the same way (greet the customer, move to a qui
 From this directory, run the scenario-catalog checks with:
 
 ```powershell
-node --test .\test\scenarios.test.mjs .\test\biology.test.mjs .\test\why.test.mjs .\test\thumbs.test.mjs
+node --test .\test\scenarios.test.mjs .\test\biology.test.mjs .\test\why.test.mjs .\test\thumbs.test.mjs .\test\models.test.mjs
 ```
 
-`thumbs.test.mjs` checks that every scenario has a 320 x 180 JPEG thumbnail under 40 KB keyed by its id and listed in `thumbs/index.json`, and that the catalog only requests listed thumbnails and falls back to a placeholder tile. The seasonal-sky logic is tested in the brand kit (`node --test` in `../brand-kit`, file `test/season-sky.test.mjs`): season by date, manifest ordering and bad-input fallbacks, 2k/4k choice, path resolution, the Bradford wording rule, the transition curve (and that reduced motion has no mosaic, scan lines, or flicker), and the 30-second clock (one swap per transition, no time passes while paused).
+`models.test.mjs` checks that every model file the code references exists and is a GLB, that each file under `assets/models/` has a CC0 credits row with a source link, that the people have Idle and Walk clips, that the total stays under 25 MB, and that the loader falls back to the primitive on failure. `thumbs.test.mjs` checks that every scenario has a 320 x 180 JPEG thumbnail under 40 KB keyed by its id and listed in `thumbs/index.json`, and that the catalog only requests listed thumbnails and falls back to a placeholder tile. The seasonal-sky logic is tested in the brand kit (`node --test` in `../brand-kit`, file `test/season-sky.test.mjs`): season by date, manifest ordering and bad-input fallbacks, 2k/4k choice, path resolution, the Bradford wording rule, the transition curve (and that reduced motion has no mosaic, scan lines, or flicker), and the 30-second clock (one swap per transition, no time passes while paused).
 
 `why.test.mjs` checks the "why this matters" content: every entry in `reasons.js` points at a real required action; every non-draft scenario has a reason in every task and one reasoning question; the hydrostatic test and the refinery-style scenarios explain every required action; reasons are single sentences of at most 110 characters with no standard numbers or citations; each question has three options of at most 64 characters, exactly one best answer, and feedback for each; the best answer is not always in the same position; the draft Circulation Builder has none; and the page has the panel and the separate reasoning result, which never touches the task score. `node tools/vr-capture/ui-check.mjs` also opens the "why" panel (and closes it with Esc) and answers the reasoning question at desktop and phone widths.
 
@@ -88,9 +88,22 @@ The tests verify the catalog (17 scenarios in 5 categories: three business, thre
 - High-risk industrial practice with animated 3D work areas (scaffold, control room, outdoor process unit, suspended platform, welding bay, electrical panel) and critical-miss feedback.
 - One scenario catalog and scene presented in desktop mode and in a WebXR immersive VR view where supported.
 
+## Realistic props and people (CC0 models)
+
+The stations are still built from primitives first, so every scenario works with no extra files. On top of that, `dressing.js` loads CC0 glTF models from [`../assets/models/`](../assets/models/CREDITS.md) with the vendored `GLTFLoader` (no CDN, works offline) and adds them once they arrive:
+
+- **People.** Every primitive "doll" (the supervisor in the spill scenario, the customer at the counter, the fire watch, the visitor, the pedestrian in the window-cleaning scenario, and so on) is swapped for a Quaternius character with an idle animation (`AnimationMixer`), about 1.7 m tall, turned toward the work. Hi-vis workers play the supervisor/operator/fire-watch roles. The pedestrian in the window-cleaning scenario plays the walk clip. People on the scaffold deck and in the window cradle are drawn at half size so they match that miniature.
+- **Props.** Poly Haven props around six work areas (delivery, spill/safe work area, welding, electrical, hydrostatic test, counter): cardboard cartons and shelving, a hand truck, a wet-floor sign, jerrycan, welding cart, tool chest, utility box, barrel, generator, cash register, and more. Models are 512 px WebP textures and at most about 6,000 triangles each.
+- **Fallback.** If a file is missing or fails to parse, `loadModel()` resolves to `null`, one console warning is logged, and the primitive (or doll) stays. Checked by blocking `assets/models/` in the browser (`BLOCK_MODELS=1`, see below): every scenario still renders and runs, no page error.
+- **Light.** The room environment light was raised a little (0.4 to 0.65) so the PBR materials read; shadows stay at one 1024 map. No post-processing.
+
+Added weight: about 9.7 MB (props 6.3 MB, people 3.4 MB; the limit is tested at 25 MB). Measured per frame in desktop Chrome (software GL, shadow pass included), the heaviest scenarios are the hydrostatic test (about 44k triangles, 112 draw calls) and the delivery check (about 55k, 53 calls); every scenario is under 60k triangles, well under the 150k budget. **Frame rate on a Quest or other headset has not been measured.**
+
+Re-shoot and measure with `SHOTS_BASE=http://localhost:8161/ node tools/vr-capture/realism-shots.mjs [outDir] [scenario ids]` (screenshots in `screenshots/realism-after/`, before shots in `screenshots/realism-before/`; set `BLOCK_MODELS=1` to test the fallback). Licenses and sources for every model: [../assets/models/CREDITS.md](../assets/models/CREDITS.md), also linked in the page footer. All are CC0 and none is a real person.
+
 ## Rendering notes
 
-The shared scene uses sRGB output, ACES filmic tone mapping, a hemisphere light plus a soft-shadow key light (one 1024 shadow map), a low-intensity room environment for metal reflections, and procedurally generated canvas textures for the floor and platform. The only image assets are the scenario thumbnails (made from this example's own screenshots) and the four CC0 sky panoramas described below. VR frame rate with these settings, and with the sky sphere, has not been measured on a headset.
+The shared scene uses sRGB output, ACES filmic tone mapping, a hemisphere light plus a soft-shadow key light (one 1024 shadow map), a low-intensity room environment for metal reflections, and procedurally generated canvas textures for the floor and platform. The image assets are the scenario thumbnails (made from this example's own screenshots) and the four CC0 sky panoramas described below. VR frame rate with these settings, and with the sky sphere, has not been measured on a headset.
 
 ## Scenario thumbnails and seasonal skies
 

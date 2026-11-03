@@ -11,6 +11,7 @@ import { decorateCoreStation } from "./core-stations.js";
 import { createLightersStation, createHydrotestStation, createSpoolStation, createResistorBench } from "./partner-stations.js";
 import { createCirculationStation } from "./biology-stations.js";
 import { PITT, textPanelTexture, thumbCardTexture, tagSprite, brandPlate, brandAssetsReady } from "../brand-kit/panels.js";
+import { dressStation, clearDressing, tickDressing, failedModels } from "./dressing.js";
 import { createSeasonSky } from "../brand-kit/season-sky.js";
 
 const canvas = document.querySelector("#scene");
@@ -135,7 +136,7 @@ scene.add(new THREE.DirectionalLight(0x7fb4ff, 0.7).translateX(5).translateY(3).
 {
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  scene.environmentIntensity = 0.4;
+  scene.environmentIntensity = 0.65;
   pmrem.dispose();
 }
 
@@ -418,6 +419,7 @@ function createDeliveryStation() {
       new THREE.MeshStandardMaterial({ color: colors[index], roughness: 0.78 }),
     );
     crate.position.set((index - 1) * 0.62, 0.44 + (index === 1 ? 0.35 : 0), 0.18);
+    crate.userData.swap = { file: "props/cardboard_box_01.glb", size: [0.58, 0.46, 0.48], rot: index === 1 ? 0.25 : 0 };
     group.add(crate);
     const label = new THREE.Mesh(
       new THREE.BoxGeometry(0.24, 0.13, 0.025),
@@ -573,7 +575,7 @@ function clearObject(group) {
       child.material.dispose();
       return;
     }
-    if (!child.isMesh) return;
+    if (!child.isMesh || child.userData.sharedAsset) return; // glTF models are shared through the cache (dressing.js)
     child.geometry.dispose();
     if (Array.isArray(child.material)) child.material.forEach((material) => material.dispose());
     else {
@@ -592,6 +594,10 @@ function setTrainingScene(scenario, stepIndex = 0) {
   scenarioModel.position.set(0, 0.2, -0.28);
   enableShadows(scenarioModel);
   world.add(scenarioModel);
+  // Optional realism pass: real props and people load asynchronously; the primitives above are the fallback.
+  const dressed = scenarioModel;
+  clearDressing();
+  dressStation(dressed, scenario?.object).then(() => { if (dressed === scenarioModel) enableShadows(dressed); });
   updateSign(scenario, stepIndex);
 }
 
@@ -1386,7 +1392,11 @@ renderer.domElement.addEventListener("pointermove", (event) => {
   canvas.style.cursor = over && over.status === "idle" ? "pointer" : "";
 });
 
+let lastFrame = 0;
 function animate(time) {
+  const delta = Math.min(0.1, Math.max(0, (time - lastFrame) / 1000));
+  lastFrame = time;
+  tickDressing(delta);
   scenarioModel?.userData.tick?.(time / 1000);
   const flashing = performance.now() < flashUntil;
   scene.background.set(flashing ? "#3a1218" : sceneColor);
@@ -1403,6 +1413,8 @@ function animate(time) {
   renderer.render(scene, camera);
 }
 
+// Read-only hooks for tools/vr-capture/realism-shots.mjs (triangle and draw-call budget, model load failures).
+globalThis.__labStats = () => ({ ...renderer.info.render, missing: failedModels() });
 setTrainingScene(null);
 updateChoiceCards();
 renderer.setAnimationLoop(animate);
