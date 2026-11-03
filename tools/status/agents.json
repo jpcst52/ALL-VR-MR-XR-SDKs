@@ -353,6 +353,18 @@
       ],
       "ended": "2026-11-03T02:51:56.264Z",
       "note": "Plate added, 01 re-baked (223 objects), all four projects re-shot, decks rebuilt"
+    },
+    {
+      "id": "dressA",
+      "name": "Hub dressing A",
+      "task": "Dress warehouse and refinery hub scenes with props and people",
+      "state": "done",
+      "started": "2026-11-03T06:17:12.463Z",
+      "watch": [
+        "vive-steamvr/hub/Assets/Editor"
+      ],
+      "ended": "2026-11-03T06:43:32.159Z",
+      "note": "Warehouse + Refinery hub scenes dressed (8 people each), Rocketbox co-worker verified in editor, all 5 scenes re-baked"
     }
   ]
 }

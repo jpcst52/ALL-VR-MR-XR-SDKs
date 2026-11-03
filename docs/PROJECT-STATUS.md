@@ -119,3 +119,10 @@ Last updated: November 1, 2026 (evening).
 | Citations added to `references.bib` | Owner reviewed and said they look fine. Still read the full texts before citing any number in a paper |
 | University logo in the public repo | OK to go with: the old launcher image containing the logo in local commit 4915dd1 may stay. The `branding/` folder and the hub's `Assets/Resources/Branding/` are still git-ignored (no logo files are committed); say so if you want the logo file added so a fresh clone shows it |
 | Commit the work | Yes, committed locally on November 2, 2026; not pushed |
+
+## November 3, 2026: hub Warehouse and Refinery dressed, with people
+
+- `Assets/Editor/HubSceneDressing.cs` (hub) dresses `WarehouseForklift_Hub` and `RefineryRounds_Hub` with Asset Store props and Rocketbox people from code, so rebuilds reproduce it. Menu: **Build hub: warehouse and refinery only**.
+- The warehouse co-worker is a Rocketbox avatar through `CoWorker.ModelFactory` (`PeopleLibrary`). Verified in the editor: walks in the Walk state, freezes at the awareness pause, scripted self-test PASS (`ShotRunner`). Not verified: headset, frame rate, hand play.
+- Found and fixed: `HubDressing.Spawn` reset the prefab root scale, so the 100x Courtyard props (generator, floodlights) came out about 100 m wide. It now keeps the prefab scale (also affects the Hydro scene's props, which should be re-checked).
+- Open: the Sci-Fi shipping containers render near black; the IG container was used in the warehouse. Triangle count is about 1.4-1.5 M per scene; optimise before relying on a Vive Pro 2 frame rate. Screenshots are editor desktop renders.

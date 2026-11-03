@@ -35,7 +35,7 @@ public static class HubDressing
         var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
         go.transform.position = position;
         go.transform.rotation = Quaternion.Euler(0, yaw, 0);
-        go.transform.localScale = Vector3.one * scale;
+        go.transform.localScale = prefab.transform.localScale * scale; // keep the prefab's own root scale (some packs import at 100x and rely on 0.01 here)
         return go;
     }
 

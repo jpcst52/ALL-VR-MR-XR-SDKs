@@ -14,14 +14,22 @@ public static class HubLobbyBuilder
     public static void BuildAll()
     {
         HubDressing.BuildHydroTestBay(); // saves HydrostaticTest_Hub (dressed)
-        BuildPlain<RefineryRounds>("RefineryRounds_Hub", new Vector3(-2.4f, 2.0f, 2.8f), true);
-        BuildPlain<WarehouseForklift>("WarehouseForklift_Hub", new Vector3(-2.4f, 2.0f, 2.8f));
+        BuildPlain<RefineryRounds>("RefineryRounds_Hub", new Vector3(-2.4f, 2.0f, 2.8f), true, HubSceneDressing.DressRefinery);
+        BuildPlain<WarehouseForklift>("WarehouseForklift_Hub", new Vector3(-2.4f, 2.0f, 2.8f), false, HubSceneDressing.DressWarehouse);
         BuildPlain<ResistorBench>("ResistorBench_Hub", new Vector3(1.2f, 1.9f, 0.9f));
         BuildLobby();
         Debug.Log("[lobby] built " + EditorBuildSettings.scenes.Length + " scenes in build settings");
     }
 
-    static void BuildPlain<T>(string sceneName, Vector3 brandOffset, bool seasonSky = false) where T : MonoBehaviour
+    /// <summary>Rebuilds only the two dressed industrial scenes (they lose their bake; bake them again afterwards).</summary>
+    [MenuItem("Pitt-Bradford/Build hub: warehouse and refinery only")]
+    public static void BuildIndustrial()
+    {
+        BuildPlain<RefineryRounds>("RefineryRounds_Hub", new Vector3(-2.4f, 2.0f, 2.8f), true, HubSceneDressing.DressRefinery);
+        BuildPlain<WarehouseForklift>("WarehouseForklift_Hub", new Vector3(-2.4f, 2.0f, 2.8f), false, HubSceneDressing.DressWarehouse);
+    }
+
+    static void BuildPlain<T>(string sceneName, Vector3 brandOffset, bool seasonSky = false, System.Action dress = null) where T : MonoBehaviour
     {
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         new GameObject("Scenario").AddComponent<T>();
@@ -34,6 +42,7 @@ public static class HubLobbyBuilder
             sky.FogTint = 0.5f;
         }
         new GameObject("Return to lobby").AddComponent<ReturnToLobby>();
+        dress?.Invoke(); // props and people from the local packs (HubSceneDressing)
         HubDressing.AddPolish(brandOffset, null, false, false); // these scenarios place their own university plate
         HubDressing.SaveScene(sceneName);
     }

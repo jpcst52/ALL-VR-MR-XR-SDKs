@@ -66,6 +66,17 @@ Every hub scene (`Lobby`, `HydrostaticTest_Hub`, `RefineryRounds_Hub`, `Warehous
 - Still created at runtime on purpose: the VR rig, task boards, why-panels, the co-worker and awareness check, resistors and LEDs, gas puffs, room tone and pump hum.
 - Not verified: headset, a built player, hand play of the baked hub scenes (checked by loading each through the portals in the editor, with a screenshot of each).
 
+## Dressing and people (Warehouse and Forklift, Refinery Rounds)
+
+Both scenes are dressed from code in `Assets/Editor/HubSceneDressing.cs` (`DressWarehouse`, `DressRefinery`), called from `HubLobbyBuilder.BuildPlain`, so a rebuild reproduces everything, people included. Props are placed by their rendered bounds (the packs' pivots differ), their colliders are switched off so nothing blocks the rig, hands or forklift, and they are marked batching-static.
+
+- **Warehouse and Forklift:** loaded racking along the north wall, pallet staging row, parked IG forklifts (east and west strips), loaded pallets and a hand truck by the dock, a shipping container with crates, extinguisher stations, an office corner (Modern Office: desk, chair, computer, cabinet, water cooler, plant, world map), duct runs and hanging lights overhead, security cameras, barrels, ladders. Eight people: two pickers at the racking, two talking by the east wall, a supervisor with documents, one crouching at a pallet, one at the office desk, one by the entry. The walking co-worker of the awareness check is now a Rocketbox avatar (`Assets/Scripts/People/PeopleLibrary.cs` sets `CoWorker.ModelFactory`; the scenario's `Speed` parameter drives Idle/Walk).
+- **Refinery Rounds:** two boilers, flue pipes, ladders, a stacked container yard, ducts, barrels, a generator with fuel cans and floodlights near the flare, pallets and crates, cabin details. Props stay within about 22 m of the unit centre, so the muster point (26 m downwind) is clear. Eight people: a guard by the gate, operators at the tower and the drum, a pair at the control-room cabin, one at the generator, and a pair at the muster point (`FollowTarget.cs` keeps them with the sign when the wind moves it).
+- **Rebuild:** **Pitt-Bradford > Build hub: warehouse and refinery only** rebuilds just these two (the other scenes keep their bake); then open each and run **Bake scene (play mode)**. **Build hub: lobby and all scenarios** resets all five scenes, so bake all five afterwards.
+- **Courtyard props** import at 100x and rely on a 0.01 root scale; `HubDressing.Spawn` now keeps the prefab's own root scale (this also affects the Hydrostatic Test Bay's generator and lights).
+- **Checked (Unity editor, desktop):** rebuilt, baked, played; the people animate (no T-pose); the Rocketbox co-worker walks the route in the Walk state, freezes with the awareness pause (movement 0.0000 m while paused) and the scripted self-test run (`Assets/Scripts/Dev/ShotRunner.cs`, same flow as `-pbCapture`) ended PASS with a 2 of 3 awareness score as designed. **Not checked:** any headset, frame rate on a Vive Pro 2, hand play. Triangle counts in the editor (static meshes plus skinned people): about 1.4 M for the warehouse and 1.5 M for the refinery, which is heavy for a headset and has not been optimised (LODs, lighter props).
+- Screenshots (Unity editor desktop render, not a headset): `docs/images/hub-dressed-warehouse-*.png`, `docs/images/hub-dressed-refinery-*.png`.
+
 ## Files
 
 - `Assets/Editor/HubSetup.cs`: project configuration (built-in pipeline, OpenXR).
