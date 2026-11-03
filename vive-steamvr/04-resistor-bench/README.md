@@ -12,8 +12,8 @@ Everything is built from Unity primitives by code (no imported art); the static 
 
 | Item | Status (as of November 3, 2026) |
 |---|---|
-| Compiles in Unity 6000.3.20f1 | Yes, in scripted editor runs (November 1 and 2). |
-| Scripted capture run (seven views: strap, meter reading, LED lit, LED burned out) | Yes, in the desktop editor, unbaked and baked. The script places parts directly; it does not use the hands. This is emulated, not a headset. |
+| Compiles in Unity 6000.3.20f1 | Yes, in scripted editor runs (November 1 to 3). |
+| Scripted capture run (fifteen views: strap, meter reading, LED lit, LED burned out, set dressing) | Yes, in the desktop editor, unbaked and baked. The script places parts directly; it does not use the hands. This is emulated, not a headset. |
 | `ResistorMath.cs` (color bands, E24, Ohm's law, derating, part check) | **Run on November 3, 2026**: every line of the test list below passed (71 assertions) in a stand-alone .NET 9 console program that compiles `ResistorMath.cs` outside Unity. That program is not committed. It does not test the scene. |
 | Played through by a person | **No.** Nobody has played the four steps by hand, with the mouse and E key or with controllers. |
 | Headset (Vive Pro 2, Quest or any other) | **Not tested.** |
@@ -84,9 +84,41 @@ Signs and labels use the shared kit's signage helpers (`Ui.Panel`, `Ui.Tag`, `Ui
 - Text printed on objects (meter and supply displays, button faces, breadboard silkscreen, the reading card) is left as it was.
 - Cheap realism: concrete floor, painted wall with a base trim, ceiling tiles and fixture frames, wood-grain bench top with an apron, foot rails and a lower shelf, textured ESD mat, a light under each ceiling fixture plus a fill and one shadow-casting key light, soft round smoke puffs.
 
+## Detail, lighting and sound (round 3)
+
+Added on November 3, 2026 (desktop editor only; nothing here has been tested in a headset, and no frame rate has been measured).
+
+**Scene detail (all procedural, in `Assets/Scripts/BenchDetail.cs` and `ResistorBench.cs`):**
+- Room: ESD floor tile (grouted checker texture), anti-fatigue rubber mat with hazard-tape edges, floor marking lines, conduit run with clamps, outlets, junction box, scuffs, ESD warning sign and "ESD PROTECTED AREA" plate, wall clock, fluorescent tubes inside the ceiling panels, a ceiling cable tray, and side and front walls so the room is closed.
+- Bench: rubberised ESD mat texture (dot grid, scratches, worn front edge), steel edge trim, edge ruler, backboard, power strip with a lit switch on the conduit drop, mains cable and ties, pen mug and notepad, stool, task lamp (clamp, two-joint arm, shade, bulb disc) and a desk magnifier with an LED-ring lens.
+- Instrument cart: oscilloscope (lit screen with a traced waveform, knobs, BNC sockets, status LED), soldering station (display, knob, coil stand with an iron resting in it, sponge, solder reel) and a monitor showing a painted schematic of the 5 V LED circuit.
+- Pegboard tool rack (screwdrivers, pliers, cutters, tweezers, hex keys, wire stripper, wire coil, tape, parts cups) with label plates; a four-shelf rack with component reels, translucent part tubes and labelled boxes; a six-by-three small-parts drawer cabinet with labels.
+- Parts: resistors now have a barrel body with end caps, glossy colour bands and tinned leads with a bent tip; LEDs have a translucent epoxy dome and barrel over a glowing die with the anvil and post visible, a halo sprite (additive, bloom stand-in) and different leg lengths; the breadboard has a painted hole grid, rails, centre channel and column numbers (model scale, not the real 2.54 mm pitch); probes have a finger guard, grip bands, tip collar and strain-relief boot; the meter has a rubber holster, range ticks, buttons, a backlight strip and boots at the jacks; the supply has knobs, status LEDs, vent slots and feet.
+- Lighting: cool fluorescent ceiling lights plus a warm spot task lamp, a realtime reflection probe (refreshed once at start), `QualitySettings.pixelLightCount = 5`. Fog is not used. The snap-zone markers are now small translucent gold pads.
+- Effects (runtime-only, soft sprites, small counts): dust motes and a faint beam in the lamp cone, a thin smoke wisp from the soldering iron, a spark burst, a brief light flash and smoke puff when an LED burns out, LED halo that follows the current.
+- "Why this matters" and the question panels keep their distance above the bench (`WhyDistance` / `AskDistance` unchanged).
+- Not done: normal maps (textures are colour maps only), and no bench-wood scratch texture beyond the existing grain.
+
+**Sound** uses the kit's `Sfx` (see [../../docs/agents/KIT-AUDIO-FX.md](../../docs/agents/KIT-AUDIO-FX.md)); nothing plays during a bake. Used here: `hvac_loop` as a quiet lab ambience bed, `esd_click` when the strap clips on, `switch` for the supply power switch, `pressure_tone` (pitched low, very quiet) as a hum while the supply is on, `meter_beep` when a reading appears, `led_on` when the LED lights, `spark_pop` and `smoke_puff` when it burns out, `ui_confirm` when a step completes, `ui_error` for mistakes, Tile footsteps on the ESD floor, plus the kit's built-in `grab`, `release` and `snap`. Whether each is a recorded CC0 sample or synthesised is decided by the kit (see its README and `Runtime/Resources/Audio/CREDITS.md`); this project adds no audio files. There are no dedicated drawer-slide or bin-lid sounds (the catalogue has none), and the range-switch click is not played because the meter dial is not interactive.
+
+**Cost note (not measured):** the baked scene grew from 398 to 934 objects (the extra set dressing is mostly small static pieces), 230 materials and 71 textures. Draw-call and frame-time impact on the Vive Pro 2 has not been measured.
+
+**Verified (November 3, 2026, desktop editor, not a headset):** compile with 0 `error CS`; unbake, then re-bake (934 objects captured, 2.3 MB scene file); the scripted capture ran on the baked scene and produced all 15 views; the same capture also ran unbaked. `ResistorMath.cs` was not changed. Audio was not listened to in this run (no audio output was checked), so levels are unverified.
+
+New screenshots (desktop editor renders, not a headset):
+
+| | |
+|---|---|
+| ![Resistor bodies, bands and bent leads in the bins](screenshots/11-parts-closeup.png) | ![Instrument cart: oscilloscope, soldering station, schematic monitor, pegboard](screenshots/12-instrument-cart.png) |
+| 11. Parts close-up: barrel resistors with glossy bands and bent leads | 12. Instrument cart, schematic monitor and pegboard tool rack |
+| ![Shelf rack with reels, tubes and boxes, and the small-parts cabinet](screenshots/13-shelves-and-drawers.png) | ![Task lamp over the breadboard with dust in the beam](screenshots/14-task-lamp-breadboard.png) |
+| 13. Shelf rack and drawer cabinet (task board hidden for this view) | 14. Task lamp, painted breadboard grid, dust in the cone |
+| ![Whole room from behind the player](screenshots/15-room-wide.png) | |
+| 15. Whole room: ESD floor, anti-fatigue mat, stool, bench, cart | |
+
 ## Baked scene
 
-`Assets/Scenes/ResistorBench.unity` is **baked**: the room, lights, bench, parts rack and bins with their label cards, mat labels, reading card and answer panel, selection tray and CHECK PART button, multimeter body and jacks, breadboard, power supply and its switch, wall poster and cards, name tags, the university plate, the wrist strap, both meter probes, the snap zones and the wires (398 objects; 399 GameObjects in the scene file including the "Scenario" object) are normal GameObjects in the saved scene, so you can see, select, move and restyle them in the editor. Their generated materials and textures are in `Assets/Baked/ResistorBench/` (93 materials and 42 textures, about 0.95 MB; identical materials are saved once, so the 12 color-band swatches are 12 assets). Commit that folder with the scene. `Start()` still runs: the kit helpers adopt the saved objects (matched by parent, name and call order) and the script re-attaches the button and grab handlers, the snap zones, the meter and supply displays, and the leads.
+`Assets/Scenes/ResistorBench.unity` is **baked**: the room, lights, bench, parts rack and bins with their label cards, mat labels, reading card and answer panel, selection tray and CHECK PART button, multimeter body and jacks, breadboard, power supply and its switch, wall poster and cards, name tags, the university plate, the wrist strap, both meter probes, the snap zones and the wires (round 3: 934 objects; 935 GameObjects in the scene file including the "Scenario" object) are normal GameObjects in the saved scene, so you can see, select, move and restyle them in the editor. Their generated materials and textures are in `Assets/Baked/ResistorBench/` (230 materials and 71 textures after round 3; identical materials are saved once). Commit that folder with the scene. `Start()` still runs: the kit helpers adopt the saved objects (matched by parent, name and call order) and the script re-attaches the button and grab handlers, the snap zones, the meter and supply displays, and the leads.
 
 **Still created at runtime (on purpose):** the resistors (all 19, including the unknown part), the two LEDs with their light and smoke, the XR rig and hands, and the task board. The parts move between bins, tray, meter and board, carry their simulated measured value, and the LEDs change colour and burn out, so they are rebuilt each play and are not in the scene.
 
@@ -102,8 +134,9 @@ Edits to baked objects are kept at Play (for example, moving the multimeter in t
 - `Assets/Baked/ResistorBench/`: materials and textures written by **Bake scene**; the baked scene refers to them.
 - `Assets/Editor/ProjectSetup.cs`: the menu items.
 - `Assets/Scenes`, `Assets/XR`, `Assets/Resources`, `ProjectSettings`: the baked scene, OpenXR settings and shader keepers (written by **Set up project**, committed).
-- `screenshots/`: the ten desktop editor renders below (re-shot November 3, 2026).
-- Screenshots (optional), with the project closed in the editor (do not pass `-batchmode`; it needs graphics): `Unity.exe -projectPath <absolute path to 04-resistor-bench> -executeMethod PittBradford.XR.EditorTools.CaptureRunner.Run -pbCapture <absolute screenshots folder> -logFile <log>`. It enters play mode, takes seven shots (`01-bench-overview` to `07-wall-references`) and exits. For the capture only, the scenario stops any OpenXR session that started (the editor may start the OpenXR Mock runtime, which otherwise tilts the pictures and blocks the field of view), hides the desktop hands, and moves the hidden player to each camera position so the name tags face the picture. The Mock Runtime feature is switched off in the committed OpenXR settings.
+- `Assets/Scripts/BenchDetail.cs`: round 3 set dressing and its procedural textures (floor, wall, shelving, instrument cart, pegboard, stool, lamp).
+- `screenshots/`: the fifteen desktop editor renders (re-shot November 3, 2026, round 3).
+- Screenshots (optional), with the project closed in the editor (do not pass `-batchmode`; it needs graphics): `Unity.exe -projectPath <absolute path to 04-resistor-bench> -executeMethod PittBradford.XR.EditorTools.CaptureRunner.Run -pbCapture <absolute screenshots folder> -logFile <log>`. It enters play mode, takes fifteen shots (`01-bench-overview` to `15-room-wide`) and exits. For the capture only, the scenario stops any OpenXR session that started (the editor may start the OpenXR Mock runtime, which otherwise tilts the pictures and blocks the field of view), hides the desktop hands, and moves the hidden player to each camera position so the name tags face the picture. The Mock Runtime feature is switched off in the committed OpenXR settings.
 
 ## Screenshots
 
