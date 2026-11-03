@@ -1,38 +1,28 @@
 {
-  // Opens every project in the repository as its own folder in one VS Code window.
+  // Opens every WebXR (browser) project in the repository as its own folder in one VS Code window.
+  // The Unity projects and native SDK samples are left out on purpose (they open in Unity / Android Studio / Xcode).
   // File > Open Workspace from File... > XR-Training.code-workspace
   "folders": [
-    { "name": "00 Repository root (docs, tools, scripts)", "path": "." },
+    { "name": "Repository root (docs, scripts, tools, Pages workflow)", "path": "." },
 
-    { "name": "Web: Practice Lab", "path": "training-simulations" },
-    { "name": "Web: Multiplayer relay + rooms", "path": "multi-player" },
-    { "name": "Web: A-Frame demo", "path": "a-frame" },
-    { "name": "Web: Three.js demo", "path": "threejs" },
-    { "name": "Web: Babylon.js demo", "path": "babylonjs" },
-    { "name": "Web: raw WebXR demo", "path": "webxr" },
-    { "name": "Web: brand kit", "path": "brand-kit" },
-    { "name": "Web: launcher (main menu)", "path": "launcher" },
-
-    { "name": "Unity 01 Hydrostatic Test Bay", "path": "vive-steamvr/01-hydrostatic-test" },
-    { "name": "Unity 02 Refinery Rounds", "path": "vive-steamvr/02-refinery-rounds" },
-    { "name": "Unity 03 Warehouse Forklift", "path": "vive-steamvr/03-warehouse-forklift" },
-    { "name": "Unity 04 Resistor Bench", "path": "vive-steamvr/04-resistor-bench" },
-    { "name": "Unity hub lobby (local assets)", "path": "vive-steamvr/hub" },
-    { "name": "Unity shared kit package", "path": "vive-steamvr/packages/com.pittbradford.xrtraining" },
-
-    { "name": "Native: Unity XRI", "path": "unity-xri" },
-    { "name": "Native: OpenXR", "path": "openxr" },
-    { "name": "Native: SteamVR", "path": "steamvr" },
-    { "name": "Native: Meta XR", "path": "meta-xr" },
-    { "name": "Native: ARCore (Android)", "path": "arcore-android" },
-    { "name": "Native: Apple visionOS", "path": "apple-spatial" },
-
-    { "name": "Tools", "path": "tools" },
-    { "name": "Scripts (builds, demo start)", "path": "scripts" },
-    { "name": "Docs", "path": "docs" }
+    { "name": "WebXR: Practice Lab (17 scenarios)", "path": "training-simulations" },
+    { "name": "WebXR: Multiplayer (relay, Circuit Lab VR, Site Safety AR, hydrostatic test)", "path": "multi-player" },
+    { "name": "WebXR: A-Frame demo", "path": "a-frame" },
+    { "name": "WebXR: Three.js demo", "path": "threejs" },
+    { "name": "WebXR: Babylon.js demo", "path": "babylonjs" },
+    { "name": "WebXR: raw WebXR Device API demo", "path": "webxr" },
+    { "name": "WebXR: brand kit (shared)", "path": "brand-kit" },
+    { "name": "WebXR: launcher (main menu)", "path": "launcher" }
   ],
   "settings": {
     "files.exclude": {
+      "vive-steamvr": true,
+      "unity-xri": true,
+      "openxr": true,
+      "steamvr": true,
+      "meta-xr": true,
+      "arcore-android": true,
+      "apple-spatial": true,
       "**/Library": true,
       "**/Temp": true,
       "**/Logs": true,
