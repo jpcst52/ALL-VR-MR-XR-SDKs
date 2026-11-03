@@ -21,7 +21,7 @@ const data = JSON.parse(readFileSync(join(repo, "site", "launcher", "examples.js
 const server = await startSubpathServer({ port: PORT, prefix: PREFIX });
 const browser = await chromium.launch({ channel: "chrome", args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 let failures = 0;
-const optional = (u) => /favicon|\/branding\//.test(u);
+const optional = (u) => /favicon|\/branding\/|\/healthz$/.test(u);
 
 async function open(url, { asPages = false, viewport = { width: 1280, height: 720 } } = {}) {
   const context = await browser.newContext({ viewport, reducedMotion: "reduce" });

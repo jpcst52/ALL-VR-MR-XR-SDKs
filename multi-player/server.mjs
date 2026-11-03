@@ -319,7 +319,8 @@ export function createRelay() {
     rooms,
     clients,
     // autoTls (CLI only): with no TLS_KEY/TLS_CERT and no INSECURE_HTTP=1, use a cached self-signed certificate.
-    async listen({ port = Number(process.env.PORT ?? 8443), host = process.env.HOST ?? "0.0.0.0", autoTls = false } = {}) {
+    // autoPort (CLI only): when the port is taken and PORT was not set explicitly, try the next ports up to +49.
+    async listen({ port = Number(process.env.PORT ?? 8443), host = process.env.HOST ?? "0.0.0.0", autoTls = false, autoPort = false } = {}) {
       const keyPath = process.env.TLS_KEY;
       const certPath = process.env.TLS_CERT;
       const httpsRequested = keyPath || certPath;
@@ -345,10 +346,22 @@ export function createRelay() {
         this.server = activeServer;
       }
 
-      await new Promise((resolveListen, rejectListen) => {
-        activeServer.once("error", rejectListen);
-        activeServer.listen(port, host, resolveListen);
-      });
+      const first = port;
+      const last = autoPort ? port + 49 : port;
+      for (;;) {
+        try {
+          await new Promise((resolveListen, rejectListen) => {
+            activeServer.once("error", rejectListen);
+            activeServer.listen(port, host, () => { activeServer.removeListener("error", rejectListen); resolveListen(); });
+          });
+          break;
+        } catch (error) {
+          if (error?.code === "EADDRINUSE" && port < last) { port += 1; continue; }
+          if (error?.code === "EADDRINUSE") error.message = `Port ${first}${last > first ? `-${last}` : ""} is already in use. Close the other program or run scripts\\stop-demo.ps1.`;
+          throw error;
+        }
+      }
+      if (port !== first) this.portMoved = { from: first, to: port };
       return { ...activeServer.address(), protocol: tlsOptions ? "https" : "http" };
     },
     async close() {
@@ -397,6 +410,12 @@ function serveStatic(request, response) {
     return;
   }
 
+  if (pathname === "/healthz") {
+    // The launcher asks this to learn whether it is being served by the relay (and so can use this origin for rooms).
+    response.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" }).end(JSON.stringify({ relay: true, service: "xr-training" }));
+    return;
+  }
+
   if (pathname === "/api/urls") {
     // Read-only list of this machine's LAN URLs, used by multi-player/qr.html.
     import("./tls.mjs").then(({ demoUrls }) => {
@@ -439,8 +458,9 @@ function serveStatic(request, response) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const relay = createRelay();
-  relay.listen({ autoTls: true }).then(async ({ port, protocol }) => {
+  relay.listen({ autoTls: true, autoPort: process.env.PORT === undefined }).then(async ({ port, protocol }) => {
     const { demoUrls } = await import("./tls.mjs");
+    if (relay.portMoved) console.log(`Port ${relay.portMoved.from} was busy, so the demo is using port ${relay.portMoved.to} instead. Use the addresses printed below.`);
     console.log(`XR training demo is running (${protocol.toUpperCase()}, port ${port}). Open these from a browser:`);
     for (const group of demoUrls({ protocol, port })) {
       console.log(`\n  ${group.adapter} (${group.host})`);

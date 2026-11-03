@@ -32,7 +32,7 @@ async function load(viewport) {
     // branding/logo.png is intentionally uncommitted; the page falls back to a text wordmark without it
     if (m.type() === "error" && !/branding\/logo\.png|logo\.png/.test(m.text()) && !/status of 404/.test(m.text())) problems.push(`console error: ${m.text()}`);
   });
-  page.on("response", (r) => { if (r.status() >= 400 && !/favicon|branding\/logo\.png/.test(r.url())) problems.push(`HTTP ${r.status()}: ${r.url()}`); });
+  page.on("response", (r) => { if (r.status() >= 400 && !/favicon|branding\/logo\.png|\/healthz$/.test(r.url())) problems.push(`HTTP ${r.status()}: ${r.url()}`); });
   await page.goto(base, { waitUntil: "networkidle" });
   await page.waitForSelector(".tile");
   return { context, page };

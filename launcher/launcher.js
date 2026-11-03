@@ -111,13 +111,18 @@
       pn.appendChild(document.createTextNode("This is the GitHub Pages copy (static files only). The multiplayer tiles load but cannot join a room, because the relay runs on the lab PC. Open the lab PC's own address (https, port " + port + ") for those. Everything else works here. "));
       pn.appendChild(el("a", { href: "launcher/doc.html?f=docs%2FGITHUB-PAGES.md", text: "What works on Pages" }));
       pn.hidden = false;
-    } else if (location.protocol !== "file:" && location.port !== port) {
-      var url = location.protocol + "//" + location.hostname + ":" + port + "/";
-      var note = document.getElementById("relay-note");
-      note.appendChild(document.createTextNode("Multiplayer tiles need the relay. This page is not served by it, so open the launcher from "));
-      note.appendChild(el("a", { href: url, text: url }));
-      note.appendChild(document.createTextNode(" once the relay is running (npm start in multi-player/)."));
-      note.hidden = false;
+    } else if (location.protocol !== "file:") {
+      // Ask this origin whether it is the relay (it answers /healthz). If so, rooms work from here, on whatever port it got.
+      // If not (a plain static server), point to the relay's usual port.
+      fetch("/healthz", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }).then(function (h) {
+        if (h && h.relay) return;
+        var url = location.protocol + "//" + location.hostname + ":" + port + "/";
+        var note = document.getElementById("relay-note");
+        note.appendChild(document.createTextNode("Multiplayer tiles need the relay. This page is not served by it, so open the launcher from "));
+        note.appendChild(el("a", { href: url, text: url }));
+        note.appendChild(document.createTextNode(" once the relay is running (scripts\start-demo.cmd). If that port was busy the relay prints the port it chose."));
+        note.hidden = false;
+      });
     }
   }
 

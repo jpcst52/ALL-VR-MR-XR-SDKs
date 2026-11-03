@@ -5,7 +5,7 @@ Items marked (verify) have not been confirmed on a real headset.
 | Symptom | Likely cause | What to do |
 |---|---|---|
 | Start script says Node.js not found | Node not installed or not on PATH | Install the LTS from https://nodejs.org, then reopen the window |
-| "Port 8443 is already in use" | another server running (including an old copy of this one) | close it, or run with `-Port 8444` and use that port in all URLs |
+| "Port 8443 is already in use" | another program (or an old copy of this demo) holds the port | `scriptsstart-demo.cmd` now moves to the next free port by itself and prints it; to stop an old copy run `scriptsstop-demo.cmd`; to see what is wrong run `scriptsdemo-doctor.cmd` |
 | `npm install` fails | no internet on first run | connect once, or copy `node_modules` from another PC with the same Node version |
 | Browser says "Your connection is not private" | expected: self-signed certificate | Advanced, then Proceed. Needed once per browser/device |
 | Warning returns every time or after a network change | certificate was regenerated for new addresses | accept again; delete `multi-player/.certs/` to force a fresh certificate |

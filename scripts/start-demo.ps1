@@ -2,7 +2,8 @@
   One-action start for the lab-PC demo.
   Starts the HTTPS relay + static site (port 8443), opens the launcher, prints the Quest and Vive steps.
   Optional: -Dashboard also starts the status dashboard (the address it prints (a free port is chosen automatically)).
-  Optional: -Port 8443 to change the port.
+  Optional: -Port 8443 to change the first port to try. If it is busy the next free port is used and printed.
+  If a copy of this demo is already running on that port, it is reused (the launcher just opens).
 #>
 param(
   [switch]$Dashboard,
@@ -26,11 +27,35 @@ if (-not (Test-Path (Join-Path $mp 'node_modules'))) {
   if ($LASTEXITCODE -ne 0) { Write-Host 'npm install failed.' -ForegroundColor Red; exit 1 }
 }
 
-$busy = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
-if ($busy) {
-  Write-Host "Port $Port is already in use (PID $($busy[0].OwningProcess)). Close that program or run with -Port <other>." -ForegroundColor Red
+function Test-Relay([int]$p) {
+  & node (Join-Path $PSScriptRoot 'relay-probe.mjs') $p *> $null
+  return ($LASTEXITCODE -eq 0)
+}
+function Get-Holder([int]$p) {
+  $c = Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+  if (-not $c) { return $null }
+  $proc = Get-Process -Id $c.OwningProcess -ErrorAction SilentlyContinue
+  return "$($proc.ProcessName) (PID $($c.OwningProcess))"
+}
+
+# Pick the port: the requested one, or the next free one (up to +49). A copy of this demo already running is reused.
+$chosen = $null
+for ($p = $Port; $p -lt $Port + 50; $p++) {
+  $holder = Get-Holder $p
+  if (-not $holder) { $chosen = $p; break }
+  if (Test-Relay $p) {
+    Write-Host "The demo is already running on port $p ($holder). Opening the launcher; nothing new was started." -ForegroundColor Green
+    Start-Process "https://localhost:$p/"
+    exit 0
+  }
+  Write-Host "Port $p is in use by $holder (not this demo), trying the next one." -ForegroundColor Yellow
+}
+if (-not $chosen) {
+  Write-Host "No free port found from $Port to $($Port + 49). Run scriptsdemo-doctor.ps1 to see what is using them." -ForegroundColor Red
   exit 1
 }
+if ($chosen -ne $Port) { Write-Host "Using port $chosen (use it in every address below)." -ForegroundColor Yellow }
+$Port = $chosen
 
 if ($Dashboard) {
   $dash = Join-Path $repo 'tools\status\server.cjs'

@@ -123,7 +123,7 @@ Run from the repository root unless noted. Each prints pass and fail counts; the
 | What | Command | Expected today |
 |---|---|---|
 | Practice Lab scenario data | `cd training-simulations`, then `node --test test/*.test.mjs` | 36 pass |
-| Multiplayer relay | `cd multi-player`, then `npm test` | 40 pass |
+| Multiplayer relay | `cd multi-player`, then `npm test` | 42 pass |
 | Brand kit | `cd brand-kit`, then `npm test` | 16 pass |
 | Offline check (no network) | `node tools/vr-capture/offline-check.mjs` | all pages ok |
 | Launcher check | `node tools/vr-capture/launcher-check.mjs` | pass |
@@ -172,3 +172,10 @@ Run on a development PC: the web demo and tests (desktop browsers, emulated Ques
 ## Open the WebXR projects at once (VS Code)
 
 `XR-Training.code-workspace` in the repository root opens each browser (WebXR) project as its own folder: the Practice Lab, multiplayer, the A-Frame, Three.js, Babylon.js and raw WebXR demos, the brand kit and the launcher, plus the repository root for docs, scripts and tools. In VS Code use **File > Open Workspace from File...** and pick it. The Unity projects and native SDK samples are not in it: open the Unity projects from Unity Hub (**Add > Add project from disk**, Unity 6000.3.20f1): `vive-steamvr/01-hydrostatic-test`, `02-refinery-rounds`, `03-warehouse-forklift`, `04-resistor-bench` and `hub` (the hub needs the local Asset Store packs and Rocketbox). The native samples (`unity-xri`, `openxr`, `steamvr`, `meta-xr`) hold only an `Assets` folder and notes, not full Unity projects.
+
+## The demo server: start, stop and check (scripts)
+
+- `scripts\start-demo.cmd` starts the menu and relay on port 8443. **If 8443 is busy it uses the next free port (8444 to 8492) and prints it; if a copy of this demo is already running it just opens the menu.** The menu works on whatever port it is served from.
+- `scripts\stop-demo.cmd` stops copies of this demo only (it asks each listener on 8443 to 8492 whether it is the relay, through `/healthz`) and leaves other programs alone.
+- `scripts\demo-doctor.cmd` checks Node, the installed dependencies, the ports, the network type, the Windows Firewall rule and the certificate, and says what to fix. It changes nothing. A network set to **Public** blocks headsets: set it to Private.
+- Headsets must use the port the start script printed, so open the addresses it prints or the QR page, not a remembered number.
