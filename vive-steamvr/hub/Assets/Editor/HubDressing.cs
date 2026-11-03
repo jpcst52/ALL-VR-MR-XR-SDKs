@@ -176,50 +176,21 @@ public static class HubDressing
 
         var dressing = new GameObject("Dressing").transform;
 
-        // The building: the IGBlocks "medium" warehouse shell
+        // The floor: the IGBlocks "medium" warehouse floor. The bay is enclosed by a room built in HubSceneDressing.DressHydro,
+        // so the hall walls and roof (which would be hidden, and whose roof prefab pivot sits at floor level) are not used.
         var shell = new GameObject("Building");
         shell.transform.SetParent(dressing, false);
         var floorPiece = Spawn(shell.transform, "WareMedium_Floor", Vector3.zero);
-        // The wall prefabs are single wall strips, so ring the floor with four of them (one with windows)
-        var fb = Union(floorPiece);
-        PlaceWall(shell.transform, "WareMedium_Walls", 0f, fb, 0);
-        PlaceWall(shell.transform, "WareMedium_Walls_Wind", 180f, fb, 1);
-        PlaceWall(shell.transform, "WareMedium_Walls", 90f, fb, 2);
-        PlaceWall(shell.transform, "WareMedium_Walls", -90f, fb, 3);
-        Spawn(shell.transform, "WareMedium_Roof", Vector3.zero);
         CenterOnFloor(shell, floorPiece);
 
-        // Plant dressing from the Sci-Fi kit: pipe runs, barrels, pallets and crates around the edges
+        // Plant props from the Sci-Fi kit and Courtyard (generator, work lights), the room around the bay, the tool bench area,
+        // the supervisor's corner and the people are built from code in HubSceneDressing.DressHydro
         var props = new GameObject("Plant props").transform;
         props.SetParent(dressing, false);
-        Spawn(props, "Pipes 01", new Vector3(-6.4f, 0f, 1.0f), 90f);
-        Spawn(props, "Pipes 03", new Vector3(-6.4f, 0f, 3.2f), 90f);
-        Spawn(props, "Barrel", new Vector3(6.0f, 0f, 4.2f));
-        Spawn(props, "Barrel", new Vector3(6.5f, 0f, 3.6f), 40f);
-        Spawn(props, "Barrel", new Vector3(5.6f, 0f, 3.5f), 80f);
-        Spawn(props, "Pallet", new Vector3(-5.6f, 0f, 4.6f), 10f);
-        Spawn(props, "Crate Long", new Vector3(-5.6f, 0.15f, 4.6f), 10f);
-        Spawn(props, "Pallet", new Vector3(-4.2f, 0f, 4.9f), 80f);
-        Spawn(props, "Crate Short", new Vector3(-4.2f, 0.15f, 4.9f), 80f);
-        Spawn(props, "Exit Sign", new Vector3(-3.6f, 3.2f, -5.7f), 0f);
-
-        // Courtyard props (local copy in Assets/Courtyard Props): a generator, fuel cans and work lights
-        Spawn(props, "PowerGenerator", new Vector3(6.3f, 0f, 0.6f), -90f);
-        Spawn(props, "Gascan_Red", new Vector3(5.5f, 0f, 1.6f), 25f);
-        Spawn(props, "Gascan_Yellow", new Vector3(5.2f, 0f, 1.2f), 110f);
-        Spawn(props, "StandingLight", new Vector3(-6.0f, 0f, -2.0f), 60f);
-        Spawn(props, "Construction Light Floor", new Vector3(3.0f, 0f, 5.4f), 200f);
-
-        // Supervisor's corner from the Modern Office pack
-        var office = new GameObject("Supervisor corner").transform;
-        office.SetParent(dressing, false);
-        Spawn(office, "Table 1", new Vector3(5.4f, 0f, -3.4f), 90f);
-        Spawn(office, "Chair 2", new Vector3(4.5f, 0f, -3.4f), -90f);
-        Spawn(office, "Computer 1", new Vector3(5.4f, 0.75f, -3.4f), 90f);
-        Spawn(office, "Lamp 1", new Vector3(5.4f, 0.75f, -2.8f), 0f);
-        Spawn(office, "File Cabinet", new Vector3(5.8f, 0f, -4.6f), 180f);
-        Spawn(office, "Water cooler", new Vector3(6.2f, 0f, -1.6f), -90f);
-        Spawn(office, "Plant 1", new Vector3(6.3f, 0f, -5.2f));
+        HubSceneDressing.Put(props, "PowerGenerator", 6.3f, 0.6f, -90f);
+        HubSceneDressing.Put(props, "Gascan_Red", 5.2f, 1.7f, 25f);
+        HubSceneDressing.Put(props, "Gascan_Yellow", 4.9f, 1.3f, 110f);
+        HubSceneDressing.DressHydro(dressing);
 
         SaveScene("HydrostaticTest_Hub");
     }

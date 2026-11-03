@@ -12,6 +12,7 @@ public static class HubSceneDressing
     const string CM1 = "Professions/Construction_Male_01", CM2 = "Professions/Construction_Male_02", CM4 = "Professions/Construction_Male_04";
     const string CF1 = "Professions/Construction_Female_01", BM1 = "Professions/Business_Male_01", BF1 = "Professions/Business_Female_01";
     const string SEC = "Professions/Security_Male_01", DEL = "Professions/Delivery_Male_01";
+    const string MED = "Professions/Medical_Female_01", AM5 = "Adults/Male_Adult_05", AF3 = "Adults/Female_Adult_03";
 
     // ------------------------------------------------------------------------------------------ helpers
 
@@ -43,6 +44,19 @@ public static class HubSceneDressing
         return go;
     }
 
+    /// <summary>Like Put but with a non-uniform scale (multiplies the prefab's own scale), for wall and ceiling pieces stretched to fit a room.</summary>
+    public static GameObject PutS(Transform parent, string prefab, float x, float z, float yaw, Vector3 scale, float y = 0f)
+    {
+        var p = HubDressing.FindPrefab(prefab);
+        if (p == null) { Debug.LogWarning($"[dress] prefab not found: {prefab}"); return null; }
+        var go = HubDressing.Spawn(parent, prefab, Vector3.zero, yaw, 1f);
+        go.transform.localScale = Vector3.Scale(p.transform.localScale, scale);
+        Tidy(go, false);
+        var b = HubDressing.Union(go);
+        go.transform.position += new Vector3(x - b.center.x, y - b.min.y, z - b.center.z);
+        return go;
+    }
+
     /// <summary>Like Put but anchored by the bounds centre in all three axes (for overhead pieces).</summary>
     public static GameObject PutAt(Transform parent, string prefab, Vector3 center, float yaw = 0f, float scale = 1f)
     {
@@ -51,6 +65,53 @@ public static class HubSceneDressing
         Tidy(go, false);
         go.transform.position += center - HubDressing.Union(go).center;
         return go;
+    }
+
+    /// <summary>A thin coloured slab (wainscot band, stripe) with a plain Standard material, kept in the scene file.</summary>
+    static GameObject Band(Transform parent, string name, Vector3 center, Vector3 size, Color color)
+    {
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        go.name = name;
+        go.transform.SetParent(parent, false);
+        go.transform.position = center;
+        go.transform.localScale = size;
+        Object.DestroyImmediate(go.GetComponent<Collider>());
+        var m = new Material(Shader.Find("Standard")) { color = color };
+        m.SetFloat("_Glossiness", 0.35f);
+        go.GetComponent<Renderer>().sharedMaterial = m;
+        GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.BatchingStatic);
+        return go;
+    }
+
+    /// <summary>A painted wall slab (Standard material, low gloss); optionally with a Pitt blue and gold base stripe on its +x/-x face.</summary>
+    static GameObject PaintedWall(Transform parent, string name, Vector3 center, Vector3 size, Color color, bool brandStripe)
+    {
+        var w = Band(parent, name, center, size, color);
+        w.GetComponent<Renderer>().sharedMaterial.SetFloat("_Glossiness", 0.12f);
+        if (brandStripe)
+        {
+            float face = center.x + (center.x > 0 ? -0.11f : 0.11f);
+            Band(parent, name + " blue stripe", new Vector3(face, 0.45f, center.z), new Vector3(0.02f, 0.9f, size.z), new Color(0f, 0.208f, 0.58f));
+            Band(parent, name + " gold stripe", new Vector3(face, 0.94f, center.z), new Vector3(0.022f, 0.06f, size.z), new Color(1f, 0.722f, 0.11f));
+        }
+        return w;
+    }
+
+    /// <summary>
+    /// Puts files, books and boxes on the planks of a Modern Office "Shelving" unit placed at (cx, cz) with the given yaw
+    /// (plank tops are at y 0.10, 0.58, 1.02, 1.46, 1.92; the unit is 1.44 wide).
+    /// </summary>
+    static void Stock(Transform parent, float cx, float cz, float yaw)
+    {
+        float a = yaw * Mathf.Deg2Rad;
+        Vector2 ax = new Vector2(Mathf.Cos(a), -Mathf.Sin(a)); // the unit's own x axis in the room plane
+        System.Action<string, float, float, float> add = (name, off, y, sc) =>
+            Put(parent, name, cx + ax.x * off, cz + ax.y * off, yaw, y, sc);
+        add("Files 1", 0f, 0.58f, 0.85f);
+        add("Paper box", -0.35f, 1.02f, 1f); add("Box1", 0.1f, 1.02f, 1f); add("Paper box", 0.45f, 1.02f, 1f);
+        add("books 1", 0f, 1.46f, 0.85f);
+        add("Box1", -0.4f, 0.10f, 1.4f); add("Box1", 0.3f, 0.10f, 1.4f);
+        add("Files 1", 0.1f, 1.92f, 0.8f);
     }
 
     static Transform Group(Transform parent, string name)
@@ -257,5 +318,261 @@ public static class HubSceneDressing
         crew.LocalPosition = Vector3.zero;
         Person(crew.transform, CM2, -0.5f, -2.4f, 90f, "Talk");
         Person(crew.transform, CF1, 0.5f, -2.4f, -90f, "Talk");
+    }
+
+    // ------------------------------------------------------------------------------------------ hydrostatic test bay
+
+    /// <summary>
+    /// Hydrostatic Test Bay: the scenario sits in the middle of the big IGBlocks hall, so this builds a room around it
+    /// (inner x -7.4..7.4, z -6.6..6.6, drop ceiling at y 5.7 under the scenario's light panels) from the Sci-Fi kit's wall and
+    /// ceiling pieces, then fills it. The equipment (x -3..5, z 0..4.5), valves, pump panel, blind flange table, gauge, task board
+    /// and the stay-behind line (z 0.6) stay clear; people stand behind the line.
+    /// </summary>
+    public static void DressHydro(Transform dressing)
+    {
+        var root = Group(dressing, "Bay room and props");
+
+        // --- room shell: stretched plain wall pieces, a door in the front wall, drop ceiling
+        var shell = Group(root, "Room shell");
+        float h = 5.7f / 10f; // the wall pieces are 10 m tall
+        PutS(shell, "Wall Plain", 0f, 6.75f, 90f, new Vector3(1f, h, 15.8f / 6f));            // back
+        PutS(shell, "Wall Plain", -7.55f, 0f, 0f, new Vector3(1f, h, 13.8f / 6f));             // left
+        PutS(shell, "Wall Plain", 7.55f, 0f, 0f, new Vector3(1f, h, 13.8f / 6f));              // right
+        PutS(shell, "Wall Plain", 0f, -6.75f, 90f, new Vector3(1f, h, 15.8f / 6f));            // front (with a door prop, below)
+        Put(shell, "Door", -3.6f, -6.5f, 0f);
+        // Pitt blue wainscot with a gold stripe on all four inner faces, as the stand-alone bay has
+        Color blue = new Color(0f, 0.208f, 0.58f), gold = new Color(1f, 0.722f, 0.11f);
+        Band(shell, "Blue band", new Vector3(0f, 0.9f, 6.59f), new Vector3(14.8f, 1.8f, 0.04f), blue);
+        Band(shell, "Gold stripe", new Vector3(0f, 1.84f, 6.57f), new Vector3(14.8f, 0.08f, 0.04f), gold);
+        Band(shell, "Blue band", new Vector3(0f, 0.9f, -6.59f), new Vector3(14.8f, 1.8f, 0.04f), blue);
+        Band(shell, "Gold stripe", new Vector3(0f, 1.84f, -6.57f), new Vector3(14.8f, 0.08f, 0.04f), gold);
+        Band(shell, "Blue band", new Vector3(7.39f, 0.9f, 0f), new Vector3(0.04f, 1.8f, 13.2f), blue);
+        Band(shell, "Gold stripe", new Vector3(7.37f, 1.84f, 0f), new Vector3(0.04f, 0.08f, 13.2f), gold);
+        Band(shell, "Blue band", new Vector3(-7.39f, 0.9f, 0f), new Vector3(0.04f, 1.8f, 13.2f), blue);
+        Band(shell, "Gold stripe", new Vector3(-7.37f, 1.84f, 0f), new Vector3(0.04f, 0.08f, 13.2f), gold);
+        for (int ix = -1; ix <= 1; ix++)
+        for (int iz = -1; iz <= 1; iz++)
+            PutS(shell, "Ceiling Closed", ix * 5.4f, iz * 4.6f, 0f, Vector3.one, 5.68f);
+        PutAt(shell, "Exit Sign", new Vector3(-3.6f, 3.2f, -6.45f), 90f);
+
+        // --- overhead: duct runs under the ceiling, hanging lights, a pipe bundle along the back wall
+        var over = Group(root, "Overhead");
+        for (int i = 0; i < 2; i++) PutAt(over, "Duct Straight", new Vector3(-5.6f, 4.85f, -3f + i * 6f), 0f);
+        for (int i = 0; i < 2; i++) PutAt(over, "Duct Straight", new Vector3(5.6f, 4.85f, -3f + i * 6f), 0f);
+        for (int i = 0; i < 3; i++) PutAt(over, "Duct Straight", new Vector3(-4.5f + i * 3f, 5.1f, 6.1f), 90f);
+        foreach (var p in new[] { new Vector2(-6.2f, -4f), new Vector2(6.2f, -4f), new Vector2(-6.2f, 2f), new Vector2(6.2f, 2f) })
+            PutAt(over, "Hanging Light", new Vector3(p.x, 5.1f, p.y), 0f);
+
+        // --- back wall: fuse box, pipe runs, a ladder and the storage staging (pallets with crates) in the corner
+        var back = Group(root, "Back wall");
+        Put(back, "Fusebox 01", -1.5f, 6.4f, 0f);
+        Put(back, "Pipes 04", -7.2f, 6.0f, 90f, 0f, 0.85f);
+        Put(back, "Pipes 06", 7.1f, 6.1f, 90f, 0f, 0.8f);
+        Put(back, "Ladder_03a", 4.6f, 6.0f, 0f);
+        Put(back, "Pallet", -5.6f, 5.2f, 10f);
+        Put(back, "Crate Long", -5.6f, 5.2f, 10f, 0.2f);
+        Put(back, "Pallet", -3.9f, 5.5f, 80f);
+        Put(back, "Crate Short", -3.9f, 5.5f, 80f, 0.2f);
+        Put(back, "Barrel", 6.4f, 5.7f);
+        Put(back, "Barrel", 6.9f, 5.0f, 40f);
+        Put(back, "Barrel", 5.9f, 4.9f, 80f);
+        Put(back, "Construction Light Floor", 2.2f, 6.1f, 200f);
+
+        // --- left wall: tool bench area (work table, wall shelving, tool cart), step ladder, a standing light
+        var tools = Group(root, "Tool bench area");
+        Put(tools, "Table 2", -6.4f, 3.0f, 90f);
+        Put(tools, "Shelving", -7.2f, 1.4f, 90f);
+        Put(tools, "Shelving", -7.2f, 4.2f, 90f);
+        Put(tools, "Shelving", -7.2f, 5.7f, 90f);
+        Stock(tools, -7.2f, 1.4f, 90f); Stock(tools, -7.2f, 4.2f, 90f); Stock(tools, -7.2f, 5.7f, 90f);
+        Put(tools, "Cart", -6.0f, 5.9f, 90f);
+        Put(tools, "Laptop", -6.3f, 3.5f, 100f, 0.77f);
+        Put(tools, "Notebook", -6.35f, 2.3f, 80f, 0.77f);
+        Put(tools, "Bin", -6.9f, 0.4f);
+        Put(tools, "StandingLight", -6.4f, -2.2f, 60f);
+        Put(tools, "Ladder_02", -7.15f, -4.6f, 90f);
+        PutAt(tools, "Proyector screen", new Vector3(-7.25f, 2.6f, -0.2f), 90f);   // pre-job briefing screen
+
+        // --- front wall: receiving stack beside the door (hand truck, cartons, pallets, barrels), sprinkler runs overhead
+        var front = Group(root, "Front wall storage");
+        Put(front, "HandTruck", -0.4f, -6.0f, 20f);
+        Put(front, "Cardboard_boxGroup01a", 1.0f, -5.9f, 0f);
+        Put(front, "Box_Pallet03", 2.6f, -5.9f, 0f);
+        Put(front, "Crate_closed", 4.0f, -6.0f, 15f);
+        Put(front, "Garbage Bin", 5.3f, -6.2f);
+        Put(front, "Fire Extinguisher", -2.0f, -6.45f, 0f, 0.9f);
+        Put(front, "Fire Extinguisher", -1.5f, -6.45f, 0f, 0.9f);
+        Put(front, "Barrel", -6.5f, -5.9f);
+        Put(front, "Barrel", -6.0f, -6.3f, 40f);
+        Put(front, "Barrel", -5.9f, -5.5f, 80f);
+        Put(front, "Pipes 02", 7.25f, 3.6f, 0f, 0f, 0.75f);
+        for (int i = 0; i < 2; i++) PutAt(over, "Sprinkler 01", new Vector3(-2.8f + i * 5.6f, 5.2f, 0f), 0f);
+
+
+        // --- supervisor's corner (right wall, front): desk, chair, computer, lamp, cabinet, water cooler, plant (right wall, front)
+        var office = Group(root, "Supervisor corner");
+        Put(office, "Table 1", 6.75f, -3.1f, 90f);
+        Put(office, "Chair 2", 5.75f, -3.1f, 90f);
+        Put(office, "Computer 1", 6.85f, -3.1f, -90f, 0.82f);
+        Put(office, "Papers", 6.5f, -3.9f, 0f, 0.82f);
+        Put(office, "Lamp 1", 7.1f, -2.4f, 90f, 0.82f);
+        Put(office, "File Cabinet", 7.15f, -1.0f, 90f, 0f, 0.5f);
+        Put(office, "Water cooler", 7.1f, -5.4f, -90f);
+        Put(office, "Plant 4", 6.5f, -6.0f);
+
+        // --- people: everyone stays behind the stay-behind line (z 0.6)
+        var people = Group(root, "People");
+        Person(people, BM1, 2.8f, -1.7f, -35f, "Note");          // test supervisor logging the gauge readout
+        Person(people, CM2, -5.6f, 3.0f, -90f, "WorkTable");     // technician at the tool bench
+        Person(people, CM4, 4.2f, -1.5f, 90f, "Talk");           // two operators talking near the pump skid
+        Person(people, CF1, 5.2f, -1.5f, -90f, "Talk");
+        Person(people, SEC, -5.2f, 0.0f, 0f, "Wait");            // safety officer at the line
+        Person(people, BF1, 5.6f, -4.3f, 90f, "Documents");      // at the supervisor's desk
+    }
+
+    // ------------------------------------------------------------------------------------------ lobby
+
+    /// <summary>
+    /// Lobby: a reception corner (east), a seating and coffee lounge (west) and plants, around the four portal pads, the welcome
+    /// board, the season chip, the brand plate and the walking lanes (the centre strip and the diagonals to the pads stay clear).
+    /// Hall is x -12..12, z -9..9; the pads are at z 5.7; the start is at (0, -6.5).
+    /// </summary>
+    public static void DressLobby(Transform dressing)
+    {
+        var root = Group(dressing, "Reception and lounge");
+
+        // --- reception (east): backdrop wall with a wall map and clock, front desk with computer, lamp, phone, papers, plants
+        var rec = Group(root, "Reception desk");
+        PaintedWall(rec, "Backdrop wall", new Vector3(11.6f, 1.8f, -5.8f), new Vector3(0.2f, 3.6f, 6.6f), new Color(0.9f, 0.92f, 0.95f), true);
+        PutAt(rec, "World map", new Vector3(11.45f, 2.15f, -5.8f), -90f);
+        PutAt(rec, "Clock", new Vector3(11.48f, 2.95f, -3.6f), -90f);
+        Put(rec, "Table 1", 9.2f, -5.8f, 90f);
+        Put(rec, "Computer 1", 9.15f, -6.5f, 90f, 0.82f);
+        Put(rec, "Laptop", 9.2f, -5.2f, 90f, 0.82f);
+        Put(rec, "Lamp 1", 9.0f, -4.5f, 90f, 0.82f);
+        Put(rec, "Phone 1", 9.3f, -5.8f, 90f, 0.82f);
+        Put(rec, "Papers", 8.9f, -6.1f, 80f, 0.82f);
+        Put(rec, "Notebook", 8.8f, -5.5f, 100f, 0.82f);
+        Put(rec, "Chair 2", 10.3f, -6.6f, 90f);
+        Put(rec, "File Cabinet", 11.0f, -3.3f, -90f);
+        Put(rec, "Plant 2", 9.1f, -3.5f);
+        Put(rec, "Plant 4", 11.2f, -8.3f);
+        Put(rec, "Bin", 10.3f, -4.3f);
+
+        // --- lounge (west): backdrop wall with a projector screen, meeting table with four chairs, coffee corner
+        var lounge = Group(root, "Lounge");
+        PaintedWall(lounge, "Backdrop wall", new Vector3(-11.6f, 1.8f, -5.8f), new Vector3(0.2f, 3.6f, 6.6f), new Color(0.9f, 0.92f, 0.95f), true);
+        PutAt(lounge, "Proyector screen", new Vector3(-11.4f, 2.2f, -5.8f), 90f);
+        Put(lounge, "Table 2", -9.6f, -5.8f, 90f);
+        Put(lounge, "Chair", -10.55f, -6.5f, 90f);
+        Put(lounge, "Chair", -10.55f, -5.0f, 90f);
+        Put(lounge, "Chair", -8.65f, -6.5f, -90f);
+        Put(lounge, "Chair", -8.65f, -5.0f, -90f);
+        Put(lounge, "Notebook", -9.6f, -5.6f, 20f, 0.77f);
+        Put(lounge, "Bottle", -9.4f, -6.3f, 0f, 0.77f);
+        Put(lounge, "Table 1", -9.2f, -8.1f, 0f);
+        Put(lounge, "machine coffee", -9.9f, -8.1f, 180f, 0.82f);
+        Put(lounge, "paper cup", -9.3f, -8.1f, 0f, 0.82f);
+        Put(lounge, "Water cooler", -11.2f, -8.2f, 90f);
+        Put(lounge, "Plant 4", -11.3f, -3.0f);
+        Put(lounge, "Plant 2", -8.2f, -3.2f);
+        Put(lounge, "Bin", -7.5f, -8.2f);
+
+        // --- east waiting row: three chairs facing the hall with a side table, between the reception and the north portals
+        var wait = Group(root, "Waiting row");
+        Put(wait, "Chair", 11.0f, 0.6f, -90f);
+        Put(wait, "Chair", 11.0f, 1.6f, -90f);
+        Put(wait, "Chair", 11.0f, 2.6f, -90f);
+        Put(wait, "Table 2", 11.2f, 4.4f, 90f);
+        Put(wait, "books 1", 11.2f, 4.0f, 90f, 0.77f);
+        Put(wait, "Plant 2", 11.2f, 6.6f);
+
+        // --- plants in the corners and along the sides (clear of the portals, pads and the brand plate)
+        var green = Group(root, "Plants");
+        Put(green, "Plant 4", 11.2f, 7.8f);
+        Put(green, "Plant 4", -11.4f, 7.4f);
+        Put(green, "Plant 2", 9.8f, 2.5f);
+        Put(green, "Plant 2", -9.8f, 2.0f);
+        Put(green, "Plant 4", 11.3f, -1.2f);
+
+        // --- people
+        var people = Group(root, "People");
+        Person(people, BF1, 10.25f, -5.2f, -90f, "Documents");   // receptionist behind the desk
+        Person(people, MED, 7.4f, -5.0f, 90f, "Wait");           // visitor waiting at the desk
+        Person(people, AM5, -8.4f, -1.8f, 90f, "Talk");          // a small group talking
+        Person(people, AF3, -7.3f, -1.8f, -90f, "Talk");
+        Person(people, BM1, 3.6f, -1.0f, -147f, "Wave");         // faculty member greeting the arrival
+        Person(people, SEC, -3.6f, -7.7f, 0f, "Idle");           // security guard at the entrance
+    }
+
+    // ------------------------------------------------------------------------------------------ resistor bench
+
+    /// <summary>
+    /// Resistor Bench: closes the open room (side and front walls from the Sci-Fi kit) and fills it as a small electronics lab with
+    /// Modern Office furniture. The room is x -4..4, z -3..1.35 (the scenario's own back wall carries the wall cards), ceiling 3.25.
+    /// The bench (x +-1.7, z 0.4..1.2), the parts bins, wall cards, answer panel and rig area (x +-2.5, z -0.95..0.15) stay clear.
+    /// </summary>
+    public static void DressResistor()
+    {
+        var root = new GameObject("Dressing").transform;
+
+        // --- walls (side and front), with the same blue and gold stripes as the back wall
+        var shell = Group(root, "Walls");
+        var paint = new Color(0.8f, 0.82f, 0.84f);
+        PaintedWall(shell, "Left wall", new Vector3(-4.05f, 1.6f, -0.85f), new Vector3(0.1f, 3.2f, 4.6f), paint, false);
+        PaintedWall(shell, "Right wall", new Vector3(4.05f, 1.6f, -0.85f), new Vector3(0.1f, 3.2f, 4.6f), paint, false);
+        PaintedWall(shell, "Front wall", new Vector3(0f, 1.6f, -3.05f), new Vector3(8.2f, 3.2f, 0.1f), paint, false);
+        Band(shell, "Base trim left", new Vector3(-3.995f, 0.06f, -0.85f), new Vector3(0.02f, 0.12f, 4.5f), new Color(0.16f, 0.17f, 0.19f));
+        Band(shell, "Base trim right", new Vector3(3.995f, 0.06f, -0.85f), new Vector3(0.02f, 0.12f, 4.5f), new Color(0.16f, 0.17f, 0.19f));
+        Band(shell, "Base trim front", new Vector3(0f, 0.06f, -2.995f), new Vector3(8f, 0.12f, 0.02f), new Color(0.16f, 0.17f, 0.19f));
+        Color blue = new Color(0f, 0.208f, 0.58f), gold = new Color(1f, 0.722f, 0.11f);
+        Band(shell, "Blue band", new Vector3(-3.99f, 2.6f, -0.82f), new Vector3(0.02f, 0.25f, 4.4f), blue);
+        Band(shell, "Gold stripe", new Vector3(-3.985f, 2.76f, -0.82f), new Vector3(0.02f, 0.04f, 4.4f), gold);
+        Band(shell, "Blue band", new Vector3(3.99f, 2.6f, -0.82f), new Vector3(0.02f, 0.25f, 4.4f), blue);
+        Band(shell, "Gold stripe", new Vector3(3.985f, 2.76f, -0.82f), new Vector3(0.02f, 0.04f, 4.4f), gold);
+        Band(shell, "Blue band", new Vector3(0f, 2.6f, -2.99f), new Vector3(8f, 0.25f, 0.02f), blue);
+        Band(shell, "Gold stripe", new Vector3(0f, 2.76f, -2.985f), new Vector3(8f, 0.04f, 0.02f), gold);
+
+        // --- left wall: side table with two computers and a laptop for the students, shelving, cabinet, plant
+        var left = Group(root, "Student table and shelving");
+        Put(left, "Table 2", -3.45f, -1.65f, 90f);
+        Put(left, "Computer 1", -3.55f, -1.05f, 90f, 0.77f);
+        Put(left, "Laptop", -3.45f, -2.3f, 90f, 0.77f);
+        Put(left, "Notebook", -3.2f, -1.6f, 80f, 0.77f);
+        Put(left, "Pens", -3.1f, -1.95f, 0f, 0.77f);
+        Put(left, "Lamp 1", -3.75f, -1.7f, 90f, 0.77f);
+        Put(left, "Shelving", -3.7f, 0.5f, 90f);
+        Stock(left, -3.7f, 0.5f, 90f);
+        Put(left, "Bin", -3.4f, -0.1f);
+        PutAt(left, "World map", new Vector3(-3.96f, 1.85f, -1.65f), 90f);
+
+        // --- right wall: projector screen with a world map beside it, shelving, cabinets, plant, clock on the back wall
+        var right = Group(root, "Projector wall");
+        PutAt(right, "Proyector screen", new Vector3(3.95f, 1.95f, -1.5f), -90f);
+        Put(right, "Shelving", 3.7f, 0.5f, -90f);
+        Stock(right, 3.7f, 0.5f, -90f);
+        Put(right, "File Cabinet", 3.75f, -2.0f, -90f, 0f, 0.5f);
+        Put(right, "Plant 4", 3.6f, -0.25f);
+        Put(right, "Bin", 3.5f, -2.8f);
+        PutAt(right, "Clock", new Vector3(3.0f, 2.55f, 1.27f), 180f);
+        Put(right, "Cardboard_box03", 3.45f, -2.6f, 20f, 0f, 0.6f);
+
+        // --- front wall (behind the rig): door, shelving, plants, map, exit sign
+        var front = Group(root, "Front wall");
+        Put(front, "Door", 2.0f, -2.95f, 0f);
+        Put(front, "Shelving", -1.2f, -2.7f, 0f);
+        Put(front, "Shelving", 0.3f, -2.7f, 0f);
+        Stock(front, -1.2f, -2.7f, 0f); Stock(front, 0.3f, -2.7f, 0f);
+        Put(front, "Plant 4", -2.4f, -2.65f);
+        Put(front, "Plant 2", 3.3f, -2.7f);
+        PutAt(front, "Exit Sign", new Vector3(2.0f, 2.8f, -2.9f), 90f);
+        Put(front, "Fire Extinguisher", 2.95f, -2.93f, 180f, 0.9f);
+
+        // --- people
+        var people = Group(root, "People");
+        Person(people, BM1, 2.5f, 0.7f, -113f, "Talk");         // instructor beside the wall references
+        Person(people, CM2, -2.85f, -2.3f, -90f, "WorkTable"); // two students at the side table
+        Person(people, AF3, -2.85f, -1.15f, -90f, "Note");
+        Person(people, MED, 3.1f, -2.0f, -40f, "Look");         // someone looking around
     }
 }

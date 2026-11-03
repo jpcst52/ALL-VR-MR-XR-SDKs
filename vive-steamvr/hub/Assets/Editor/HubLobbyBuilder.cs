@@ -16,7 +16,7 @@ public static class HubLobbyBuilder
         HubDressing.BuildHydroTestBay(); // saves HydrostaticTest_Hub (dressed)
         BuildPlain<RefineryRounds>("RefineryRounds_Hub", new Vector3(-2.4f, 2.0f, 2.8f), true, HubSceneDressing.DressRefinery);
         BuildPlain<WarehouseForklift>("WarehouseForklift_Hub", new Vector3(-2.4f, 2.0f, 2.8f), false, HubSceneDressing.DressWarehouse);
-        BuildPlain<ResistorBench>("ResistorBench_Hub", new Vector3(1.2f, 1.9f, 0.9f));
+        BuildPlain<ResistorBench>("ResistorBench_Hub", new Vector3(1.2f, 1.9f, 0.9f), false, HubSceneDressing.DressResistor);
         BuildLobby();
         Debug.Log("[lobby] built " + EditorBuildSettings.scenes.Length + " scenes in build settings");
     }
@@ -58,14 +58,8 @@ public static class HubLobbyBuilder
         // The hall keeps its own walls (the IGBlocks shell is far larger than the lobby); the packs only add props.
         var dressing = new GameObject("Dressing").transform;
 
-        // Office furniture by the entrance as a reception corner
-        var reception = new GameObject("Reception").transform;
-        reception.SetParent(dressing, false);
-        HubDressing.Spawn(reception, "Table 1", new Vector3(8.5f, 0f, -6.5f), 90f);
-        HubDressing.Spawn(reception, "Chair 2", new Vector3(7.6f, 0f, -6.5f), -90f);
-        HubDressing.Spawn(reception, "Plant 1", new Vector3(10.4f, 0f, -7.6f));
-        HubDressing.Spawn(reception, "Water cooler", new Vector3(-9.5f, 0f, -7.2f), 90f);
-        HubDressing.Spawn(reception, "Plant 1", new Vector3(-10.4f, 0f, -4.5f));
+        // Reception corner, seating and coffee lounge, plants and people (HubSceneDressing.DressLobby); the portals, board and pads stay clear
+        HubSceneDressing.DressLobby(dressing);
 
         Directory.CreateDirectory("Assets/Scenes/Local");
         HubDressing.SaveScene("Lobby");
