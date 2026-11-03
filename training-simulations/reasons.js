@@ -266,7 +266,7 @@ export const reasons = {
         plan: "Agreeing the plan catches mistakes before anyone is exposed.",
       },
       {
-        off: "Switching off is the first step, but a switch alone can be turned back on.",
+        off: "Switching off starts the isolation, but a switch alone can be turned back on.",
         lock: "Your own lock stops anyone switching the circuit back on while you work.",
         tag: "The tag tells others who is working and why the breaker is locked.",
         prove: "A broken tester also reads zero, so you prove it works first.",
@@ -341,7 +341,7 @@ export const reasons = {
         rating: "A part run close to its power limit runs hot and can fail early.",
       },
       {
-        env: "Sulfur can attack the inside of standard chip resistors over time.",
+        env: "Sulfur can attack the silver in standard chip resistors over time and make them fail open.",
         derate: "Parts can safely handle less power when their surroundings are hot.",
       },
     ],
