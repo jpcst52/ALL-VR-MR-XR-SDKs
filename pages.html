@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>All GitHub Pages · Pitt-Bradford XR</title>
+  <meta name="description" content="One page with a link to every WebXR example and every other GitHub Pages site for the Pitt-Bradford XR work.">
+  <style>
+    :root {
+      --royal: #003594; --gold: #ffb81c; --navy: #00205b; --sky: #dbeeff;
+      --bg: #f4f9ff; --ink: #0b1b3a; --card: #ffffff; --line: #b9d3f0; --muted: #3c557d;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #00143a; --ink: #eaf3ff; --card: #0a2a66; --line: #2a4f94; --muted: #b6cdf0; --sky: #0a2a66; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.5 Roboto, "Segoe UI", Arial, sans-serif; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 0 16px; }
+    header { background: var(--navy); color: #fff; padding: 22px 0 18px; border-bottom: 5px solid var(--gold); }
+    h1 { font: 400 clamp(30px, 6vw, 46px)/1.05 "League Gothic", Impact, "Arial Narrow", sans-serif; letter-spacing: .02em; text-transform: uppercase; margin: 0 0 6px; }
+    header p { margin: 0; color: #dbeeff; max-width: 60ch; }
+    h2 { font: 400 28px/1.1 "League Gothic", Impact, "Arial Narrow", sans-serif; text-transform: uppercase; letter-spacing: .02em; margin: 32px 0 8px; }
+    .note { color: var(--muted); font-size: 15px; margin: 0 0 12px; }
+    ul.sites { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+    ul.sites a { display: block; min-height: 56px; padding: 12px 14px; background: var(--card); border: 1px solid var(--line); border-left: 6px solid var(--royal); border-radius: 8px; color: inherit; text-decoration: none; }
+    ul.sites a:hover, ul.sites a:focus-visible { border-left-color: var(--gold); outline: 2px solid var(--gold); outline-offset: 1px; }
+    .t { font-weight: 700; font-size: 18px; }
+    .s { color: var(--muted); font-size: 15px; }
+    .u { font: 13px/1.3 Consolas, monospace; color: var(--muted); word-break: break-all; margin-top: 3px; }
+    .tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 99px; background: var(--sky); border: 1px solid var(--line); margin-left: 6px; vertical-align: middle; }
+    .warn { background: #fff4d6; color: #4a3600; border: 1px solid #e6c45a; border-radius: 8px; padding: 10px 14px; margin-top: 12px; font-size: 15px; }
+    footer { margin: 36px 0 28px; color: var(--muted); font-size: 14px; }
+    a.home { color: var(--gold); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>All GitHub Pages</h1>
+      <p>Every WebXR example in this repository, and the other GitHub Pages sites. Open this page in the headset's browser, then tap a link. <a class="home" href="./">Main menu</a></p>
+    </div>
+  </header>
+
+  <main class="wrap" id="main">
+    <h2>Other GitHub Pages sites</h2>
+    <p class="note">These are separate repositories. They open in a new tab.</p>
+    <ul class="sites" id="others"></ul>
+
+    <h2>This repository: browser demos</h2>
+    <ul class="sites" id="browser"></ul>
+
+    <h2>This repository: multiplayer</h2>
+    <p class="note">These pages need the relay running on the lab PC. Served from GitHub Pages they load but cannot join a room (the relay is not a static file).</p>
+    <ul class="sites" id="multiplayer"></ul>
+
+    <h2>This repository: Quest pages</h2>
+    <ul class="sites" id="quest"></ul>
+
+    <div class="warn" role="note">WebXR support depends on the browser and device. Nothing here has been tested on a headset yet: see the GitHub Pages guide for the device table.</div>
+  </main>
+
+  <footer class="wrap">
+    <a href="docs/GITHUB-PAGES.md">GitHub Pages guide</a> ·
+    <a href="CREDITS.md">Credits</a>
+  </footer>
+
+  <script>
+    // Sites from other repositories. Edit this list when a new Pages site is added.
+    var OTHER_SITES = [
+      { title: "Alumni Weekend 2026", summary: "VR projects for Alumni Weekend 2026.", url: "https://jcallinan.github.io/Alumni-Weekend-2026/" },
+      { title: "BMW 325xi 3D", summary: "A 3D car model viewer.", url: "https://jcallinan.github.io/bmw-325xi-3d/" }
+    ];
+
+    function item(title, summary, href, tag, shown) {
+      var li = document.createElement("li");
+      var a = document.createElement("a");
+      a.href = href;
+      var t = document.createElement("div"); t.className = "t"; t.textContent = title;
+      if (tag) { var g = document.createElement("span"); g.className = "tag"; g.textContent = tag; t.appendChild(g); }
+      var s = document.createElement("div"); s.className = "s"; s.textContent = summary;
+      var u = document.createElement("div"); u.className = "u"; u.textContent = shown;
+      a.appendChild(t); a.appendChild(s); a.appendChild(u); li.appendChild(a);
+      return li;
+    }
+
+    OTHER_SITES.forEach(function (site) {
+      document.getElementById("others").appendChild(item(site.title, site.summary, site.url, "other repository", site.url));
+    });
+
+    fetch("launcher/examples.json").then(function (r) { return r.json(); }).then(function (data) {
+      var web = { browser: "browser", multiplayer: "multiplayer", quest: "quest" };
+      data.examples.forEach(function (e) {
+        var list = web[e.section];
+        if (!list || !e.url || /^(https?:)?\/\//.test(e.url)) return;
+        var abs = new URL(e.url, location.href).href;
+        document.getElementById(list).appendChild(item(e.title, e.summary || "", e.url, e.status || "", abs));
+      });
+    }).catch(function () {
+      var li = document.createElement("li");
+      li.textContent = "The list of examples could not be loaded. Open the main menu instead.";
+      document.getElementById("browser").appendChild(li);
+    });
+  </script>
+</body>
+</html>

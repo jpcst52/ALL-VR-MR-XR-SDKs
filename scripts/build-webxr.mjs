@@ -58,6 +58,7 @@ mkdirSync(site, { recursive: true });
 
 // 1. the pages
 copyFile("index.html");
+copyFile("pages.html"); // flat list of every page and the other Pages sites
 copyFile("branding/logo.png"); // the one branding file the owner approved for publishing (2026-11-02); the rest of branding/ stays out
 for (const dir of ["launcher", "brand-kit", "vendor", "assets", "a-frame", "threejs", "babylonjs", "webxr", "demo-ui"]) {
   if (existsSync(join(repo, dir))) copyTree(dir, (r, isDir) => isDir && /\/screenshots$/.test(r)); // screenshots are added when referenced

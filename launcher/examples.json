@@ -555,6 +555,12 @@
       "title": "Slide decks (download)",
       "links": [
         {
+          "id": "all-pages",
+          "title": "All GitHub Pages (flat list)",
+          "url": "pages.html",
+          "note": "every WebXR page and the other Pages sites, one tap each"
+        },
+        {
           "id": "repository-guide",
           "title": "Repository guide (whole repo)",
           "url": "Repository-Guide.pptx",

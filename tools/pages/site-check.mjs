@@ -53,7 +53,7 @@ const fetchOk = async (u) => { const r = await fetch(u); return r.status === 200
 try {
   // 1. every web page in the launcher (urls that are not Markdown or decks)
   const pageUrls = [...new Set(data.examples.map((e) => e.url).filter((u) => !/\.(md|pptx)$/i.test(u)))];
-  for (const u of [...pageUrls, "qr.html"]) {
+  for (const u of [...pageUrls, "qr.html", "pages.html"]) {
     const { page, context, problems } = await open(base + u);
     await page.waitForTimeout(u.startsWith("multi-player") || u.startsWith("training") ? 3500 : 2000);
     const canvases = await page.locator("canvas").count();

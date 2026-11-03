@@ -70,3 +70,7 @@ The check serves `site/` under `/ALL-VR-MR-XR-SDKs/` (a sub-path, like Pages, so
 ## Related
 
 [BUILDS.md](BUILDS.md) (Vive player builds), [HOW-TO-RUN.md](HOW-TO-RUN.md) (running everything on the lab PC), [HOLOLENS-AR-NOTES.md](HOLOLENS-AR-NOTES.md).
+
+## The flat list page (`pages.html`)
+
+`pages.html` (`https://jpcst52.github.io/ALL-VR-MR-XR-SDKs/pages.html`) is one plain page with a large link for every WebXR page in this repository (read from `launcher/examples.json`, so it stays current) and for the other GitHub Pages sites: Alumni Weekend 2026 and the BMW 325xi 3D viewer. It is meant to be opened once in a headset browser and bookmarked. To add another site, add a line to the `OTHER_SITES` list at the bottom of the file.
