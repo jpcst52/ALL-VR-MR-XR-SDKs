@@ -11,6 +11,7 @@ import { decorateCoreStation } from "./core-stations.js";
 import { createLightersStation, createHydrotestStation, createSpoolStation, createResistorBench } from "./partner-stations.js";
 import { createCirculationStation } from "./biology-stations.js";
 import { PITT, textPanelTexture, thumbCardTexture, tagSprite, brandPlate, brandAssetsReady } from "../brand-kit/panels.js";
+import { createRoom, ROOM_BY_STATION, GROUND_BY_STATION, DEFAULT_GROUND } from "./rooms.js";
 import { dressStation, clearDressing, tickDressing, failedModels } from "./dressing.js";
 import { createSeasonSky } from "../brand-kit/season-sky.js";
 
@@ -291,7 +292,7 @@ function enableShadows(root) {
     if (!node.isMesh || node.userData.isTrainingUi) return;
     const material = Array.isArray(node.material) ? node.material[0] : node.material;
     if (!material?.isMeshStandardMaterial || material.transparent) return;
-    node.castShadow = true;
+    node.castShadow = !node.userData.noShadowCast; // room walls and floors only receive
     node.receiveShadow = true;
   });
 }
@@ -575,6 +576,9 @@ function clearObject(group) {
       child.material.dispose();
       return;
     }
+    // Every skinned character owns a bone texture (made on its first draw) that is not shared through the model cache.
+    // Without this each visit to a scenario with people leaked a few GPU textures (found in round 2 with renderer.info.memory).
+    if (child.isSkinnedMesh) child.skeleton?.dispose();
     if (!child.isMesh || child.userData.sharedAsset) return; // glTF models are shared through the cache (dressing.js)
     child.geometry.dispose();
     if (Array.isArray(child.material)) child.material.forEach((material) => material.dispose());
@@ -591,6 +595,15 @@ function setTrainingScene(scenario, stepIndex = 0) {
   clearObject(scenarioModel);
   scenarioModel = stationBuilders[scenario?.object]?.() ?? createCounter();
   decorateCoreStation(scenarioModel, scenario?.object);
+  // A procedural room (walls, floor, fittings) behind indoor work areas; a ground colour for outdoor ones.
+  const room = scenario ? createRoom(ROOM_BY_STATION[scenario.object]) : null;
+  if (room) {
+    room.traverse((node) => { node.userData.noShadowCast = true; });
+    scenarioModel.add(room);
+  }
+  const ground = GROUND_BY_STATION[scenario?.object];
+  floor.material.color.set(ground?.color ?? DEFAULT_GROUND);
+  floor.material.roughness = ground?.rough ?? 0.82;
   scenarioModel.position.set(0, 0.2, -0.28);
   enableShadows(scenarioModel);
   world.add(scenarioModel);
@@ -722,6 +735,7 @@ function showCatalog() {
   simulation.hidden = true;
   catalog.hidden = false;
   renderCatalog();
+  moveFocus(catalog.querySelector("h2"));
   setTrainingScene(null);
   updateChoiceCards();
 }
@@ -764,7 +778,17 @@ function setHotspotStatus(state, status) {
   state.label = labelSprite(state.def.label, color, status);
   state.label.position.set(...(state.labelOffset ?? [0, 0.24, 0]));
   state.group.add(state.label);
-  if (state.button) state.button.disabled = status !== "idle";
+  if (state.button) {
+    const hadFocus = document.activeElement === state.button;
+    state.button.disabled = status !== "idle";
+    // The state is also spoken: a done or wrong action is not only a colour change.
+    state.button.textContent = status === "idle" ? state.def.label : `${state.def.label} (${status === "done" ? "done" : "wrong"})`;
+    if (hadFocus && status !== "idle") {
+      // A disabled button drops keyboard focus; hand it to the next action that is still available.
+      const buttons = [...taskActions.querySelectorAll("button")];
+      (buttons.slice(buttons.indexOf(state.button) + 1).find((b) => !b.disabled) ?? buttons.find((b) => !b.disabled))?.focus();
+    }
+  }
 }
 
 function createHotspot(def) {
@@ -882,6 +906,7 @@ function renderTask(step) {
     finished: false,
   };
   updateChoiceCards();
+  moveFocus(currentStep === 0 ? simulationTitle : decisionPrompt);
 }
 
 function performHotspot(state) {
@@ -940,6 +965,7 @@ function finishTask() {
   feedback.hidden = false;
   updateSign(activeScenario, currentStep, task.step.principle);
   updateChoiceCards();
+  if (taskActions.contains(document.activeElement) || document.activeElement === document.body) continueButton.focus({ preventScroll: true });
 }
 
 // ---------------------------------------------------------------- reasoning question
@@ -1011,6 +1037,13 @@ function chooseRationale(index) {
   updateChoiceCards();
 }
 
+// Keyboard and screen-reader users: when the panel content changes, move focus to its new heading so they are not left on a removed control.
+function moveFocus(element) {
+  if (!element) return;
+  element.setAttribute("tabindex", "-1");
+  element.focus({ preventScroll: true });
+}
+
 function renderQuestion() {
   const step = activeScenario.steps[currentStep];
   hideWhy();
@@ -1042,6 +1075,7 @@ function renderQuestion() {
   });
   setTrainingScene(activeScenario, currentStep);
   updateChoiceCards();
+  moveFocus(currentStep === 0 ? simulationTitle : decisionPrompt);
 }
 
 function startScenario(scenario) {
@@ -1140,6 +1174,7 @@ function finishScenario() {
     return entry;
   }));
   review.hidden = !missedPrinciples.length;
+  moveFocus(completionTitle);
   renderCatalog();
   setTrainingScene(activeScenario);
   updateChoiceCards();
@@ -1396,25 +1431,38 @@ let lastFrame = 0;
 function animate(time) {
   const delta = Math.min(0.1, Math.max(0, (time - lastFrame) / 1000));
   lastFrame = time;
-  tickDressing(delta);
-  scenarioModel?.userData.tick?.(time / 1000);
-  const flashing = performance.now() < flashUntil;
+  // prefers-reduced-motion: people stand still, alarms and the swaying platform hold a fixed pose, halos do not pulse.
+  if (!reducedMotion) tickDressing(delta);
+  scenarioModel?.userData.tick?.(reducedMotion ? 0.5 : time / 1000);
+  const flashing = !reducedMotion && performance.now() < flashUntil; // no full-screen flash with reduced motion; the red panel still reports a critical miss
   scene.background.set(flashing ? "#3a1218" : sceneColor);
   // The sky shows behind the menu and outdoor scenarios; it steps aside for the red critical-miss flash.
   sky.setEnabled(skyWanted && !flashing);
   sky.update(time, camera);
   if (task) {
     task.states.forEach((state, index) => {
-      state.halo.scale.setScalar(state.status === "idle" ? 1 + 0.14 * Math.sin(time / 280 + index) : 1);
+      state.halo.scale.setScalar(state.status === "idle" && !reducedMotion ? 1 + 0.14 * Math.sin(time / 280 + index) : 1);
     });
   }
-  platformRing.rotation.z += renderer.xr.isPresenting ? 0.0015 : 0.0007;
+  if (!reducedMotion) platformRing.rotation.z += renderer.xr.isPresenting ? 0.0015 : 0.0007;
   controls.update();
   renderer.render(scene, camera);
 }
 
 // Read-only hooks for tools/vr-capture/realism-shots.mjs (triangle and draw-call budget, model load failures).
-globalThis.__labStats = () => ({ ...renderer.info.render, missing: failedModels() });
+globalThis.__labStats = () => ({ ...renderer.info.render, memory: { ...renderer.info.memory }, missing: failedModels() });
+// Triangles of each visible mesh in the current work area, largest first (tools/vr-capture/lab-qa.mjs --tris).
+globalThis.__labTriangles = () => {
+  const rows = [];
+  scenarioModel?.traverse((node) => {
+    if (!node.isMesh || !node.visible) return;
+    for (let p = node.parent; p; p = p.parent) if (p.visible === false) return;
+    const g = node.geometry;
+    const tris = (g.index ? g.index.count : g.attributes.position.count) / 3;
+    rows.push({ name: (() => { for (let p = node; p; p = p.parent) if (p.userData.dressName) return p.userData.dressName; return "station primitives"; })(), tris: Math.round(tris), shadow: node.castShadow });
+  });
+  return rows.sort((a, b) => b.tris - a.tris);
+};
 setTrainingScene(null);
 updateChoiceCards();
 renderer.setAnimationLoop(animate);
@@ -1429,17 +1477,25 @@ brandAssetsReady.then(() => {
   if (activeScenario) updateSign(activeScenario, currentStep);
 });
 
-// On wide screens the control panel covers the right side, so shift the scene toward the left.
+// On wide screens the control panel covers the right side, so shift the scene toward the free area on the left.
+// The shift and the field of view follow the real panel width (it narrows on tablets and small laptops), so the
+// work area is never hidden behind the panel.
 function frameScene() {
-  camera.aspect = window.innerWidth / window.innerHeight;
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  camera.aspect = width / height;
   // Portrait phones: widen the view and lift the scene into the space above the bottom-sheet panel.
-  camera.fov = window.innerWidth <= 700 && window.innerHeight > window.innerWidth ? 78 : 54;
-  if (window.innerWidth > 900) {
-    camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * 0.23, 0, window.innerWidth, window.innerHeight);
-  } else if (window.innerWidth <= 700) {
-    camera.setViewOffset(window.innerWidth, window.innerHeight, 0, window.innerHeight * 0.24, window.innerWidth, window.innerHeight);
+  camera.fov = width <= 700 && height > width ? 78 : 54;
+  if (width > 700) {
+    const panelEl = document.querySelector(".panel");
+    const covered = Math.min(width * 0.7, (panelEl?.offsetWidth ?? 684) + 24); // panel plus its right margin
+    const free = Math.max(width - covered - 24, 240);
+    camera.setViewOffset(width, height, covered / 2 - 12, 0, width, height);
+    // Show about 8 m of the work area across the free strip (the platform is 5 m wide, and its near edge is closer than the middle) (the camera is about 8.7 m away).
+    const wantedHalfAngle = Math.atan(3.9 / (8.7 * Math.max(free / height, 0.3)));
+    camera.fov = Math.min(82, Math.max(54, (2 * wantedHalfAngle * 180) / Math.PI));
   } else {
-    camera.clearViewOffset();
+    camera.setViewOffset(width, height, 0, height * 0.24, width, height);
   }
   camera.updateProjectionMatrix();
 }

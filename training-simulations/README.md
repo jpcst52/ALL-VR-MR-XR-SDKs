@@ -68,8 +68,10 @@ Business and research tasks work the same way (greet the customer, move to a qui
 From this directory, run the scenario-catalog checks with:
 
 ```powershell
-node --test .\test\scenarios.test.mjs .\test\biology.test.mjs .\test\why.test.mjs .\test\thumbs.test.mjs .\test\models.test.mjs
+node --test .\test\scenarios.test.mjs .\test\biology.test.mjs .\test\why.test.mjs .\test\thumbs.test.mjs .\test\models.test.mjs .\test\round2.test.mjs
 ```
+
+`round2.test.mjs` checks the round-2 work from the source: every indoor station has a room kind and every outdoor one a ground colour; rooms never cast shadows and are freed with the station; skinned characters free their bone texture; late-loading models are dropped; ground props stay on the platform (or the room floor) and clear of the hotspots they could hide; reduced motion; keyboard focus handling; the camera follows the real panel width. Browser checks outside `node --test`: `node tools/vr-capture/lab-qa.mjs <outDir> [ids]` (screenshots at the start, after a correct action and after a wrong one, plus triangles and heap), `node tools/vr-capture/lab-a11y.mjs [id]` (keyboard-only run), `node tools/vr-capture/lab-leak.mjs [rounds]` (GPU texture and geometry counts over repeated visits to all 17 scenarios), and `node tools/vr-capture/ui-check.mjs --only lab`.
 
 `models.test.mjs` checks that every model file the code references exists and is a GLB, that each file under `assets/models/` has a CC0 credits row with a source link, that the people have Idle and Walk clips, that the total stays under 25 MB, and that the loader falls back to the primitive on failure. `thumbs.test.mjs` checks that every scenario has a 320 x 180 JPEG thumbnail under 40 KB keyed by its id and listed in `thumbs/index.json`, and that the catalog only requests listed thumbnails and falls back to a placeholder tile. The seasonal-sky logic is tested in the brand kit (`node --test` in `../brand-kit`, file `test/season-sky.test.mjs`): season by date, manifest ordering and bad-input fallbacks, 2k/4k choice, path resolution, the Bradford wording rule, the transition curve (and that reduced motion has no mosaic, scan lines, or flicker), and the 30-second clock (one swap per transition, no time passes while paused).
 
@@ -88,18 +90,35 @@ The tests verify the catalog (17 scenarios in 5 categories: three business, thre
 - High-risk industrial practice with animated 3D work areas (scaffold, control room, outdoor process unit, suspended platform, welding bay, electrical panel) and critical-miss feedback.
 - One scenario catalog and scene presented in desktop mode and in a WebXR immersive VR view where supported.
 
-## Realistic props and people (CC0 models)
+## Rooms, props and people
 
-The stations are still built from primitives first, so every scenario works with no extra files. On top of that, `dressing.js` loads CC0 glTF models from [`../assets/models/`](../assets/models/CREDITS.md) with the vendored `GLTFLoader` (no CDN, works offline) and adds them once they arrive:
+Every scenario is built from primitives first, so it works with no extra files. Two layers are added on top.
 
-- **People.** Every primitive "doll" (the supervisor in the spill scenario, the customer at the counter, the fire watch, the visitor, the pedestrian in the window-cleaning scenario, and so on) is swapped for a Quaternius character with an idle animation (`AnimationMixer`), about 1.7 m tall, turned toward the work. Hi-vis workers play the supervisor/operator/fire-watch roles. The pedestrian in the window-cleaning scenario plays the walk clip. People on the scaffold deck and in the window cradle are drawn at half size so they match that miniature.
-- **Props.** Poly Haven props around six work areas (delivery, spill/safe work area, welding, electrical, hydrostatic test, counter): cardboard cartons and shelving, a hand truck, a wet-floor sign, jerrycan, welding cart, tool chest, utility box, barrel, generator, cash register, and more. Models are 512 px WebP textures and at most about 6,000 triangles each.
-- **Fallback.** If a file is missing or fails to parse, `loadModel()` resolves to `null`, one console warning is logged, and the primitive (or doll) stays. Checked by blocking `assets/models/` in the browser (`BLOCK_MODELS=1`, see below): every scenario still renders and runs, no page error.
-- **Light.** The room environment light was raised a little (0.4 to 0.65) so the PBR materials read; shadows stay at one 1024 map. No post-processing.
+**Rooms (`rooms.js`, no files).** The twelve indoor work areas stand in a procedural cut-away room: a floor, a back wall and two side walls with textures drawn on a canvas, a skirting board, and wall fittings (window, clock, notice board, exit sign, caged lamps). Six kinds: shop, warehouse, workshop, office, laboratory, and control room. The four outdoor work areas (height, battery limits, window cleaning, field) keep the seasonal sky and get a ground colour (gravel, slab, plaza, grass). The circulation schematic keeps the plain stage. Walls only receive shadows, and their textures are freed when you leave the scenario.
 
-Added weight: about 9.7 MB (props 6.3 MB, people 3.4 MB; the limit is tested at 25 MB). Measured per frame in desktop Chrome (software GL, shadow pass included), the heaviest scenarios are the hydrostatic test (about 44k triangles, 112 draw calls) and the delivery check (about 55k, 53 calls); every scenario is under 60k triangles, well under the 150k budget. **Frame rate on a Quest or other headset has not been measured.**
+**Props and people (`dressing.js`, CC0 glTF).** `dressing.js` loads models from [`../assets/models/`](../assets/models/CREDITS.md) with the vendored `GLTFLoader` (no CDN, works offline) and adds them once they arrive:
 
-Re-shoot and measure with `SHOTS_BASE=http://localhost:8161/ node tools/vr-capture/realism-shots.mjs [outDir] [scenario ids]` (screenshots in `screenshots/realism-after/`, before shots in `screenshots/realism-before/`; set `BLOCK_MODELS=1` to test the fallback). Licenses and sources for every model: [../assets/models/CREDITS.md](../assets/models/CREDITS.md), also linked in the page footer. All are CC0 and none is a real person.
+- **People.** Every primitive "doll" (the supervisor in the spill scenario, the customer at the counter, the fire watch, the visitor, the pedestrian in the window-cleaning scenario, and so on) is swapped for a Quaternius character with an idle animation, about 1.7 m tall, turned toward the work. Hi-vis workers play the supervisor, operator and fire-watch roles. The control room has an outgoing operator and the lighter-lot area a quality technician (both added in round 2). People on the scaffold deck and in the window cradle are drawn at half size, and the ground props beside the scaffold are half size too, so the miniature stays consistent.
+- **Props.** Poly Haven props in all twelve indoor work areas and the four outdoor ones: cartons, shelving, hand truck, wet-floor sign, jerrycan, welding cart, tool chest, utility box, barrels, generator and cash register (earlier pass); armchair, side table, office desk, microscope, stools, bins, plastic crates, pipes, bench lamp, circuit board, laptop, cement bags, fire alarm panels, wall lamps, security camera, dead tree trunk (round 2). Models are 512 px WebP textures, simplified to a few thousand triangles each. Positions are kept off the hotspot area; `test/round2.test.mjs` checks that no ground prop covers a hotspot.
+- **Fallback.** If a file is missing or fails to parse, `loadModel()` resolves to `null`, one console warning is logged, and the primitive (or doll) stays. A model that finishes loading after you have left the scenario is dropped. Checked by blocking `assets/models/` in the browser (`BLOCK_MODELS=1`): every scenario still renders, no page error.
+- **Light.** One hemisphere light, a key light with one 1024 shadow map, a fill light, and a low-intensity room environment. No post-processing.
+
+Model weight: 15.4 MB in total (props 12.0 MB, people 3.5 MB); round 2 added 19 props and about 5.7 MB. Measured per frame in desktop Chrome with software GL, shadow pass included (`node tools/vr-capture/lab-qa.mjs <outDir>`): the heaviest scenarios are the delivery check (about 88k triangles, 141 draw calls), the spill (81k), welding (78k) and the pipe spool (72k); the rest are below 65k. A single pass, without the shadow pass, is about half of that. **Frame rate on a Quest or any headset has not been measured**, and these counts are the likeliest thing to need trimming there.
+
+Memory: each visit to a scenario with people used to leave a few GPU textures behind (the bone texture of every skinned character was not freed). That is fixed; `renderer.info.memory` is now flat over repeated visits to all 17 scenarios (`tools/vr-capture/lab-qa.mjs` prints the heap, and the check is described under Tests).
+
+Licenses and sources for every model: [../assets/models/CREDITS.md](../assets/models/CREDITS.md), also linked in the page footer. All are CC0 and none is a real person. To add a model: `node tools/vr-capture/fetch-polyhaven.mjs <dir> <id>`, then `node tools/vr-capture/shrink-models.mjs ...` (see the comments in both), then add its credits row.
+
+## Accessibility
+
+What was checked in a desktop browser (Chrome, software rendering) and what was not.
+
+- **Keyboard only.** `node tools/vr-capture/lab-a11y.mjs [scenario id]` plays a whole scenario with the keyboard and checks where focus goes: to the scenario title on opening, to the next available action after each hotspot is done (a finished action is disabled, which used to drop focus to the page), to **Continue** when a task finishes, to the next prompt, to the result heading, and to the catalog heading when you go back. The "Keyboard / list controls" disclosure holds the same actions as the 3D hotspots and says so in the task hint. A done or wrong action is named in the button text, for example "Hot work permit (done)", not only coloured.
+- **Screen readers.** The 3D canvas is hidden from assistive technology (it has no text equivalent of its own); everything a learner needs is in the panel. The scenario section no longer announces itself as one big live region (it duplicated the feedback, task log and result announcements). Not tested with NVDA, JAWS or VoiceOver.
+- **Colour contrast.** Text and status colours in the panel were computed against their backgrounds: every pair is at least 5.5:1 (muted text 10.8:1, small grey text 6.4:1, critical red 5.5:1, gold on royal blue 6.3:1). Small captions were raised to 12 px.
+- **Reduced motion.** With `prefers-reduced-motion: reduce` the hotspot halos do not pulse, the critical miss does not flash the screen, people stand still, the platform ring does not turn, alarm lights hold a fixed state, and the sky cross-fades. The red feedback panel still reports a critical miss.
+- **Small screens.** The panel narrows on tablets and small laptops (701 to 1100 px) and the camera follows its real width, so the work area is no longer hidden behind it (at 1100 px it was mostly covered). On phones it is a bottom sheet.
+- **Not done:** a skip link, a high-contrast mode, text scaling tests above 200%, captions or audio (there is no audio), and any test in VR. The 3D scene itself cannot be used without sight; the list controls make the tasks completable, but the spatial content is lost.
 
 ## Rendering notes
 
@@ -118,7 +137,7 @@ It crops the work area from `screenshots/03-scenario-*.png` (left of the page pa
 **Seasonal skies.** Behind the scenario menu, one sky per season (spring, summer, autumn, winter) rotates every 30 seconds, starting with the current season. The change looks like an old monitor: the picture breaks into mosaic blocks that grow, scan lines and a slight red/blue flicker appear for about one second, the next season swaps in at the peak, and the blocks shrink away. With **prefers-reduced-motion** it is a plain cross-fade. A small "Autumn sky" chip next to the progress count (and a small tag beside the plaque in VR) names the current season.
 
 - The effect is drawn inside the sky sphere's own shader (`../brand-kit/season-sky.js`) in view-direction space, so it renders the same way in both eyes in WebXR; there is no screen-space post-processing.
-- The outdoor scenarios (work at height, outdoor rounds at the battery limits, skyscraper window cleaning, field observation) keep the sky behind their work area; indoor scenarios keep the navy room. The sky steps aside for the red critical-miss flash. Every scene label is already on a backed panel, so the photo does not reduce readability (checked in desktop screenshots only).
+- The outdoor scenarios (work at height, outdoor rounds at the battery limits, skyscraper window cleaning, field observation) keep the sky behind their work area; indoor scenarios stand in a procedural room (`rooms.js`). The sky steps aside for the red critical-miss flash. Every scene label is already on a backed panel, so the photo does not reduce readability (checked in desktop screenshots only).
 - Images come from `../assets/skies/skies.json` (2k files; `?sky=4k` in the address uses the 4k files on a desktop). If the manifest or an image is missing, the scene keeps its navy background and nothing errors; a season whose image fails is skipped. Rotation pauses while the tab is hidden.
 - **Image credits** (a link at the foot of the page panel) lists each image's credit and source from the manifest. The current images are CC0 Poly Haven panoramas used as **regional-style stand-ins, not photos of Bradford, PA**; the page says "Seasonal skies, regional style (not photos of Bradford)" and only names Bradford for an image whose manifest entry has `isBradford: true`.
 - The page needs the repository root served (it loads `../vendor/`, `../brand-kit/` and `../assets/`); it makes no network requests outside the local server.
@@ -196,7 +215,7 @@ Desktop browser captures (1440 x 900, November 1, 2026, `node tools/vr-capture/s
 | Transition at its peak (swap point): largest blocks, scan lines, colour split | ![Transition at its peak](screenshots/skies/transition-mid.png) |
 | Reduced motion: plain cross-fade, half way | ![Reduced-motion cross-fade](screenshots/skies/reduced-motion-crossfade.png) |
 | Outdoor scenario (battery limits) with the sky behind | ![Outdoor scenario with sky](screenshots/skies/scenario-outdoor.png) |
-| Indoor scenario (electrical) keeps the navy room | ![Indoor scenario without sky](screenshots/skies/scenario-indoor.png) |
+| Indoor scenario (electrical): workshop room | ![Indoor scenario without sky](screenshots/skies/scenario-indoor.png) |
 
 ### Why this matters and the reasoning question
 

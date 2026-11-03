@@ -23,7 +23,7 @@ mkdirSync(out, { recursive: true });
 const { scenarios } = await import(pathToFileURL(join(repo, "training-simulations", "scenarios.js")).href);
 
 export const size = { width: 320, height: 180 };
-const defaultCrop = { x: 0, y: 328, width: 596, height: 335 }; // 16:9, the work area on the left of the panel
+const defaultCrop = { x: 0, y: 420, width: 596, height: 335 }; // 16:9, the work area on the left of the panel
 const crops = {}; // per-scenario overrides, e.g. { "circulation-builder": { x: 0, y: 330, width: 596, height: 335 } }
 const slug = (title) => title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-$/, "");
 

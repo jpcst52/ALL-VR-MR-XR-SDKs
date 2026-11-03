@@ -190,7 +190,7 @@ input:focus-visible, button:focus-visible, a:focus-visible, summary:focus-visibl
 .scenario-card:hover { border-color: var(--gold); background: var(--card-hover); transform: translateY(-1px); }
 .scenario-card .scenario-title { font-weight: 700; font-size: 14.5px; line-height: 1.3; }
 .scenario-card .scenario-description { margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.45; }
-.scenario-card .scenario-meta { margin-top: auto; padding-top: 8px; color: var(--soft); font-size: 11px; }
+.scenario-card .scenario-meta { margin-top: auto; padding-top: 8px; color: var(--soft); font-size: 12px; }
 .scenario-card.completed { border-color: #2f8a6a; }
 .scenario-card.completed .scenario-meta { color: var(--good); font-weight: 500; }
 .scenario-card.critical-flag .scenario-meta::after { content: " \00b7  critical misses"; color: #ff9b9b; }
@@ -227,7 +227,7 @@ input:focus-visible, button:focus-visible, a:focus-visible, summary:focus-visibl
 }
 .season-chip::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--gold); vertical-align: 1px; }
 
-.sky-credits { margin-top: 10px; color: var(--soft); font-size: 11.5px; }
+.sky-credits { margin-top: 10px; color: var(--soft); font-size: 12px; }
 .sky-credits summary { display: inline-block; padding: 8px 0; cursor: pointer; color: var(--sky); text-decoration: underline; text-underline-offset: 3px; }
 .sky-credits p { margin: 2px 0 6px; }
 .sky-credits ul { margin: 0; padding-left: 18px; }
@@ -352,6 +352,11 @@ input:focus-visible, button:focus-visible, a:focus-visible, summary:focus-visibl
 
 [hidden] { display: none !important; }
 
+/* Tablets and small laptops: a narrower panel so the 3D work area keeps room beside it (app.js frameScene follows its width). */
+@media (min-width: 701px) and (max-width: 1100px) {
+  .panel { width: clamp(360px, 46vw, 660px); }
+}
+
 /* ------------------------------------------------------------------ phone: the panel becomes a bottom sheet */
 @media (max-width: 700px) {
   .panel {
@@ -381,5 +386,9 @@ input:focus-visible, button:focus-visible, a:focus-visible, summary:focus-visibl
   * { transition: none !important; }
   .why-panel { animation: none; }
 }
-.model-credits { margin: 4px 0 0; color: var(--soft); font-size: 11.5px; }
+.model-credits { margin: 4px 0 0; color: var(--soft); font-size: 12px; }
 .model-credits a { color: var(--sky); text-underline-offset: 3px; }
+
+/* Headings that receive focus when the panel changes (programmatic focus only) need no ring. */
+h2[tabindex="-1"]:focus, h3[tabindex="-1"]:focus { outline: none; }
+.choice:disabled[data-state], .choice:disabled { opacity: 0.72; }
