@@ -468,7 +468,7 @@ public partial class HydroTest
         {
             float x = -3f + i * 3f;
             B(rw, "Window frame", new Vector3(x, 4.5f, -0.03f), new Vector3(1.5f, 1.0f, 0.06f), dark);
-            B(rw, "Window sky", new Vector3(x, 4.5f, -0.065f), new Vector3(1.38f, 0.88f, 0.01f), P.Glow(new Color(0.42f, 0.58f, 0.85f), 1.0f));
+            B(rw, "Window sky", new Vector3(x, 4.5f, -0.065f), new Vector3(1.38f, 0.88f, 0.01f), P.Daylight(1.15f));
             B(rw, "Window mullion", new Vector3(x, 4.5f, -0.075f), new Vector3(0.04f, 0.9f, 0.02f), dark);
             B(rw, "Window mullion", new Vector3(x, 4.5f, -0.075f), new Vector3(1.4f, 0.04f, 0.02f), dark);
         }

@@ -39,7 +39,7 @@ public static class HubLobbyBuilder
             // The scenario keeps its own sun and trilight ambient; the far fog is pulled halfway to the photo's horizon.
             var sky = AddSeasonSky();
             sky.Interval = 0f;
-            sky.FogTint = 0.5f;
+            sky.FogTint = 0.85f;
         }
         new GameObject("Return to lobby").AddComponent<ReturnToLobby>();
         dress?.Invoke(); // props and people from the local packs (HubSceneDressing)
@@ -72,6 +72,22 @@ public static class HubLobbyBuilder
         sky.SkyShader = Shader.Find("PittBradford/SeasonSky");
         if (sky.SkyShader == null) Debug.LogWarning("[lobby] PittBradford/SeasonSky shader not found; scenes keep their own sky");
         return sky;
+    }
+
+    /// <summary>For -executeMethod HubLobbyBuilder.BuildOneCli -pbScene Hydro|Refinery|Warehouse|Resistor|Lobby: rebuilds one scene (it loses its bake) and quits.</summary>
+    public static void BuildOneCli()
+    {
+        string part = null;
+        var a = System.Environment.GetCommandLineArgs();
+        for (int i = 0; i < a.Length - 1; i++) if (a[i] == "-pbScene") part = a[i + 1];
+        string p = (part ?? "").ToLowerInvariant();
+        if (p.StartsWith("hydro")) HubDressing.BuildHydroTestBay();
+        else if (p.StartsWith("refinery")) BuildPlain<RefineryRounds>("RefineryRounds_Hub", new Vector3(-2.4f, 2.0f, 2.8f), true, HubSceneDressing.DressRefinery);
+        else if (p.StartsWith("warehouse")) BuildPlain<WarehouseForklift>("WarehouseForklift_Hub", new Vector3(-2.4f, 2.0f, 2.8f), false, HubSceneDressing.DressWarehouse);
+        else if (p.StartsWith("resistor")) BuildPlain<ResistorBench>("ResistorBench_Hub", new Vector3(1.2f, 1.9f, 0.9f), false, HubSceneDressing.DressResistor);
+        else if (p.StartsWith("lobby")) BuildLobby();
+        else { Debug.LogError("[lobby] unknown scene " + part); EditorApplication.Exit(2); return; }
+        EditorApplication.Exit(0);
     }
 
     /// <summary>For -executeMethod HubLobbyBuilder.BuildAllCli.</summary>

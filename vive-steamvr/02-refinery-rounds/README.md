@@ -185,6 +185,10 @@ How: the bake now runs the kit's `RenderBudget` pass (flags and settings only, n
 - **The monitor falls instead of clipping to your chest:** it clips only after the bump test has passed. Before that it drops where you release it.
 - **Red Console lines or repeated errors during play:** copy the first one.
 
+## Visual pass 2 (2026-11-05)
+
+Normal maps are now generated for every textured material (block joints, concrete grain, planks, cardboard flutes), noise textures are 512 px, windows and the dock door show a daylight picture, a merged contact-shadow mesh (one draw call) grounds standing objects, and the kit asks for 4x MSAA and forced anisotropic filtering (ground is 300 m wide so its edge sits deep in the fog). Editor render counters moved by a few set-pass or draw calls only (see [../hub/README.md](../hub/README.md) and `docs/PROJECT-STATUS.md`); they are CPU counters, not a Vive frame rate. Screenshots in `screenshots/` were re-shot as desktop editor renders (not a headset). **Not re-baked yet** (its Unity process hung and was left running), so the baked scene and screenshots here are still from round 4; the script and kit changes are in place and apply on the next Unbake and Bake.
+
 ## Research basis
 
 See [../../docs/research/README.md](../../docs/research/README.md).

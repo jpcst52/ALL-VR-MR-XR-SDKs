@@ -17,3 +17,9 @@ Author for all files below: **rubberduck** (OpenGameArt.org user). Selected by f
 | `snap_1`, `snap_2` | 100 CC0 metal and wood SFX | `metal_close_01.ogg`, `lock_open_01.ogg` |
 
 Licence: https://creativecommons.org/publicdomain/zero/1.0/
+
+## Round 4 (November 5, 2026): no new recordings
+
+No new recorded files were added in round 4. The one attempt to fetch more CC0 packs (Kenney, a second OpenGameArt pack) was not completed: the Kenney site refused an automated request and no workaround was used, so no source or licence could be verified, and an unverified file is never included. All new sounds are synthesized in code (`Synth.cs`) and need no credit.
+
+The files above are still the same unmodified downloads. What changed is how the kit plays them: at load, `Sfx` now applies a 30 Hz high-pass, a gentle low-pass for the name (`clink_metal` has a steeper one, 5.5 kHz, because two of its four recordings measured as harsh: 56 and 43 percent of their energy above 6 kHz), fades at the ends, and the loudness target for that name, with a soft limiter. The files on disk are not rewritten. Whether the recordings sound better or worse than the new synthesized versions is unknown (unheard): to compare, rename a recording out of `Resources/Audio/` and the synthesized version takes over.

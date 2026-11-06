@@ -83,7 +83,7 @@ public partial class HydroTest : MonoBehaviour, IShotScript
         {
             // the hub supplies its own building and keeps this scenario's original ambient and fog
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.34f, 0.36f, 0.4f);
+            RenderSettings.ambientLight = new Color(0.45f, 0.47f, 0.52f);
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Linear;
             RenderSettings.fogColor = new Color(0.55f, 0.58f, 0.62f);

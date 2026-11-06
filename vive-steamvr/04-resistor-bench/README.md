@@ -203,6 +203,10 @@ How: the bake now runs the kit's `RenderBudget` pass (flags and settings only, n
 - **Cyan or pink materials in the first seconds:** the editor is still compiling shader variants. Wait a moment.
 - **Red Console lines or repeated errors during play:** copy the first one.
 
+## Visual pass 2 (2026-11-05)
+
+Normal maps are now generated for every textured material (block joints, concrete grain, planks, cardboard flutes), noise textures are 512 px, windows and the dock door show a daylight picture, a merged contact-shadow mesh (one draw call) grounds standing objects, and the kit asks for 4x MSAA and forced anisotropic filtering (ambient and the ESD floor tile lighter). Editor render counters moved by a few set-pass or draw calls only (see [../hub/README.md](../hub/README.md) and `docs/PROJECT-STATUS.md`); they are CPU counters, not a Vive frame rate. Screenshots in `screenshots/` were re-shot as desktop editor renders (not a headset). Re-baked and re-shot; hand check passes.
+
 ## Research
 
 See [../../docs/research/README.md](../../docs/research/README.md) for the annotated bibliography and study ideas for this line of work.

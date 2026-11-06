@@ -76,6 +76,24 @@ namespace PittBradford.XR
             var go = new GameObject("Capture Driver");
             DontDestroyOnLoad(go);
             go.AddComponent<CaptureDriver>().dir = dir;
+            go.AddComponent<Watchdog>();
+        }
+
+        /// <summary>Exits a headless capture or perf run that never finishes (for example a scene script threw in Start), so no editor is left running.</summary>
+        internal class Watchdog : MonoBehaviour
+        {
+            float limit = 480f;
+            void Awake()
+            {
+                var args = Environment.GetCommandLineArgs();
+                for (int i = 0; i < args.Length - 1; i++) if (args[i] == "-pbTimeout" && float.TryParse(args[i + 1], out var t)) limit = t;
+            }
+            void Update()
+            {
+                if (Time.realtimeSinceStartup < limit) return;
+                Debug.LogError("[capture] timeout after " + limit + " s; exiting");
+                Quit(4);
+            }
         }
 
         string dir;
@@ -128,6 +146,10 @@ namespace PittBradford.XR
             }
             catch (Exception e) { Debug.LogWarning("[capture] could not stop XR: " + e.Message); }
         }
+
+        internal static void StopXrForPerf() => StopXr();
+        internal static void AddWatchdog(GameObject go) => go.AddComponent<Watchdog>();
+        internal static void QuitForPerf() => Quit(0);
 
         internal static void Quit(int code)
         {

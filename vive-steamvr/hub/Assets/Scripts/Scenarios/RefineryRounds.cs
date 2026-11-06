@@ -386,8 +386,8 @@ public partial class RefineryRounds : MonoBehaviour, IShotScript
             sun.shadows = LightShadows.Soft;
         }
 
-        var gravel = P.Mat(Color.white, 0f, 0.08f, P.NoiseTexture("gravel", new Color(0.30f, 0.28f, 0.24f), new Color(0.52f, 0.5f, 0.46f), 10f, 256, 1f, 11), 26f);
-        P.Box(root, "Ground", V(0f, -0.1f, 5f), V(130f, 0.2f, 130f), gravel);
+        var gravel = P.Mat(Color.white, 0f, 0.08f, P.NoiseTexture("gravel", new Color(0.30f, 0.28f, 0.24f), new Color(0.52f, 0.5f, 0.46f), 10f, 256, 1f, 11), 60f);
+        P.Box(root, "Ground", V(0f, -0.1f, 5f), V(300f, 0.2f, 300f), gravel); // wide enough that its edge is deep in the far fog (starts 45 m, full at 160 m)
         P.Box(root, "Process pad", V(0f, 0.02f, 4f), V(24f, 0.04f, 20f), concrete, false);
         P.Box(root, "Gate line", V(0f, 0.045f, FenceMinZ), V(3.2f, 0.01f, 0.25f), hazard, false);
         P.Box(root, "Walkway", V(0f, 0.045f, -10f), V(1.2f, 0.01f, 8f), P.Mat(new Color(0.9f, 0.75f, 0.1f), 0f, 0.3f), false);

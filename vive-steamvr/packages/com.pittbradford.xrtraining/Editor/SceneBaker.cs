@@ -648,8 +648,9 @@ namespace PittBradford.XR.EditorTools
                         File.WriteAllBytes(path, png);
                         AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
                         var imp = (TextureImporter)AssetImporter.GetAtPath(path);
-                        imp.textureType = TextureImporterType.Default;
-                        imp.sRGBTexture = t2.isDataSRGB;
+                        bool isNormal = src.name.EndsWith("-nrm");
+                        imp.textureType = isNormal ? TextureImporterType.NormalMap : TextureImporterType.Default;
+                        imp.sRGBTexture = !isNormal && t2.isDataSRGB;
                         imp.mipmapEnabled = t2.mipmapCount > 1;
                         imp.wrapMode = t2.wrapMode;
                         imp.filterMode = t2.filterMode;

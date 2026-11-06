@@ -2,54 +2,6 @@
   "outputDir": "",
   "agents": [
     {
-      "id": "vive-warehouse",
-      "name": "Vive 03 Warehouse forklift",
-      "task": "Unity project 03-warehouse-forklift (uncompiled draft)",
-      "state": "done",
-      "started": "2026-11-02T00:30:56.454Z",
-      "watch": [
-        "../../vive-steamvr/03-warehouse-forklift"
-      ],
-      "ended": "2026-11-02T00:46:29.079Z",
-      "note": "03 warehouse forklift written; uncompiled, untested"
-    },
-    {
-      "id": "vive-resistor",
-      "name": "Vive 04 Resistor bench",
-      "task": "Unity project 04-resistor-bench (uncompiled draft)",
-      "state": "done",
-      "started": "2026-11-02T00:30:56.504Z",
-      "watch": [
-        "../../vive-steamvr/04-resistor-bench"
-      ],
-      "ended": "2026-11-02T00:44:38.315Z",
-      "note": "04 resistor bench written; uncompiled, untested"
-    },
-    {
-      "id": "b5",
-      "name": "Courtyard copy",
-      "task": "Copying 5 prop folders into hub",
-      "state": "done",
-      "started": "2026-11-02T00:46:41.464Z",
-      "watch": [
-        "vive-steamvr/hub/Assets/Courtyard"
-      ],
-      "ended": "2026-11-02T00:53:30.044Z",
-      "note": "5 Courtyard prop folders copied into hub (233 MB, git-ignored)"
-    },
-    {
-      "id": "decks",
-      "name": "Update decks (E5)",
-      "task": "Update the three decks for Vive, Quest, hub and launcher work",
-      "state": "done",
-      "started": "2026-11-02T02:08:46.065Z",
-      "watch": [
-        "tools/decks"
-      ],
-      "ended": "2026-11-02T02:13:00.380Z",
-      "note": "3 decks rebuilt in Pitt palette; validated; 38 of 56 slides viewed; hardware unverified"
-    },
-    {
       "id": "webreal",
       "name": "Web realism pass (D2)",
       "task": "CC0 textures and lighting on hero Practice Lab scenes",
@@ -502,6 +454,55 @@
       ],
       "ended": "2026-11-05T23:45:30.085Z",
       "note": "reported; see I1"
+    },
+    {
+      "id": "j1-audio",
+      "name": "Sound pass 2",
+      "task": "Better sound effects across Unity scenes",
+      "state": "done",
+      "started": "2026-11-06T00:57:33.205Z",
+      "watch": [
+        "vive-steamvr/packages/com.pittbradford.xrtraining/Runtime/Resources/Audio",
+        "vive-steamvr/packages/com.pittbradford.xrtraining/Runtime/Sfx.cs"
+      ],
+      "ended": "2026-11-06T01:19:48.148Z",
+      "note": "Sounds re-synthesized, 11 new names, SceneAudio (reverb zone, beds, director, auto-start by scene name), loudness targets and limiter, SfxReport and SceneAudioCheck tools; run in project 04 only; unheard, measured only; no new recordings"
+    },
+    {
+      "id": "j2-visual",
+      "name": "Visual pass 2",
+      "task": "Better visuals on five Vive scenes",
+      "state": "done",
+      "started": "2026-11-06T00:57:33.411Z",
+      "watch": [
+        "vive-steamvr"
+      ],
+      "ended": "2026-11-06T01:34:57.605Z",
+      "note": "Kit normal maps, daylight windows, contact shadows, VrQuality; hub 5 scenes + projects 01,03,04 re-baked and re-shot, hand checks pass, counters within +-6 set-pass/+-56 draw; project 02 not re-baked (PID 11140 hung, left running)"
+    },
+    {
+      "id": "j2b",
+      "name": "Project 02 re-bake",
+      "task": "unbake, bake, capture project 02",
+      "state": "done",
+      "started": "2026-11-06T11:53:06.980Z",
+      "watch": [
+        "vive-steamvr/02-refinery-rounds"
+      ],
+      "ended": "2026-11-06T12:10:47.335Z",
+      "note": "project 02 re-baked, 20 shots, setPass 358 drawCalls 1003 (editor counters)"
+    },
+    {
+      "id": "lm",
+      "name": "Lightmap spike",
+      "task": "Bake lighting spike on hub Warehouse scene",
+      "state": "done",
+      "started": "2026-11-06T11:53:29.706Z",
+      "watch": [
+        "vive-steamvr/hub"
+      ],
+      "ended": "2026-11-06T12:08:03.279Z",
+      "note": "Lightmap spike: feasible, aisle darker, not rolled out; scene restored"
     }
   ]
 }

@@ -60,7 +60,7 @@ public partial class WarehouseForklift
     /// <summary>Sealed concrete: broad tone patches, fine grain and scattered dark and light aggregate.</summary>
     static Texture2D FloorTex() => MakeTex("wf-floor", 512, 512, false, true, (u, v, x, y) =>
     {
-        float b = Mathf.Lerp(0.40f, 0.58f, TileN(u, v, 3f, 1) * 0.55f + TileN(u, v, 11f, 2) * 0.3f + TileN(u, v, 29f, 3) * 0.15f);
+        float b = Mathf.Lerp(0.50f, 0.70f, TileN(u, v, 3f, 1) * 0.55f + TileN(u, v, 11f, 2) * 0.3f + TileN(u, v, 29f, 3) * 0.15f);
         float s = Hash(x, y, 1);
         if (s > 0.986f) b *= 0.6f; else if (s < 0.01f) b *= 1.3f;
         b += (Hash(x, y, 2) - 0.5f) * 0.05f;
@@ -164,15 +164,15 @@ public partial class WarehouseForklift
         mCrate = P.Mat(new Color(0.12f, 0.3f, 0.6f), 0f, 0.5f);
         mCrate2 = P.Mat(new Color(0.45f, 0.47f, 0.5f), 0f, 0.5f);
         mLampWhite = P.Glow(new Color(1f, 0.97f, 0.9f), 1.8f);
-        concrete = P.Mat(Color.white, 0f, 0.38f, FloorTex(), 8f); // sealed concrete: picks up the reflection probe
+        concrete = P.Mat(Color.white, 0f, 0.52f, FloorTex(), 8f); // sealed concrete: picks up the reflection probe
         softDot = SoftDotTex();
         mDecalTyreA = DecalMat(TyreTex("wf-tyre-a", 1), 0.3f);
         mDecalTyreB = DecalMat(TyreTex("wf-tyre-b", 2), 0.3f);
         mDecalStain = DecalMat(StainTex("wf-stain", 3), 0.9f);
         mSpill = DecalMat(StainTex("wf-spill", 7), 0.97f, new Color(0.5f, 0.6f, 0.75f, 1f));
-        mGlowPool = DecalMat(softDot, 0f, new Color(1f, 0.95f, 0.8f, 0.35f));
+        mGlowPool = DecalMat(softDot, 0f, new Color(1f, 0.95f, 0.8f, 0.55f));
         mGlowPool.EnableKeyword("_EMISSION");
-        mGlowPool.SetColor("_EmissionColor", new Color(1f, 0.93f, 0.75f) * 0.9f);
+        mGlowPool.SetColor("_EmissionColor", new Color(1f, 0.93f, 0.75f) * 1.4f);
     }
 
     // ------------------------------------------------------------------------------------------------- small helpers
@@ -439,7 +439,7 @@ public partial class WarehouseForklift
             Bx(root, "Fixture hanger", pos + new Vector3(-0.9f, 0.3f, 0), new Vector3(0.02f, 0.4f, 0.02f), steel);
             Bx(root, "Fixture hanger", pos + new Vector3(0.9f, 0.3f, 0), new Vector3(0.02f, 0.4f, 0.02f), steel);
             // soft light pool on the floor and an additive light shaft from the kit (one draw each)
-            Decal(root, "Light pool", new Vector3(lx, 0.0145f, lz), 0f, new Vector2(7f, 7f), mGlowPool);
+            Decal(root, "Light pool", new Vector3(lx, 0.0145f, lz), 0f, new Vector2(9f, 9f), mGlowPool);
             Fx.LightShaft(root, pos + new Vector3(0, -0.05f, 0), 6.1f, 30f, new Color(1f, 0.94f, 0.8f), 0.07f);
         }
         // cool daylight from the open dock door against the warm fixtures; a warm low light on the break area.

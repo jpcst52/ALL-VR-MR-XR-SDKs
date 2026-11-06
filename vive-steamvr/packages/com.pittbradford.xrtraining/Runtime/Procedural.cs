@@ -23,6 +23,9 @@ namespace PittBradford.XR
         static Shader LitShader => (Urp ? Shader.Find("Universal Render Pipeline/Lit") : null) ?? Shader.Find("Standard");
         static string SmoothnessProperty => Urp ? "_Smoothness" : "_Glossiness";
 
+        // Name fragments of textures that are pictures, not surfaces (signs, decals, stripes): they get no relief.
+        static readonly string[] FlatTextureNames = { "label", "decal", "stain", "tyre", "spill", "dot", "soft", "stripe", "hazard", "brand", "sign", "logo", "poster", "font", "-nrm", "icon" };
+
         public static Material Mat(Color color, float metallic = 0f, float smoothness = 0.35f, Texture tex = null, float tiling = 1f)
         {
             string key = $"{color}{metallic}{smoothness}{(tex ? tex.name : "")}{tiling}";
@@ -34,9 +37,59 @@ namespace PittBradford.XR
             {
                 m.mainTexture = tex;
                 m.mainTextureScale = new Vector2(tiling, tiling);
+                var nrm = !Urp ? NormalFor(tex as Texture2D) : null;
+                if (nrm != null)
+                {
+                    m.SetTexture("_BumpMap", nrm);
+                    m.SetFloat("_BumpScale", metallic > 0.5f ? 0.3f : 0.75f);
+                    m.EnableKeyword("_NORMALMAP");
+                }
             }
             Cache[key] = m;
             return m;
+        }
+
+        static readonly Dictionary<string, Texture2D> NormalCache = new Dictionary<string, Texture2D>();
+
+        /// <summary>
+        /// A tangent-space normal map made from the fine detail of a generated albedo texture (its brightness minus a local average, so
+        /// stains and colour patches stay flat and grain, aggregate, planks and cardboard flutes get relief). Same size and wrap as the
+        /// source, so it tiles the same way. Returns null for picture-like textures (signs, decals, stripes) and unreadable ones.
+        /// </summary>
+        public static Texture2D NormalFor(Texture2D src, float strength = 1.8f)
+        {
+            if (src == null || !src.isReadable || src.width < 128 || src.width > 1024) return null;
+            string lower = src.name.ToLowerInvariant();
+            foreach (var f in FlatTextureNames) if (lower.Contains(f)) return null;
+            string key = src.name + src.width + strength;
+            if (NormalCache.TryGetValue(key, out var done) && done) return done;
+            int w = src.width, h = src.height;
+            var px = src.GetPixels32(0);
+            var lum = new float[w * h];
+            for (int i = 0; i < lum.Length; i++) lum[i] = (px[i].r * 0.3f + px[i].g * 0.59f + px[i].b * 0.11f) / 255f;
+            // local average (wrapping box blur, radius 4, two separable passes), subtracted to keep only the fine detail
+            var tmp = new float[w * h]; var avg = new float[w * h];
+            const int r = 4;
+            for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++) { float a = 0; for (int k = -r; k <= r; k++) a += lum[y * w + (x + k + w) % w]; tmp[y * w + x] = a / (2 * r + 1); }
+            for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++) { float a = 0; for (int k = -r; k <= r; k++) a += tmp[((y + k + h) % h) * w + x]; avg[y * w + x] = a / (2 * r + 1); }
+            var ht = new float[w * h];
+            for (int i = 0; i < ht.Length; i++) ht[i] = lum[i] - avg[i] + avg[i] * 0.25f; // a little of the large shape too
+            var t = new Texture2D(w, h, TextureFormat.RGB24, true, true) { name = src.name + "-nrm", wrapMode = src.wrapMode, filterMode = FilterMode.Trilinear, anisoLevel = 8 };
+            var o = new Color32[w * h];
+            for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+            {
+                float dx = ht[y * w + (x + 1) % w] - ht[y * w + (x - 1 + w) % w];
+                float dy = ht[((y + 1) % h) * w + x] - ht[((y - 1 + h) % h) * w + x];
+                var n = new Vector3(-dx * strength * 8f, -dy * strength * 8f, 1f).normalized;
+                o[y * w + x] = new Color32((byte)((n.x * 0.5f + 0.5f) * 255f), (byte)((n.y * 0.5f + 0.5f) * 255f), (byte)((n.z * 0.5f + 0.5f) * 255f), 255);
+            }
+            t.SetPixels32(o);
+            t.Apply(true);
+            NormalCache[key] = t;
+            return t;
         }
 
         public static Material Glow(Color color, float intensity = 1.6f)
@@ -45,6 +98,37 @@ namespace PittBradford.XR
             m.EnableKeyword("_EMISSION");
             m.SetColor("_EmissionColor", color * intensity);
             m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            return m;
+        }
+
+        /// <summary>
+        /// A bright daylight view for a window, open dock door or skylight: a lit emissive picture (sky gradient with soft clouds, a hazy
+        /// tree line and a pale yard) instead of a flat blue box. Light only, no extra objects; one material per tint.
+        /// </summary>
+        public static Material Daylight(float intensity = 1.25f)
+        {
+            var tex = Make("daylight-view", 256, (u, v) =>
+            {
+                var top = new Color(0.36f, 0.56f, 0.88f); var horizon = new Color(0.86f, 0.93f, 1f);
+                float k = Mathf.Clamp01((v - 0.42f) / 0.58f);
+                var c = Color.Lerp(horizon, top, Mathf.Pow(k, 0.8f));
+                float cloud = Mathf.PerlinNoise(u * 4.5f + 3f, v * 9f + 1f) * 0.6f + Mathf.PerlinNoise(u * 12f, v * 24f) * 0.4f;
+                c = Color.Lerp(c, Color.white, Mathf.Clamp01((cloud - 0.55f) * 2.2f) * Mathf.Clamp01(k * 2f + 0.2f));
+                float ridge = 0.40f + Mathf.PerlinNoise(u * 14f + 9f, 2f) * 0.07f + Mathf.PerlinNoise(u * 60f, 7f) * 0.025f;
+                if (v < ridge) c = Color.Lerp(new Color(0.36f, 0.44f, 0.36f), new Color(0.55f, 0.62f, 0.58f), Mathf.Clamp01((v - ridge + 0.1f) * 5f)); // hazy trees
+                if (v < 0.27f) c = Color.Lerp(new Color(0.66f, 0.67f, 0.66f), new Color(0.72f, 0.73f, 0.72f), Mathf.PerlinNoise(u * 6f, v * 40f)); // yard
+                return c;
+            });
+            string key = "daylight" + intensity;
+            if (Cache.TryGetValue(key, out var cached) && cached) return cached;
+            var m = new Material(LitShader) { color = Color.black };
+            m.SetFloat("_Metallic", 0f);
+            m.SetFloat(SmoothnessProperty, 0f);
+            m.EnableKeyword("_EMISSION");
+            m.SetTexture("_EmissionMap", tex);
+            m.SetColor("_EmissionColor", Color.white * intensity);
+            m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            Cache[key] = m;
             return m;
         }
 
@@ -79,6 +163,7 @@ namespace PittBradford.XR
 
         public static Texture2D NoiseTexture(string name, Color a, Color b, float scale, int size = 256, float streak = 1f, int seed = 1)
         {
+            size = Mathf.Max(size, 512); // Vive Pro 2: 256 px is visibly soft at arm's length
             var t = new Texture2D(size, size, TextureFormat.RGB24, true) { name = name, wrapMode = TextureWrapMode.Repeat, filterMode = FilterMode.Trilinear, anisoLevel = 8 };
             var px = new Color[size * size];
             float ox = seed * 17.3f, oy = seed * 9.1f;
@@ -89,6 +174,7 @@ namespace PittBradford.XR
                 float n = Mathf.PerlinNoise(ox + u * scale, oy + v * scale * streak) * 0.6f
                         + Mathf.PerlinNoise(ox + u * scale * 4f, oy + v * scale * 4f * streak) * 0.3f
                         + Mathf.PerlinNoise(ox + u * scale * 16f, oy + v * scale * 16f * streak) * 0.1f;
+                n = Mathf.Clamp01(n + (Mathf.PerlinNoise(ox + u * 180f, oy + v * 180f) - 0.5f) * 0.14f); // fine grain
                 px[y * size + x] = Color.Lerp(a, b, n);
             }
             t.SetPixels(px);

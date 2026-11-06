@@ -132,9 +132,9 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
         // dim warehouse mood: darker ambient (roof a little brighter, floor bounce darkest); the fixtures and the cool
         // dock daylight do the work
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
-        RenderSettings.ambientSkyColor = new Color(0.36f, 0.37f, 0.40f);
-        RenderSettings.ambientEquatorColor = new Color(0.30f, 0.31f, 0.34f);
-        RenderSettings.ambientGroundColor = new Color(0.17f, 0.17f, 0.18f);
+        RenderSettings.ambientSkyColor = new Color(0.47f, 0.48f, 0.52f);
+        RenderSettings.ambientEquatorColor = new Color(0.40f, 0.41f, 0.45f);
+        RenderSettings.ambientGroundColor = new Color(0.25f, 0.25f, 0.27f);
         RenderSettings.fog = true;
         RenderSettings.fogMode = FogMode.Linear;
         RenderSettings.fogColor = new Color(0.36f, 0.38f, 0.42f);
@@ -389,7 +389,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
     void BuildMarkings()
     {
         var root = NewRoot("Markings");
-        var laneMat = P.Mat(new Color(0.23f, 0.24f, 0.27f), 0f, 0.15f);
+        var laneMat = P.Mat(Color.white, 0f, 0.3f, P.NoiseTexture("lane-asphalt", new Color(0.31f, 0.32f, 0.35f), new Color(0.42f, 0.43f, 0.46f), 14f, 512, 1f, 31), 6f);
         var green = P.Mat(new Color(0.08f, 0.5f, 0.24f), 0f, 0.25f);
         var yellow = P.Mat(new Color(1f, 0.8f, 0.05f), 0f, 0.3f);
         var white = P.Mat(new Color(0.95f, 0.95f, 0.95f), 0f, 0.3f);
@@ -615,7 +615,7 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
     {
         var root = NewRoot("Loading dock");
         float x = 13.82f;
-        P.Box(root, "Dock opening", new Vector3(x, 1.9f, 6f), new Vector3(0.06f, 3.8f, 4.6f), P.Glow(new Color(0.6f, 0.78f, 1f), 1.1f), false);
+        P.Box(root, "Dock opening", new Vector3(x, 1.9f, 6f), new Vector3(0.06f, 3.8f, 4.6f), P.Daylight(1.3f), false);
         P.Box(root, "Dock frame N", new Vector3(x - 0.04f, 1.9f, 8.4f), new Vector3(0.14f, 3.9f, 0.2f), hazard, false);
         P.Box(root, "Dock frame S", new Vector3(x - 0.04f, 1.9f, 3.6f), new Vector3(0.14f, 3.9f, 0.2f), hazard, false);
         P.Box(root, "Dock frame top", new Vector3(x - 0.04f, 3.85f, 6f), new Vector3(0.14f, 0.2f, 5.0f), hazard, false);

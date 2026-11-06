@@ -16,7 +16,9 @@ Editing a file here changes every project that uses the kit, including the hub. 
 
 Tested: the package compiles in Unity 6000.3.20f1 inside each project (scripted editor runs, November 1 and 2, 2026) and the desktop fallback ran in the scripted capture runs. Not tested: any headset. The controller bindings (`<XRController>{LeftHand/RightHand}` trigger, grip and primary 2D axis) are written for the OpenXR Vive, Index and Touch profiles that **Pitt-Bradford > Set up project** enables; they have not been run on a Vive Pro 2 or a Quest. The package declares Unity 6000.0 and Input System 1.8.1 as minimums; the projects are pinned to 6000.3.20f1 and Input System 1.20.1 and only that combination has been run.
 
-## Audio and effects (round 3)
+## Audio and effects (round 3, sound revised in round 4)
+
+**Round 4 (November 5, 2026), unheard.** The synthesis in `Synth.cs` was rewritten (impacts are a noise transient plus a modal body plus a thump, pink noise instead of white, softer alarms and beeps, seamless loops, one interface family in one key), `Sfx.cs` now levels every clip to a per-kind loudness target with a soft limiter and a gentle low-pass, and `SceneAudio` gives each of the five scenes a room reverb (`AudioReverbZone`), a low ambience bed and rare distant sounds, started automatically from the scene name (see [../../../docs/agents/KIT-AUDIO-FX.md](../../../docs/agents/KIT-AUDIO-FX.md)). Measure with `-executeMethod PittBradford.XR.EditorTools.SfxReport.RunAndExit -pbWavDir <folder>` (writes a WAV and a `report.csv` row per clip: peak, RMS, spectral centroid, share above 6 kHz, clip, click and loop-seam flags) and `SceneAudioCheck.RunAndExit` (play-mode check of the scene audio objects). The numbers show levels, harshness and loop seams only; **nobody has listened**. Run in project 04 only. No new recordings were added (see `Runtime/Resources/Audio/CREDITS.md`).
 
 Written November 3, 2026. API with short examples: [../../../docs/agents/KIT-AUDIO-FX.md](../../../docs/agents/KIT-AUDIO-FX.md). Honest status: the library compiles, every catalogue name generates and passes a numeric check (no NaN, peak below 1, not silent; menu **Pitt-Bradford > Sfx self-test**, or `-executeMethod PittBradford.XR.EditorTools.SfxSelfTest.RunAndExit [-pbWavDir <dir>]` which also writes WAV files), and project 01 runs with it in the desktop editor. **Nobody has listened to any of it on speakers or in a headset**, so levels, taste and the recorded-sample choices are unchecked. Spatial rolloff and the pitch of the pump hum are untested by ear.
 
@@ -32,14 +34,14 @@ Written November 3, 2026. API with short examples: [../../../docs/agents/KIT-AUD
 
 **Recorded CC0 samples** (OpenGameArt, author rubberduck, CC0; details in `Runtime/Resources/Audio/CREDITS.md`; chosen by file name, not by ear): `door_open`, `door_close`, `switch`, `water_drip`, `clink_metal`, `pallet_drop`, `snap`.
 
-**Synthesized** (everything else): `ui_confirm ui_error ui_select button valve_turn grab release thud_box cone_place tape spray water_pour pump_hum gas_hiss alarm_siren alarm_siren_rise alarm_siren_fall gas_monitor_beep monitor_alarm radio_click radio_static forklift_horn forklift_engine_loop forklift_beep_reverse hydraulic_whine mirror_snap led_on spark_pop smoke_puff esd_click meter_beep wind_loop hvac_loop plant_drone_loop flare_roar_loop ding error_buzz pressure_tone gauge_tick footstep_concrete footstep_metal footstep_tile footstep_gravel footstep_wood`.
+**Synthesized** (everything else; new in round 4: `amb_lobby amb_hydro amb_refinery amb_warehouse amb_bench far_clank far_creak far_steam far_relay_tick far_thud far_beep`): `ui_confirm ui_error ui_select button valve_turn grab release thud_box cone_place tape spray water_pour pump_hum gas_hiss alarm_siren alarm_siren_rise alarm_siren_fall gas_monitor_beep monitor_alarm radio_click radio_static forklift_horn forklift_engine_loop forklift_beep_reverse hydraulic_whine mirror_snap led_on spark_pop smoke_puff esd_click meter_beep wind_loop hvac_loop plant_drone_loop flare_roar_loop ding error_buzz pressure_tone gauge_tick footstep_concrete footstep_metal footstep_tile footstep_gravel footstep_wood`.
 
-Loops (use `Sfx.Loop`): `water_pour pump_hum alarm_siren monitor_alarm radio_static forklift_engine_loop forklift_beep_reverse wind_loop hvac_loop plant_drone_loop flare_roar_loop pressure_tone`.
+Loops (use `Sfx.Loop`; plus the five `amb_*` beds): `water_pour pump_hum alarm_siren monitor_alarm radio_static forklift_engine_loop forklift_beep_reverse wind_loop hvac_loop plant_drone_loop flare_roar_loop pressure_tone`.
 
 ### How to add a sound
 
 1. **A recording:** put a CC0 or public-domain `.ogg` or `.wav` in `Runtime/Resources/Audio/` named `<name>.ogg` (or `<name>_1.ogg`, `<name>_2.ogg` ... for variations), and add its source URL, author and licence to `CREDITS.md`. It overrides synthesis for that name.
-2. **A synthesized sound:** add a generator to `Synth.cs` (a method taking a `System.Random` and returning a float array at `Synth.R` samples per second), then register it in the `Sfx` static constructor with `Reg("name", Synth.MyGenerator, loop: false, rate: 32000, peak: 0.6f, variants: 3)`. Run the Sfx self-test.
+2. **A synthesized sound:** add a generator to `Synth.cs` (a method taking a `System.Random` and returning a float array at `Synth.R` samples per second), then register it in the `Sfx` static constructor with `Reg("name", Synth.MyGenerator, loop: false, rate: 32000, level: -23f, lp: 9000f, variants: 4)` (`level` is the loudness target in dBFS, `lp` the low-pass in Hz). Run the Sfx self-test.
 3. Add the name to the lists above and to `docs/agents/KIT-AUDIO-FX.md`.
 
 ### Effects (`Fx`)

@@ -110,9 +110,9 @@ public class ResistorBench : MonoBehaviour, IShotScript
         QualitySettings.shadowDistance = 12f;
         QualitySettings.pixelLightCount = 5; // cap per-pixel lights (VR budget): the extra lights fall back to vertex lighting
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
-        RenderSettings.ambientSkyColor = new Color(0.46f, 0.48f, 0.53f);
-        RenderSettings.ambientEquatorColor = new Color(0.36f, 0.37f, 0.39f);
-        RenderSettings.ambientGroundColor = new Color(0.2f, 0.2f, 0.21f);
+        RenderSettings.ambientSkyColor = new Color(0.58f, 0.60f, 0.65f);
+        RenderSettings.ambientEquatorColor = new Color(0.47f, 0.48f, 0.51f);
+        RenderSettings.ambientGroundColor = new Color(0.30f, 0.30f, 0.32f);
 
         // sound: the kit's Sfx library (no sound is played during a bake)
 

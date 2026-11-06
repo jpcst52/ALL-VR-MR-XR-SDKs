@@ -174,3 +174,14 @@ Targets were set-pass <= 700, draw calls <= 1,200, shadow casters <= 400, non-di
 **Trade-offs you will see.** Rooms are slightly darker with less pooled light under the fixtures (the glow decals and light-shaft cones remain); the Warehouse is the most affected. The indoor scenes have no realtime shadows from the key light (the soft blob-shadow decals some scenes already had remain). Small props do not cast shadows. To get the old look back, raise `RenderBudget.PixelLights` / `KeyShadowMaxIntensity` and re-bake, at the cost of the numbers above.
 
 **Caveats.** These are editor CPU counters from a mono Game view. The frame rate on a Vive Pro 2 has **not** been measured, and neither has the GPU cost (pixel fill, MSAA, shader cost), which this work did not change. Draw calls and set-pass calls say nothing about GPU time. The standalone projects were re-baked and their capture runs pass, but their counters were not measured separately (the hub scenes run the same scripts).
+
+## Round 5 visual pass (2026-11-05)
+
+All five scenes were rebuilt (`HubLobbyBuilder.BuildOneCli`), baked (`HubBakeCli.BakeScene`) and re-shot with the new kit. What changed is in the kit, so every project gets it: generated normal maps on textured materials, 512 px grain, `P.Daylight` windows (Warehouse dock door, Hydro windows), one merged contact-shadow mesh per scene (`Editor/ContactShadows.cs`, runs after every bake), `VrQuality` (4x MSAA, anisotropic filtering forced on, 2 cascades, soft shadows, shadow distance at most 40 m). Per scene: Warehouse ambient and floor lighter, lanes lighter, light pools stronger; Resistor ambient and ESD tiles lighter; Hydro ambient up; Refinery ground 300 m with the sky's fog tint 0.85.
+
+Editor CPU counters (Play mode, median, start view, `PerfProbe`, not a Vive frame rate), set-pass / draw calls before and after: Lobby 354 / 436 to 308 / 356 (rebuilt), Hydro 344 / 398 to 348 / 400, Refinery 546 / 1,085 to 540 / 1,093, Warehouse 583 / 1,282 to 589 / 1,284, Resistor 568 / 812 to 570 / 813. `-pbHandCheck` passes in all five. Before/after pictures: `docs/images/hub-r5-before-*.png` and `hub-r5-after-*.png`.
+
+Headless tools: `PerfProbe` now lives in the kit (`-pbPerf <file>` writes one line and exits; `-pbTimeout <s>` exits a capture or perf run that never finishes). Rebuild one scene: `Unity.exe -projectPath hub -executeMethod HubLobbyBuilder.BuildOneCli -pbScene Warehouse`; bake it: `-executeMethod HubBakeCli.BakeScene -pbScene Warehouse` (this reorders the build settings; restore Lobby first); screenshots: `PittBradford.XR.EditorTools.CaptureRunner.Run -pbCapture <dir> -pbScene Warehouse -pbOfflineWeather`.
+
+Not verified: any headset, the GPU cost of the new quality settings at 2448 x 2448 per eye, how the textures look at VR distance. Baked lightmaps were considered and not done (the pack meshes lack lightmap UVs; the scenes are rebuilt from code).
+

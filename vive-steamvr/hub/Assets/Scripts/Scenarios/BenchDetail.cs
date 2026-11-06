@@ -135,14 +135,14 @@ public static class BenchDetail
         {
             int cell = 128;
             bool alt = ((x / cell) + (y / cell)) % 2 == 0;
-            Color c = alt ? new Color(0.27f, 0.29f, 0.3f) : new Color(0.245f, 0.265f, 0.28f);
+            Color c = alt ? new Color(0.40f, 0.42f, 0.44f) : new Color(0.36f, 0.38f, 0.40f);
             float n = Mathf.PerlinNoise(x * 0.07f + 3f, y * 0.07f) * 0.06f + Hash(x, y) * 0.035f;
             c += new Color(n, n, n);
             int cx = x % cell, cy = y % cell;
             if (cx < 2 || cy < 2) c = Mul(c, 0.68f);
             return c;
         });
-        P.Box(root, "ESD floor", new Vector3(0, 0.002f, 0.5f), new Vector3(7.8f, 0.004f, 6.8f), P.Mat(Color.white, 0f, 0.3f, tile, 13f), false);
+        P.Box(root, "ESD floor", new Vector3(0, 0.002f, 0.5f), new Vector3(7.8f, 0.004f, 6.8f), P.Mat(Color.white, 0f, 0.45f, tile, 13f), false);
 
         // anti-fatigue rubber mat where the player stands, diamond-pattern and edged with hazard tape
         var rubber = Paint("rubber mat", 256, 256, (x, y) =>

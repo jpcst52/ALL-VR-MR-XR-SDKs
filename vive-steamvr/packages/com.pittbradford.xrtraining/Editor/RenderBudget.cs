@@ -34,6 +34,7 @@ namespace PittBradford.XR.EditorTools
         public static string Apply(Scene scene)
         {
             int made = 0, staticSet = 0, shadowOff = 0, vertexLights = 0;
+            Debug.Log(ContactShadows.Build(scene)); // before the static pass, so it is merged with the rest
             var roots = scene.GetRootGameObjects();
             foreach (var root in roots)
             {
