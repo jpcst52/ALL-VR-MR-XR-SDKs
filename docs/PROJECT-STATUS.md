@@ -150,3 +150,14 @@ Last updated: November 1, 2026 (evening).
 - Checked: all four portals load; Warehouse scripted self-test PASS; other flows ran to the end; people animate. Not checked: headset, hand play.
 - Decision for the owner: the hub copy of `WarehouseForklift.cs` now differs from project 03 (mirror camera drawn every third frame within 12 m). Copy the change to project 03 if you want them in step.
 
+
+## November 5, 2026: Unity VR fixes (text in one eye, teleport, hands)
+
+- **Text in one eye:** the kit shader `PBText` (all TextMesh text) had no stereo-instancing macros while the OpenXR settings use Single Pass Instanced, so it drew in one eye only. Fixed. The only other custom shaders are `SeasonSky` (already correct) and the new `PBColor` (`PittBradford/FlatColor`, stereo aware), which replaces `Hidden/Internal-Colored` (stereo support unknown) for the warehouse awareness dark shell. Everything else uses built-in shaders (Sprites/Default, Unlit, legacy particles, Standard, Skybox/Procedural), which support instancing. The mirror camera and capture cameras render to textures with `stereoTargetEye = None`, which is fine. Resources materials `PBTextKeep` and `PBFlatColorKeep` keep the shaders in builds.
+- **Teleport:** kit `Teleporter.cs`. Push either stick (or the upper trackpad) forward, release to teleport (short blink); left or right turns 45 degrees. Smooth walking is off by default (it shared the left stick). Desktop: hold T. Invalid targets (steep, table-high, loose body, no standing room, outside `Area`) show a red arc. Assumption: Vive trackpad reads as `Primary2DAxis`, upper touch = forward, lift fires.
+- **Hands:** the controller model is rebuilt, kept on when untracked, and on the desktop both hands show (the left was hidden). `-pbHandCheck <folder>` (see the kit README) checks both hands and the teleport rules and writes screenshots.
+- **Verified:** compiles and `-pbHandCheck` passed in the editor desktop fallback for projects 02, 03, 04 (and the hub scenes, see Task-Status I1). **Not verified:** any headset, the stereo shader in a real Single Pass Instanced run, Vive wand/trackpad input, teleport feel. Owner should try it on the Vive.
+
+### Web labs in headsets (Nov 5)
+
+Circuit Lab, Site Safety Layout and the Hydro rig gained an in-headset toolbox (parts, four examples each for the first two, reset with confirm), Y (open/off) and B (close/on) on the part under the ray, X/A rotate, and glove hands on the controllers. Also fixed: aiming a controller at a part with a label sprite threw an error. Verified in an emulated Quest 3 only; see multi-player/README.md.

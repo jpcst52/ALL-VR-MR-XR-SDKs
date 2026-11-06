@@ -15,12 +15,16 @@ namespace PittBradford.XR
         public bool IsLeft { get; private set; }
         public XRRig Rig { get; private set; }
         public Vector2 Stick { get; private set; }
+        /// <summary>Thumbstick or trackpad pressed in (Primary2DAxisClick).</summary>
+        public bool StickClick { get; private set; }
+        /// <summary>Set by the rig while a teleport arc is shown, so the pointing ray does not draw on top of it.</summary>
+        public bool SuppressRay;
         public bool TriggerDown, TriggerUp, TriggerHeld, GripDown, GripUp, GripHeld;
         public Vector3 Velocity { get; private set; }
         public Grabbable Held { get; private set; }
         public Pressable Hover { get; private set; }
 
-        InputAction trigger, grip, stick;
+        InputAction trigger, grip, stick, stickClick;
         LineRenderer ray;
         Transform visual;
         Vector3 lastPosition;
@@ -46,6 +50,7 @@ namespace PittBradford.XR
             hand.grip = Button("<XRController>{" + usage + "}/{GripButton}");
             hand.stick = new InputAction("stick", InputActionType.Value, "<XRController>{" + usage + "}/{Primary2DAxis}");
             hand.stick.Enable();
+            hand.stickClick = Button("<XRController>{" + usage + "}/{Primary2DAxisClick}");
             hand.BuildVisual();
             return hand;
         }
@@ -57,14 +62,26 @@ namespace PittBradford.XR
             return a;
         }
 
+        /// <summary>The controller model: a blue handle, a gold ring and a gold tip, about the size of a Vive wand. Built from code so it can never be missing.</summary>
         void BuildVisual()
         {
             visual = new GameObject("Controller").transform;
             visual.SetParent(transform, false);
-            // A simple controller: a handle and a ring, tilted forward like a held wand.
-            P.Prim(PrimitiveType.Capsule, visual, "Handle", new Vector3(0, -0.03f, 0.0f), new Vector3(0.035f, 0.07f, 0.035f), P.Mat(P.MediumBlue, 0.2f, 0.6f), false)
+            visual.localScale = Vector3.one * 0.7f;
+            var body = P.Mat(P.Royal, 0.1f, 0.55f);
+            var gold = P.Mat(P.Gold, 0.2f, 0.7f);
+            // tilted forward like a held wand: handle runs back toward the palm, ring and tip point ahead
+            P.Prim(PrimitiveType.Capsule, visual, "Handle", new Vector3(0, -0.035f, -0.02f), new Vector3(0.04f, 0.075f, 0.04f), body, false)
                 .transform.localRotation = Quaternion.Euler(70f, 0, 0);
-            P.Prim(PrimitiveType.Sphere, visual, "Head", new Vector3(0, 0.0f, 0.06f), Vector3.one * 0.06f, P.Mat(P.Gold, 0.2f, 0.7f), false);
+            P.Prim(PrimitiveType.Cylinder, visual, "Ring", new Vector3(0, 0.0f, 0.055f), new Vector3(0.085f, 0.006f, 0.085f), gold, false)
+                .transform.localRotation = Quaternion.Euler(90f, 0, 0);
+            P.Prim(PrimitiveType.Sphere, visual, "Head", new Vector3(0, 0.0f, 0.08f), Vector3.one * 0.035f, gold, false);
+            foreach (var r in visual.GetComponentsInChildren<Renderer>())
+            {
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                r.receiveShadows = false;
+                r.enabled = true;
+            }
             var rayGo = new GameObject("Ray");
             rayGo.transform.SetParent(transform, false);
             ray = rayGo.AddComponent<LineRenderer>();
@@ -77,10 +94,30 @@ namespace PittBradford.XR
             ray.useWorldSpace = true;
         }
 
+        /// <summary>True when the controller model is switched on and has at least one enabled renderer with a material. Used by the hand check.</summary>
+        public bool VisualOk(out string why)
+        {
+            why = "";
+            if (visual == null) { why = "no visual"; return false; }
+            if (!gameObject.activeInHierarchy || !visual.gameObject.activeInHierarchy) { why = "inactive"; return false; }
+            int n = 0;
+            foreach (var r in visual.GetComponentsInChildren<Renderer>())
+            {
+                if (!r.enabled) { why = "renderer disabled: " + r.name; return false; }
+                if (r.sharedMaterial == null) { why = "no material: " + r.name; return false; }
+                n++;
+            }
+            if (n == 0) { why = "no renderers"; return false; }
+            if (visual.lossyScale.x < 0.4f || visual.lossyScale.x > 2f) { why = "odd scale " + visual.lossyScale.x; return false; }
+            return true;
+        }
+
         void Update()
         {
             bool headset = XRRig.Headset;
             if (!headset) DesktopPose();
+            // the model is always on (also with no controller tracked); only a scenario's own hide call turns it off
+            if (visual != null && !visual.gameObject.activeSelf) visual.gameObject.SetActive(true);
             ReadInput(headset);
             UpdateVelocity();
             UpdatePointer();
@@ -95,26 +132,33 @@ namespace PittBradford.XR
             {
                 TriggerDown = trigger.WasPressedThisFrame(); TriggerUp = trigger.WasReleasedThisFrame(); TriggerHeld = trigger.IsPressed();
                 GripDown = grip.WasPressedThisFrame(); GripUp = grip.WasReleasedThisFrame(); GripHeld = grip.IsPressed();
-                Stick = stick.ReadValue<Vector2>();
+                Stick = stick.ReadValue<Vector2>(); StickClick = stickClick.IsPressed();
             }
             else
             {
                 var mouse = Mouse.current; var kb = Keyboard.current;
                 if (IsLeft || mouse == null || kb == null)
                 {
-                    TriggerDown = TriggerUp = TriggerHeld = GripDown = GripUp = GripHeld = false; Stick = Vector2.zero; return;
+                    TriggerDown = TriggerUp = TriggerHeld = GripDown = GripUp = GripHeld = false; Stick = Vector2.zero; StickClick = false; return;
                 }
                 TriggerDown = mouse.leftButton.wasPressedThisFrame; TriggerUp = mouse.leftButton.wasReleasedThisFrame; TriggerHeld = mouse.leftButton.isPressed;
                 GripDown = kb.eKey.wasPressedThisFrame; GripUp = kb.eKey.wasReleasedThisFrame; GripHeld = kb.eKey.isPressed;
-                Stick = Vector2.zero;
+                Stick = Vector2.zero; StickClick = false;
             }
         }
 
         void DesktopPose()
         {
-            if (IsLeft) { visual.gameObject.SetActive(false); ray.enabled = false; return; }
             var cam = Rig.Camera.transform;
-            transform.position = cam.position + cam.forward * 0.55f + cam.right * 0.22f - cam.up * 0.2f;
+            if (IsLeft)
+            {
+                // desktop: the left hand is just shown, resting at the lower left of the view (it has no input)
+                transform.position = cam.position + cam.forward * 0.65f - cam.right * 0.22f - cam.up * 0.24f;
+                transform.rotation = Quaternion.LookRotation(cam.forward + cam.right * 0.06f + cam.up * 0.04f);
+                ray.enabled = false;
+                return;
+            }
+            transform.position = cam.position + cam.forward * 0.65f + cam.right * 0.22f - cam.up * 0.24f;
             // Aim at the point the mouse crosshair is on (center of the view).
             transform.rotation = Quaternion.LookRotation(cam.forward + cam.right * -0.06f + cam.up * 0.04f);
         }
@@ -144,9 +188,9 @@ namespace PittBradford.XR
                 Hover = found;
                 if (Hover != null) Hover.SetHover(true);
             }
-            if (ray != null && ray.enabled || !IsLeft)
+            if (ray != null && (!IsLeft || XRRig.Headset))
             {
-                ray.enabled = !IsLeft || XRRig.Headset;
+                ray.enabled = (!IsLeft || XRRig.Headset) && !SuppressRay;
                 ray.SetPosition(0, XRRig.Headset ? transform.position : transform.position + transform.forward * 0.05f);
                 ray.SetPosition(1, end);
             }

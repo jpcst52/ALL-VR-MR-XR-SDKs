@@ -2,18 +2,6 @@
   "outputDir": "",
   "agents": [
     {
-      "id": "vive-refinery",
-      "name": "Vive 02 Refinery rounds",
-      "task": "Unity project 02-refinery-rounds (uncompiled draft)",
-      "state": "done",
-      "started": "2026-11-02T00:30:56.404Z",
-      "watch": [
-        "../../vive-steamvr/02-refinery-rounds"
-      ],
-      "ended": "2026-11-02T00:47:49.306Z",
-      "note": "02 refinery rounds written; uncompiled, untested"
-    },
-    {
       "id": "vive-warehouse",
       "name": "Vive 03 Warehouse forklift",
       "task": "Unity project 03-warehouse-forklift (uncompiled draft)",
@@ -475,11 +463,13 @@
       "id": "r4-perf",
       "name": "Render cost optimisation",
       "task": "Cut draw calls, set-pass, shadow casters and lights across the kit baker, projects 01-04 and the hub; re-bake and re-shoot",
-      "state": "running",
+      "state": "done",
       "started": "2026-11-03T20:58:00.110Z",
       "watch": [
         "vive-steamvr"
-      ]
+      ],
+      "ended": "2026-11-03T23:40:43.302Z",
+      "note": "Render cost: hydro 2052->394 draw calls, refinery 1807->1082, warehouse 4295->1240, bench 2497->804 (editor counters); project 01 stuck behind a hung Unity; hub editor still open"
     },
     {
       "id": "r4-pages",
@@ -496,6 +486,22 @@
       ],
       "ended": "2026-11-03T21:10:18.704Z",
       "note": "Vive build script (dry run only), WebXR site build 129.7 MB, Pages workflow, site check passes under sub-path; real Unity builds and live site untested"
+    },
+    {
+      "id": "u-vrfix",
+      "name": "Unity VR fixes",
+      "task": "Text on one eye, teleport, hands visible in every Unity scene",
+      "state": "done",
+      "started": "2026-11-05T23:30:42.511Z",
+      "watch": [
+        "vive-steamvr/packages",
+        "vive-steamvr/02-refinery-rounds",
+        "vive-steamvr/03-warehouse-forklift",
+        "vive-steamvr/04-resistor-bench",
+        "vive-steamvr/hub"
+      ],
+      "ended": "2026-11-05T23:45:30.085Z",
+      "note": "reported; see I1"
     }
   ]
 }

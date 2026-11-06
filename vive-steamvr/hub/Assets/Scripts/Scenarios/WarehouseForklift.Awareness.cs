@@ -328,7 +328,7 @@ public partial class WarehouseForklift
         Destroy(dimSphere.GetComponent<Collider>());
         dimSphere.transform.position = head;
         dimSphere.transform.localScale = Vector3.one * 3.2f; // radius 1.6 m
-        var blankShader = Shader.Find("Hidden/Internal-Colored");
+        var blankShader = Shader.Find("PittBradford/FlatColor") ?? Shader.Find("Hidden/Internal-Colored"); // FlatColor is stereo-instancing aware (both eyes)
         Material dm;
         if (blankShader != null)
         {

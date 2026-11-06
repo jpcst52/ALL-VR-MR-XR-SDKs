@@ -39,8 +39,8 @@ Requirements: Unity **6000.3.20f1** (built-in render pipeline; no extra assets),
 
 | | Vive wands (untested) | Desktop |
 |---|---|---|
-| Move | Left trackpad or stick | W A S D |
-| Turn | Right stick snap turn (30 degrees) | Hold the right mouse button and move the mouse |
+| Move | Teleport: push either thumbstick (or the trackpad) forward to show an arc, let go to jump there (green = valid, red = refused) | Hold T, let go to teleport; W A S D also walks |
+| Turn | Thumbstick or trackpad left or right turns 45 degrees (either hand), or turn your body | Hold the right mouse button and move the mouse |
 | Press (buttons, switch, answers) | Point + trigger | Aim with the centre of the view, left click (range about 4 m) |
 | Grab | Grip near the object | Aim at it and hold **E** (range about 3 m) |
 | Release | Let go of the grip | Release **E** |

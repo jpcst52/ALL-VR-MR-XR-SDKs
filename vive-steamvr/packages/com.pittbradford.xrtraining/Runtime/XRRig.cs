@@ -6,7 +6,7 @@ using UnityEngine.XR;
 namespace PittBradford.XR
 {
     /// <summary>
-    /// A minimal OpenXR rig: head and two controllers driven by the Input System, thumbstick/trackpad locomotion,
+    /// A minimal OpenXR rig: head and two controllers driven by the Input System, thumbstick teleport with snap turn (see Teleporter),
     /// and a keyboard-and-mouse fallback so every example can be tried (and tested) without a headset.
     /// </summary>
     public class XRRig : MonoBehaviour
@@ -17,7 +17,13 @@ namespace PittBradford.XR
         public static bool Headset => XRSettings.isDeviceActive;
 
         public float MoveSpeed = 2.0f;
-        public float SnapTurnDegrees = 30f;
+        /// <summary>Comfort snap turn on either thumbstick (left or right).</summary>
+        public float SnapTurnDegrees = 45f;
+        /// <summary>Thumbstick teleport (push forward, release). Off = no teleport.</summary>
+        public bool TeleportEnabled = true;
+        /// <summary>Smooth walking on the left stick. Off by default: teleport and snap turn are the comfort locomotion (and the left stick is used for them).</summary>
+        public bool SmoothLocomotion = false;
+        public Teleporter Teleport { get; private set; }
         public bool LocomotionEnabled = true;
         /// <summary>Optional limits so a player cannot walk out of the training area.</summary>
         public Bounds? Area;
@@ -26,7 +32,7 @@ namespace PittBradford.XR
         public bool Footsteps = true;
         public Surface FloorSurface = Surface.Concrete;
 
-        float pitch, yaw, snapCooldown, stepDistance;
+        float pitch, yaw, stepDistance;
         Vector3 lastPosition;
 
         public static XRRig Create(Vector3 position, float yawDegrees = 0f)
@@ -52,6 +58,7 @@ namespace PittBradford.XR
             rig.Left = Hand.Create(rig, true);
             rig.Right = Hand.Create(rig, false);
             rig.yaw = yawDegrees;
+            rig.Teleport = Teleporter.Create(rig);
             return rig;
         }
 
@@ -78,21 +85,16 @@ namespace PittBradford.XR
             }
         }
 
+        // Teleport and snap turn live in Teleporter. Smooth walking is optional (SmoothLocomotion) for people who want it.
         void HeadsetLocomotion()
         {
+            if (!SmoothLocomotion) return;
             Vector2 move = Left.Stick;
             if (move.sqrMagnitude > 0.04f)
             {
                 var forward = Vector3.ProjectOnPlane(Camera.transform.forward, Vector3.up).normalized;
                 var right = Vector3.ProjectOnPlane(Camera.transform.right, Vector3.up).normalized;
                 transform.position += (forward * move.y + right * move.x) * (MoveSpeed * Time.deltaTime);
-            }
-            snapCooldown -= Time.deltaTime;
-            float turn = Right.Stick.x;
-            if (Mathf.Abs(turn) > 0.7f && snapCooldown <= 0f)
-            {
-                transform.RotateAround(Camera.transform.position, Vector3.up, Mathf.Sign(turn) * SnapTurnDegrees);
-                snapCooldown = 0.35f;
             }
         }
 

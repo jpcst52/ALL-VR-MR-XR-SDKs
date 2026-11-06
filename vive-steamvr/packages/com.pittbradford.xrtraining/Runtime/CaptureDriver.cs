@@ -114,7 +114,7 @@ namespace PittBradford.XR
         }
 
         /// <summary>The editor can start the OpenXR mock runtime, which tilts and overrides cameras; screenshots want it off.</summary>
-        static void StopXr()
+        internal static void StopXr()
         {
             try
             {
@@ -129,7 +129,7 @@ namespace PittBradford.XR
             catch (Exception e) { Debug.LogWarning("[capture] could not stop XR: " + e.Message); }
         }
 
-        static void Quit(int code)
+        internal static void Quit(int code)
         {
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.Exit(code);

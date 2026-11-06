@@ -37,8 +37,8 @@ Requirements: Unity **6000.3.20f1** (built-in render pipeline; no extra assets),
 
 | Action | Vive wands (untested) | Desktop |
 |---|---|---|
-| Move | Left trackpad or stick | W A S D |
-| Turn | Right stick snap turn (30 degrees), or turn your body | Hold the right mouse button and move the mouse |
+| Move | Teleport: push either thumbstick (or the trackpad) forward to show an arc, let go to jump there (green = valid, red = refused) | Hold T, let go to teleport; W A S D also walks |
+| Turn | Thumbstick or trackpad left or right turns 45 degrees (either hand), or turn your body | Hold the right mouse button and move the mouse |
 | Press a button | Point with the controller, trigger | Aim with the centre of the view, left click (range about 4 m) |
 | Grab | Grip, near the object | Aim at the object and hold **E** (range about 3 m); release E to drop |
 | Wear PPE | Bring the item to your head or chest and release | Hold **E** on the item, keep E held and click **WEAR** at the PPE sign |
