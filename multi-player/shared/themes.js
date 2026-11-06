@@ -1,5 +1,8 @@
 import * as THREE from "three";
 import { PITT, tagSprite, drawSignLines, fontsReady } from "../../brand-kit/panels.js";
+import { evaluateCircuit, TERMINAL } from "./circuit-eval.mjs";
+import { circuitExamples, safetyExamples } from "./examples.mjs";
+import { safetyStatus } from "./safety-eval.mjs";
 import { evaluateHydro, summaryText, PORTS, NOZZLES } from "./hydro-eval.mjs";
 
 // A theme describes one shared-building example: its parts, how to draw them, and how to
@@ -48,82 +51,7 @@ function textSprite(text, color = "#f2f6fc", background = "#00205bdd", width = 0
 
 // ---------------------------------------------------------------- circuits
 
-const TERMINAL = { battery: 0.4, switch: 0.4, bulb: 0.4, resistor: 0.4, motor: 0.4, wire: 0.6 };
-const CONTACT_DISTANCE = 0.32;
-
-function terminalPoints(item) {
-  const reach = TERMINAL[item.part];
-  const [x, , z] = item.position;
-  const angle = item.rotation[1] ?? 0;
-  const dx = Math.cos(angle) * reach;
-  const dz = -Math.sin(angle) * reach;
-  return [[x - dx, z - dz], [x + dx, z + dz]];
-}
-
-class UnionFind {
-  constructor(size) { this.parent = Array.from({ length: size }, (_, index) => index); }
-  find(item) {
-    while (this.parent[item] !== item) {
-      this.parent[item] = this.parent[this.parent[item]];
-      item = this.parent[item];
-    }
-    return item;
-  }
-  union(a, b) { this.parent[this.find(a)] = this.find(b); }
-}
-
-// A deliberately simplified model: terminals that touch are joined, and a part carries current when it
-// lies on a loop with the battery (a "2-core" after pruning dead ends). Series/parallel resistance is
-// approximated by the number of resistors in the loop.
-export function evaluateCircuit(items) {
-  const touching = new Array(items.length * 2).fill(false);
-  const points = items.flatMap(terminalPoints);
-  const nodes = new UnionFind(points.length);
-  for (let a = 0; a < points.length; a += 1) {
-    for (let b = a + 1; b < points.length; b += 1) {
-      if ((a >> 1) === (b >> 1)) continue;
-      if (Math.hypot(points[a][0] - points[b][0], points[a][1] - points[b][1]) <= CONTACT_DISTANCE) {
-        nodes.union(a, b);
-        touching[a] = true;
-        touching[b] = true;
-      }
-    }
-  }
-  const result = {
-    state: items.some((item) => item.part === "battery") ? "open" : "no-battery",
-    live: new Set(),
-    brightness: 1,
-    touching,
-  };
-  const battery = items.findIndex((item) => item.part === "battery");
-  if (battery < 0) return result;
-  if (nodes.find(battery * 2) === nodes.find(battery * 2 + 1)) {
-    result.state = "short";
-    return result;
-  }
-  const edges = [];
-  items.forEach((item, index) => {
-    if (item.part === "switch" && !item.on) return;
-    edges.push({ index, a: nodes.find(index * 2), b: nodes.find(index * 2 + 1) });
-  });
-  let active = edges.filter((edge) => edge.a !== edge.b);
-  for (let changed = true; changed;) {
-    const degree = new Map();
-    for (const edge of active) {
-      degree.set(edge.a, (degree.get(edge.a) ?? 0) + 1);
-      degree.set(edge.b, (degree.get(edge.b) ?? 0) + 1);
-    }
-    const kept = active.filter((edge) => degree.get(edge.a) > 1 && degree.get(edge.b) > 1);
-    changed = kept.length !== active.length;
-    active = kept;
-  }
-  if (!active.some((edge) => edge.index === battery)) return result;
-  result.state = "closed";
-  for (const edge of active) result.live.add(edge.index);
-  const resistors = [...result.live].filter((index) => items[index].part === "resistor").length;
-  result.brightness = 1 / (1 + resistors * 0.9);
-  return result;
-}
+export { evaluateCircuit };
 
 function terminalStub(x, hot) {
   return mesh(cylinder(0.045, 0.045, 0.1, 12), metal(hot ? "#ffd479" : "#c9a14a"), [x, 0.2, 0], [0, 0, along]);
@@ -216,7 +144,7 @@ export const circuits = {
   title: "Circuit Lab",
   pitch: "Snap batteries, switches, bulbs, resistors, wires, and motors together. Everyone sees the same live circuit.",
   sceneLabel: "Shared electrical circuit board",
-  controls: "Press a part button to add it (click the board for more, Esc to stop). Drag to move, or use [ ] and the arrow keys; rotate with R. Touch the gold ends of parts so they connect, close the switch (T), and light the bulb.",
+  controls: "Press a part button to add it (click the board for more, Esc to stop). Drag to move, or use [ ] and the arrow keys; rotate with R. Touch the gold ends of parts so they connect, close the switch (T), and light the bulb. In a headset: use the toolbox at your left (trigger to press), Y opens and B closes, X or A rotates the selected part.",
   spawnSpacing: 1.15,
   toggleLabel: "Toggle switch",
   parts: [
@@ -228,15 +156,8 @@ export const circuits = {
     { id: "wire", label: "Wire", name: "Wire" },
   ],
   demoLabel: "Load demo circuit",
-  demo: [
-    { part: "battery", position: [-0.8, 0.08, -0.6], rotation: [0, 0, 0] },
-    { part: "switch", position: [0, 0.08, -0.6], rotation: [0, 0, 0], on: true },
-    { part: "bulb", position: [0.8, 0.08, -0.6], rotation: [0, 0, 0] },
-    { part: "wire", position: [1.2, 0.08, 0], rotation: [0, Math.PI / 2, 0] },
-    { part: "wire", position: [0.6, 0.08, 0.6], rotation: [0, 0, 0] },
-    { part: "wire", position: [-0.6, 0.08, 0.6], rotation: [0, 0, 0] },
-    { part: "wire", position: [-1.2, 0.08, 0], rotation: [0, Math.PI / 2, 0] },
-  ],
+  examples: circuitExamples,
+  xrLabels: { off: "Open switch", on: "Close switch", offWord: "open", onWord: "closed" },
   build: buildCircuitPart,
   applyState(object) {
     const lever = object.group.userData.lever;
@@ -354,19 +275,12 @@ const safetyBuilders = {
   },
 };
 
-const safetyChecks = [
-  ["exit", "exit sign"],
-  ["extinguisher", "extinguisher"],
-  ["firstaid", "first-aid kit"],
-  ["muster", "muster point"],
-];
-
 export const safety = {
   id: "safety",
   title: "Site Safety Layout",
   pitch: "Lay out a shared work-area safety plan: exits, extinguishers, first aid, muster point, and barriers around hazards.",
   sceneLabel: "Shared site safety layout board",
-  controls: "Press a part button to add it (click the board for more, Esc to stop). Drag to move, or use [ ] and the arrow keys; rotate with R. Put a barrier next to each hazard beacon and toggle a beacon (T) to mark an active hazard.",
+  controls: "Press a part button to add it (click the board for more, Esc to stop). Drag to move, or use [ ] and the arrow keys; rotate with R. Put a barrier next to each hazard beacon and toggle a beacon (T) to mark an active hazard. In a headset: use the toolbox at your left (trigger to press), Y opens and B closes, X or A rotates the selected part.",
   spawnSpacing: 0.85,
   toggleLabel: "Toggle hazard beacon",
   parts: [
@@ -378,14 +292,8 @@ export const safety = {
     { id: "muster", label: "Muster", name: "Muster point" },
   ],
   demoLabel: "Load sample layout",
-  demo: [
-    { part: "exit", position: [-2.0, 0.08, -1.6], rotation: [0, 0.4, 0] },
-    { part: "extinguisher", position: [-1.0, 0.08, -1.6], rotation: [0, 0, 0] },
-    { part: "firstaid", position: [0.0, 0.08, -1.6], rotation: [0, 0, 0] },
-    { part: "muster", position: [2.0, 0.08, -1.2], rotation: [0, -0.4, 0] },
-    { part: "beacon", position: [0.6, 0.08, 0.6], rotation: [0, 0, 0], on: true },
-    { part: "barrier", position: [0.6, 0.08, 1.2], rotation: [0, 0, 0] },
-  ],
+  examples: safetyExamples,
+  xrLabels: { off: "Beacon off", on: "Beacon on", offWord: "off", onWord: "flashing" },
   build(part) {
     const group = new THREE.Group();
     safetyBuilders[part](group);
@@ -409,13 +317,10 @@ export const safety = {
   summary(objects) {
     if (!objects.size) return "Add parts, or load the sample layout.";
     const items = [...objects.values()].map((object) => ({ part: object.data.part, x: object.group.position.x, z: object.group.position.z, on: object.data.on }));
-    const present = (part) => items.some((item) => item.part === part);
-    const checks = safetyChecks.map(([part, label]) => `${present(part) ? "✓" : "✗"} ${label}`);
-    const barriers = items.filter((item) => item.part === "barrier");
-    const unguarded = items.filter((item) => item.part === "beacon"
-      && !barriers.some((barrier) => Math.hypot(barrier.x - item.x, barrier.z - item.z) < 1.1)).length;
-    const active = items.filter((item) => item.part === "beacon" && item.on).length;
-    const hazard = unguarded ? ` ${unguarded} hazard beacon${unguarded === 1 ? "" : "s"} without a barrier.` : items.some((item) => item.part === "beacon") ? " Every hazard beacon has a barrier." : "";
+    const status = safetyStatus(items);
+    const checks = status.checks.map((check) => `${check.ok ? "✓" : "✗"} ${check.label}`);
+    const { unguarded, active } = status;
+    const hazard = unguarded ? ` ${unguarded} hazard beacon${unguarded === 1 ? "" : "s"} without a barrier.` : status.beacons ? " Every hazard beacon has a barrier." : "";
     return `Checklist: ${checks.join(" · ")}.${hazard}${active ? ` ${active} active hazard${active === 1 ? "" : "s"}.` : ""}`;
   },
 };
@@ -530,7 +435,7 @@ export const hydrotest = {
   title: "Hydrostatic Test Rig",
   pitch: "Together, assemble a water-filled test rig for a shell-and-tube heat exchanger: cap the nozzles, vent the air, and plumb a fill line. Safety awareness practice, not a test procedure.",
   sceneLabel: "Shared hydrostatic test rig board",
-  controls: "Press a part button to add it (click the board for more, Esc to stop). Drag to move, or use [ ] and the arrow keys; rotate with R. Touch the grey port dots so parts connect, put a gold blind flange over each top nozzle, set the vent and valve open (T), then watch the checklist.",
+  controls: "Press a part button to add it (click the board for more, Esc to stop). Drag to move, or use [ ] and the arrow keys; rotate with R. Touch the grey port dots so parts connect, put a gold blind flange over each top nozzle, set the vent and valve open (T), then watch the checklist. In a headset: use the toolbox at your left (trigger to press), Y opens and B closes, X or A rotates the selected part.",
   spawnSpacing: 0.95,
   toggleLabel: "Open / close valve",
   parts: [
@@ -544,6 +449,7 @@ export const hydrotest = {
     { id: "pipe", label: "Pipe", name: "Pipe" },
   ],
   demoLabel: "Load demo rig",
+  xrLabels: { off: "Close valve", on: "Open valve", offWord: "closed", onWord: "open" },
   demo: [
     { part: "tank", position: [-2.35, 0.08, 0.3], rotation: [0, 0, 0] },
     { part: "pump", position: [-1.6, 0.08, 0.3], rotation: [0, 0, 0] },
@@ -584,5 +490,8 @@ export const hydrotest = {
     return summaryText(result);
   },
 };
+
+// Every theme offers `examples` (ready-made scenes). Hydrotest has the one demo rig.
+if (!hydrotest.examples) hydrotest.examples = [{ id: "demo", label: "Demo rig", blurb: "The assembled test rig.", items: hydrotest.demo }];
 
 export const themes = { circuits, safety, hydrotest };

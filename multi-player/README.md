@@ -23,6 +23,22 @@ The shared parts are generated from Three.js primitives. The room around the boa
 - VR here is emulator and desktop only; it has not been tried on a real headset.
 - Screenshots: [empty room](./screenshots/hydrotest-empty.png), [completed rig](./screenshots/hydrotest-rig.png), [second client](./screenshots/hydrotest-rig-client2.png).
 
+## In a headset: toolbox, buttons, examples
+
+In VR (and in AR once aligned) a **toolbox** floats at your left: a button for every part, four ready-made examples, Open/Close, Rotate, Delete and **Reset scene** (press twice to confirm). It also shows the live summary and which part is selected, because the page panel is not visible inside a headset. Point a controller at a button and press the trigger. Squeeze both grips to bring the toolbox back in front of you.
+
+| Control | Does |
+|---|---|
+| Trigger on a part | Grab and move it (selects it) |
+| **Y** (left) | Open the switch under the ray, or the selected one (Safety Lab: beacon off; Hydro rig: close valve) |
+| **B** (right) | Close the switch (beacon on; open valve) |
+| X or A | Rotate the selected part 45° |
+| Squeeze both grips | Move the toolbox in front of you |
+
+Each lab has four examples (Circuit Lab: Simple loop, Two bulbs in series, Dimmed bulb, Motor and bulb; Safety Lab: Sample layout, Welding bay, Chemical store, Loading lane). Loading one replaces the scene for everyone in the room. The same buttons are on the page for desktop users. Each controller shows a blue glove hand (bare hands show tracked joints when the headset supports it).
+
+**Verified:** `node tools/vr-capture/toolbox-check.mjs` runs 41 checks in desktop Chrome with an **emulated Quest 3**: toolbox presses, all examples, Y/B/X, reset, gloves present. **Not tested on a real headset**; the button numbers (4 and 5) are the Quest standard mapping. The examples are checked by `test/examples.test.mjs` (each circuit closes and powers its load; each safety layout passes its checklist).
+
 ## Joining, leaving and keyboard use
 
 - **Join flow:** before joining, the panel shows three numbered steps. After joining, the name and room fields collapse into one line ("Room lab") with a **Leave room** button. The status line is colored when something needs attention (amber for a retry, red for an error).

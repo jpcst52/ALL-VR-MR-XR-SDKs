@@ -197,3 +197,8 @@ canvas.scene:focus-visible { outline: 3px solid var(--gold); outline-offset: -3p
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
+
+.examples { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+.examples button { padding: 7px 4px; font-size: 13px; font-weight: 500; }
+.examples button.danger { grid-column: 1 / -1; border-color: #b8323a; background: #5b1e2a; }
+.examples button.danger:hover { background: #7c2433; }

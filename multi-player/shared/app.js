@@ -5,6 +5,8 @@ import { PITT, tagSprite, brandPlate } from "../../brand-kit/panels.js";
 import { buildEnvironment } from "./world.js";
 import { createAvatar } from "./avatars.js";
 import { normalizePose, spreadAngles } from "./avatar-logic.mjs";
+import { createToolbox } from "./toolbox.js";
+import { XRHandModelFactory } from "three/addons/webxr/XRHandModelFactory.js";
 
 const mode = document.body.dataset.mode === "ar" ? "ar" : "vr";
 const params = new URLSearchParams(location.search);
@@ -572,11 +574,15 @@ function meshesForRaycast() {
   return [...objects.values()].flatMap((object) => object.group.children);
 }
 
-function findObjectHit() {
+// accept(object) lets the caller skip parts it cannot use (the Y and B buttons look past a barrier for the beacon behind it).
+function findObjectHit(accept = null) {
+  // setFromXRController leaves the raycaster without a camera, and raycasting against a label sprite throws without one.
+  raycaster.camera = renderer.xr.isPresenting ? renderer.xr.getCamera() : camera;
   const hits = raycaster.intersectObjects(meshesForRaycast(), true);
   for (const hit of hits) {
     const group = hit.object.userData.sharedObject ?? hit.object.parent;
-    if (group?.userData.sharedId) return { object: objects.get(group.userData.sharedId), point: hit.point };
+    const object = group?.userData.sharedId ? objects.get(group.userData.sharedId) : null;
+    if (object && (!accept || accept(object))) return { object, point: hit.point };
   }
   return null;
 }
@@ -654,6 +660,13 @@ function onPointerDown(event) {
     -((event.clientY - bounds.top) / bounds.height) * 2 + 1,
   );
   raycaster.setFromCamera(pointer, camera);
+  const tool = toolbox.pick(raycaster);
+  if (tool) {
+    event.preventDefault();
+    event.stopPropagation();
+    toolbox.press(tool);
+    return;
+  }
   const hit = findObjectHit();
   if (hit) {
     event.preventDefault();
@@ -735,17 +748,131 @@ function rotateSelected() {
   send({ type: "rotate", id: object.id, rotation });
 }
 
-function loadDemo() {
-  for (const item of theme.demo) {
+// Removes every part (parts another person is holding stay until they let go).
+function clearScene() {
+  if (!isConnected()) return false;
+  pendingToggles.length = 0;
+  for (const id of [...objects.keys()]) send({ type: "delete", id });
+  return true;
+}
+
+function resetScene() {
+  if (!clearScene()) { setStatus("Join a room before changing the shared scene.", "warn"); return; }
+  objectSerial = 0;
+  setStatus("Scene cleared for everyone. Add parts or load an example.");
+}
+
+// Replaces the scene with a ready-made one. The relay handles messages in order, so the clear finishes before the new parts arrive.
+function loadExample(index) {
+  const example = theme.examples?.[index];
+  if (!example) return;
+  if (!isConnected()) { setStatus("Join a room before changing the shared scene.", "warn"); return; }
+  clearScene();
+  objectSerial = 0;
+  for (const item of example.items) {
     if (item.on) pendingToggles.push(item.part);
     send({ type: "place", part: item.part, position: item.position, rotation: item.rotation });
   }
+  setStatus(`Loaded the example "${example.label}": ${example.blurb}`);
+}
+
+function loadDemo() { loadExample(0); }
+
+// Sets the selected part's state, or the part under a controller's ray: Y opens/turns off, B closes/turns on.
+function setPartState(on, controller = null) {
+  let object = objects.get(selectedObjectId);
+  if (controller) {
+    raycaster.setFromXRController(controller);
+    const toggles = (item) => theme.parts.find((part) => part.id === item.data.part)?.toggles;
+    const hit = findObjectHit(toggles) ?? findObjectHit();
+    if (hit) { object = hit.object; selectObject(object.id); }
+  }
+  const labels = theme.xrLabels;
+  if (!object) { setStatus("Point at a part, or select one, then press the button again.", "warn"); return false; }
+  const part = theme.parts.find((item) => item.id === object.data.part);
+  if (!part?.toggles) { setStatus(`${partName(object.data.part)} has no ${labels.offWord}/${labels.onWord} state. ${theme.toggleLabel} works on a part that does.`, "warn"); return false; }
+  return send({ type: "toggle", id: object.id, on });
+}
+
+function toolboxState() {
+  const object = objects.get(selectedObjectId);
+  const part = theme.parts.find((item) => item.id === object?.data.part);
+  const words = theme.xrLabels;
+  return {
+    connected: isConnected(),
+    hasSelection: Boolean(object),
+    canToggle: Boolean(part?.toggles),
+    selectedLabel: !isConnected() ? "Join a room on the page first" : object ? `Selected: ${partName(object.data.part)}${part?.toggles ? ` (${object.data.on ? words.onWord : words.offWord})` : ""}` : "Nothing selected: grab a part to select it",
+    summary: summary.textContent,
+  };
+}
+
+const toolbox = createToolbox({
+  theme,
+  getState: toolboxState,
+  actions: {
+    add: (part) => { selectedPart = part; spawnPart(part); },
+    example: (index) => loadExample(index),
+    rotate: () => rotateSelected(),
+    remove: () => { if (selectedObjectId) send({ type: "delete", id: selectedObjectId }); },
+    setState: (on) => setPartState(on),
+    reset: () => resetScene(),
+  },
+});
+toolbox.group.visible = false;
+scene.add(toolbox.group);
+let toolboxPlacement = false; // true until the toolbox has been put in front of the player in this session
+
+// Puts the toolbox at the player's left, a little ahead, at chest height, turned to face them. Squeezing both grips does it again.
+const placeHead = new THREE.Vector3();
+const placeAhead = new THREE.Vector3();
+function placeToolbox() {
+  const xrCamera = renderer.xr.getCamera();
+  xrCamera.getWorldPosition(placeHead);
+  xrCamera.getWorldDirection(placeAhead);
+  placeAhead.y = 0;
+  if (placeAhead.lengthSq() < 0.01) placeAhead.set(0, 0, -1);
+  placeAhead.normalize();
+  const reach = mode === "ar" ? 0.65 : 0.75;
+  const side = mode === "ar" ? 0.55 : 0.75;
+  toolbox.group.position.set(placeHead.x + placeAhead.x * reach + placeAhead.z * side, placeHead.y - 0.2, placeHead.z + placeAhead.z * reach - placeAhead.x * side);
+  toolbox.group.rotation.set(0, Math.atan2(placeHead.x - toolbox.group.position.x, placeHead.z - toolbox.group.position.z), 0);
+  toolboxPlacement = false;
+}
+
+// Desktop preview of the toolbox (?toolbox=1) so it can be checked without a headset.
+if (params.get("toolbox") === "1") {
+  toolbox.group.visible = true;
+  toolbox.group.position.set(-2.9, 1.5, 1.6);
+  toolbox.group.rotation.y = 0.9;
 }
 
 toggleButton.addEventListener("click", toggleSelected);
 rotateButton.addEventListener("click", rotateSelected);
 demoButton.addEventListener("click", loadDemo);
-demoButton.textContent = theme.demoLabel;
+demoButton.textContent = theme.examples?.length ? `Load: ${theme.examples[0].label}` : theme.demoLabel;
+// The other ready-made scenes and a reset button, under the demo button on the page.
+{
+  const row = document.createElement("div");
+  row.className = "examples";
+  (theme.examples ?? []).slice(1).forEach((example, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.example = String(index + 1);
+    button.title = example.blurb;
+    button.textContent = `Load: ${example.label}`;
+    button.addEventListener("click", () => loadExample(index + 1));
+    row.append(button);
+  });
+  const reset = document.createElement("button");
+  reset.type = "button";
+  reset.id = "reset-scene";
+  reset.className = "danger";
+  reset.textContent = "Reset scene";
+  reset.addEventListener("click", () => { if (!objects.size || window.confirm("Remove every part for everyone in this room?")) resetScene(); });
+  row.append(reset);
+  demoButton.after(row);
+}
 toggleButton.textContent = theme.toggleLabel;
 document.title = `${document.title.split("—")[0]}— ${theme.title}`;
 document.querySelector("h1").textContent = theme.title;
@@ -809,6 +936,35 @@ function keyboardMove(event) {
   send({ type: "release", id: object.id, position, rotation });
 }
 
+const handFactory = new XRHandModelFactory();
+const gloveMaterial = new THREE.MeshStandardMaterial({ color: PITT.royal, roughness: 0.55, metalness: 0.05 });
+const cuffMaterial = new THREE.MeshStandardMaterial({ color: PITT.gold, roughness: 0.4, metalness: 0.3 });
+// side is -1 for the left hand and 1 for the right. The grip space has -Z pointing out along the fingers.
+function makeGloveHand(side) {
+  const hand = new THREE.Group();
+  hand.name = "glove-hand";
+  const palm = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.03, 0.09), gloveMaterial);
+  palm.position.set(0, 0, 0.01);
+  hand.add(palm);
+  const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.04, 0.04, 16), cuffMaterial);
+  cuff.rotation.x = Math.PI / 2;
+  cuff.position.set(0, 0, 0.075);
+  hand.add(cuff);
+  [-0.03, -0.01, 0.01, 0.03].forEach((x, finger) => {
+    const length = [0.05, 0.062, 0.058, 0.046][finger];
+    const part = new THREE.Mesh(new THREE.CapsuleGeometry(0.0085, length, 4, 8), gloveMaterial);
+    part.rotation.x = Math.PI / 2 + 0.35; // fingers curl slightly toward the palm
+    part.position.set(x, -0.006, -0.04 - length / 2);
+    hand.add(part);
+  });
+  const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(0.01, 0.04, 4, 8), gloveMaterial);
+  thumb.rotation.set(Math.PI / 2 - 0.2, 0, side * 0.9);
+  thumb.position.set(side * 0.052, 0.002, -0.015);
+  hand.add(thumb);
+  hand.position.set(0, 0, -0.03);
+  return hand;
+}
+
 for (let index = 0; index < 2; index += 1) {
   const controller = renderer.xr.getController(index);
   const beam = new THREE.Line(
@@ -824,9 +980,28 @@ for (let index = 0; index < 2; index += 1) {
   });
   controller.addEventListener("connected", (event) => {
     controller.userData.targetRayMode = event.data?.targetRayMode;
+    controller.userData.source = event.data;
     controller.userData.connected = true;
   });
-  controller.addEventListener("disconnected", () => { controller.userData.connected = false; });
+  controller.addEventListener("disconnected", () => { controller.userData.connected = false; controller.userData.source = null; });
+  controller.addEventListener("squeezestart", () => {
+    controller.userData.squeezing = true;
+    if ([0, 1].every((other) => renderer.xr.getController(other).userData.squeezing)) toolboxPlacement = true;
+  });
+  controller.addEventListener("squeezeend", () => { controller.userData.squeezing = false; });
+
+  // A visible hand for every controller (a blue glove with a gold cuff), and a tracked hand when the headset sees bare hands.
+  // Nothing is fetched: the stock controller models come from a CDN, which the offline demo cannot use.
+  const grip = renderer.xr.getControllerGrip(index);
+  grip.add(makeGloveHand(index === 0 ? -1 : 1));
+  scene.add(grip);
+  const hand = renderer.xr.getHand(index);
+  hand.add(handFactory.createHandModel(hand, "boxes"));
+  scene.add(hand);
+}
+
+function haptic(controller, strength = 0.4, ms = 40) {
+  controller.userData.source?.gamepad?.hapticActuators?.[0]?.pulse?.(strength, ms);
 }
 
 function onXrSelectStart(controller) {
@@ -835,6 +1010,9 @@ function onXrSelectStart(controller) {
     return;
   }
   raycaster.setFromXRController(controller);
+  const tool = toolbox.pick(raycaster);
+  if (tool) { if (toolbox.press(tool)) haptic(controller); return; }
+  if (toolbox.group.visible && toolbox.distance(raycaster) !== null) return; // the panel itself: nothing to place or grab behind it
   const hit = findObjectHit();
   if (hit) {
     beginGrab(hit.object, hit.point);
@@ -845,10 +1023,48 @@ function onXrSelectStart(controller) {
     spawnAt(selectedPart, hitWorldPoint);
     return;
   }
+  // Pointing at the empty board adds the last-chosen part there; pointing past the board edge does nothing.
   const point = raycaster.ray.intersectPlane(getBoardPlane(), tempVector);
-  if (point && point.distanceTo(camera.getWorldPosition(tempVector2)) < 10) {
+  if (point && board.worldToLocal(point.clone()).setY(0).length() <= 3.3 && point.distanceTo(camera.getWorldPosition(tempVector2)) < 10) {
     spawnAt(selectedPart, point);
   }
+}
+
+// Face buttons, read each frame. On Quest the top face button of each hand is button 5 (Y on the left, B on the right) and the
+// lower one is button 4 (X, A). Y opens or turns off, B closes or turns on, X or A rotates the selected part by 45 degrees.
+function pollXrButtons() {
+  for (let index = 0; index < 2; index += 1) {
+    const controller = renderer.xr.getController(index);
+    const pad = controller.userData.source?.gamepad;
+    if (!pad || controller.userData.targetRayMode === "screen") continue;
+    const now = pad.buttons.map((button) => button.pressed);
+    const before = controller.userData.buttons ?? [];
+    const edge = (number) => now[number] && !before[number];
+    const hand = controller.userData.source.handedness;
+    if (edge(5) && hand === "left") { if (setPartState(false, controller)) haptic(controller, 0.5, 60); }
+    if (edge(5) && hand === "right") { if (setPartState(true, controller)) haptic(controller, 0.5, 60); }
+    if (edge(4)) rotateSelected();
+    controller.userData.buttons = now;
+  }
+}
+
+// Highlight the toolbox button under each controller ray, and stop the beam at the panel.
+function updateToolboxHover(time) {
+  if (!toolbox.group.visible) return;
+  if (toolboxPlacement && renderer.xr.isPresenting) placeToolbox();
+  let hovered = null;
+  for (let index = 0; index < 2; index += 1) {
+    const controller = renderer.xr.getController(index);
+    if (!controller.userData.connected || controller.userData.targetRayMode === "screen") continue;
+    raycaster.setFromXRController(controller);
+    const button = toolbox.pick(raycaster);
+    const beam = controller.children.find((child) => child.isLine);
+    const away = toolbox.distance(raycaster);
+    if (beam) beam.scale.z = away !== null ? Math.min(away, 4) : 1;
+    if (button) hovered = button;
+  }
+  toolbox.setHover(hovered);
+  toolbox.update(time);
 }
 
 function updateControllerGrab() {
@@ -893,6 +1109,8 @@ function calibrateArOrigin(point) {
   board.quaternion.setFromRotationMatrix(basis);
   arDirection = direction;
   arCalibrationStep = 2;
+  toolbox.group.visible = true;
+  toolboxPlacement = true;
   alignmentStatus.textContent = "Aligned. Shared board coordinates now map to this local AR space.";
   xrHint.textContent = "Board aligned. Tap a shared part to grab it, or tap the work surface to add one.";
   reticle.material.color.set("#73e7d4");
@@ -910,7 +1128,7 @@ async function enterXr() {
         optionalFeatures: ["local-floor", "bounded-floor", "hand-tracking"],
       });
       await renderer.xr.setSession(session);
-      updateStatus("In VR. Point a controller, then squeeze to grab or add a shared part.");
+      updateStatus("In VR. Your toolbox floats at your left: point and press the trigger to add parts or load an example. Trigger grabs a part, Y opens and B closes a switch, X or A rotates.");
     } else {
       const supported = await navigator.xr.isSessionSupported("immersive-ar");
       if (!supported) throw new Error("This browser or device cannot start an immersive AR session.");
@@ -918,7 +1136,7 @@ async function enterXr() {
       renderer.xr.setReferenceSpaceType("local");
       const session = await navigator.xr.requestSession("immersive-ar", {
         requiredFeatures: ["hit-test"],
-        optionalFeatures: ["local-floor", "dom-overlay"],
+        optionalFeatures: ["local-floor", "dom-overlay", "hand-tracking"],
         domOverlay: { root: document.body },
       });
       await renderer.xr.setSession(session);
@@ -1000,8 +1218,8 @@ vrStage.visible = false;
   vrStage.add(floorDisc, ring, pedestal);
   scene.add(vrStage);
 }
-renderer.xr.addEventListener("sessionstart", () => { send({ type: "mode", mode }); updateRoster(); environment.applyXr(true); environment.setShadows(false); vrStage.visible = mode === "vr"; });
-renderer.xr.addEventListener("sessionend", () => { send({ type: "mode", mode: "web" }); updateRoster(); environment.applyXr(false); environment.setShadows(shadowsWanted); vrStage.visible = false; });
+renderer.xr.addEventListener("sessionstart", () => { toolbox.group.visible = mode === "vr"; toolboxPlacement = true; send({ type: "mode", mode }); updateRoster(); environment.applyXr(true); environment.setShadows(false); vrStage.visible = mode === "vr"; });
+renderer.xr.addEventListener("sessionend", () => { toolbox.group.visible = params.get("toolbox") === "1"; send({ type: "mode", mode: "web" }); updateRoster(); environment.applyXr(false); environment.setShadows(shadowsWanted); vrStage.visible = false; });
 renderer.xr.addEventListener("sessionend", () => {
   if (mode !== "vr") return;
   board.position.set(0, 0, 0);
@@ -1067,7 +1285,8 @@ function onMessageFrame(time, frame) {
   }
 
   if (mode === "ar" && renderer.xr.isPresenting && frame) updateArHitTest(frame);
-  if (renderer.xr.isPresenting) updateControllerGrab();
+  if (renderer.xr.isPresenting) { pollXrButtons(); updateControllerGrab(); }
+  updateToolboxHover(performance.now());
   orbit.update();
   renderer.render(scene, camera);
 }
@@ -1095,7 +1314,7 @@ window.addEventListener("resize", () => {
 });
 
 // Read-only handles for the capture and measurement scripts (tools/measure.mjs); nothing in the page depends on it.
-window.__mp = { renderer, scene, camera, peers, environment, objects };
+window.__mp = { renderer, scene, camera, peers, environment, objects, toolbox, toolboxState };
 
 window.addEventListener("beforeunload", () => {
   releaseGrab();
