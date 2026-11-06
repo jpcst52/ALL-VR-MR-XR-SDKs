@@ -11,7 +11,7 @@ This is general safety-awareness practice. It is not a site procedure, a test pe
 | Item | Status (as of November 3, 2026) |
 |---|---|
 | Compiles in Unity 6000.3.20f1 | Yes, in scripted editor runs (November 1 and 2). |
-| Scripted capture run (all six steps with the real rules, the question, the summary) | Yes, in the desktop editor (November 3, 2026, baked scene, 0 compile errors). This is emulated, not a headset. Seventeen screenshots come from it. |
+| Scripted capture run (all six steps with the real rules, the question, the summary) | Yes, in the desktop editor (November 5, 2026, re-baked scene, 0 compile errors). This is emulated, not a headset. Seventeen screenshots come from it. |
 | Sound (round 3) | The catalogue generates and passes a numeric check (no NaN, no clipping, not silent). **Nobody has listened to it yet**, on speakers or in a headset: levels and taste are unchecked. Frame rate is not measured. |
 | Played by a person on the desktop | The owner played an earlier version before the "why this matters" panels were added. The panels, the question and the baked scene have not been played by hand. |
 | Headset (Vive Pro 2, Quest or any other) | **Not tested.** Controller bindings (Vive, Index, Touch profiles) are set up in code only. |
@@ -37,8 +37,8 @@ Requirements: Unity **6000.3.20f1** (built-in render pipeline), Windows, and a *
 
 | Action | Vive wands (untested) | Desktop |
 |---|---|---|
-| Move | Left trackpad or stick | W A S D |
-| Look / turn | Head; right stick snap-turn (30 degrees) | Hold the right mouse button and move the mouse |
+| Move | Teleport: push either thumbstick (or the trackpad) forward to show an arc, let go to jump there (green = valid, red = refused) | Hold T, let go to teleport; W A S D also walks |
+| Look / turn | Head; thumbstick or trackpad left or right turns 45 degrees (either hand) | Hold the right mouse button and move the mouse |
 | Press (valves, PRESSURIZE and STOP buttons, answers) | Point + trigger | Aim with the centre of the view, left click (range about 4 m) |
 | Grab (blind flanges) | Grip near the object | Aim at it and hold **E** (range about 3 m); release E to drop |
 | Answer the reasoning question | Point + trigger | Left click, or press 1, 2 or 3 |
@@ -138,6 +138,12 @@ Desktop editor renders made by the capture run (re-shot November 3, 2026 after r
 | 15 Overview with light shafts, duct and tool board | 16 Vessel detail: nameplate, second gauge, pressure bar |
 | ![Eye wash, shower, PPE rack, pallet and hose coil](screenshots/17-eyewash-and-shower.png) | |
 | 17 Eye wash, safety shower, pallet and hose coil | |
+
+## Render cost
+
+Round 3 detail roughly tripled the render cost; round 4 cut it again with no object removed. Editor CPU counters in Play mode (median, mono editor Game view, measured on the hub copy of this scene because the hub runs the same scripts; **not** a Vive frame rate): set-pass calls 1,913 to **341**, draw calls 2,052 to **394**, triangles 690 k to **127 k**.
+
+How: the bake now runs the kit's `RenderBudget` pass (flags and settings only, nothing is merged on disk). Groups that never move are declared with `P.Static(...)` and become batching-static; small, thin, emissive and transparent parts stop casting shadows; at most two non-directional lights stay on with a shorter range (the rest are switched off but stay in the scene), with a little more ambient light to make up; the soft indoor key light no longer casts realtime shadows. Baked materials are colour-quantised and GPU-instanced. The look is close to before but slightly flatter, with less pooled light; re-shoot screenshots were compared by eye and not replaced. GPU time and the frame rate on a headset are **not measured**. Details and the full table: `../hub/README.md`.
 
 ## Troubleshooting
 
