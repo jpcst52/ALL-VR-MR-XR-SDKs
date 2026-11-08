@@ -147,7 +147,7 @@ scene.add(new THREE.DirectionalLight(0x7fb4ff, 0.7).translateX(5).translateY(3).
 // indoor scenarios keep the plain navy room. If the manifest or an image is missing, the navy background stays.
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 let skyWanted = true;
-const outdoorStations = new Set(["height", "battery", "facade", "field"]);
+const outdoorStations = new Set(["height", "battery", "facade"]);
 const seasonChip = document.querySelector("#season-chip");
 const skyCredits = document.querySelector("#sky-credits");
 const sky = createSeasonSky({
@@ -336,8 +336,8 @@ let scenarioModel = null;
 
 // All in-world text goes through the shared brand kit (../brand-kit/panels.js): backed, rounded, bordered panels
 // in the bundled Pitt fonts. lines[0] is the kicker; the rest is the body, which shrinks to fit the panel.
-function textTexture(lines, { accent = PITT.gold, width = 1024, height = 512, size = 40, brand = false } = {}) {
-  return textPanelTexture({ width, height, size, minSize: Math.round(size * 0.55), accent, brand, kicker: lines[0], body: lines.slice(1).join(" ") });
+function textTexture(lines, { accent = PITT.gold, width = 1024, height = 512, size = 40, brand = false, fill, badge, icon, ink, bar } = {}) {
+  return textPanelTexture({ width, height, size, minSize: Math.round(size * 0.55), accent, brand, kicker: lines[0], body: lines.slice(1).join(" "), fill, badge, icon, ink, bar });
 }
 
 // Canvas width that matches a plane's aspect ratio, so panel text is never stretched.
@@ -381,175 +381,8 @@ function createCounter() {
   return group;
 }
 
-function createSafetyStation() {
-  const group = new THREE.Group();
-  const coneMaterial = new THREE.MeshStandardMaterial({ color: "#ff9d59", roughness: 0.48 });
-  for (const x of [-0.62, 0.62]) {
-    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.55, 4), coneMaterial);
-    cone.position.set(x, 0.5, 0.25);
-    group.add(cone);
-    const base = new THREE.Mesh(
-      new THREE.BoxGeometry(0.43, 0.07, 0.34),
-      new THREE.MeshStandardMaterial({ color: "#ffb36b" }),
-    );
-    base.position.set(x, 0.2, 0.25);
-    group.add(base);
-  }
-  const hazard = new THREE.Mesh(
-    new THREE.CircleGeometry(0.42, 40),
-    new THREE.MeshStandardMaterial({ color: "#73e7d4", transparent: true, opacity: 0.62, roughness: 0.4 }),
-  );
-  hazard.rotation.x = -Math.PI / 2;
-  hazard.position.set(0, 0.21, 0.35);
-  group.add(hazard);
-  const rail = new THREE.Mesh(
-    new THREE.BoxGeometry(1.9, 0.08, 0.08),
-    new THREE.MeshStandardMaterial({ color: "#d8edf3", metalness: 0.42 }),
-  );
-  rail.position.set(0, 0.72, 0.35);
-  group.add(rail);
-  return group;
-}
-
-function createDeliveryStation() {
-  const group = new THREE.Group();
-  const colors = ["#7188ba", "#9d86c8", "#668f87"];
-  for (let index = 0; index < 3; index += 1) {
-    const crate = new THREE.Mesh(
-      new THREE.BoxGeometry(0.58, 0.46, 0.48),
-      new THREE.MeshStandardMaterial({ color: colors[index], roughness: 0.78 }),
-    );
-    crate.position.set((index - 1) * 0.62, 0.44 + (index === 1 ? 0.35 : 0), 0.18);
-    crate.userData.swap = { file: "props/cardboard_box_01.glb", size: [0.58, 0.46, 0.48], rot: index === 1 ? 0.25 : 0 };
-    group.add(crate);
-    const label = new THREE.Mesh(
-      new THREE.BoxGeometry(0.24, 0.13, 0.025),
-      new THREE.MeshBasicMaterial({ color: index === 1 ? "#ffb36b" : "#d8edf3" }),
-    );
-    label.position.set((index - 1) * 0.62, crate.position.y, -0.07);
-    group.add(label);
-  }
-  const clipboard = new THREE.Mesh(
-    new THREE.BoxGeometry(0.48, 0.62, 0.045),
-    new THREE.MeshStandardMaterial({ color: "#d6e1ea", roughness: 0.84 }),
-  );
-  clipboard.position.set(1.22, 0.82, 0.08);
-  clipboard.rotation.z = -0.18;
-  group.add(clipboard);
-  return group;
-}
-
-function createConsentStation() {
-  const group = new THREE.Group();
-  const table = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.92, 0.94, 0.13, 48),
-    new THREE.MeshStandardMaterial({ color: "#315365", roughness: 0.62 }),
-  );
-  table.position.y = 0.86;
-  group.add(table);
-  const stem = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.12, 0.2, 0.8, 20),
-    new THREE.MeshStandardMaterial({ color: "#91aabd", metalness: 0.3 }),
-  );
-  stem.position.y = 0.42;
-  group.add(stem);
-  const form = new THREE.Mesh(
-    new THREE.BoxGeometry(0.4, 0.05, 0.56),
-    new THREE.MeshStandardMaterial({ color: "#e5edf4", roughness: 0.9 }),
-  );
-  form.position.set(-0.2, 0.98, 0.16);
-  form.rotation.y = -0.18;
-  group.add(form);
-  const pen = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.025, 0.025, 0.4, 10),
-    new THREE.MeshStandardMaterial({ color: "#73e7d4", metalness: 0.28 }),
-  );
-  pen.position.set(0.36, 1.0, 0.12);
-  pen.rotation.z = Math.PI / 2.8;
-  group.add(pen);
-  return group;
-}
-
-function createSampleStation() {
-  const group = new THREE.Group();
-  const tray = new THREE.Mesh(
-    new THREE.BoxGeometry(1.55, 0.12, 0.72),
-    new THREE.MeshStandardMaterial({ color: "#42536a", roughness: 0.74 }),
-  );
-  tray.position.y = 0.66;
-  group.add(tray);
-  for (let index = 0; index < 3; index += 1) {
-    const vial = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.12, 0.11, 0.48, 20),
-      new THREE.MeshPhysicalMaterial({
-        color: ["#84cfba", "#90aef2", "#dbab78"][index],
-        transparent: true,
-        opacity: 0.74,
-        roughness: 0.22,
-        transmission: 0.12,
-      }),
-    );
-    vial.position.set((index - 1) * 0.43, 0.99, 0.1);
-    group.add(vial);
-    const cap = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.13, 0.13, 0.1, 18),
-      new THREE.MeshStandardMaterial({ color: "#d9e3eb", metalness: 0.28 }),
-    );
-    cap.position.set((index - 1) * 0.43, 1.28, 0.1);
-    group.add(cap);
-    const tag = new THREE.Mesh(
-      new THREE.BoxGeometry(0.18, 0.1, 0.02),
-      new THREE.MeshBasicMaterial({ color: index === 1 ? "#ffb36b" : "#73e7d4" }),
-    );
-    tag.position.set((index - 1) * 0.43, 1.0, -0.02);
-    group.add(tag);
-  }
-  return group;
-}
-
-function createFieldStation() {
-  const group = new THREE.Group();
-  const caseBody = new THREE.Mesh(
-    new THREE.BoxGeometry(0.82, 0.28, 0.58),
-    new THREE.MeshStandardMaterial({ color: "#4b6478", roughness: 0.48, metalness: 0.12 }),
-  );
-  caseBody.position.set(-0.2, 0.6, 0.1);
-  group.add(caseBody);
-  const screen = new THREE.Mesh(
-    new THREE.BoxGeometry(0.4, 0.19, 0.025),
-    new THREE.MeshBasicMaterial({ color: "#73e7d4" }),
-  );
-  screen.position.set(-0.2, 0.62, -0.205);
-  group.add(screen);
-  const pole = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.035, 0.045, 1.2, 12),
-    new THREE.MeshStandardMaterial({ color: "#c5d4de", metalness: 0.48 }),
-  );
-  pole.position.set(0.72, 0.68, 0.2);
-  group.add(pole);
-  const sensor = new THREE.Mesh(
-    new THREE.SphereGeometry(0.16, 20, 14),
-    new THREE.MeshStandardMaterial({ color: "#ffb36b", metalness: 0.3 }),
-  );
-  sensor.position.set(0.72, 1.32, 0.2);
-  group.add(sensor);
-  const marker = new THREE.Mesh(
-    new THREE.RingGeometry(0.2, 0.27, 24),
-    new THREE.MeshBasicMaterial({ color: "#73e7d4", side: THREE.DoubleSide }),
-  );
-  marker.rotation.x = -Math.PI / 2;
-  marker.position.set(0.72, 0.22, 0.2);
-  group.add(marker);
-  return group;
-}
-
 const stationBuilders = {
   counter: createCounter,
-  safety: createSafetyStation,
-  delivery: createDeliveryStation,
-  consent: createConsentStation,
-  sample: createSampleStation,
-  field: createFieldStation,
   height: createHeightStation,
   control: createControlRoomStation,
   battery: createBatteryStation,
@@ -1221,28 +1054,54 @@ retryButton.addEventListener("click", () => {
 finishButton.addEventListener("click", showCatalog);
 backButton.addEventListener("click", showCatalog);
 
+// Each kind of card has its own colour, so the cards are easy to tell apart in a headset:
+//   answer choices  A blue, B gold, C teal, each with a round letter badge
+//   continue        solid green with an arrow (the "go on" action)
+//   back            slate with a left arrow;  main menu  royal blue and gold with a house
+//   scenario list   tinted by category (industrial, manufacturing, life science)
+const CHOICE_STYLES = [
+  { accent: "#7fc4ff", fill: ["#14438f", "#0b2a63"], badge: "A", bar: "left" },
+  { accent: "#ffb81c", fill: ["#5e4509", "#3b2a05"], badge: "B", bar: "left" },
+  { accent: "#73e7d4", fill: ["#0f504d", "#093330"], badge: "C", bar: "left" },
+];
+const CHOICE_RIGHT = { accent: "#4be3a0", fill: ["#12603f", "#0b3d28"], bar: "left" };
+const ADVANCE_STYLE = { accent: "#d8ffe9", fill: ["#25b377", "#157a52"], icon: "arrow-right", ink: "#ffffff", bar: "none" };
+const BACK_STYLE = { accent: "#aebbd9", fill: ["#26324f", "#18213a"], icon: "arrow-left", bar: "none" };
+const MENU_STYLE = { accent: PITT.gold, fill: ["#0a3fae", "#022a78"], icon: "home", bar: "none" };
+
+// A dark tint of a colour, for card backgrounds that hint at their category.
+function darken(hex, mix = 0.78) {
+  const channel = (i) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
+  const base = [4, 19, 58];
+  const out = [0, 1, 2].map((i) => Math.round(channel(i) * (1 - mix) + base[i] * mix));
+  return `rgb(${out[0]}, ${out[1]}, ${out[2]})`;
+}
+
 function createChoiceCard(index) {
   const material = new THREE.MeshBasicMaterial({
     map: textTexture([`Choice ${index + 1}`, "Start a practice scenario to load your decisions."], {
-      accent: index === 1 ? PITT.gold : "#7fc4ff",
+      ...(CHOICE_STYLES[index] ?? CHOICE_STYLES[0]),
       width: 680,
       height: 384,
       size: 34,
     }),
     transparent: true,
     side: THREE.DoubleSide,
+    depthTest: false, // draw over the dioramas, rooms and people: a card behind a prop used to be hidden (the continue box)
   });
   const card = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 0.65), material);
+  card.renderOrder = 30;
   card.userData.choiceIndex = index;
   card.userData.isTrainingUi = true;
   return card;
 }
 
-function replaceCardTexture(card, lines, accent = PITT.gold, size = 34, height = 384) {
+function replaceCardTexture(card, lines, accent = PITT.gold, size = 34, height = 384, style = {}) {
   card.material.map?.dispose();
   const { width: w, height: h } = card.geometry.parameters;
   card.material.map = textTexture(lines, {
-    accent,
+    ...style,
+    accent: style.accent ?? accent,
     width: canvasWidthFor(height, [w, h]),
     height,
     size,
@@ -1263,6 +1122,29 @@ advanceTarget.geometry = new THREE.PlaneGeometry(1.7, 0.78);
 advanceTarget.position.set(0, 1.15, -1.32);
 advanceTarget.visible = false;
 station.add(advanceTarget);
+
+// Exit cards, always reachable in a headset: "Back to scenarios" while a scenario is open, and "Main menu" everywhere
+// (it leaves the lab and returns to the main menu page, ending the VR session).
+function createExitCard(lines, style) {
+  const card = createChoiceCard(0);
+  card.geometry.dispose();
+  card.geometry = new THREE.PlaneGeometry(1.0, 0.36);
+  card.renderOrder = 31;
+  replaceCardTexture(card, lines, style.accent, 38, 288, style);
+  card.position.set(0, 0.55, -1.32);
+  station.add(card);
+  return card;
+}
+const menuTarget = createExitCard(["MAIN MENU", "Exit to all examples"], MENU_STYLE);
+const backTarget = createExitCard(["BACK", "Scenario list"], BACK_STYLE);
+backTarget.visible = false;
+
+function exitToMenu() {
+  const done = () => { window.location.href = new URL("../", window.location.href).href; };
+  const session = renderer.xr.getSession?.();
+  if (session) Promise.resolve(session.end()).catch(() => {}).then(done);
+  else done();
+}
 
 for (let index = 0; index < scenarios.length; index += 1) {
   const scenario = scenarios[index];
@@ -1299,8 +1181,10 @@ function updateChoiceCards() {
       replaceCardTexture(card, answered
         ? [`${option.best ? "Best answer" : "Not the best"}${reasoning?.chosen === index ? " · your choice" : ""}`, `${option.text}: ${option.feedback}`]
         : [`Reasoning · option ${index + 1}`, option.text],
-      answered ? (option.best ? "#4be3a0" : "#7fc4ff") : index === 1 ? PITT.gold : "#7fc4ff",
-      answered ? 52 : 72); // larger than the default 34 px so the options read in a headset
+      undefined,
+      answered ? 52 : 72, // larger than the default 34 px so the options read in a headset
+      384,
+      answered && option.best ? { ...CHOICE_RIGHT, badge: "OK" } : CHOICE_STYLES[index] ?? CHOICE_STYLES[0]);
       return;
     }
     const choice = step?.choices?.[index];
@@ -1309,8 +1193,12 @@ function updateChoiceCards() {
     replaceCardTexture(card, [
       `${learnerName || "Learner"} · CHOICE ${index + 1}`,
       choice?.text ?? "Start a practice scenario to load your decisions.",
-    ], index === 1 ? PITT.gold : "#7fc4ff");
+    ], undefined, 34, 384, CHOICE_STYLES[index] ?? CHOICE_STYLES[0]);
   });
+  backTarget.visible = Boolean(activeScenario) && renderer.xr.isPresenting; // headset only: the page has its own buttons on a desktop
+  menuTarget.visible = renderer.xr.isPresenting;
+  menuTarget.position.x = activeScenario ? 0.62 : 0;
+  backTarget.position.x = -0.62;
   advanceTarget.visible = Boolean(activeScenario && answered && (!task || renderer.xr.isPresenting));
   if (advanceTarget.visible) {
     const last = activeScenario.steps.length - 1;
@@ -1318,7 +1206,7 @@ function updateChoiceCards() {
       : rationaleMode ? "See your result"
         : currentStep === last && activeScenario.rationale ? "Continue to the reasoning question"
           : currentStep === last ? "See your result" : "Continue to the next task";
-    replaceCardTexture(advanceTarget, ["PRACTICE", text], PITT.gold, 40);
+    replaceCardTexture(advanceTarget, ["NEXT", text], undefined, 44, 384, ADVANCE_STYLE);
   }
   catalogTargets.forEach((card, index) => {
     const scenario = scenarios[index];
@@ -1332,6 +1220,7 @@ function updateChoiceCards() {
       kicker: `${scenario.category} · ${scenario.draft ? "draft" : scenario.duration}`,
       title: scenario.title,
       accent: categoryOf(scenario).accent,
+      fill: [darken(categoryOf(scenario).accent, 0.72), darken(categoryOf(scenario).accent, 0.88)],
       image: thumbImages.get(scenario.id) ?? null,
       size: 64,
       minSize: 40,
@@ -1372,10 +1261,16 @@ for (let index = 0; index < 2; index += 1) {
       ...choiceTargets.filter((card) => card.visible),
       ...catalogTargets.filter((card) => card.visible),
       ...(advanceTarget.visible ? [advanceTarget] : []),
+      ...(menuTarget.visible ? [menuTarget] : []),
+      ...(backTarget.visible ? [backTarget] : []),
     ];
     const hit = raycaster.intersectObjects(targets, false)[0];
     if (!hit) return;
-    if (hit.object.userData.hotspot) {
+    if (hit.object === menuTarget) {
+      exitToMenu();
+    } else if (hit.object === backTarget) {
+      showCatalog();
+    } else if (hit.object.userData.hotspot) {
       performHotspot(hit.object.userData.hotspot);
     } else if (hit.object === advanceTarget) {
       if (completion.hidden) advanceStep();
@@ -1462,6 +1357,15 @@ globalThis.__labTriangles = () => {
     rows.push({ name: (() => { for (let p = node; p; p = p.parent) if (p.userData.dressName) return p.userData.dressName; return "station primitives"; })(), tris: Math.round(tris), shadow: node.castShadow });
   });
   return rows.sort((a, b) => b.tris - a.tris);
+};
+// Hooks for tools/vr-capture/lab-vr-check.mjs: the in-world cards and where they are in world space.
+globalThis.__labUi = {
+  cards: { menu: menuTarget, back: backTarget, advance: advanceTarget },
+  worldOf: (card) => card.getWorldPosition(new THREE.Vector3()).toArray(),
+  start: (index) => startScenario(scenarios[index]),
+  state: () => ({ scenario: activeScenario?.id ?? null, answered, presenting: renderer.xr.isPresenting }),
+  isDrawnOnTop: (card) => card.material.depthTest === false && card.renderOrder >= 30,
+  renderer,
 };
 setTrainingScene(null);
 updateChoiceCards();

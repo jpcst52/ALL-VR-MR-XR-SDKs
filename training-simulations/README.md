@@ -1,8 +1,10 @@
 # Fieldwork XR Practice Lab
 
-A browser-based XR training example with a learner name field and seventeen short, decision-driven practice scenarios in five groups: everyday small-business work, responsible community and field research, six high-risk industrial tasks, four manufacturing-quality exercises, and one **draft** life-science activity (Circulation Builder, see below). Every activity has immediate feedback, a takeaway principle, and a session score. All seventeen scenarios are **hands-on**: the six industrial, four manufacturing-quality, and one life-science scenarios have four tasks each and the six business and research scenarios have three, and in every one that you carry out yourself by selecting labelled hotspots on an animated 3D work area (inspect the scaffold tag, clip your lanyard to an anchor, apply your lock and tag, close a cylinder valve), rather than choosing from a list of answers. Wrong actions show their consequence, steps have to be done in a safe order, and dangerous mistakes are flagged as **critical safety misses**.
+A browser-based XR training example with a learner name field and eleven short, hands-on practice scenarios in three groups: six high-risk industrial tasks, four manufacturing-quality exercises, and one **draft** life-science activity (Circulation Builder, see below). Every activity has immediate feedback, a takeaway principle, and a session score. Every scenario is **hands-on**: each has four tasks that you carry out yourself by selecting labelled hotspots on an animated 3D work area (inspect the scaffold tag, clip your lanyard to an anchor, apply your lock and tag, close a cylinder valve), rather than choosing from a list of answers. Wrong actions show their consequence, steps have to be done in a safe order, and dangerous mistakes are flagged as **critical safety misses**.
 
-The business scenarios are broadly useful to neighborhood shops, service teams, and small workplaces: welcoming a customer while protecting privacy, responding safely to an unknown spill, and checking an incoming delivery. Research scenarios cover voluntary informed consent, sample identity and custody, and consistent field observations. The industrial scenarios cover work at height, running a refinery unit from a control room, outdoor rounds at refinery battery limits (the edge of a process unit), window cleaning from a suspended platform on a skyscraper, welding and hot work, and electrical isolation. They are general awareness practice built around widely taught controls (permits, fall arrest, lockout/tag/test, gas alarms, fire watch) and do not replace site procedures. 
+**Mechanical, not conversational.** An earlier version also had six everyday business and research scenarios (welcoming a walk-in customer, a spill in a stockroom, checking a delivery, inviting a research participant, sample custody, a field observation). They were removed on November 8, 2026: they were simplistic, and the customer-service and consent ones depended on talking to someone, which cannot be done in this lab. The lab now keeps only work that is done with the hands and equipment.
+
+The industrial scenarios cover work at height, running a refinery unit from a control room, outdoor rounds at refinery battery limits (the edge of a process unit), window cleaning from a suspended platform on a skyscraper, welding and hot work, and electrical isolation. They are general awareness practice built around widely taught controls (permits, fall arrest, lockout/tag/test, gas alarms, fire watch) and do not replace site procedures.
 
 The **Manufacturing quality** group (accent `#66B2E3`, heading MANUFACTURING QUALITY PRACTICE) is shaped around the kinds of work done at local manufacturers, and is **inspired by those kinds of work only**. It does not describe any real company's process, product, or procedure:
 
@@ -32,7 +34,7 @@ Open <http://localhost:8003>. Three.js is vendored in `../vendor/three`, so it r
 ## Try a session
 
 1. Enter a display name. It is held in page memory for the current browser session and is not sent to a server or saved to local storage.
-2. Select one of the seventeen simulations.
+2. Select one of the eleven simulations.
 3. Read the short situation and choose one of three responses for each decision. Industrial, manufacturing-quality, and life-science scenarios show a pre-task checklist first, then four hands-on tasks (see below).
 4. Review the immediate feedback and principle, then continue to the next decision.
 5. Answer the reasoning question (one "why" question; every scenario except the draft Circulation Builder has one). It is reported separately from the task score.
@@ -61,8 +63,6 @@ Data format: an optional `why` on a correct hotspot and an optional `rationale` 
 
 The content is general safety and quality awareness written for this lab. It is not a procedure, permit, or certification, and it cites no standards or regulation numbers. It has **not** yet been reviewed by the owner, partners, or a subject-matter expert.
 
-Business and research tasks work the same way (greet the customer, move to a quiet room, label vials against the protocol, record an outlier as measured). In those, a critical mistake means a serious breach such as promising a benefit, writing a participant's name on a sample, or deleting an inconvenient reading.
-
 ## Tests
 
 From this directory, run the scenario-catalog checks with:
@@ -77,15 +77,13 @@ node --test .\test\scenarios.test.mjs .\test\biology.test.mjs .\test\why.test.mj
 
 `why.test.mjs` checks the "why this matters" content: every entry in `reasons.js` points at a real required action; every non-draft scenario has a reason in every task and one reasoning question; the hydrostatic test and the refinery-style scenarios explain every required action; reasons are single sentences of at most 110 characters with no standard numbers or citations; each question has three options of at most 64 characters, exactly one best answer, and feedback for each; the best answer is not always in the same position; the draft Circulation Builder has none; and the page has the panel and the separate reasoning result, which never touches the task score. `node tools/vr-capture/ui-check.mjs` also opens the "why" panel (and closes it with Esc) and answers the reasoning question at desktop and phone widths.
 
-The tests verify the catalog (17 scenarios in 5 categories: three business, three research, six industrial, four manufacturing quality, one draft life science), that every task in every scenario is completable: unique hotspot ids, positions and results, valid prerequisites, at least two required actions, and a critical mistake. Hands-on interactions were also exercised in a desktop browser (hotspot clicks on the canvas, the list controls, out-of-order and critical mistakes, scoring); VR controller selection uses the same code path but needs a headset to confirm. Browser interaction was also checked in desktop mode; physical headset behavior still requires compatible WebXR hardware.
+The tests verify the catalog (11 scenarios in 3 categories: six industrial, four manufacturing quality, one draft life science; the removed business and research groups must not come back), that every task in every scenario is completable: unique hotspot ids, positions and results, valid prerequisites, at least two required actions, and a critical mistake. Hands-on interactions were also exercised in a desktop browser (hotspot clicks on the canvas, the list controls, out-of-order and critical mistakes, scoring); VR controller selection uses the same code path but needs a headset to confirm. Browser interaction was also checked in desktop mode; physical headset behavior still requires compatible WebXR hardware.
 
 `biology.test.mjs` checks the draft Circulation Builder: it is labelled as a draft and as not clinical guidance, the station is registered in `app.js`, every revealed or hidden part exists in the model, the pulmonary and systemic circuits can only be completed in blood-flow order, chamber positions and vessel colours match introductory biology, every task has a key misconception, and the content names no partner companies and contains no citations or links. Circulation Builder was played through once in a desktop browser (Chrome via Playwright, using the list controls; one out-of-order action, one key misconception, score 5/8) with external network requests blocked and no page errors. Its hotspots were not clicked on the 3D canvas in that run (the list controls call the same handler). It has **not** been run in the VR emulator or on any headset.
 
 ## What it demonstrates
 
-- A complete, seventeen-scenario browser learning flow with lightweight name entry and session-only progress.
-- Local small-business decisions around customer service and privacy, basic hazard response, and inventory receiving.
-- Research habits around informed consent, confidentiality, traceable sample handling, and faithful data recording.
+- A complete, eleven-scenario browser learning flow with lightweight name entry and session-only progress.
 - Immediate, consequence-based feedback, a principle recap at each step, and a short score without collecting or transmitting learner data.
 - High-risk industrial practice with animated 3D work areas (scaffold, control room, outdoor process unit, suspended platform, welding bay, electrical panel) and critical-miss feedback.
 - One scenario catalog and scene presented in desktop mode and in a WebXR immersive VR view where supported.
@@ -137,7 +135,7 @@ It crops the work area from `screenshots/03-scenario-*.png` (left of the page pa
 **Seasonal skies.** Behind the scenario menu, one sky per season (spring, summer, autumn, winter) rotates every 30 seconds, starting with the current season. The change looks like an old monitor: the picture breaks into mosaic blocks that grow, scan lines and a slight red/blue flicker appear for about one second, the next season swaps in at the peak, and the blocks shrink away. With **prefers-reduced-motion** it is a plain cross-fade. A small "Autumn sky" chip next to the progress count (and a small tag beside the plaque in VR) names the current season.
 
 - The effect is drawn inside the sky sphere's own shader (`../brand-kit/season-sky.js`) in view-direction space, so it renders the same way in both eyes in WebXR; there is no screen-space post-processing.
-- The outdoor scenarios (work at height, outdoor rounds at the battery limits, skyscraper window cleaning, field observation) keep the sky behind their work area; indoor scenarios stand in a procedural room (`rooms.js`). The sky steps aside for the red critical-miss flash. Every scene label is already on a backed panel, so the photo does not reduce readability (checked in desktop screenshots only).
+- The outdoor scenarios (work at height, outdoor rounds at the battery limits, skyscraper window cleaning) keep the sky behind their work area; indoor scenarios stand in a procedural room (`rooms.js`). The sky steps aside for the red critical-miss flash. Every scene label is already on a backed panel, so the photo does not reduce readability (checked in desktop screenshots only).
 - Images come from `../assets/skies/skies.json` (2k files; `?sky=4k` in the address uses the 4k files on a desktop). If the manifest or an image is missing, the scene keeps its navy background and nothing errors; a season whose image fails is skipped. Rotation pauses while the tab is hidden.
 - **Image credits** (a link at the foot of the page panel) lists each image's credit and source from the manifest. The current images are CC0 Poly Haven panoramas used as **regional-style stand-ins, not photos of Bradford, PA**; the page says "Seasonal skies, regional style (not photos of Bradford)" and only names Bradford for an image whose manifest entry has `isBradford: true`.
 - The page needs the repository root served (it loads `../vendor/`, `../brand-kit/` and `../assets/`); it makes no network requests outside the local server.
@@ -171,31 +169,25 @@ All captures are from the running example in a desktop browser at the default (n
 | Step | Capture |
 |---|---|
 | Welcome and name entry | ![Welcome screen](screenshots/01-welcome.png) |
-| Scenario catalog | ![Seventeen-scenario catalog](screenshots/02-catalog.png) |
+| Scenario catalog | ![Eleven-scenario catalog](screenshots/02-catalog.png) |
 | Task feedback | ![Feedback after finishing a task](screenshots/04-feedback.png) |
 | Scenario complete | ![Completion and score](screenshots/05-complete.png) |
 
-### The seventeen scenarios
+### The eleven scenarios
 
 | Scenario | Capture |
 |---|---|
-| Welcome a walk-in | ![Welcome a walk-in](screenshots/03-scenario-1-welcome-a-walk-in.png) |
-| Make a safe work area | ![Make a safe work area](screenshots/03-scenario-2-make-a-safe-work-area.png) |
-| Check an incoming delivery | ![Check an incoming delivery](screenshots/03-scenario-3-check-an-incoming-delivery.png) |
-| Invite a participant | ![Invite a participant](screenshots/03-scenario-4-invite-a-participant.png) |
-| Track a research sample | ![Track a research sample](screenshots/03-scenario-5-track-a-research-sample.png) |
-| Record a field observation | ![Record a field observation](screenshots/03-scenario-6-record-a-field-observation.png) |
-| Work at height (mid-task) | ![Work at height](screenshots/03-scenario-7-work-at-height.png) |
-| Run a unit from the control room | ![Control room](screenshots/03-scenario-8-run-a-unit-from-the-control-room.png) |
-| Outdoor rounds at the battery limits | ![Battery limits](screenshots/03-scenario-9-outdoor-rounds-at-the-battery-limits.png) |
-| Clean windows on a skyscraper | ![Skyscraper window cleaning](screenshots/03-scenario-10-clean-windows-on-a-skyscraper.png) |
-| Weld safely | ![Welding](screenshots/03-scenario-11-weld-safely.png) |
-| Electrical isolation and work | ![Electrical isolation](screenshots/03-scenario-12-electrical-isolation-and-work.png) |
-| Sample and test a lighter lot (task 3) | ![Lighter lot sampling](screenshots/03-scenario-13-sample-and-test-a-lighter-lot.png) |
-| Hydrostatic test of a heat exchanger (task 3) | ![Hydrostatic test](screenshots/03-scenario-14-hydrostatic-test-of-a-heat-exchanger.png) |
-| Weld a refinery pipe spool (task 3) | ![Pipe spool welding](screenshots/03-scenario-15-weld-a-refinery-pipe-spool.png) |
-| Select and check a resistor (task 2) | ![Resistor selection](screenshots/03-scenario-16-select-and-check-a-resistor.png) |
-| Circulation Builder, draft (task 1) | ![Circulation Builder placing the heart chambers](screenshots/03-scenario-17-circulation-builder.png) |
+| Work at height (mid-task) | ![Work at height](screenshots/03-scenario-1-work-at-height.png) |
+| Run a unit from the control room | ![Run a unit from the control room](screenshots/03-scenario-2-run-a-unit-from-the-control-room.png) |
+| Outdoor rounds at the battery limits | ![Outdoor rounds at the battery limits](screenshots/03-scenario-3-outdoor-rounds-at-the-battery-limits.png) |
+| Clean windows on a skyscraper | ![Clean windows on a skyscraper](screenshots/03-scenario-4-clean-windows-on-a-skyscraper.png) |
+| Weld safely | ![Weld safely](screenshots/03-scenario-5-weld-safely.png) |
+| Electrical isolation and work | ![Electrical isolation and work](screenshots/03-scenario-6-electrical-isolation-and-work.png) |
+| Sample and test a lighter lot (task 3) | ![Sample and test a lighter lot](screenshots/03-scenario-7-sample-and-test-a-lighter-lot.png) |
+| Hydrostatic test of a heat exchanger (task 3) | ![Hydrostatic test of a heat exchanger](screenshots/03-scenario-8-hydrostatic-test-of-a-heat-exchanger.png) |
+| Weld a refinery pipe spool (task 3) | ![Weld a refinery pipe spool](screenshots/03-scenario-9-weld-a-refinery-pipe-spool.png) |
+| Select and check a resistor (task 2) | ![Select and check a resistor](screenshots/03-scenario-10-select-and-check-a-resistor.png) |
+| Circulation Builder, draft (task 1) | ![Circulation Builder](screenshots/03-scenario-11-circulation-builder.png) |
 | Critical safety miss | ![Critical safety miss feedback](screenshots/06-critical-miss.png) |
 | Industrial result and review list | ![Industrial result with review list](screenshots/07-industrial-result.png) |
 

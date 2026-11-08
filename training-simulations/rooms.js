@@ -11,14 +11,9 @@ const BACK_Z = -3.0;
 const SIDE_X = 5.6;
 const WALL_HEIGHT = 9;
 
-// Which station gets which room. Outdoor stations (height, battery, facade, field) and the schematic circulation
+// Which station gets which room. Outdoor stations (height, battery, facade) and the schematic circulation
 // station are not listed: they keep the sky or the plain stage.
 export const ROOM_BY_STATION = {
-  counter: "shop",
-  safety: "warehouse",
-  delivery: "warehouse",
-  consent: "office",
-  sample: "lab",
   control: "control",
   welding: "workshop",
   electrical: "workshop",
@@ -32,7 +27,6 @@ export const GROUND_BY_STATION = {
   height: { color: "#7b7d78", rough: 0.95 }, // gravel yard
   battery: { color: "#6d7075", rough: 0.95 }, // process-unit slab
   facade: { color: "#8b8e92", rough: 0.9 }, // paved plaza
-  field: { color: "#5f7d48", rough: 1 }, // grass
 };
 export const DEFAULT_GROUND = "#1b2c4f";
 

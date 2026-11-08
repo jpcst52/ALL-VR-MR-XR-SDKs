@@ -99,7 +99,7 @@ namespace PittBradford.XR.EditorTools
         }
 
         /// <summary>Materials are created at runtime from "Standard", so make sure the shader and its variants survive a build.</summary>
-        static void KeepShaderVariants()
+        public static void KeepShaderVariants()
         {
             var shaderNames = new[] { "Standard", "Sprites/Default", "Unlit/Color", "Unlit/Transparent Cutout", "PittBradford/Text", "PittBradford/FlatColor", "Unlit/Texture", "Legacy Shaders/Particles/Additive", "Legacy Shaders/Particles/Alpha Blended", "Skybox/Procedural", "PittBradford/SeasonSky" };
             var gs = AssetDatabase.LoadMainAssetAtPath("ProjectSettings/GraphicsSettings.asset");

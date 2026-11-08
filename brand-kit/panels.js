@@ -60,7 +60,12 @@ export function drawPanel(context, width, height, { accent = PITT.gold, radius, 
   context.save();
   context.beginPath();
   context.roundRect(inset, inset, width - inset * 2, height - inset * 2, r);
-  if (fill) {
+  if (Array.isArray(fill)) {
+    const gradient = context.createLinearGradient(0, 0, 0, height);
+    gradient.addColorStop(0, fill[0]);
+    gradient.addColorStop(1, fill[1]);
+    context.fillStyle = gradient;
+  } else if (fill) {
     context.fillStyle = fill;
   } else {
     const gradient = context.createLinearGradient(0, 0, 0, height);
@@ -140,10 +145,41 @@ function drawBrandBand(context, x, y, width, height) {
   context.fillRect(x, y + height - Math.max(3, height * 0.05), width, Math.max(3, height * 0.05));
 }
 
+// Simple vector icons for action cards (no font dependency): drawn centred on (cx, cy) inside a box of about `s` pixels.
+function drawIcon(context, kind, cx, cy, s, color) {
+  context.save();
+  context.fillStyle = color;
+  context.strokeStyle = color;
+  context.lineWidth = s * 0.16;
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  context.beginPath();
+  if (kind === "arrow-right" || kind === "arrow-left") {
+    const d = kind === "arrow-right" ? 1 : -1;
+    context.moveTo(cx - d * s * 0.42, cy);
+    context.lineTo(cx + d * s * 0.38, cy);
+    context.moveTo(cx + d * s * 0.05, cy - s * 0.34);
+    context.lineTo(cx + d * s * 0.4, cy);
+    context.lineTo(cx + d * s * 0.05, cy + s * 0.34);
+    context.stroke();
+  } else if (kind === "home") {
+    // a filled house: roof, walls, and a door cut out with the panel's own dark colour
+    context.moveTo(cx - s * 0.5, cy - s * 0.04);
+    context.lineTo(cx, cy - s * 0.48);
+    context.lineTo(cx + s * 0.5, cy - s * 0.04);
+    context.closePath();
+    context.fill();
+    context.fillRect(cx - s * 0.34, cy - s * 0.04, s * 0.68, s * 0.46);
+    context.fillStyle = "#04133a";
+    context.fillRect(cx - s * 0.09, cy + s * 0.12, s * 0.18, s * 0.3);
+  }
+  context.restore();
+}
+
 // Kicker + wrapped body text on a backed panel. Text shrinks to fit and never draws outside the border.
 // Options: brand (adds the Pitt-Bradford/CIST band at the top), align ("left" | "center").
-export function drawTextPanel(context, width, height, { kicker = "", body = "", accent = PITT.gold, size = 40, minSize = 18, brand = false, align = "left", bar = "top", bodyWeight = 500 } = {}) {
-  const { thick } = drawPanel(context, width, height, { accent, bar: brand ? "none" : bar });
+export function drawTextPanel(context, width, height, { kicker = "", body = "", accent = PITT.gold, size = 40, minSize = 18, brand = false, align = "left", bar = "top", bodyWeight = 500, fill, badge = "", icon = "", ink = "#ffffff" } = {}) {
+  const { thick } = drawPanel(context, width, height, { accent, bar: brand ? "none" : bar, fill });
   const pad = Math.round(Math.min(width, height) * 0.09);
   let top = bar === "top" && !brand ? thick + pad * 0.7 : pad * 0.85;
   if (brand) {
@@ -157,8 +193,29 @@ export function drawTextPanel(context, width, height, { kicker = "", body = "", 
     context.restore();
     top = band + pad * 0.6;
   }
-  const left = bar === "left" ? thick + pad * 0.8 : pad;
-  const maxWidth = width - left - pad;
+  let left = bar === "left" ? thick + pad * 0.8 : pad;
+  let right = width - pad;
+  // Distinct cards: a round letter or number badge on the left (answer choices) and/or an icon on the right (actions).
+  if (badge) {
+    const r = Math.min(height * 0.2, width * 0.1);
+    const cx = left + r, cy = top + r * 0.95;
+    context.beginPath();
+    context.arc(cx, cy, r, 0, Math.PI * 2);
+    context.fillStyle = accent;
+    context.fill();
+    context.fillStyle = "#04133a";
+    context.font = `800 ${Math.round(r * 1.25)}px ${SANS}`;
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText(String(badge), cx, cy + r * 0.04);
+    left += r * 2 + pad * 0.55;
+  }
+  if (icon) {
+    const s = Math.min(height * 0.42, width * 0.2);
+    drawIcon(context, icon, right - s * 0.5, height / 2, s, accent);
+    right -= s + pad * 0.5;
+  }
+  const maxWidth = right - left;
   const x = align === "center" ? left + maxWidth / 2 : left;
   context.textAlign = align;
   context.textBaseline = "top";
@@ -173,7 +230,7 @@ export function drawTextPanel(context, width, height, { kicker = "", body = "", 
   }
   const fit = fitText(body, { measure: measureWith(context, bodyWeight), maxWidth, maxHeight: height - top - pad * 0.8, size, minSize });
   context.font = `${bodyWeight} ${fit.size}px ${SANS}`;
-  context.fillStyle = "#ffffff";
+  context.fillStyle = ink;
   fit.lines.forEach((line, index) => context.fillText(line, x, top + index * fit.size * 1.24, maxWidth));
   return fit;
 }
@@ -190,8 +247,8 @@ export function textPanelTexture(options = {}) {
 // A menu card with a 16:9 picture on the left and a kicker + title on the right (the scenario catalog in VR).
 // `image` is an loaded <img>/<canvas> or null: without it the picture area shows a tinted placeholder tile, so a
 // missing thumbnail never looks broken. The title is large and shrinks to fit; the card never draws outside itself.
-export function drawThumbCard(context, width, height, { kicker = "", title = "", accent = PITT.gold, image = null, size = 60, minSize = 34 } = {}) {
-  const { thick } = drawPanel(context, width, height, { accent, bar: "left", radius: height * 0.12 });
+export function drawThumbCard(context, width, height, { kicker = "", title = "", accent = PITT.gold, image = null, size = 60, minSize = 34, fill } = {}) {
+  const { thick } = drawPanel(context, width, height, { accent, bar: "left", radius: height * 0.12, fill });
   const pad = Math.round(height * 0.075);
   // The picture takes about 42% of the card width (16:9), vertically centred; the text gets the rest.
   const picW = Math.round(Math.min(width * 0.42, ((height - pad * 2) * 16) / 9));

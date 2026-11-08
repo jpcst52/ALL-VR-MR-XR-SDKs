@@ -12,7 +12,7 @@ export async function buildOverview(file) {
     slide.addText("VR · MR · AR\nSDK examples", { placeholder: "title" });
     text(slide, "XR training examples for general safety awareness: ten SDK and framework demos, three multiplayer WebXR themes, a 17-scenario web Practice Lab, and four Unity projects with a lobby hub.", { x: 0.7, y: 3.8, w: 6.2, h: 1.3, fontSize: 18, color: C.background2, objectName: "Subtitle" });
     chip(slide, C, "13 examples", { x: 0.7, y: 5.55, w: 1.7, name: "Chip examples" });
-    chip(slide, C, "17 scenarios", { x: 2.55, y: 5.55, w: 1.8, color: C.accent3, name: "Chip scenarios" });
+    chip(slide, C, "11 scenarios", { x: 2.55, y: 5.55, w: 1.8, color: C.accent3, name: "Chip scenarios" });
     chip(slide, C, "VR emulator captures", { x: 4.5, y: 5.55, w: 2.3, color: C.accent2, name: "Chip VR" });
     await shot(slide, C, img("training-simulations/screenshots/vr/03-hands-on-task.png"), { x: 7.9, y: 0.6, w: 4.85, h: 3.2, caption: "Practice Lab task in an emulated Quest 3 session", name: "Title VR task" });
     await shot(slide, C, img("multi-player/screenshots/vr/01-circuit-lab-in-vr.png"), { x: 7.9, y: 3.95, w: 4.85, h: 3.2, caption: "Multiplayer Circuit Lab in an emulated VR session", name: "Title VR circuit" });
@@ -49,7 +49,7 @@ export async function buildOverview(file) {
       ["WEB 3D & IMMERSION", C.accent2, [["WebXR", "Immersive color field"], ["A-Frame", "Animated Orbit Garden"], ["Three.js", "Prism Bloom + VR entry"], ["Babylon.js", "Luminous Totem + XR"]]],
       ["MOBILE & SPATIAL", C.accent3, [["Google ARCore", "Plane detection + cube placement"], ["Apple · visionOS", "SwiftUI spatial atlas"]]],
       ["ENGINE TOOLING", C.accent4, [["Unity XRI", "Grab selection color feedback"]]],
-      ["MULTIPLAYER & TRAINING", C.accent5, [["Circuit Lab", "Shared VR circuit builder"], ["Site Safety Layout", "Shared AR safety plan"], ["Practice Lab", "17 hands-on scenarios"]]],
+      ["MULTIPLAYER & TRAINING", C.accent5, [["Circuit Lab", "Shared VR circuit builder"], ["Site Safety Layout", "Shared AR safety plan"], ["Practice Lab", "11 hands-on scenarios"]]],
     ];
     columns.forEach(([head, color, items], i) => {
       const x = 0.6 + i * 2.45;
@@ -133,9 +133,9 @@ export async function buildOverview(file) {
 
   // 8 ---------------------------------------------------------------- practice lab
   {
-    const slide = contentSlide(pres, { section: "Multiplayer and training", eyebrow: "07 / FIELDWORK XR PRACTICE LAB", title: "Fieldwork XR Practice Lab: 17 hands-on scenarios" });
+    const slide = contentSlide(pres, { section: "Multiplayer and training", eyebrow: "07 / FIELDWORK XR PRACTICE LAB", title: "Fieldwork XR Practice Lab: 11 hands-on scenarios" });
     await shot(slide, C, img("training-simulations/screenshots/02-catalog.png"), { x: 0.6, y: 1.75, w: 3.9, h: 4.9, caption: "Scenario catalog", name: "Catalog screenshot" });
-    await shot(slide, C, img("training-simulations/screenshots/03-scenario-7-work-at-height.png"), { x: 4.7, y: 1.75, w: 3.9, h: 4.9, caption: "Work at height · hands-on task", name: "Task screenshot", crop: { left: 0, top: 130, width: 620, height: 780 } });
+    await shot(slide, C, img("training-simulations/screenshots/03-scenario-1-work-at-height.png"), { x: 4.7, y: 1.75, w: 3.9, h: 4.9, caption: "Work at height · hands-on task", name: "Task screenshot", crop: { left: 0, top: 130, width: 620, height: 780 } });
     entries(slide, C, [
       ["3 business", "Welcome a walk-in, make a safe work area, check a delivery."],
       ["3 research", "Informed consent, sample custody, field observation."],

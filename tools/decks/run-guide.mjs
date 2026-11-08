@@ -145,7 +145,7 @@ export async function buildRunGuide(file) {
   // 8-9 Practice lab
   section(pres, "Practice Lab");
   {
-    const slide = contentSlide(pres, { section: "Practice Lab", eyebrow: "BROWSER / TRAINING", title: "Fieldwork XR Practice Lab | 17 hands-on scenarios" });
+    const slide = contentSlide(pres, { section: "Practice Lab", eyebrow: "BROWSER / TRAINING", title: "Fieldwork XR Practice Lab | 11 hands-on scenarios" });
     text(slide, "Business, research, industrial, manufacturing-quality, and one draft life-science scenario. Enter a name, pick a scenario, and carry out each task in the 3D scene.", { x: 0.6, y: 1.4, w: 12, h: 0.35, fontSize: 14, color: C.background2, objectName: "Subtitle" });
     card(slide, C, { x: 0.6, y: 1.95, w: 4.6, h: 4.75, name: "Lab instructions card" });
     label(slide, C, "RUN FROM THE REPOSITORY ROOT", { x: 0.85, y: 2.15, w: 4, color: C.accent2, name: "Lab run label" });
@@ -153,7 +153,7 @@ export async function buildRunGuide(file) {
     label(slide, C, "TRY THIS", { x: 0.85, y: 3.85, w: 4, color: C.accent3, name: "Lab try label" });
     bullets(slide, C, ["Enter a name and open Work at height.", "Click the glowing hotspots to do each step.", "Try a wrong action to see its consequence.", "Use the Keyboard / list controls if you prefer buttons."], { x: 0.85, y: 4.2, w: 4.1, h: 2.4, size: 13, gap: 5, name: "Lab try" });
     await shot(slide, C, img("training-simulations/screenshots/02-catalog.png"), { x: 5.4, y: 1.95, w: 3.7, h: 4.75, caption: "Scenario catalog", name: "Lab catalog" });
-    await shot(slide, C, img("training-simulations/screenshots/03-scenario-7-work-at-height.png"), { x: 9.25, y: 1.95, w: 3.5, h: 4.75, caption: "Work at height", name: "Lab task", crop: { left: 0, top: 130, width: 620, height: 780 } });
+    await shot(slide, C, img("training-simulations/screenshots/03-scenario-1-work-at-height.png"), { x: 9.25, y: 1.95, w: 3.5, h: 4.75, caption: "Work at height", name: "Lab task", crop: { left: 0, top: 130, width: 620, height: 780 } });
   }
   {
     const slide = contentSlide(pres, { section: "Practice Lab", eyebrow: "HOW A TASK WORKS", title: "Do the task yourself: hotspots, order, consequences" });
@@ -250,7 +250,7 @@ export async function buildRunGuide(file) {
     text(slide, "Use the captured screenshots as references; always verify immersive behavior on the target runtime.", { x: 0.6, y: 1.4, w: 12, h: 0.35, fontSize: 14, color: C.background2, objectName: "Subtitle" });
     card(slide, C, { x: 0.6, y: 1.95, w: 6.0, h: 4.0, name: "Tested card" });
     label(slide, C, "TESTED ON DESKTOP / EMULATOR", { x: 0.9, y: 2.15, w: 5.4, color: C.accent5, name: "Tested label" });
-    bullets(slide, C, ["Four browser demos served and rendered; controls exercised", "Practice Lab: 17 scenarios on desktop (VR captures not refreshed for the 5 newest); automated suites pass (Practice Lab 36, brand kit 16, relay 42, web layout 48)", "Multiplayer relay: automated tests (npm test); two-client rooms", "VR sessions in an emulated Quest 3 with a scripted controller"], { x: 0.9, y: 2.55, w: 5.4, h: 3.2, size: 13.5, gap: 8, name: "Tested points" });
+    bullets(slide, C, ["Four browser demos served and rendered; controls exercised", "Practice Lab: 11 scenarios on desktop (VR captures not refreshed for the 5 newest); automated suites pass (Practice Lab 36, brand kit 16, relay 42, web layout 48)", "Multiplayer relay: automated tests (npm test); two-client rooms", "VR sessions in an emulated Quest 3 with a scripted controller"], { x: 0.9, y: 2.55, w: 5.4, h: 3.2, size: 13.5, gap: 8, name: "Tested points" });
     card(slide, C, { x: 6.75, y: 1.95, w: 6.0, h: 4.0, name: "Needs device card" });
     label(slide, C, "NEEDS HARDWARE / A TOOLCHAIN", { x: 7.05, y: 2.15, w: 5.4, color: C.accent3, name: "Device label" });
     bullets(slide, C, ["Headset VR/AR sessions need supported devices and runtimes", "Real controller input in the Practice Lab and Circuit Lab", "Quest camera needs permission and physical hardware", "ARCore needs a supported Android camera device", "visionOS builds need macOS + Xcode; Unity examples need package setup"], { x: 7.05, y: 2.55, w: 5.4, h: 3.2, size: 13.5, gap: 8, name: "Device points" });

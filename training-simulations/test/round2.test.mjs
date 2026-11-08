@@ -24,7 +24,7 @@ test("every indoor station has a known room kind and every room kind is built", 
     assert.ok(kinds.has(kind), `${kind} is not a room kind`);
   }
   // Outdoor stations keep the sky; the schematic circulation station keeps the plain stage. Everything else has a room.
-  const outdoor = new Set(["height", "battery", "facade", "field", "circulation"]);
+  const outdoor = new Set(["height", "battery", "facade", "circulation"]);
   for (const key of objectKeys) assert.equal(key in map, !outdoor.has(key), `${key}: room expected only for indoor stations`);
   for (const key of outdoor) if (key !== "circulation") assert.match(block(rooms, "export const GROUND_BY_STATION"), new RegExp(`\\b${key}:`), `${key} has a ground colour`);
 });
@@ -56,7 +56,7 @@ test("every prop file added in round 2 is used, small, and under the triangle an
 test("ground-level props keep clear of hotspots they could hide, and stay on the platform or the room floor", () => {
   const table = block(dressing, "export const STATION_PROPS");
   const stations = [...table.matchAll(/^  (\w+): \[([\s\S]*?)^  \],/gm)];
-  assert.ok(stations.length >= 14, "found the station prop tables");
+  assert.ok(stations.length >= 10, "found the station prop tables");
   for (const [, key, body] of stations) {
     const hotspots = scenarios.filter((s) => s.object === key).flatMap((s) => s.steps.flatMap((step) => step.hotspots ?? []));
     for (const [, x, y, z, size] of body.matchAll(/pos: \[(-?[\d.]+), ([-\w.]+), (-?[\d.]+)\][^}]*?\b([hw]): ([\d.]+)/g).map((m) => [m[0], m[1], m[2], m[3], m[5]])) {

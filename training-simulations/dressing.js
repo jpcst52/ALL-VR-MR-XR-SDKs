@@ -150,19 +150,6 @@ export async function placePerson(parent, roleKey, { pos, rot = 0, scale = 1, an
 // Props per work area. Positions are station-local metres (y = 0 is the platform), kept out of the hotspot ring.
 // `rot` turns a prop about y so its front faces the camera/work. `h` is the height in metres.
 export const STATION_PROPS = {
-  delivery: [
-    { file: "props/hand_truck.glb", pos: [1.55, 0, -0.35], h: 1.15, rot: -0.5 },
-    { file: "props/plastic_crate_01.glb", pos: [-1.0, 0, 0.75], h: 0.3, rot: 0.3 },
-    { file: "props/steel_frame_shelves_01.glb", pos: [-1.8, 0, -0.35], h: 1.9, rot: 0 },
-    { file: "props/wooden_crate_01.glb", pos: [1.0, 0, -0.55], h: 0.4, rot: 0.2 },
-  ],
-  safety: [
-    { file: "props/WetFloorSign_01.glb", pos: [-0.35, 0, 0.9], h: 0.63, rot: 0.2 },
-    { file: "props/plastic_broom.glb", pos: [0.95, 0, -0.45], h: 1.2, rot: 0 },
-    { file: "props/plastic_jerrycan.glb", pos: [0.75, 0, 0.7], h: 0.34, rot: 0.5 },
-    { file: "props/korean_fire_extinguisher_01.glb", pos: [1.7, 0, -0.3], h: 0.5 },
-    { file: "props/medical_box.glb", pos: [-1.75, 0, -0.35], w: 0.45, rot: 0 },
-  ],
   welding: [
     { file: "props/portable_welding_cart.glb", pos: [0.45, 0, -0.8], h: 1.0, rot: 0 },
     { file: "props/metal_toolbox.glb", pos: [0.0, 0, 0.6], h: 0.29, rot: 0.3 },
@@ -185,19 +172,6 @@ export const STATION_PROPS = {
     { file: "props/plastic_crate_01.glb", pos: [1.3, 0, -0.1], h: 0.3, rot: -0.3 },
   ],
   // Round 2: the plainer scenarios. y = -0.2 stands a prop on the room floor beyond the platform edge (radius 2.4).
-  consent: [
-    { file: "props/modern_arm_chair_01.glb", pos: [1.95, 0, 0.7], h: 0.85, rot: -1.9 },
-    { file: "props/side_table_01.glb", pos: [-1.95, 0, -0.6], h: 0.5 },
-    { file: "props/metal_trash_can.glb", pos: [1.85, 0, -1.0], h: 0.55 },
-  ],
-  sample: [
-    { file: "props/metal_office_desk.glb", pos: [0, 0, -1.7], w: 1.7 },
-    { file: "props/industrial_microscope.glb", pos: [0.3, 0.8, -1.7], h: 0.32, rot: 0.3 },
-    { file: "props/plastic_container.glb", pos: [1.9, 0, -0.9], h: 0.3, rot: 0.3 },
-    { file: "props/metal_trash_can.glb", pos: [-2.0, 0, -1.1], h: 0.55 },
-    { file: "props/metal_stool_03.glb", pos: [-1.2, 0, -1.8], h: 0.62 },
-    { file: "props/steel_frame_shelves_01.glb", pos: [-3.5, ROOM_FLOOR_Y, -2.45], h: 1.9 },
-  ],
   control: [
     { person: "worker", pos: [-1.2, 0, 0.5], rot: 1.1 },
     { file: "props/classic_laptop.glb", pos: [-0.62, 0.84, 0.2], h: 0.25, rot: 0.4 },
@@ -241,11 +215,6 @@ export const STATION_PROPS = {
     { file: "props/modular_industrial_pipes_01.glb", pos: [-1.9, 0, -1.3], h: 1.9 },
     { file: "props/barrel_03.glb", pos: [1.9, 0, -0.9], h: 0.9 },
     { file: "props/barrel_03.glb", pos: [2.05, 0, -0.4], h: 0.9, rot: 1.0 },
-  ],
-  field: [
-    { file: "props/dead_tree_trunk_02.glb", pos: [-2.1, 0, -0.9], w: 1.6, rot: 0.8 },
-    { file: "props/metal_toolbox.glb", pos: [1.45, 0, 0.5], h: 0.29, rot: -0.5 },
-    { file: "props/plastic_crate_01.glb", pos: [1.95, 0, -0.5], h: 0.3, rot: 0.4 },
   ],
 };
 

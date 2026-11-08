@@ -66,7 +66,7 @@ export async function buildRepository(file) {
   {
     const slide = contentSlide(pres, { section: "Browser", eyebrow: "04 / FIELDWORK XR PRACTICE LAB", title: "Seventeen short scenarios in the browser" });
     await maybeShot(slide, C, "training-simulations/screenshots/02-catalog.png", { x: 0.6, y: 1.75, w: 3.7, h: 4.9, caption: "Scenario catalogue", name: "Lab catalogue" });
-    await maybeShot(slide, C, "training-simulations/screenshots/03-scenario-7-work-at-height.png", { x: 4.45, y: 1.75, w: 3.7, h: 4.9, caption: "Work at height, hands-on task", name: "Lab scenario" });
+    await maybeShot(slide, C, "training-simulations/screenshots/03-scenario-1-work-at-height.png", { x: 4.45, y: 1.75, w: 3.7, h: 4.9, caption: "Work at height, hands-on task", name: "Lab scenario" });
     bullets(slide, C, [
       "Five groups: everyday business, community and field research, high-risk industrial, manufacturing quality, and a draft life-science scenario.",
       "Click glowing points in a 3D scene to do each step. Every option has feedback; critical mistakes are flagged.",

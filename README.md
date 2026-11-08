@@ -54,7 +54,7 @@ Desktop captures of the browser examples running. Immersive XR sessions need a s
 
 | Scenario catalog | Work at height | Electrical isolation |
 |---|---|---|
-| [![Practice Lab scenario catalog](training-simulations/screenshots/02-catalog.png)](training-simulations/) | [![Work at height task](training-simulations/screenshots/03-scenario-7-work-at-height.png)](training-simulations/) | [![Critical mistake in the electrical scenario](training-simulations/screenshots/06-critical-miss.png)](training-simulations/) |
+| [![Practice Lab scenario catalog](training-simulations/screenshots/02-catalog.png)](training-simulations/) | [![Work at height task](training-simulations/screenshots/03-scenario-1-work-at-height.png)](training-simulations/) | [![Critical mistake in the electrical scenario](training-simulations/screenshots/06-critical-miss.png)](training-simulations/) |
 
 The Unity, Android, and Apple examples need their native toolchains and devices, so they have no screenshots here.
 
@@ -102,7 +102,7 @@ Use `Ctrl+C` to stop the server. The libraries are bundled in `vendor/`, so the 
 | WebXR | Adjust the color-field animation speed in the preview and immersive session. |
 | Circuit Lab | Join a room, see remote participants, and build a shared circuit that lights a bulb when the loop is closed. |
 | Site Safety Layout | Calibrate a shared board origin using hit testing, then edit a shared safety layout with a live checklist. |
-| Fieldwork XR Practice Lab | Enter a name, pick one of seventeen scenarios, and carry out each task by selecting hotspots in a 3D work area. |
+| Fieldwork XR Practice Lab | Enter a name, pick one of eleven scenarios, and carry out each task by selecting hotspots in a 3D work area. |
 
 ## GitHub Pages (WebXR on a headset browser)
 
@@ -123,7 +123,7 @@ Open `http://localhost:8443/multi-player/vr/` and `http://localhost:8443/multi-p
 
 ## Fieldwork XR Practice Lab
 
-The [Practice Lab](training-simulations/) has seventeen scenarios in five groups: local-business, research-practice, industrial safety (work at height, a refinery control room, refinery battery limits, skyscraper window cleaning, welding, and electrical work), manufacturing quality, and a draft life-science scenario (circulation) for faculty review. In every scenario you carry out the tasks yourself by selecting hotspots in a 3D work area. Wrong actions show consequences, some steps must be done in order, and dangerous mistakes are flagged as critical. Start it with `python -m http.server 8000` and open `http://localhost:8000/training-simulations/`; its README explains name handling, scoring, and WebXR limitations. It is a non-certified learning prototype and does not replace workplace procedures or professional training.
+The [Practice Lab](training-simulations/) has eleven hands-on scenarios in three groups: industrial safety (work at height, a refinery control room, refinery battery limits, skyscraper window cleaning, welding and hot work, electrical isolation), manufacturing quality (lighter-lot sampling, a heat-exchanger hydrostatic test, pipe-spool welding, resistor selection) and one draft life-science activity for faculty review. The earlier business and research scenarios were removed on 2026-11-08.
 
 ## VR emulator captures
 

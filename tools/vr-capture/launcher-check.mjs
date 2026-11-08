@@ -44,8 +44,8 @@ for (const vp of [{ width: 1600, height: 1000 }, { width: 420, height: 900 }]) {
   const tiles = await page.locator(".tile").count();
   const fonts = await page.evaluate(async () => { await document.fonts.ready; return ["League Gothic", "Merriweather", "Roboto"].map((f) => document.fonts.check(`16px "${f}"`)); });
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);
-  const guideLinks = await page.locator(".tools .group a").count();
-  if (guideLinks !== data.guides.flatMap((g) => g.links).length) problems.push(`${vp.width}px: expected ${data.guides.flatMap((g) => g.links).length} guide links, found ${guideLinks}`);
+  if (await page.locator(".tools .group a").count() !== 0) problems.push(`${vp.width}px: the guides should be on launcher/guides.html, not the home page`);
+  if (await page.locator('a[href="launcher/guides.html"]').count() < 1) problems.push(`${vp.width}px: the home page does not link to launcher/guides.html`);
   if (tiles !== data.examples.length) problems.push(`${vp.width}px: expected ${data.examples.length} tiles, found ${tiles}`);
   if (fonts.includes(false)) problems.push(`${vp.width}px: a brand font failed to load`);
   if (overflow) problems.push(`${vp.width}px: horizontal overflow`);
@@ -104,7 +104,7 @@ console.table(rows);
   const { context, page } = await load({ width: 1200, height: 900 });
   const total = data.examples.length;
   const vis = () => page.locator(".tile:not([hidden])").count();
-  const guidesVis = () => page.locator("#tools li:not([hidden])").count();
+  const guidesVis = async () => 0; // guides are on their own page now (checked in section 5)
   if (await page.locator(".legend li").count() !== 3) problems.push("search: status legend should list 3 kinds");
   if (await page.locator("#q").isDisabled()) problems.push("search: box is disabled after load");
   await page.keyboard.press("/");
@@ -123,14 +123,29 @@ console.table(rows);
   if ((await vis()) !== 0 || (await guidesVis()) !== 0 || !/Nothing matches/.test(await page.locator("#count").innerText())) problems.push("search: a miss should show no tiles and say so");
   await page.keyboard.press("Escape");
   if ((await vis()) !== total || (await page.inputValue("#q")) !== "") problems.push("search: Escape does not restore all tiles");
-  await page.fill("#q", "glossary");
-  if ((await guidesVis()) < 1) problems.push("search: 'glossary' finds no guide");
-  console.log(`search: forklift=${hits}/${total} tiles, glossary guides=${await guidesVis()}`);
+  console.log(`search: forklift=${hits}/${total} tiles`);
   if (shots) {
     await page.fill("#q", "quest");
     await page.screenshot({ path: join(repo, "docs", "images", "launcher-search.png"), fullPage: false });
     console.log("wrote docs/images/launcher-search.png");
   }
+  await context.close();
+}
+
+// 5. the guides page: every guide link is listed, search works, and it links back to the menu
+{
+  const { context, page } = await load({ width: 1200, height: 900 });
+  await page.goto(new URL("launcher/guides.html", base).href, { waitUntil: "networkidle" });
+  await page.waitForSelector("#tools .group a");
+  const want = data.guides.flatMap((g) => g.links).length;
+  const got = await page.locator("#tools .group a").count();
+  if (got !== want) problems.push(`guides page: expected ${want} guide links, found ${got}`);
+  if (await page.locator('a[href="../"]').count() < 1) problems.push("guides page: no link back to the main menu");
+  await page.fill("#q", "glossary");
+  if ((await page.locator("#tools li:not([hidden])").count()) < 1) problems.push("guides page: 'glossary' finds no guide");
+  await page.fill("#q", "zzzznothing");
+  if ((await page.locator("#tools li:not([hidden])").count()) !== 0) problems.push("guides page: a miss should show no links");
+  console.log(`guides page: ${got}/${want} links`);
   await context.close();
 }
 

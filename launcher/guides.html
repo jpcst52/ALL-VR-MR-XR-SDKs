@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Guides, status and decks · Pitt-Bradford XR Training</title>
+  <meta name="description" content="Every guide, status page and slide deck in the XR training repository.">
+  <link rel="stylesheet" href="../brand-kit/brand.css">
+  <link rel="stylesheet" href="launcher.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to the guides</a>
+
+  <header class="top">
+    <div class="wrap top-inner">
+      <div class="brand" data-pitt-brand></div>
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="../">&larr; Main menu</a></nav>
+      <h1>Guides, status and decks</h1>
+      <p class="lede">Everything written down in this repository. Guides open here in the menu, offline.</p>
+    </div>
+  </header>
+
+  <div class="wrap finder" role="search">
+    <label for="q">Search guides</label>
+    <div class="finder-row">
+      <input type="search" id="q" placeholder="for example: glossary, build, hub" autocomplete="off" aria-controls="tools" disabled>
+      <button type="button" id="clear" hidden>Clear</button>
+    </div>
+    <p id="count" class="count" role="status" aria-live="polite"></p>
+  </div>
+
+  <main id="main" class="wrap">
+    <noscript><p class="noscript">This page needs JavaScript to list the guides. They are in the docs folder of the repository.</p></noscript>
+    <section id="tools" class="block tools" aria-labelledby="tools-h"></section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap">
+      <p>Non-certified learning prototypes. General safety awareness practice only; not procedures, permits or certification.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="../brand-kit/brand.js"></script>
+  <script src="guides.js"></script>
+</body>
+</html>

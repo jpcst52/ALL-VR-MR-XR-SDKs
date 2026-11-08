@@ -7,7 +7,7 @@
 ## Run it
 
 1. Close every Unity editor that has one of the projects open (the script refuses to build an open project; it checks for a Unity process whose command line names the project and for `Temp\UnityLockfile`).
-2. **All five at once:** double-click `scripts\build-all-vive.cmd` (the four projects plus the hub, about 45 minutes; it opens `builds\vive` when done, ready to copy to the VR Stage PC). Or double-click `scripts\build-vive.cmd` for the four projects without the hub, or run from the repository root:
+2. **All five at once:** double-click `scripts\build-all-vive.cmd` (the four projects plus the hub, about 45 minutes on the first PC and a few minutes on a faster one; it opens `builds\vive` when done, ready to copy to the VR Stage PC). Or double-click `scripts\build-vive.cmd` for the four projects without the hub, or run from the repository root:
 
 ```
 powershell -ExecutionPolicy Bypass -File scripts\build-vive.ps1 -DryRun        # print the commands only

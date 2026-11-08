@@ -182,8 +182,6 @@ input:focus-visible, button:focus-visible, a:focus-visible, summary:focus-visibl
   transition: border-color .15s ease, background .15s ease, transform .15s ease;
 }
 .scenario-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--line-strong); }
-.category:has(.business-mark) .scenario-card::before { background: #ffb36b; }
-.category:has(.research-mark) .scenario-card::before { background: #73e7d4; }
 .category:has(.industrial-mark) .scenario-card::before { background: #f2c94c; }
 .category:has(.manufacturing-mark) .scenario-card::before { background: #66B2E3; }
 .category:has(.biology-mark) .scenario-card::before { background: #ff7b8a; }
@@ -392,3 +390,23 @@ input:focus-visible, button:focus-visible, a:focus-visible, summary:focus-visibl
 /* Headings that receive focus when the panel changes (programmatic focus only) need no ring. */
 h2[tabindex="-1"]:focus, h3[tabindex="-1"]:focus { outline: none; }
 .choice:disabled[data-state], .choice:disabled { opacity: 0.72; }
+
+/* Distinct cards: every kind of card has its own colour so the steps are easy to tell apart. */
+.decision-card { border-top: 3px solid #7fc4ff; background: linear-gradient(180deg, #0d2a6a, var(--card) 40%); }
+.briefing { border-left-color: var(--gold); }
+.category:has(.industrial-mark) .scenario-card { background: linear-gradient(135deg, #3a3416 0%, var(--card) 55%); }
+.category:has(.manufacturing-mark) .scenario-card { background: linear-gradient(135deg, #123a63 0%, var(--card) 55%); }
+.category:has(.biology-mark) .scenario-card { background: linear-gradient(135deg, #4a1f35 0%, var(--card) 55%); }
+#choices .choice { position: relative; padding-left: 58px; border-left-width: 5px; }
+#choices .choice::before { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #04133a; }
+#choices .choice:nth-child(1) { border-left-color: #7fc4ff; background: #0b2a63; }
+#choices .choice:nth-child(1)::before { content: "A"; background: #7fc4ff; }
+#choices .choice:nth-child(2) { border-left-color: #ffb81c; background: #3b2a05; }
+#choices .choice:nth-child(2)::before { content: "B"; background: #ffb81c; }
+#choices .choice:nth-child(3) { border-left-color: #73e7d4; background: #093330; }
+#choices .choice:nth-child(3)::before { content: "C"; background: #73e7d4; }
+#choices .choice:hover:not(:disabled) { filter: brightness(1.25); border-color: inherit; }
+#continue { background: linear-gradient(180deg, #25b377, #157a52); border-color: #25b377; color: #fff; }
+#continue:hover:not(:disabled) { background: #2dc88a; border-color: #2dc88a; }
+#continue::after { content: " 92"; }
+.completion { background: linear-gradient(180deg, #3a2f0c, var(--card) 55%); border-top: 3px solid var(--gold); }

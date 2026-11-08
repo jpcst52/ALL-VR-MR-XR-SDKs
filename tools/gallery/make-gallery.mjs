@@ -15,7 +15,7 @@ const sections = [
   { title: "Unity 04 Resistor Bench", note: "Standalone Vive project.", dir: "vive-steamvr/04-resistor-bench/screenshots" },
   { title: "Circuit Lab and Safety Lab v2 (web, Quest)", note: "Desktop Chrome and an emulated Quest 3.", dir: "multi-player/screenshots", filter: /^v2-.*\.png$/ },
   { title: "Circuit Lab and Safety Lab v1 (web, Quest)", note: "The original labs, kept.", dir: "multi-player/screenshots", filter: /^(?!v2-).*\.png$/ },
-  { title: "Fieldwork XR Practice Lab (web)", note: "Three.js, 12 hands-on scenarios.", dir: "training-simulations/screenshots" },
+  { title: "Fieldwork XR Practice Lab (web)", note: "Three.js, 11 hands-on scenarios.", dir: "training-simulations/screenshots" },
 ];
 
 const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));

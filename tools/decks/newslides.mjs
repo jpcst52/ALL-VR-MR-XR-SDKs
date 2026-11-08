@@ -132,7 +132,7 @@ export async function verifiedSlide(pres, C, { section, eyebrow, title = "What i
   card(slide, C, { x: 0.6, y: 1.75, w: 6.0, h: 4.1, name: "Verified card" });
   label(slide, C, "RUN AND CHECKED", { x: 0.85, y: 1.95, w: 5.4, color: C.accent5, name: "Verified label" });
   bullets(slide, C, [
-    "Browser demos and the Practice Lab (17 scenarios) on a desktop browser",
+    "Browser demos and the Practice Lab (11 scenarios) on a desktop browser",
     "Automated suites pass on a development PC: Practice Lab 36, brand kit 16, relay 42, web layout checks 48",
     "Multiplayer relay with automated tests; two-client rooms",
     "Unity projects 01 to 04 and the five hub scenes compile and run in the editor (desktop mode); scripted self-tests pass",
@@ -175,7 +175,7 @@ export async function forkliftDesignSlide(pres, C, { section, eyebrow }) {
 export async function researchFeaturesSlide(pres, C, { section, eyebrow }) {
   const slide = contentSlide(pres, { section, eyebrow, title: "Features that come from the research" });
   entries(slide, C, [
-    ["Why this matters", "After each step a short reason appears; one question at the end checks the reason, logged apart from the procedure score. Web (16 of 17 scenarios), Hydrostatic Test Bay, Refinery Rounds."],
+    ["Why this matters", "After each step a short reason appears; one question at the end checks the reason, logged apart from the procedure score. Web (10 of 11 scenarios), Hydrostatic Test Bay, Refinery Rounds."],
     ["Pedestrian awareness check", "Warehouse and forklift: a co-worker walks past the forklift, the scene freezes and asks where they were and which way they walked. Adapted from the pause-and-ask idea, not a validated test."],
     ["Menu with thumbnails and seasonal skies", "Scenario thumbnails on the menu cards and portals; a sky that changes season every 30 seconds with a pixelate and scan-line transition. Skies are regional-style stand-ins, not photos of Bradford."],
   ], { x: 0.6, y: 1.75, w: 5.6, h: 3.9, nameColor: C.accent1, nameSize: 15, descSize: 12, gap: 10, name: "Research features" });
@@ -189,7 +189,7 @@ export async function researchFeaturesSlide(pres, C, { section, eyebrow }) {
 export async function systemSlide(pres, C, { section, eyebrow }) {
   const slide = contentSlide(pres, { section, eyebrow, title: "What the system is" });
   const lanes = [
-    ["WEB PRACTICE LAB", C.accent1, ["17 hands-on safety-awareness scenarios", "Runs in any browser, and in Quest Browser", "Works offline from one lab PC"]],
+    ["WEB PRACTICE LAB", C.accent1, ["11 hands-on safety-awareness scenarios", "Runs in any browser, and in Quest Browser", "Works offline from one lab PC"]],
     ["MULTIPLAYER WEBXR", C.accent2, ["Circuit Lab, Site Safety Layout, Hydrostatic Test Rig", "One small relay; people join by room name", "Other users appear as characters in hard hats"]],
     ["UNITY PROJECTS", C.accent3, ["Four scenario projects and a lobby hub", "Built for Vive Pro 2 on SteamVR (OpenXR)", "Plays in a desktop window with no headset"]],
     ["RESEARCH", C.accent5, ["Bibliography of 77 references", "Three draft study designs", "Nothing has been measured yet"]],
@@ -209,7 +209,7 @@ export async function realismSlide(pres, C, { section, eyebrow }) {
     ["training-simulations/screenshots/realism-after/work-at-height.png", "Work at height"],
     ["training-simulations/screenshots/realism-after/control-room-unit.png", "Refinery control room"],
     ["training-simulations/screenshots/realism-after/heat-exchanger-hydrotest.png", "Heat-exchanger hydrostatic test"],
-    ["training-simulations/screenshots/realism-after/customer-welcome.png", "Welcome a walk-in"],
+    ["training-simulations/screenshots/realism-after/electrical-work.png", "Electrical isolation"],
   ];
   for (const [i, [file, caption]] of shots.entries()) {
     await maybeShot(slide, C, file, { x: 0.6 + (i % 2) * 4.15, y: 1.75 + Math.floor(i / 2) * 2.55, w: 4.0, h: 2.4, caption: caption + " (desktop browser)", name: `Realism screenshot ${i + 1}` });

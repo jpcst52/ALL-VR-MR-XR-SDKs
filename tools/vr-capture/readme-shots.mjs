@@ -86,7 +86,7 @@ if (which === "all" || which === "lab") {
     await name(); await start("work-at-height"); await finishStep(byId("work-at-height").steps[0]); await top(); await shot("04-feedback.png");
   });
   await lab(async ({ page, name, start, toTask, top, shot }) => {
-    const s = byId("customer-welcome");
+    const s = byId("work-at-height");
     await name(); await start(s.id); await toTask(s, s.steps.length - 1);
     await (async () => { for (const id of order(s.steps.at(-1))) { await page.evaluate(() => { document.querySelector("#task-actions-wrap").open = true; }); await page.click(`#task-actions [data-hotspot="${id}"]`); } })();
     await page.click("#continue");

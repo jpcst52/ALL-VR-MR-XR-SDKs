@@ -10,6 +10,8 @@ General safety-awareness practice only: none of the scenarios is a procedure, pe
 |---|---|
 | Run the demo, a Unity project, the hub, or a headset | [HOW-TO-RUN.md](HOW-TO-RUN.md) |
 | Set up a new PC (Node, Unity, SteamVR, Meta XR Simulator, checks) | [DEVELOPER-SETUP.md](DEVELOPER-SETUP.md) |
+| Check the Vive with Valve's own SteamVR sample (first step of the SteamVR rebuild) | [STEAMVR-SAMPLE.md](STEAMVR-SAMPLE.md) |
+| Test the Vive builds with no headset (SteamVR's simulated headset) and the web examples (emulated Quest) | [STEAMVR-SIMULATOR.md](STEAMVR-SIMULATOR.md) |
 | Get the builds onto the VR Stage PC and run them (one page, start to finish) | [VR-STAGE-QUICKSTART.md](VR-STAGE-QUICKSTART.md) |
 | Read the experience-report paper on building this project (HTML, with a PDF copy) | [paper/paper.html](paper/paper.html) |
 | Build the hub (lobby and all four scenarios) and what it needs | [BUILD-THE-HUB.md](BUILD-THE-HUB.md) |
@@ -58,7 +60,7 @@ General safety-awareness practice only: none of the scenarios is a procedure, pe
 
 | Folder | Notes |
 |---|---|
-| [../training-simulations/](../training-simulations/README.md) | Fieldwork XR Practice Lab (web, 17 scenarios) |
+| [../training-simulations/](../training-simulations/README.md) | Fieldwork XR Practice Lab (web, 11 scenarios) |
 | [../multi-player/](../multi-player/README.md) | Relay, Circuit Lab, Site Safety Layout, hydrostatic test (multi-user web) |
 | [../vive-steamvr/hub/](../vive-steamvr/hub/README.md) | Hub lobby with portals (local Asset Store packs) |
 | [../vive-steamvr/01-hydrostatic-test/](../vive-steamvr/01-hydrostatic-test/README.md) | Unity project 01 |

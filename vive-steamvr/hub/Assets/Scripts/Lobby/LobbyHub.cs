@@ -185,8 +185,8 @@ public class LobbyHub : MonoBehaviour, IShotScript
         P.Cyl(p, "Pad inner", new Vector3(0, 0.02f, -1.5f), TriggerRadius * 0.82f, 0.02f, Vector3.up, P.Mat(new Color(0.95f, 0.96f, 0.98f), 0f, 0.3f), false);
 
         Ui.Panel(p, "Sign", new Vector3(0, h + 0.95f, 0.03f), new Vector2(w + 0.8f, 1.2f), Color.Lerp(e.Color, Color.black, 0.25f), Color.white, 0.04f);
-        P.Text(p, (index + 1) + "  " + e.Title, new Vector3(0, h + 1.12f, -0.05f), 0.3f, Color.white, TextAnchor.MiddleCenter, true);
-        P.Text(p, e.Blurb, new Vector3(0, h + 0.8f, -0.05f), 0.14f, Color.white, TextAnchor.MiddleCenter);
+        P.Text(p, (index + 1) + "  " + e.Title, new Vector3(0, h + 1.27f, -0.05f), 0.3f, Color.white, TextAnchor.MiddleCenter, true);   // title and blurb are 0.5 m apart so the two lines of the blurb never touch the title
+        P.Text(p, e.Blurb, new Vector3(0, h + 0.74f, -0.05f), 0.14f, Color.white, TextAnchor.MiddleCenter);
 
         // Thumbnail of the scenario inside the doorway, on a rounded white frame (skipped if the image is missing)
         var thumb = string.IsNullOrEmpty(e.Thumb) ? null : Resources.Load<Texture2D>("Thumbnails/" + e.Thumb);

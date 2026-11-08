@@ -34,7 +34,7 @@ If Way 2 hits trouble, Way 1 is the fallback: the builds on the Build PC are alr
 
 **A. The builds already exist on the Build PC.** Folders in `C:\GitHub\ALL-VR-MR-XR-SDKs\builds\vive\`: `01-...`, `02-...`, `03-...`, `04-...`, `hub`, each with its `.exe`. As of 2026-11-08 the hub folder includes the lobby music and sky fix. Skip to step 2.
 
-**B. Rebuild all five on the Build PC** (after pulling new changes). Close every Unity editor, then double-click **`scripts\build-all-vive.cmd`**. About 45 minutes (the hub is about 11). It opens `builds\vive` when it finishes. A project that fails is reported and the others still build; logs are in `builds\logs\`. Details: [BUILDS.md](BUILDS.md).
+**B. Rebuild all five on the Build PC** (after pulling new changes). Close every Unity editor, then double-click **`scripts\build-all-vive.cmd`**. About 45 minutes on the first PC (the hub is about 11), a few minutes on a faster lab PC. It opens `builds\vive` when it finishes. A project that fails is reported and the others still build; logs are in `builds\logs\`. Details: [BUILDS.md](BUILDS.md).
 
 **C. Build on a different PC** (a fresh checkout). Projects 01 to 04 build from the checkout alone with `scripts\build-vive.cmd`. The **hub needs the licensed files that are not in git**: on the PC that has them double-click `scripts\pack-hub-assets.cmd` (makes `builds\hub-assets-<date>.zip`, about 2 GB zipped, 3 GB of files), carry it over by USB, then on the new PC drag it onto `scripts\unpack-hub-assets.cmd` and run `scripts\build-all-vive.cmd`. Full explanation, the list of packs and a from-scratch route: [BUILD-THE-HUB.md](BUILD-THE-HUB.md). Never upload that zip or the hub build.
 

@@ -4,16 +4,16 @@ import { scenarios, categories } from "../scenarios.js";
 
 const count = (id) => scenarios.filter((scenario) => scenario.category === id).length;
 
-test("the catalog has business, research, industrial, manufacturing, and draft biology simulations", () => {
-  assert.equal(scenarios.length, 17);
-  assert.equal(categories.length, 5);
-  assert.equal(count("business"), 3);
-  assert.equal(count("research"), 3);
+test("the catalog is hands-on and mechanical: industrial, manufacturing, and a draft biology simulation", () => {
+  assert.equal(scenarios.length, 11);
+  assert.equal(categories.length, 3);
   assert.equal(count("industrial"), 6);
   assert.equal(count("manufacturing"), 4);
   assert.equal(count("biology"), 1);
-  assert.equal(new Set(scenarios.map((scenario) => scenario.id)).size, 17);
+  assert.equal(new Set(scenarios.map((scenario) => scenario.id)).size, 11);
   for (const scenario of scenarios) assert.ok(categories.some((category) => category.id === scenario.category));
+  // The conversation-style business and research scenarios were removed: you cannot talk to anyone in the lab.
+  assert.equal(categories.some((category) => ["business", "research"].includes(category.id)), false);
 });
 
 test("industrial scenarios cover the requested trades", () => {
@@ -72,17 +72,3 @@ test("every scenario is a set of hands-on tasks that can be completed", () => {
   }
 });
 
-test("research exercises reinforce consent, accurate records, and safe protocol use", () => {
-  const researchText = scenarios
-    .filter((scenario) => scenario.category === "research")
-    .flatMap((scenario) => scenario.steps.flatMap((step) => [
-      step.prompt,
-      step.principle,
-      ...step.hotspots.flatMap((hotspot) => [hotspot.label, hotspot.say]),
-    ]))
-    .join(" ")
-    .toLowerCase();
-  for (const concept of ["voluntary", "consent", "protocol", "guess", "record"]) {
-    assert.ok(researchText.includes(concept), `research catalog covers ${concept}`);
-  }
-});

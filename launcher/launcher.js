@@ -54,7 +54,7 @@
     var jump = document.getElementById("jump");
     jump.appendChild(el("a", { href: "#path", text: "Demo path" }));
     data.sections.forEach(function (s) { jump.appendChild(el("a", { href: "#sec-" + s.id, text: s.title.replace(/ \(.*\)/, "") })); });
-    jump.appendChild(el("a", { href: "#tools", text: "Guides" }));
+    jump.appendChild(el("a", { href: "launcher/guides.html", text: "Guides and decks" }));
 
     // demo path
     var path = document.getElementById("path");
@@ -87,22 +87,6 @@
       host.appendChild(sec);
     });
 
-    // guides: grouped links to every document and deck; Markdown opens in the in-menu viewer (doc.html), other files open directly
-    var guides = document.getElementById("tools");
-    guides.appendChild(el("h2", { id: "tools-h", text: "Guides, status and decks" }));
-    guides.appendChild(el("p", { class: "intro", text: "Everything written down in this repository. Guides open here in the menu, offline." }));
-    var groups = el("div", { class: "groups" });
-    data.guides.forEach(function (g) {
-      var ul = el("ul");
-      g.links.forEach(function (t) {
-        var href = /\.md$/i.test(t.url) ? "launcher/doc.html?f=" + encodeURIComponent(t.url) : t.url;
-        var a = el("a", { href: href, id: "guide-" + t.id, "data-search": [t.title, t.note || "", g.title, t.id].join(" ").toLowerCase() }, [document.createTextNode(t.title), t.note ? el("small", { text: t.note }) : null]);
-        ul.appendChild(el("li", {}, [a]));
-      });
-      groups.appendChild(el("section", { class: "group", "aria-labelledby": "g-" + g.id }, [el("h3", { id: "g-" + g.id, text: g.title }), ul]));
-    });
-    guides.appendChild(groups);
-
     // relay hint: multiplayer pages need the relay, which serves this same site on its own port
     var port = String(data.meta.relayPort);
     if (/github\.io$/i.test(location.hostname)) {
@@ -129,7 +113,7 @@
   // Search / filter: client-side only. Tiles and guide links carry a data-search string.
   function setupFinder() {
     var q = document.getElementById("q"), clear = document.getElementById("clear"), count = document.getElementById("count");
-    var links = [].slice.call(document.querySelectorAll("#sections .tile, #tools .group a"));
+    var links = [].slice.call(document.querySelectorAll("#sections .tile"));
     var path = document.getElementById("path");
     q.disabled = false;
 
@@ -137,15 +121,13 @@
       var terms = q.value.toLowerCase().split(/\s+/).filter(Boolean), shown = 0;
       links.forEach(function (a) {
         var hay = a.getAttribute("data-search"), ok = terms.every(function (t) { return hay.indexOf(t) >= 0; });
-        var holder = a.classList.contains("tile") ? a : a.parentNode; // guide links sit in an li
-        holder.hidden = !ok;
+        a.hidden = !ok;
         if (ok) shown++;
       });
-      [].forEach.call(document.querySelectorAll("section.block[id^=sec-], .group"), function (sec) {
-        sec.hidden = !!terms.length && !sec.querySelector(sec.classList.contains("group") ? "li:not([hidden])" : ".tile:not([hidden])");
+      [].forEach.call(document.querySelectorAll("section.block[id^=sec-]"), function (sec) {
+        sec.hidden = !!terms.length && !sec.querySelector(".tile:not([hidden])");
       });
       path.hidden = !!terms.length;
-      document.getElementById("tools").hidden = !!terms.length && !document.querySelector("#tools li:not([hidden])");
       clear.hidden = !terms.length;
       count.textContent = terms.length ? (shown ? shown + " match" + (shown === 1 ? "" : "es") + " for “" + q.value.trim() + "”." : "Nothing matches “" + q.value.trim() + "”. Try a shorter word.") : "";
     }
