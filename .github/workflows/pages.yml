@@ -24,6 +24,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Check picture sizes (3 MB limit)
+        run: node scripts/check-image-sizes.mjs
       - name: Build the site
         run: node scripts/build-webxr.mjs
       - name: Install the browser-check tools (Playwright; uses the runner's Chrome)

@@ -9,6 +9,7 @@ General safety-awareness practice only: none of the scenarios is a procedure, pe
 | I want to... | Read |
 |---|---|
 | Run the demo, a Unity project, the hub, or a headset | [HOW-TO-RUN.md](HOW-TO-RUN.md) |
+| Set up a new PC (Node, Unity, SteamVR, Meta XR Simulator, checks) | [DEVELOPER-SETUP.md](DEVELOPER-SETUP.md) |
 | Check that nothing is broken, or play-test by hand | [TESTING.md](TESTING.md) |
 | See what is done and what is left | [Task-Status.md](Task-Status.md) (task list) and [PROJECT-STATUS.md](PROJECT-STATUS.md) (decisions and caveats) |
 | Run the live status dashboard | [status-dashboard-guide.md](status-dashboard-guide.md) |
@@ -27,7 +28,7 @@ General safety-awareness practice only: none of the scenarios is a procedure, pe
 | [HOW-TO-RUN.md](HOW-TO-RUN.md) | One page for everything: a three-step quick start for demo day, the demo server, Unity projects (desktop and headset), the hub lobby, tests, screenshots, decks, troubleshooting |
 | [HOLOLENS-AR-NOTES.md](HOLOLENS-AR-NOTES.md) | Why content looks small on a HoloLens (small additive display), how to measure it and fit content to it; untested on a HoloLens |
 | [GITHUB-PAGES.md](GITHUB-PAGES.md) | The static WebXR site on GitHub Pages: address, QR code, what works (and what needs the relay), opening it on Quest, HoloLens 2, Vive XR and phones, updating and checking it; nothing tested on a headset |
-| [BUILDS.md](BUILDS.md) | `scriptsuild-vive.cmd`: builds the four Unity projects (and optionally the hub) as Windows players for the VR Stage PC; script not run for real yet |
+| [BUILDS.md](BUILDS.md) | `scripts\build-vive.cmd`: builds the four Unity projects (and optionally the hub) as Windows players for the VR Stage PC; script not run for real yet |
 | [TESTING.md](TESTING.md) | The automated suites with expected counts, and hands-on check tables (desktop Unity D1-D14, baked scenes B1-B4, lobby L1-L6, web W1-W6) |
 | [demo-day/HARDWARE-TEST-SESSION.md](demo-day/HARDWARE-TEST-SESSION.md) | Pass/fail sheet for the first lab run on the Vive Pro 2 and Quest |
 

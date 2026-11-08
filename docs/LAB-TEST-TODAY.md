@@ -33,6 +33,7 @@ Things to look at: frame rate and comfort in v2 (it has PBR textures, glow and f
 | 02 Refinery Rounds | walk the rounds, gas alarm, muster to the upwind point; text readable |
 | 03 Warehouse and Forklift | **new:** the co-worker and the forklift driver are realistic people. Does the driver look right in the cab? Does the co-worker walk past? Mirror, signs, the pause-and-ask check |
 | 04 Resistor Bench | pick up a part, use the meter, the burnt-LED mistake, the question |
+| **Hub** (`builds\vive\hub\XRTrainingHub.exe`) | **the one to start with if you want to reach everything:** it opens in the lobby, and from there you walk to the four scenarios (Hydrostatic, Refinery, Warehouse, Resistor Bench). Check that each scenario loads from the lobby and that you can get back. About 1 GB, uses licensed art: lab PC only, never upload it. Built 2026-11-08; only built, never started or run in a headset |
 
 For every build: left thumbstick moves (or teleports on forward), right thumbstick snap-turns 45 degrees, both hands visible, and the Vive wands work (the **trackpad** feel is the least certain part; the controller bindings are enabled for Vive, Index and Touch but were never tried). Note anything that is too bright, too dark or too harsh (the lighting was just softened), anything that sounds wrong (the sound was rebuilt but only measured, never heard in a scene), and frame rate (the SteamVR frame-time overlay is enough).
 
@@ -54,4 +55,4 @@ For every build: left thumbstick moves (or teleports on forward), right thumbsti
 
 ## 6. Rebuilding the Unity builds
 
-`scripts\build-vive.cmd` (close every Unity editor first). Details and options: [BUILDS.md](BUILDS.md). The hub (all five scenes, uses Asset Store art that cannot be redistributed) is built with `-IncludeHub` only on the lab PC and its build must never be published.
+`scripts\build-vive.cmd` (close every Unity editor first). Details and options: [BUILDS.md](BUILDS.md). The hub (all five scenes, uses Asset Store art that cannot be redistributed) is built with `scripts\build-vive.cmd -IncludeHub` (add `-Projects hub` for the hub alone, about 11 minutes) only on the lab PC and its build must never be published. Setting up another PC: [DEVELOPER-SETUP.md](DEVELOPER-SETUP.md).

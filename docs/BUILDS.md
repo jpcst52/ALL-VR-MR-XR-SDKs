@@ -51,7 +51,7 @@ The `.exe` keeps the name the project gives it (not the folder name) because Uni
 
 ## The hub
 
-`-IncludeHub` builds `vive-steamvr\hub` (lobby and all scenarios). It uses local Asset Store packs and Rocketbox people: copy that build to the lab PC only and never publish it. The hub has no build method yet, so the script reports it as SKIPPED. The proposed one-line editor method is in `scripts\proposed-BuildScript.cs.txt` (save it as `vive-steamvr\hub\Assets\Editor\HubBuild.cs`). The hub is usually open in the owner's editor, which also blocks the build.
+`-IncludeHub` builds `vive-steamvr\hub` (lobby and the four scenarios) into `builds\vive\hub\XRTrainingHub.exe`, using `HubBuild.BuildWindows` in `vive-steamvr\hub\Assets\Editor\HubBuild.cs`. It uses local Asset Store packs and Rocketbox people: copy that build to the lab PC only and never publish it. First built 2026-11-08 (about 1 GB, 11 minutes, `-IncludeHub -Projects hub` builds only the hub); it was built but never started, so lobby navigation in the player is unverified. The hub is usually open in the owner's editor, which blocks the build. The combined zip holds projects 01 to 04 only; the hub has its own `hub.zip`.
 
 ## If it fails
 
