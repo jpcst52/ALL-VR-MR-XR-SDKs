@@ -47,7 +47,7 @@ The `.exe` keeps the name the project gives it (not the folder name) because Uni
 ## Copy to the VR Stage PC and run
 
 1. Copy a project folder (or unzip the combined zip) to the VR Stage PC, for example `C:\XRTraining\`.
-2. Once per PC: install Steam and SteamVR, set up the Vive Pro 2, and in SteamVR choose Settings, OpenXR, Set SteamVR as OpenXR runtime. `README-VR-STAGE.txt` in each folder repeats this.
+2. Once per PC: install Steam and SteamVR, set up the Vive Pro 2, and in SteamVR choose Settings, Developer, Set SteamVR as OpenXR runtime. The whole path from build to headset is on one page: [VR-STAGE-QUICKSTART.md](VR-STAGE-QUICKSTART.md). `README-VR-STAGE.txt` in each folder repeats this.
 3. Start SteamVR, wake the headset, double-click the `.exe`. Windows SmartScreen may warn about the unsigned file (More info, Run anyway).
 4. No headset: the app runs on the desktop with keyboard and mouse (keys are in each project's README).
 

@@ -33,14 +33,14 @@ Rocketbox avatars used (from the library's `Avatars` folder; each with its `Expo
 
 On the PC that has the hub files (the author's lab PC):
 
-1. Double-click **`scripts\pack-hub-assets.cmd`**. It zips every local-only file, including the `.meta` files (they hold the asset IDs the scenes refer to, so a copy without them breaks the scenes), into `builds\hub-assets-<date>.zip` (about 3 GB of files; `-DryRun` through `scripts\hub-assets.ps1 -Pack -DryRun` shows the list first). It takes a few minutes.
+1. Double-click **`scripts\pack-hub-assets.cmd`**. It zips every local-only file, including the `.meta` files (they hold the asset IDs the scenes refer to, so a copy without them breaks the scenes), into `builds\hub-assets-<date>.zip` (about 3 GB of files, 2,084 MB zipped on 2026-11-08; `-DryRun` through `scripts\hub-assets.ps1 -Pack -DryRun` shows the list first). It takes a few minutes.
 2. Move the zip to the other PC by USB drive or local network. It holds licensed files: do not upload it or put it in a shared cloud folder.
 
 On the PC that will build:
 
 3. Install **Unity Hub** and **Unity 6000.3.20f1** with *Windows Build Support (Mono)*. `git pull` this repository.
 4. Close every Unity editor. Drag the zip onto **`scripts\unpack-hub-assets.cmd`**. It extracts into `vive-steamvr\hub\Assets`.
-5. Double-click **`scripts\build-all-vive.cmd`** (all five players) or run `powershell -ExecutionPolicy Bypass -File scripts\build-vive.ps1 -IncludeHub -Projects hub` for the hub alone. The scenes are already built and baked, so nothing needs to be opened in Unity first. The first Unity run on a new PC imports about 3 GB of assets into its `Library` folder, so expect it to take noticeably longer than the author's 10 minutes (not measured).
+5. Run **`scripts\check-build-pc.cmd`** (checks Unity, disk space, the hub files and the network; changes nothing), then double-click **`scripts\build-all-vive.cmd`** (all five players) or run `powershell -ExecutionPolicy Bypass -File scripts\build-vive.ps1 -IncludeHub -Projects hub` for the hub alone. The scenes are already built and baked, so nothing needs to be opened in Unity first. The first Unity run on a new PC imports about 3 GB of assets into its `Library` folder, so expect it to take noticeably longer than the author's 10 minutes (not measured).
 6. The result is `builds\vive\hub\XRTrainingHub.exe` with `hub.zip` beside it. Copy that folder to the VR Stage PC. Keep it off GitHub.
 
 If the build script says the hub's scenes or art are missing, step 4 did not complete or went to the wrong folder; the script lists exactly what it did not find.

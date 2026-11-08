@@ -10,6 +10,8 @@ General safety-awareness practice only: none of the scenarios is a procedure, pe
 |---|---|
 | Run the demo, a Unity project, the hub, or a headset | [HOW-TO-RUN.md](HOW-TO-RUN.md) |
 | Set up a new PC (Node, Unity, SteamVR, Meta XR Simulator, checks) | [DEVELOPER-SETUP.md](DEVELOPER-SETUP.md) |
+| Get the builds onto the VR Stage PC and run them (one page, start to finish) | [VR-STAGE-QUICKSTART.md](VR-STAGE-QUICKSTART.md) |
+| Read the experience-report paper on building this project (HTML, with a PDF copy) | [paper/paper.html](paper/paper.html) |
 | Build the hub (lobby and all four scenarios) and what it needs | [BUILD-THE-HUB.md](BUILD-THE-HUB.md) |
 | Test day: what to start and what to check | [LAB-TEST-TODAY.md](LAB-TEST-TODAY.md) |
 | Listen to and review the Unity sound effects | [audio-review/README.md](audio-review/README.md) |

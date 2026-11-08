@@ -109,7 +109,7 @@ for example to C:\XRTraining\. The .exe does not run on its own.
 Install on the VR Stage PC (once)
   1. Steam, then SteamVR (Steam Library > Tools > SteamVR). Set up the HTC Vive Pro 2 (wireless adapter or link box)
      and check the room set-up in SteamVR.
-  2. In SteamVR: Settings > OpenXR > "Set SteamVR as OpenXR runtime". (If a different OpenXR runtime is active the headset
+  2. In SteamVR: Settings > Developer > "Set SteamVR as OpenXR runtime" (the menu name may differ in other SteamVR versions). (If a different OpenXR runtime is active the headset
      will not be used and the app falls back to the desktop view.)
   3. Install the current GPU driver. A Windows Defender or SmartScreen prompt may appear for an unsigned exe: choose
      More info > Run anyway (the build is unsigned).

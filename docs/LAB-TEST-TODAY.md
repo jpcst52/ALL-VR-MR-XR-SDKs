@@ -24,6 +24,8 @@ Things to look at: frame rate and comfort in v2 (it has PBR textures, glow and f
 
 ## 3. Vive Pro 2 with SteamVR (Unity builds, no server)
 
+The whole path from build to headset, including copying to the VR Stage PC, is on one page: [VR-STAGE-QUICKSTART.md](VR-STAGE-QUICKSTART.md).
+
 1. Start SteamVR and check the headset is tracked. SteamVR must be the OpenXR runtime (SteamVR > Settings > Developer > Set SteamVR as OpenXR runtime). You did this already on this PC.
 2. Open `builds\vive\<project>\` (the folder that `lab-test.cmd` opened) and run the `.exe` inside it. Keep the whole folder together; the `.exe` needs the `_Data` folder beside it. If a project folder is missing, its build failed: see `builds\logs\<project>.log` and section 5.
 
