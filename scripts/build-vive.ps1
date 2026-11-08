@@ -83,6 +83,13 @@ function Get-BuildTarget([string]$projectPath) {
   return $null
 }
 
+function Test-HubAssets([string]$hubPath) {
+  # The hub's scenes and art packs are licensed and git-ignored, so a fresh clone cannot build it. Returns the missing items.
+  $need = @('Assets\Scenes\Local\Lobby.unity', 'Assets\Scenes\Local\HydrostaticTest_Hub.unity', 'Assets\Scenes\Local\RefineryRounds_Hub.unity',
+            'Assets\Scenes\Local\WarehouseForklift_Hub.unity', 'Assets\Scenes\Local\ResistorBench_Hub.unity', 'Assets\Rocketbox', 'Assets\Baked')
+  $need | Where-Object { -not (Test-Path (Join-Path $hubPath $_)) }
+}
+
 function Get-FolderMB([string]$p) {
   if (-not (Test-Path $p)) { return 0 }
   [math]::Round(((Get-ChildItem $p -Recurse -File -ErrorAction SilentlyContinue | Measure-Object Length -Sum).Sum) / 1MB, 1)
@@ -133,6 +140,11 @@ foreach ($name in $all) {
   try {
     if (-not (Test-Path (Join-Path $path 'ProjectSettings'))) { throw 'not a Unity project folder' }
 
+    if ($name -eq 'hub') {
+      $missing = @(Test-HubAssets $path)
+      if ($missing.Count) { throw "no build method: the hub's licensed scenes and art are not in this checkout (missing: $($missing -join ', ')). They are git-ignored; copy vive-steamvr\hub\Assets from the lab PC, or build the hub on that PC." }
+    }
+
     $open = @(Get-OpenEditors $path)
     if ($open.Count) { throw "already open in a Unity editor (process id $($open.ProcessId -join ', ')). Close it first." }
     if (Test-Path (Join-Path $path 'Temp\UnityLockfile')) { throw "Temp\UnityLockfile exists: the project is open or Unity did not shut down cleanly. Close Unity; if no editor is open, delete $path\Temp." }
@@ -173,7 +185,7 @@ foreach ($name in $all) {
     $title = if ($name -eq 'hub') { 'XR Training Hub (lobby and all scenarios)' } else { $name }
     Set-Content -Path (Join-Path $dest 'README-VR-STAGE.txt') -Value (New-StageReadme $title $exeName ($name -eq 'hub')) -Encoding UTF8
     if (-not (Test-Path (Join-Path $dest $exeName))) { throw "copy failed: $exeName not in $dest" }
-    $builtFolders += $dest
+    if ($name -ne 'hub') { $builtFolders += $dest }   # the hub holds licensed art: its own zip only, never in the combined one
     if (-not $NoZip) {
       $zip = Join-Path $OutRoot "$name.zip"
       if (Test-Path $zip) { Remove-Item -Force $zip }
@@ -197,7 +209,7 @@ if (-not $DryRun -and -not $NoZip -and $builtFolders.Count) {
   $combined = Join-Path $OutRoot "XR-Training-Vive-$Stamp.zip"
   if (Test-Path $combined) { Remove-Item -Force $combined }
   Compress-Archive -Path $builtFolders -DestinationPath $combined -CompressionLevel Optimal
-  Write-Host "`nCombined zip: $combined ($([math]::Round((Get-Item $combined).Length / 1MB, 1)) MB)"
+  Write-Host "`nCombined zip (projects 01 to 04, not the hub): $combined ($([math]::Round((Get-Item $combined).Length / 1MB, 1)) MB)"
 }
 
 Write-Host ''

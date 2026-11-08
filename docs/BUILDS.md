@@ -7,7 +7,7 @@
 ## Run it
 
 1. Close every Unity editor that has one of the projects open (the script refuses to build an open project; it checks for a Unity process whose command line names the project and for `Temp\UnityLockfile`).
-2. Double-click `scripts\build-vive.cmd`, or from the repository root:
+2. **All five at once:** double-click `scripts\build-all-vive.cmd` (the four projects plus the hub, about 45 minutes; it opens `builds\vive` when done, ready to copy to the VR Stage PC). Or double-click `scripts\build-vive.cmd` for the four projects without the hub, or run from the repository root:
 
 ```
 powershell -ExecutionPolicy Bypass -File scripts\build-vive.ps1 -DryRun        # print the commands only
@@ -19,6 +19,8 @@ powershell -ExecutionPolicy Bypass -File scripts\build-vive.ps1 -IncludeHub    #
 `npm run build:vive` runs the same script. Options: `-UnityExe <path>` (or set `UNITY_EXE`; default `C:\Program Files\Unity\Hub\Editor\6000.3.20f1\Editor\Unity.exe`), `-Projects <names>`, `-NoZip`, `-Batchmode`, `-DryRun` (alias `-WhatIf`).
 
 The projects are built one at a time. For each, Unity is started with `-projectPath <project> -executeMethod ProjectSetup.BuildWindows -quit -logFile builds\logs\<project>.log`. `ProjectSetup.BuildWindows` already exists in projects 01 to 04 (it is the menu item Pitt-Bradford > Build Windows player and calls the kit's `Configurator.BuildWindows`, which builds the scenes enabled in Build Settings for Windows 64-bit). The repository's other Unity command-line runs (captures, bakes) are documented without `-batchmode` because they need graphics, so the script does not pass it either; `-Batchmode` is there to try, untested. Each Unity start takes minutes (script compile, shaders, player build): expect a long first run.
+
+**The hub needs files that are not in git.** Its scenes (`Assets\Scenes\Local`), baked data and the licensed Asset Store packs and Rocketbox people are git-ignored, so on a fresh checkout the script reports the hub as SKIPPED (listing what is missing) and still builds the other four. To build the hub on another PC, copy `vive-steamvr\hub\Assets` from the lab PC first. Projects 01 to 04 build from a plain checkout. The combined zip `XR-Training-Vive-<date>.zip` holds projects 01 to 04 only; the hub has its own `hub.zip` and must stay off GitHub and shared drives.
 
 After each build the script checks the log for `error CS`, requires the line `[build] Succeeded` and the `.exe`, then copies the build folder. A failed project is reported and the next one still runs; the exit code is 1 if any failed.
 
