@@ -162,7 +162,7 @@ The room field accepts an optional `?room=lab` query parameter. There are no acc
 3. Join the same room from each page. The roster should show each connected participant and whether they joined from VR, AR, or the web.
 4. Add a battery, switch, bulb, or wire (or load the demo) from either participant. The part should appear on all clients. Later joiners receive the existing room snapshot.
 5. Drag a part in the desktop view, or aim/select with an XR controller. Another participant's grab is denied while the part is held. Switch and beacon toggles, rotation, and deletion are also shared.
-6. To place the AR board in a real shared space, follow the two-point alignment step on each AR device before building. Keep both devices at the same site and use the same physical alignment markers.
+6. To place the AR board in a real shared space, follow the two-point alignment step on each AR device before building. Keep both devices at the same site and use the same physical alignment markers. Working alone with a headset, press **grip** while aligning to drop the board on the floor 1.5 m in front of you instead (it cannot match another device's position, so use the two markers when people share the space). Tested only in an emulated Quest 3, not on a headset.
 
 ## What this illustrates
 

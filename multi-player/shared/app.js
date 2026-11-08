@@ -986,6 +986,7 @@ for (let index = 0; index < 2; index += 1) {
   controller.addEventListener("disconnected", () => { controller.userData.connected = false; controller.userData.source = null; });
   controller.addEventListener("squeezestart", () => {
     controller.userData.squeezing = true;
+    if (mode === "ar" && arCalibrationStep < 2 && controller.userData.targetRayMode !== "screen") { quickAlignAr(); return; }
     if ([0, 1].every((other) => renderer.xr.getController(other).userData.squeezing)) toolboxPlacement = true;
   });
   controller.addEventListener("squeezeend", () => { controller.userData.squeezing = false; });
@@ -1088,6 +1089,36 @@ function resetArAlignment() {
   alignmentStatus.textContent = "Tap the shared origin marker, then a second marker along +Z.";
 }
 
+// Puts the board at `origin` with +Z along `direction` (both on the floor) and ends the alignment steps.
+function finishArAlignment(origin, direction) {
+  const xAxis = new THREE.Vector3().crossVectors(up, direction).normalize();
+  const basis = new THREE.Matrix4().makeBasis(xAxis, up, direction);
+  arOrigin = origin;
+  board.position.copy(origin);
+  board.quaternion.setFromRotationMatrix(basis);
+  arDirection = direction;
+  arCalibrationStep = 2;
+  toolbox.group.visible = true;
+  toolboxPlacement = true;
+  reticle.material.color.set("#73e7d4");
+}
+
+// Solo shortcut (grip while aligning): the board goes on the floor 1.5 m ahead of you, +Z pointing away from you. Good for one
+// person; use the two-marker taps when several devices must share the same real spot. The floor is the last point the hit test
+// found, or 1.5 m below your head when there is none yet.
+function quickAlignAr() {
+  const xrCamera = renderer.xr.getCamera();
+  const head = xrCamera.getWorldPosition(new THREE.Vector3());
+  const ahead = xrCamera.getWorldDirection(new THREE.Vector3());
+  ahead.y = 0;
+  if (ahead.lengthSq() < 1e-4) ahead.set(0, 0, -1);
+  ahead.normalize();
+  const floorY = hitWorldPoint?.y ?? head.y - 1.5;
+  finishArAlignment(new THREE.Vector3(head.x, floorY, head.z).addScaledVector(ahead, 1.5), ahead);
+  alignmentStatus.textContent = "Board placed on the floor in front of you (solo alignment).";
+  xrHint.textContent = "Board placed. Tap a shared part to grab it, or tap the work surface to add one.";
+}
+
 function calibrateArOrigin(point) {
   if (arCalibrationStep === 0) {
     arOrigin = point;
@@ -1103,14 +1134,7 @@ function calibrateArOrigin(point) {
     return;
   }
   direction.normalize();
-  const xAxis = new THREE.Vector3().crossVectors(up, direction).normalize();
-  const basis = new THREE.Matrix4().makeBasis(xAxis, up, direction);
-  board.position.copy(arOrigin);
-  board.quaternion.setFromRotationMatrix(basis);
-  arDirection = direction;
-  arCalibrationStep = 2;
-  toolbox.group.visible = true;
-  toolboxPlacement = true;
+  finishArAlignment(arOrigin, direction);
   alignmentStatus.textContent = "Aligned. Shared board coordinates now map to this local AR space.";
   xrHint.textContent = "Board aligned. Tap a shared part to grab it, or tap the work surface to add one.";
   reticle.material.color.set("#73e7d4");
@@ -1143,7 +1167,7 @@ async function enterXr() {
       await startArHitTesting(session);
       document.body.classList.add("in-xr");
       xrHint.hidden = false;
-      xrHint.textContent = "Tap the shared origin marker. Then tap the agreed +Z direction marker.";
+      xrHint.textContent = "Tap the shared origin marker. Then tap the agreed +Z direction marker. Working alone with a headset? Press grip to drop the board in front of you.";
       updateStatus("AR active. Align the same two physical markers used by your collaborators.");
     }
     activeSession = renderer.xr.getSession();

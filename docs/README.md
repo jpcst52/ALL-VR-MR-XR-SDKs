@@ -10,6 +10,8 @@ General safety-awareness practice only: none of the scenarios is a procedure, pe
 |---|---|
 | Run the demo, a Unity project, the hub, or a headset | [HOW-TO-RUN.md](HOW-TO-RUN.md) |
 | Set up a new PC (Node, Unity, SteamVR, Meta XR Simulator, checks) | [DEVELOPER-SETUP.md](DEVELOPER-SETUP.md) |
+| Test day: what to start and what to check | [LAB-TEST-TODAY.md](LAB-TEST-TODAY.md) |
+| Listen to and review the Unity sound effects | [audio-review/README.md](audio-review/README.md) |
 | Check that nothing is broken, or play-test by hand | [TESTING.md](TESTING.md) |
 | See what is done and what is left | [Task-Status.md](Task-Status.md) (task list) and [PROJECT-STATUS.md](PROJECT-STATUS.md) (decisions and caveats) |
 | Run the live status dashboard | [status-dashboard-guide.md](status-dashboard-guide.md) |

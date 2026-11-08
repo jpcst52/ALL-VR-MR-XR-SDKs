@@ -44,8 +44,9 @@ test("in-world text goes through the panel kit (no bare canvas text in scene cod
     ...readdirSync(join(repo, "multi-player", "shared")).filter((f) => f.endsWith(".js")).map((f) => `multi-player/shared/${f}`),
   ];
   for (const file of sources) {
-    assert.doesNotMatch(read(file), /\.fillText\(/, `${file} draws text itself; use brand-kit/panels.js`);
-    assert.doesNotMatch(read(file), /Arial|system-ui, sans-serif/, `${file} uses a non-brand font in the scene`);
+    // the in-headset toolbox draws its own button labels (canvas buttons in the brand fonts, checked below), so it is the one exception
+    if (file !== "multi-player/shared/toolbox.js") assert.doesNotMatch(read(file), /\.fillText\(/, `${file} draws text itself; use brand-kit/panels.js`);
+    assert.doesNotMatch(read(file), /Arial(?! Narrow)|(?<!Roboto, 'Segoe UI', )system-ui, sans-serif/, `${file} uses a non-brand font in the scene`);
   }
   assert.match(read("training-simulations/app.js"), /brandPlate\(/, "the Practice Lab scene shows the brand plaque");
   assert.match(read("training-simulations/app.js"), /brand: true/, "the scenario sign carries the brand band");

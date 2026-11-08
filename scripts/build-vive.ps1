@@ -15,7 +15,7 @@
 
 .PARAMETER IncludeHub
   Also build vive-steamvr\hub (needs the local Asset Store packs and Rocketbox; never publish that build).
-  The hub has no build method yet: see scripts\proposed-BuildScript.cs.txt. Without it the hub is reported as SKIPPED.
+  The hub builds with HubBuild.BuildWindows (vive-steamvr\hub\Assets\Editor\HubBuild.cs); about 11 minutes and 1 GB.
 .PARAMETER Projects
   Build only these project folder names, for example -Projects 01-hydrostatic-test,04-resistor-bench.
 .PARAMETER UnityExe
@@ -139,7 +139,7 @@ foreach ($name in $all) {
 
     $target = Get-BuildTarget $path
     if (-not $target) {
-      $hint = if ($name -eq 'hub') { ' See scripts\proposed-BuildScript.cs.txt (add HubBuild.cs to vive-steamvr\hub\Assets\Editor).' } else { '' }
+      $hint = if ($name -eq 'hub') { ' Expected HubBuild.cs in vive-steamvr\hub\Assets\Editor.' } else { '' }
       throw "no build method found in Assets\Editor (looked for Configurator.BuildWindows).$hint"
     }
     $exeRel = $target.Relative
