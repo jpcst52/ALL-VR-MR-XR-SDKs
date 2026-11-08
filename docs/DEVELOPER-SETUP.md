@@ -58,7 +58,7 @@ node tools/pages/site-check.mjs              checks the built site under its sub
 5. After editing the shared kit, compile without opening a window, using a project that is not open: `powershell -File scripts\unity-compile-check.ps1 -Project 02-refinery-rounds`. One compile error in the kit puts every project into Safe Mode.
 6. Build players with `scripts\build-all-vive.cmd` (all five, about 45 minutes) or `scripts\build-vive.cmd` (the four without the hub); outputs go to `builds\vive\`, git-ignored. Editor-only APIs in Runtime code pass the compile check but break a player build, so build before handing over. See [BUILDS.md](BUILDS.md).
 
-**The hub** (`vive-steamvr\hub`, lobby and all four scenarios) uses licensed Asset Store packs and the full Rocketbox library, none of which are in the repository. It builds only on a PC that has those files (the lab PC; copy `vive-steamvr\hub\Assets` to build elsewhere): `scripts\build-all-vive.cmd`. Never publish that build.
+**The hub** (`vive-steamvr\hub`, lobby and all four scenarios) uses licensed Asset Store packs and the full Rocketbox library, none of which are in the repository. It builds only on a PC that has those files (the lab PC; see [BUILD-THE-HUB.md](BUILD-THE-HUB.md) to build elsewhere): `scripts\build-all-vive.cmd`. Never publish that build.
 
 Rocketbox people (MIT): the standalone project 03 ships a small subset. To add more, run `python tools\people\export-subset.py <project> <Avatars/Folder/Name> ...` (reads from the hub's local library).
 

@@ -142,7 +142,7 @@ foreach ($name in $all) {
 
     if ($name -eq 'hub') {
       $missing = @(Test-HubAssets $path)
-      if ($missing.Count) { throw "no build method: the hub's licensed scenes and art are not in this checkout (missing: $($missing -join ', ')). They are git-ignored; copy vive-steamvr\hub\Assets from the lab PC, or build the hub on that PC." }
+      if ($missing.Count) { throw "no build method: the hub's licensed scenes and art are not in this checkout (missing: $($missing -join ', ')). They are git-ignored; see docs\BUILD-THE-HUB.md (copy them from the lab PC with scripts\pack-hub-assets.cmd and unpack-hub-assets.cmd)." }
     }
 
     $open = @(Get-OpenEditors $path)
