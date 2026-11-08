@@ -39,7 +39,11 @@ namespace PittBradford.XR
         {
             due = Time.unscaledTime + 0.7f;   // let the scenario build its rig and objects first
             // generate the bed now, while the scene is still loading, so there is no hitch when it starts
-            if (SceneAudio.AutoStart && Sfx.Active && SceneAudio.TryPlaceOf(SceneManager.GetActiveScene().name, out var place)) Sfx.Preload(SceneAudio.BedFor(place));
+            if (SceneAudio.AutoStart && Sfx.Active && SceneAudio.TryPlaceOf(SceneManager.GetActiveScene().name, out var place))
+            {
+                Sfx.Preload(SceneAudio.BedFor(place));
+                Sfx.PreloadBackground();   // the rest of the catalogue is built on a background thread, a few clips per frame
+            }
         }
 
         void Update()

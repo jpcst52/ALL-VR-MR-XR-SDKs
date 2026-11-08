@@ -1,6 +1,6 @@
 # Warehouse and forklift pedestrian safety (Unity, desktop and Vive Pro 2 / SteamVR)
 
-A Unity project for desktop (keyboard and mouse) and for the HTC Vive Pro 2 on SteamVR (OpenXR). You arrive at the entry of a warehouse where a forklift drives a loop around the racking, and practice general pedestrian awareness. It uses the shared kit in [`../packages/com.pittbradford.xrtraining`](../packages/com.pittbradford.xrtraining) and builds everything from primitives, so it needs no imported art.
+A Unity project for desktop (keyboard and mouse) and for the HTC Vive Pro 2 on SteamVR (OpenXR). You arrive at the entry of a warehouse where a forklift drives a loop around the racking, and practice general pedestrian awareness. It uses the shared kit in [`../packages/com.pittbradford.xrtraining`](../packages/com.pittbradford.xrtraining) and builds everything from primitives except the two people: the walking co-worker and the forklift driver are shrunk Microsoft Rocketbox avatars (MIT) committed under `Assets/Resources/Rocketbox` (about 18 MB). If that folder is deleted the project falls back to the primitive figures.
 
 ![Start view: PPE table and sign, task board, university plate, PPE header sign (desktop editor render, not a headset)](screenshots/07-start-view.png)
 
@@ -21,7 +21,7 @@ The hub keeps its own copy of `WarehouseForklift.cs` (`../hub/Assets/Scripts/Sce
 
 ## How to open and run
 
-Requirements: Unity **6000.3.20f1** (built-in render pipeline; no extra assets), Windows, and a **full clone** of this repository (the project loads the shared kit from `../packages/com.pittbradford.xrtraining` by a relative `file:` path). OpenXR 1.19.0 and the Input System come from `Packages/manifest.json`.
+Requirements: Unity **6000.3.20f1** (built-in render pipeline; the two Rocketbox people are already in the project), Windows, and a **full clone** of this repository (the project loads the shared kit from `../packages/com.pittbradford.xrtraining` by a relative `file:` path). OpenXR 1.19.0 and the Input System come from `Packages/manifest.json`.
 
 **Desktop (no headset).**
 
@@ -64,7 +64,7 @@ After each step a **WHY THIS MATTERS** panel shows a one-sentence reason for a f
 
 In this scenario you are a pedestrian, not the forklift driver, so the event is built around what a pedestrian should notice and do.
 
-1. **The event.** It only starts after board step 3 (crossing) is done. Eight seconds later the forklift is sent to put a pallet away on the west-wall racking; it drives there from wherever it is on its loop (that travel time was not measured). It stops in the marked **LOADING ZONE** on the west lane, turns to the rack, raises the forks, drives in, sets the pallet on the shelf (in code; the screenshots do not show this step clearly), backs out, lowers, and turns back into the lane. When it stops in the loading zone a co-worker (hi-vis vest, white hard hat, clipboard) comes out of the **STAFF ENTRANCE** door, crosses the north lane, and walks close past the working forklift to the cone station. The driver sounds the horn when the co-worker comes within 4.5 m and holds ("Holding: person behind me") until they are more than 3.2 m away. Nothing warns you before the co-worker appears.
+1. **The event.** It only starts after board step 3 (crossing) is done. Eight seconds later the forklift is sent to put a pallet away on the west-wall racking; it drives there from wherever it is on its loop (that travel time was not measured). It stops in the marked **LOADING ZONE** on the west lane, turns to the rack, raises the forks, drives in, sets the pallet on the shelf (in code; the screenshots do not show this step clearly), backs out, lowers, and turns back into the lane. When it stops in the loading zone a co-worker (a realistic Rocketbox avatar in blue overalls and a white hard hat) comes out of the **STAFF ENTRANCE** door, crosses the north lane, and walks close past the working forklift to the cone station. The driver sounds the horn when the co-worker comes within 4.5 m and holds ("Holding: person behind me") until they are more than 3.2 m away. Nothing warns you before the co-worker appears.
 2. **The awareness check.** 4.5 s after the co-worker appears, the scene freezes: physics, the forklift and the co-worker stop (`Time.timeScale = 0`), audio pauses, you cannot walk (you can still look around and point), and a dark shell around your head blanks the view behind a panel. The panel is headed "AWARENESS CHECK, Question 1 of 3". Three questions are asked one at a time, answered by pointing and pulling the trigger (desktop: aim and click):
    - *Where was the co-worker in the hi-vis vest?* In front of you / to your left / to your right / behind you, relative to the way your head was facing at the freeze.
    - *Which way were they walking, as seen from you?* Toward you / away from you / across from your left to your right / across from your right to your left.
@@ -213,3 +213,7 @@ Normal maps are now generated for every textured material (block joints, concret
 ## Research
 
 Background references and study ideas for XR safety training: [../../docs/research/README.md](../../docs/research/README.md).
+
+## People
+
+The co-worker (Construction_Male_02) and the forklift driver (Construction_Male_01) are Microsoft Rocketbox avatars, MIT licence (`Assets/Resources/Rocketbox/LICENSE.md`; Gonzalez-Franco et al. 2020, doi 10.3389/frvir.2020.561558). The committed copies are shrunk: textures at 1024 px, specular maps dropped, only the idle and walk clips kept. `tools/people/export-subset.py` makes them from the hub's local library; in Unity, Pitt-Bradford > People > Set up Rocketbox controllers builds the materials and animator controllers. The co-worker plays the library's walk and idle clips. The library has no sitting clip, so `SeatedDriver.cs` bends the driver's hips and knees on top of an idle clip and raises his right arm to wave. His seat height and pose were set by eye from desktop renders; they have not been checked in a headset.

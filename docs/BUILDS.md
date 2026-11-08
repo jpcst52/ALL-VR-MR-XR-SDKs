@@ -2,7 +2,7 @@
 
 `scripts\build-vive.cmd` (or `scripts\build-vive.ps1`) makes Windows 64-bit standalone players of the Unity training projects so the `.exe` folders can be copied to the VR Stage PC (HTC Vive Pro 2 with SteamVR).
 
-**Honest status.** The script has been checked with PowerShell's parser and with `-DryRun` (it prints the Unity commands correctly and detects an editor that is already open). **The real build has not been run**: the author could not start Unity. No build has been run on the VR Stage PC and nothing has been tried with a headset. Do a dry run first, then build one project, then the rest.
+**Honest status.** Run for real on 2026-11-08 on the author's PC: all four projects build (148 to 204 MB each, about 10 minutes each). The first run failed because `SceneLook.cs` used `Light.shadowRadius`, an editor-only API that the editor accepts but a player build rejects; that is fixed. The Warehouse build was started once without a window and ran 25 s with no crash. **No build has been run on a headset or on the VR Stage PC.** Lesson: the editor compile check (`scripts/unity-compile-check.ps1`) does not catch editor-only APIs in Runtime code, so build one project after kit edits.
 
 ## Run it
 

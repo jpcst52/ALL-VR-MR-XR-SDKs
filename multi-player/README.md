@@ -15,6 +15,37 @@ Participants join a named room, see the same shared parts and other participants
 
 The shared parts are generated from Three.js primitives. The room around the board (lab, yard or test bay) is built from CC0 glTF props, and other participants appear as characters in hard hats (see [Rooms, props and people](#rooms-props-and-people)). Room state is relayed by this project's server, and this is not a production-hosted multiplayer service.
 
+## Lab v2: Circuit Lab and Safety Lab with a new look (v1 is unchanged)
+
+![Circuit Lab v2](./screenshots/v2-circuit-lab-desktop.png)
+
+![Site Safety Lab v2](./screenshots/v2-safety-lab-desktop.png)
+
+- **Pages:** `http://localhost:8443/multi-player/v2/` (Circuit Lab) and `http://localhost:8443/multi-player/v2/?theme=safety` (Safety Lab). The v1 pages (`vr/`, `ar/`, `vr/?theme=safety`) are untouched and still work; each v2 page has "Circuit Lab / Safety Lab / Open the v1 look" links. v1 and v2 use the same relay protocol and the same theme ids, so **a v1 page and a v2 page in the same room see the same parts**.
+- **Same behaviour:** rooms, parts, the four examples per lab, the headset toolbox, Y / B / X or A, Reset (press twice), glove hands, avatars and grab ownership all behave as in v1. `v2/app.js` is a fork of `shared/app.js` (the protocol client was copied, not rewritten); the rules come from the shared modules (`circuit-eval.mjs`, `safety-eval.mjs`, `examples.mjs`, `toolbox.js`, `avatars.js`). The only edit to a shared file is that `circuit-eval.mjs` now also exports `terminalPoints` and `CONTACT_DISTANCE` (no behaviour change).
+- **What is new** (all generated in code: no downloaded textures or models; the few glTF props are the CC0 ones already in `assets/models-mp`, desktop only):
+  - *Materials:* MeshStandardMaterial everywhere, with canvas-baked colour, roughness and normal maps (wood planks with grain, painted plaster with the Pitt band, corrugated steel, concrete, pegboard, brushed steel, rubber work mat) and an environment map made once with PMREMGenerator from a small generated "room" (window, ceiling strips). Soft shadows from a window-direction sun on the desktop.
+  - *Rooms:* a workshop (wood floor, benches with parts bins, a pegboard with tools, a window with light shafts, shelves, pendant lamps, a brand roundel under the board) and a safety bay (concrete floor with painted lanes, corrugated walls, roller door, bollards, drums, pallets, PPE / CAUTION / EMERGENCY EXIT signs). The board is a wooden platform with a steel rim, the printed work mat (Circuit Lab) or a hazard-striped, marked bay floor (Safety Lab), and the Pitt-Bradford plaque.
+  - *Circuit parts:* a metal-cased battery with a printed label and brass terminals, a bakelite switch with a brass blade and red handle that eases open and closed, a glass bulb with a filament that heats from dark to white and a halo glow that really lights nearby objects, a resistor with colour bands, a motor with ribs, shaft, fan and a speed blur, and wire in rounded, sagging segments. Brass posts mark each terminal, and a green ring appears where two terminals touch. **When the circuit is closed, gold dots flow along the parts in the direction of conventional current** (pure logic in `v2/flow.mjs`, unit tested).
+  - *Safety parts:* an EXIT sign with a glowing face, a lathe-built extinguisher with a label and hose, a first-aid case, a barrier with yellow/black and red/white reflective stripes, a muster sign with a painted ring, and a hazard beacon whose dome pulses, with a rotating light bar, two light beams and a floor glow.
+  - *Lighting that stays cheap:* the "bloom" is additive glow sprites (no post-processing pass at all, so it is identical on desktop and in a headset). Bulbs and beacons light the scene through a **fixed pool of four point lights** handed to the brightest emitters each frame, so adding or removing bulbs never recompiles shaders. Contact-shadow blobs stand in for the shadow map in a headset and in lite mode. Materials are shared between parts and parts are merged per material.
+  - *In VR:* the room is kept (v1 hides it), drawn at floor level around the table-top model, without glTF props or a shadow map. In AR the room is hidden as before.
+  - *Brand:* Pitt Royal, Gold, Medium Blue and New Sky on the page, signs, mat and plaque; League Gothic, Merriweather and Roboto from `vendor/fonts` (via brand-kit). No CDN: `node tools/vr-capture/offline-check.mjs` now includes both v2 pages.
+- **Render cost** (`renderer.info`, from `node multi-player/tools/v2-shots.mjs`; counts are for one full frame, and the in-session figures are for **both eyes**, so per eye is about half):
+
+| Scene | Draw calls | Triangles | Notes |
+|---|---|---|---|
+| Circuit Lab v2, desktop, shadows on, glTF props, 2 other participants | 162 | 85k | includes the shadow-map pass |
+| Safety Lab v2, desktop, same | 199 | 91k | |
+| Circuit Lab v2, emulated Quest 3 session, Simple loop | 158 (about 79 per eye) | 58k (about 29k per eye) | no shadow map, no glTF props, no other participants |
+| Safety Lab v2, emulated Quest 3 session, Sample layout | 164 (about 82 per eye) | 35k (about 18k per eye) | same |
+
+  **Not measured: frame rate on a real Quest.** These are counts only (SwiftShader frame times mean nothing). The design target is 72 fps, with about 80 draw calls and under 30k triangles per eye and one normal-mapped lighting model with five lights; whether a Quest 3 holds 72 fps (and what a Quest 2 does) has to be measured on the headset, for example with the OVR Metrics Tool. If it is short, the first things to drop are the pendant lamps and light shafts, then normal maps.
+- **Verified** (all in desktop Chrome, an **emulated Quest 3**, never a real headset): `node tools/vr-capture/v2-check.mjs` runs 56 checks (join, toolbox add / examples / reset, Y / B / X, glove hands, frames drawn, environment map and PBR materials present, the light count constant, current dots follow the switch, terminal rings, a lit bulb or beacon gets a real light, draw-call and triangle budget); `npm test` adds `test/v2-flow.test.mjs` (current direction through every example) and `test/v2-assets.test.mjs` (imports resolve, vendored three, no CDN, the relay serves v2 and still serves v1). `node tools/vr-capture/toolbox-check.mjs` (v1, 41 checks) and all earlier tests still pass.
+- **Not verified:** a real Quest (look, comfort, frame rate, controller feel), a Vive, a phone, AR for v2 (there is no `v2/ar/` page yet; the code keeps the AR branch but it was not run), and how bright or dark the rooms look on a headset display.
+- **Capture:** `node multi-player/tools/v2-shots.mjs` writes `screenshots/v2-*.png` ([circuit desktop](./screenshots/v2-circuit-lab-desktop.png), [close-up](./screenshots/v2-circuit-lab-closeup.png), [bulb](./screenshots/v2-circuit-lab-bulb.png), [safety desktop](./screenshots/v2-safety-lab-desktop.png), [safety close-up](./screenshots/v2-safety-lab-closeup.png), and the emulated Quest 3 views [circuit](./screenshots/v2-circuit-lab-quest.png) and [safety](./screenshots/v2-safety-lab-quest.png)). The other participants in the desktop shots are scripted relay clients.
+- **Found while building it:** the existing glTF prop `bench_vice_01` has its mesh about 5 m off its origin, so in v1's full (non-lite) mode a vice appears in the middle of the board. v1 was left as it is; v2 leaves that prop out, and `v2-shots.mjs` checks that every prop it loads sits near where it was placed.
+
 ## Hydrostatic Test Rig (third theme)
 
 - Page: `http://localhost:8443/multi-player/hydrotest/` (theme `hydrotest`; `?theme=hydrotest` also works on the other pages). Rooms are separate from the Circuit Lab and Site Safety rooms.
@@ -153,7 +184,7 @@ This requires both devices to agree on the same physical points and remain in th
 
 ## Tests
 
-`npm test` runs 42 tests: the relay (mixed VR/AR clients, snapshots and isolation, theme separation, toggle and rotate rules, exclusive object ownership, disconnect cleanup, invalid input, HTTP routes and path traversal), TLS certificates, the hydrostatic checklist, the participant mode message and avatar spreading, optional avatar poses (validation, relay, late joiners, old-client profile unchanged), and the asset checks: every model in `shared/models.json` exists as a GLB and has a CC0 entry and source link in `CREDITS.md`, no model is shipped unlisted, every prop used by a room layout and every avatar character is in the manifest, per-model and per-scene triangle budgets, deterministic avatar looks, and the fallback logic (a failing load gives the primitive, every layout prop maps to a primitive stand-in). The browser-side fallback is exercised by `ONLY=fallback node multi-player/tools/shots.mjs` (all model requests blocked). The headset session and AR camera/hit-test itself still need supported physical hardware for end-to-end testing.
+`npm test` runs 64 tests (the first 42 are listed here; later work and v2 added the rest, v2 adds 8): the relay (mixed VR/AR clients, snapshots and isolation, theme separation, toggle and rotate rules, exclusive object ownership, disconnect cleanup, invalid input, HTTP routes and path traversal), TLS certificates, the hydrostatic checklist, the participant mode message and avatar spreading, optional avatar poses (validation, relay, late joiners, old-client profile unchanged), and the asset checks: every model in `shared/models.json` exists as a GLB and has a CC0 entry and source link in `CREDITS.md`, no model is shipped unlisted, every prop used by a room layout and every avatar character is in the manifest, per-model and per-scene triangle budgets, deterministic avatar looks, and the fallback logic (a failing load gives the primitive, every layout prop maps to a primitive stand-in). The browser-side fallback is exercised by `ONLY=fallback node multi-player/tools/shots.mjs` (all model requests blocked). The headset session and AR camera/hit-test itself still need supported physical hardware for end-to-end testing.
 
 The AR screenshot is explicitly a desktop fallback capture of the live AR page's scene. It is not a recording of camera passthrough or a physical AR session.
 
@@ -178,6 +209,7 @@ multi-player/
     models.json       manifest of the shipped models and their licenses
     themes.js         Circuit Lab, Site Safety Layout and Hydrostatic Test Rig parts, models, and live summaries
     style.css         browser panel and responsive layout
+  v2/                   Lab v2 (new look): index.html, app.js (fork of shared/app.js), themes2.js, parts2.js, world2.js, fx.js, tex.js, flow.mjs, v2.css
   vr/
     index.html        WebXR immersive-vr entry point
     README.md         VR-specific prerequisites, controls, and run notes

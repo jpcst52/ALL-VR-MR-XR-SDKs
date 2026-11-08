@@ -151,7 +151,7 @@
     },
     {
       "id": "circuit-lab",
-      "title": "Circuit Lab (multiplayer VR)",
+      "title": "Circuit Lab v1 (multiplayer VR)",
       "summary": "A shared electronics bench: snap together batteries, switches, bulbs and motors with others in one room.",
       "section": "multiplayer",
       "badges": [
@@ -166,8 +166,38 @@
       "featured": true
     },
     {
+      "id": "circuit-lab-v2",
+      "title": "Circuit Lab v2 (multiplayer VR, new look)",
+      "summary": "The same shared bench in a lit workshop: PBR parts, window light, reflections, current flowing in the wires. v1 stays available.",
+      "section": "multiplayer",
+      "badges": [
+        "Browser",
+        "Needs relay on :8443"
+      ],
+      "status": "Ready on desktop; emulated Quest 3 only",
+      "statusKind": "ready",
+      "url": "multi-player/v2/",
+      "screenshot": "multi-player/screenshots/v2-circuit-lab-desktop.png",
+      "relay": true
+    },
+    {
+      "id": "site-safety-v2",
+      "title": "Site Safety Lab v2 (multiplayer VR, new look)",
+      "summary": "The same shared safety layout in a lit bay: beacons with light beams, striped barriers, signs and floor markings. v1 stays available.",
+      "section": "multiplayer",
+      "badges": [
+        "Browser",
+        "Needs relay on :8443"
+      ],
+      "status": "Ready on desktop; emulated Quest 3 only",
+      "statusKind": "ready",
+      "url": "multi-player/v2/?theme=safety",
+      "screenshot": "multi-player/screenshots/v2-safety-lab-desktop.png",
+      "relay": true
+    },
+    {
       "id": "site-safety",
-      "title": "Site Safety Layout (multiplayer AR)",
+      "title": "Site Safety Layout v1 (multiplayer AR)",
       "summary": "Plan exits, extinguishers and barriers together; a live checklist flags what is missing.",
       "section": "multiplayer",
       "badges": [
@@ -355,7 +385,7 @@
     },
     {
       "id": "circuit-lab-quest",
-      "title": "Circuit Lab in the Quest Browser",
+      "title": "Circuit Lab v1 in the Quest Browser",
       "summary": "Join the shared bench from a headset. Needs HTTPS from the lab PC that the Quest trusts.",
       "section": "quest",
       "badges": [

@@ -5,7 +5,7 @@ const staticBase = (process.env.STATIC_BASE ?? "http://localhost:8000/").replace
 const relayBase = (process.env.RELAY_BASE ?? "http://localhost:8443/").replace(/\/?$/, "/");
 const pages = [
   ...["a-frame/", "threejs/", "babylonjs/", "webxr/", "training-simulations/", ""].map((path) => staticBase + path),
-  ...["multi-player/vr/", "multi-player/ar/", "multi-player/hydrotest/"].map((path) => relayBase + path),
+  ...["multi-player/vr/", "multi-player/ar/", "multi-player/hydrotest/", "multi-player/v2/", "multi-player/v2/?theme=safety"].map((path) => relayBase + path),
 ];
 // branding/logo.png is git-ignored and optional: pages fall back to a text wordmark when it is missing.
 const optional = (url) => url.includes("favicon") || url.includes("/branding/");

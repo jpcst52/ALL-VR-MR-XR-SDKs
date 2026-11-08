@@ -13,7 +13,7 @@ namespace PittBradford.XR.EditorTools
         static readonly string[] Loops =
         {
             "water_pour", "pump_hum", "alarm_siren", "monitor_alarm", "radio_static", "forklift_engine_loop", "forklift_beep_reverse",
-            "wind_loop", "hvac_loop", "plant_drone_loop", "flare_roar_loop", "pressure_tone",
+            "wind_loop", "hvac_loop", "plant_drone_loop", "flare_roar_loop", "pressure_tone", "electric_buzz",
             "amb_lobby", "amb_hydro", "amb_refinery", "amb_warehouse", "amb_bench",
         };
 

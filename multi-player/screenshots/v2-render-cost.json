@@ -1,0 +1,30 @@
+{
+  "circuits desktop (full, shadows on)": {
+    "calls": 162,
+    "triangles": 84726,
+    "textures": 56,
+    "geometries": 86,
+    "programs": 28
+  },
+  "safety desktop (full, shadows on)": {
+    "calls": 199,
+    "triangles": 90448,
+    "textures": 77,
+    "geometries": 102,
+    "programs": 27
+  },
+  "circuits emulated Quest 3 (in session, no shadow map)": {
+    "calls": 158,
+    "triangles": 57544,
+    "textures": 29,
+    "geometries": 71,
+    "programs": 19
+  },
+  "safety emulated Quest 3 (in session, no shadow map)": {
+    "calls": 164,
+    "triangles": 35404,
+    "textures": 34,
+    "geometries": 77,
+    "programs": 20
+  }
+}

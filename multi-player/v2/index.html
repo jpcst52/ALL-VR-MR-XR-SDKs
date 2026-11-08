@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Circuit Lab and Site Safety Lab v2: a shared WebXR workshop with PBR parts, window light and reflections. Join from a Quest or a desktop browser.">
+    <title>Multiplayer VR v2 — Circuit Lab</title>
+    <link rel="stylesheet" href="../../brand-kit/brand.css">
+    <link rel="stylesheet" href="../shared/style.css">
+    <link rel="stylesheet" href="./v2.css">
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "../../vendor/three/three.module.js",
+          "three/addons/": "../../vendor/three/addons/"
+        }
+      }
+    </script>
+  </head>
+  <body data-mode="vr" data-theme="circuits">
+    <main id="panel" class="panel">
+      <div class="panel-brand">
+        <div data-pitt-brand="compact"></div>
+        <a class="home-link" href="../../">All examples</a>
+      </div>
+      <header class="heading">
+        <p class="eyebrow">MULTIPLAYER WEBXR / VR · V2</p>
+        <h1>Circuit Lab</h1>
+        <p>Build a shared electrical circuit. Room updates appear for headset and browser participants.</p>
+      </header>
+      <nav class="version-nav" aria-label="Lab and version">
+        <a data-theme="circuits" href="?theme=circuits">Circuit Lab</a>
+        <a data-theme="safety" href="?theme=safety">Safety Lab</a>
+        <a data-v1 href="../vr/">Open the v1 look</a>
+      </nav>
+      <section class="connection" aria-label="Room connection">
+        <label for="name">Your name</label>
+        <input id="name" maxlength="20" autocomplete="nickname" value="Builder">
+        <label for="room">Room</label>
+        <input id="room" maxlength="24" autocomplete="off" value="lab">
+        <button id="join" type="button">Join room</button>
+        <p id="status" role="status" aria-live="polite">Join a room to start collaborating.</p>
+      </section>
+      <section id="workspace" class="workspace" hidden>
+        <p id="roster" class="roster">Participants: 0</p>
+        <div id="parts" class="parts" aria-label="Shared parts"></div>
+        <p id="summary" class="summary" role="status" aria-live="polite"></p>
+        <button id="load-demo" type="button" class="wide"></button>
+        <div class="actions">
+          <button id="toggle-selected" type="button" disabled>Toggle</button>
+          <button id="rotate-selected" type="button" disabled>Rotate 45°</button>
+        </div>
+        <button id="enter-xr" class="primary" type="button">Enter VR</button>
+        <button id="delete-selected" type="button" disabled>Delete selected</button>
+        <p id="controls" class="controls"></p>
+      </section>
+    </main>
+    <p id="xr-hint" class="xr-hint" hidden></p>
+    <script type="module" src="../../brand-kit/brand.js"></script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

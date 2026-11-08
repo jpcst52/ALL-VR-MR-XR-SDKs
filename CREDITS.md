@@ -18,7 +18,7 @@ Wind and temperature in Refinery Rounds (project 02, the hub copy) and the hydro
 
 ## People in the hub scenes
 
-Realistic people in the local hub project come from the **Microsoft Rocketbox Avatar Library**, MIT license, https://github.com/microsoft/Microsoft-Rocketbox. Cite: Gonzalez-Franco, M., et al. (2020). The Rocketbox Library and the Utility of Freely Available Rigged Avatars. *Frontiers in Virtual Reality, 1*, 561558. https://doi.org/10.3389/frvir.2020.561558. The avatar files are imported locally and are not committed.
+Realistic people in the local hub project come from the **Microsoft Rocketbox Avatar Library**, MIT license, https://github.com/microsoft/Microsoft-Rocketbox. Cite: Gonzalez-Franco, M., et al. (2020). The Rocketbox Library and the Utility of Freely Available Rigged Avatars. *Frontiers in Virtual Reality, 1*, 561558. https://doi.org/10.3389/frvir.2020.561558. The hub copy is imported locally and not committed. Project 03 (Warehouse and Forklift) commits two shrunk avatars (1024 px textures, idle and walk clips only) under `vive-steamvr/03-warehouse-forklift/Assets/Resources/Rocketbox`, with the MIT licence beside them; more can be added with `tools/people/export-subset.py`.
 
 ## Unity Asset Store packs (local only)
 

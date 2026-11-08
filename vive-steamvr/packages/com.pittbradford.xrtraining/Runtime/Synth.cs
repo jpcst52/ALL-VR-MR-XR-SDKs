@@ -15,6 +15,8 @@ namespace PittBradford.XR
     public static class Synth
     {
         public static int R = 32000;
+        /// <summary>Hold this while setting <see cref="R"/> and generating: <see cref="Sfx"/> builds sounds on a background thread as well as on the main thread.</summary>
+        public static readonly object GenLock = new object();
         const float Tau = Mathf.PI * 2f;
 
         public enum Mat { Metal, Wood, Plastic, Glass }
@@ -145,11 +147,17 @@ namespace PittBradford.XR
             }
         }
 
-        /// <summary>A decaying sine (with optional FM) added at <paramref name="start"/> seconds.</summary>
+        /// <summary>
+        /// A decaying sine (with optional FM) added at <paramref name="start"/> seconds. It fades out over its last 4 ms so a segment that
+        /// is cut off while still audible does not click. A steady tone (no decay) that fills the whole buffer is left alone: it is a
+        /// loop component, whole cycles, and must not dip at the loop point.
+        /// </summary>
         public static void Tone(float[] dst, float freq, float amp, float start, float dur, float attack, float decay, float fmRatio = 0f, float fmIndex = 0f)
         {
             if (freq > R * 0.45f) return;
             int o = (int)(start * R), n = (int)(dur * R);
+            bool steady = decay == 0f && o == 0 && n >= dst.Length - 1;
+            int fade = Mathf.Max(1, (int)(0.004f * R));
             for (int i = 0; i < n; i++)
             {
                 int j = o + i;
@@ -157,7 +165,8 @@ namespace PittBradford.XR
                 float t = (float)i / R;
                 float ph = Tau * freq * t;
                 if (fmRatio > 0f) ph += fmIndex * Mathf.Sin(Tau * freq * fmRatio * t);
-                dst[j] += Mathf.Sin(ph) * amp * Mathf.Min(1f, t / Mathf.Max(0.0005f, attack)) * Mathf.Exp(-decay * t);
+                float env = steady ? 1f : Mathf.Min(1f, t / Mathf.Max(0.0005f, attack)) * Mathf.Exp(-decay * t) * Mathf.Min(1f, (float)(n - i) / fade);
+                dst[j] += Mathf.Sin(ph) * amp * env;
             }
         }
 
@@ -173,7 +182,7 @@ namespace PittBradford.XR
                 float f = f1 + (f0 - f1) * Mathf.Exp(-k * t);
                 ph += Tau * f / R;
                 if (j < 0 || j >= dst.Length) continue;
-                dst[j] += Mathf.Sin(ph) * amp * Mathf.Min(1f, t / Mathf.Max(0.0005f, attack)) * Mathf.Exp(-decay * t);
+                dst[j] += Mathf.Sin(ph) * amp * Mathf.Min(1f, t / Mathf.Max(0.0005f, attack)) * Mathf.Exp(-decay * t) * Mathf.Min(1f, (float)(n - i) / Mathf.Max(1, (int)(0.004f * R)));
             }
         }
 
@@ -239,7 +248,10 @@ namespace PittBradford.XR
                 float ff = f * ratios[k] * (1f + Rnd(r) * 0.012f);
                 if (ff > R * 0.42f) continue;
                 float d = decay * dm[k];
-                Tone(dst, ff, amp * amps[k] * Range(r, 0.8f, 1f), start, Mathf.Min(1.6f, 6f / Mathf.Max(1f, d)), 0.0006f, d);
+                float a = amp * amps[k] * Range(r, 0.8f, 1f), dur = Mathf.Min(1.6f, 6f / Mathf.Max(1f, d));
+                Tone(dst, ff, a, start, dur, 0.0006f, d);
+                // real struck metal and glass have mode pairs a fraction of a percent apart: they beat slowly, which is what makes a ring sound alive
+                if ((m == Mat.Metal || m == Mat.Glass) && k < 3) Tone(dst, ff * (1f + Range(r, 0.0025f, 0.007f)), a * 0.55f, start, dur, 0.0006f, d * 1.1f);
             }
         }
 
@@ -271,43 +283,128 @@ namespace PittBradford.XR
             Add(dst, n, amp, start);
         }
 
+        // ------------------------------------------------------------------ round 5 helpers
+
         /// <summary>
-        /// Small room: six damped comb filters and two all-pass diffusers (Schroeder/Freeverb style). The buffer should
-        /// already include the tail length. The damping keeps the tail dark so it does not ring metallically.
+        /// Small-room reverb by convolution with a synthetic impulse response: a few discrete early reflections, then a diffuse tail
+        /// made of three noise bands that decay at different rates (lows ring longest, highs die first, like air and soft walls).
+        /// Smoother and less metallic than the round 4 comb filters. The result is longer than the input by part of the tail.
+        /// <paramref name="size"/> stretches the early reflections (0.6 small booth, 1 room, 2 hall).
         /// </summary>
-        public static float[] Reverb(float[] x, float mix, float decaySeconds)
+        public static float[] Reverb(float[] x, float mix, float decaySeconds, float size = 1f)
         {
-            float[] delays = { 0.0297f, 0.0371f, 0.0411f, 0.0437f, 0.0503f, 0.0571f };
-            var wet = new float[x.Length];
-            foreach (var d in delays)
+            var ir = Ir(decaySeconds, size);
+            int outLen = x.Length + (int)(Mathf.Min(0.9f, decaySeconds * 0.7f) * R);
+            int n = 1; while (n < x.Length + ir.Length) n <<= 1;
+            var xr = new double[n]; var xi = new double[n]; var hr = new double[n]; var hi = new double[n];
+            for (int i = 0; i < x.Length; i++) xr[i] = x[i];
+            for (int i = 0; i < ir.Length; i++) hr[i] = ir[i];
+            SfxMeasure.Fft(xr, xi); SfxMeasure.Fft(hr, hi);
+            for (int i = 0; i < n; i++)
             {
-                int dn = Mathf.Max(8, (int)(d * R));
-                float g = Mathf.Pow(0.001f, d / Mathf.Max(0.05f, decaySeconds));
-                var buf = new float[dn];
-                int p = 0; float lp = 0f;
-                for (int i = 0; i < x.Length; i++)
-                {
-                    lp = lp * 0.42f + buf[p] * 0.58f;
-                    float y = x[i] + lp * g;
-                    buf[p] = y;
-                    p = (p + 1) % dn;
-                    wet[i] += y / delays.Length;
-                }
+                double a = xr[i] * hr[i] - xi[i] * hi[i], b = xr[i] * hi[i] + xi[i] * hr[i];
+                xr[i] = a; xi[i] = -b;                    // conjugate, so the forward transform below acts as the inverse
             }
-            foreach (var d in new[] { 0.0050f, 0.0017f })
-            {
-                int dn = Mathf.Max(4, (int)(d * R));
-                var buf = new float[dn]; int p = 0;
-                for (int i = 0; i < wet.Length; i++)
-                {
-                    float bo = buf[p], v = wet[i] + 0.5f * bo;
-                    buf[p] = v; p = (p + 1) % dn;
-                    wet[i] = bo - 0.5f * v;
-                }
-            }
-            var o = new float[x.Length];
-            for (int i = 0; i < x.Length; i++) o[i] = x[i] + wet[i] * mix * 1.6f;
+            SfxMeasure.Fft(xr, xi);
+            var o = new float[outLen];
+            float g = mix * 1.3f / n;
+            for (int i = 0; i < outLen; i++) o[i] = (i < x.Length ? x[i] : 0f) + (i < n ? (float)xr[i] * g : 0f);
             return o;
+        }
+
+        static readonly System.Collections.Generic.Dictionary<string, float[]> irCache = new System.Collections.Generic.Dictionary<string, float[]>();
+
+        static float[] Ir(float rt60, float size)
+        {
+            string key = R + "/" + (int)(rt60 * 1000f) + "/" + (int)(size * 100f);
+            if (irCache.TryGetValue(key, out var hit)) return hit;
+            var rng = new Rng((int)(rt60 * 1000f) + 17);
+            int len = (int)(Mathf.Min(1.5f, rt60 * 1.15f) * R);
+            var ir = new float[len];
+            // early reflections: eight taps with falling, alternating-sign gains (walls, floor, ceiling)
+            float[] et = { 0.0071f, 0.0113f, 0.0171f, 0.0236f, 0.0309f, 0.0392f, 0.0488f, 0.0601f };
+            float[] eg = { 0.9f, -0.75f, 0.62f, -0.5f, 0.42f, -0.33f, 0.27f, -0.2f };
+            for (int k = 0; k < et.Length; k++)
+            {
+                int p = (int)(et[k] * size * R) + (int)(Rnd(rng) * 0.0006f * R);
+                if (p > 0 && p < len) ir[p] += eg[k] * 0.55f * Mathf.Pow(0.02f, et[k] * size / Mathf.Max(0.1f, rt60));
+            }
+            // diffuse tail from 12 ms: the low band lasts 1.2x, the mid band 1x and the high band 0.4x of the reverberation time
+            float tail0 = 0.012f * size;
+            var lo = White(rng, len / (float)R); Filter(lo, F.Low, 500f, 0.7f);
+            var mid = White(rng, len / (float)R); Filter(mid, F.High, 500f, 0.7f); Filter(mid, F.Low, 3000f, 0.7f);
+            var hi = White(rng, len / (float)R); Filter(hi, F.High, 3000f, 0.7f); Filter(hi, F.Low, 7000f, 0.7f);
+            for (int i = 0; i < len && i < lo.Length; i++)
+            {
+                float t = (float)i / R - tail0;
+                if (t < 0f) continue;
+                float fade = Mathf.Clamp01(t / 0.01f);
+                float e1 = Mathf.Exp(-6.9f * t / (rt60 * 1.2f)), e2 = Mathf.Exp(-6.9f * t / rt60), e3 = Mathf.Exp(-6.9f * t / (rt60 * 0.4f));
+                ir[i] += fade * (lo[i] * e1 * 1.4f + mid[i] * e2 * 1.0f + hi[i] * e3 * 0.5f) * 0.9f;
+            }
+            double en = 0; for (int i = 0; i < len; i++) en += ir[i] * ir[i];
+            float sc = (float)(1.0 / Math.Sqrt(Math.Max(1e-9, en)));
+            for (int i = 0; i < len; i++) ir[i] *= sc;
+            irCache[key] = ir;
+            return ir;
+        }
+
+        /// <summary>
+        /// One air bubble in water (Minnaert resonance): it rings at about 3.26 / radius Hz, the pitch rises a little as it rings out,
+        /// and it decays in about ten milliseconds. Many of these at random radii and times are what flowing and dripping water sounds like.
+        /// </summary>
+        public static void Bubble(float[] dst, Rng r, float start, float radiusMm, float amp)
+        {
+            float f0 = 3.26f / (radiusMm * 0.001f);
+            if (f0 > R * 0.42f) return;
+            float d = 0.043f * f0 + 0.0014f * Mathf.Pow(f0, 1.5f), sigma = 0.1f * d * Range(r, 0.6f, 1.4f);
+            int o = (int)(start * R), n = (int)(Mathf.Min(0.25f, 6f / d) * R);
+            float ph = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / R;
+                ph += Tau * f0 * (1f + sigma * t) / R;
+                int j = o + i;
+                if (j < 0 || j >= dst.Length) continue;
+                dst[j] += Mathf.Sin(ph) * amp * Mathf.Min(1f, t / 0.0012f) * Mathf.Exp(-d * t);
+            }
+        }
+
+        /// <summary>
+        /// Sparse crackle (sparks, fire, arcs): clicks at random times, each a very short damped sine at a random frequency between
+        /// <paramref name="fLo"/> and <paramref name="fHi"/>, with heavy-tailed amplitudes. Band-limited by construction, so it does not hiss.
+        /// </summary>
+        public static void Crackle(float[] dst, Rng r, float start, float dur, float perSecond, float amp, float fLo, float fHi, float decay = 500f)
+        {
+            int n = Mathf.Max(1, (int)(dur * perSecond));
+            for (int k = 0; k < n; k++)
+            {
+                float t = start + (float)r.NextDouble() * dur, a = amp * (0.15f + 0.85f * Mathf.Pow((float)r.NextDouble(), 2.5f));
+                Tone(dst, Range(r, fLo, fHi), a, t, 6f / decay, 0.0003f, decay * Range(r, 0.7f, 1.4f));
+            }
+        }
+
+        /// <summary>FM bell: a bright attack that mellows as the modulation index decays (real bells and tines do this); sine body.</summary>
+        public static void FmBell(float[] dst, float f, float amp, float start, float dur, float ratio, float index, float decay, float indexDecay)
+        {
+            int o = (int)(start * R), n = (int)(dur * R);
+            for (int i = 0; i < n; i++)
+            {
+                int j = o + i;
+                if (j < 0 || j >= dst.Length) continue;
+                float t = (float)i / R;
+                float idx = index * Mathf.Exp(-indexDecay * t);
+                dst[j] += Mathf.Sin(Tau * f * t + idx * Mathf.Sin(Tau * f * ratio * t)) * amp * Mathf.Min(1f, t / 0.002f) * Mathf.Exp(-decay * t) * Mathf.Min(1f, (float)(n - i) / Mathf.Max(1, (int)(0.004f * R)));
+            }
+        }
+
+        /// <summary>A soft rubbing noise (shoe leather, cloth, a hand on a surface): band-limited pink noise with a smooth hump.</summary>
+        public static void Scuff(float[] dst, Rng r, float start, float dur, float amp, float lo, float hi)
+        {
+            var n = Pink(r, dur);
+            Filter(n, F.High, lo, 0.7f); Filter(n, F.Low, hi, 0.7f);
+            for (int i = 0; i < n.Length; i++) n[i] *= Mathf.Sin(Mathf.PI * (float)i / n.Length);
+            Add(dst, n, amp, start);
         }
 
         public static float[] Normalize(float[] x, float peak)
@@ -395,7 +492,7 @@ namespace PittBradford.XR
         /// fade in and a longer fade out; then the level is set to <paramref name="levelDb"/> (RMS of the active part, dBFS)
         /// and a soft-knee limiter keeps the peak below <paramref name="ceiling"/>.
         /// </summary>
-        public static float[] Finish(float[] x, bool loop, float lowpass, float levelDb, float ceiling = 0.85f)
+        public static float[] Finish(float[] x, bool loop, float lowpass, float levelDb, float lufs = float.NaN, float ceiling = 0.85f)
         {
             if (loop)
             {
@@ -406,7 +503,45 @@ namespace PittBradford.XR
             else Filter(x, F.High, 30f, 0.707f);
             if (lowpass > 0f && lowpass < R * 0.45f) { if (loop) FilterLoop(x, F.Low, lowpass, 0.6f); else Filter(x, F.Low, lowpass, 0.6f); }
             if (!loop) Edges(x, 1.5f, 14f);
-            return Level(x, levelDb, ceiling);
+            if (loop) return float.IsNaN(lufs) ? Level(x, levelDb, ceiling) : LevelLufs(x, lufs, ceiling);
+            return LevelPeak(x, levelDb, ceiling);
+        }
+
+        /// <summary>
+        /// One-shot level: scales so the PEAK is <paramref name="ceiling"/> (linear), unless that would make the active RMS exceed
+        /// <paramref name="rmsCapDb"/> (sustained sounds). No limiter squashes the transient; a last soft guard only touches samples above 0.97.
+        /// </summary>
+        public static float[] LevelPeak(float[] x, float rmsCapDb, float ceiling)
+        {
+            float pk = 1e-6f;
+            for (int i = 0; i < x.Length; i++) pk = Mathf.Max(pk, Mathf.Abs(x[i]));
+            double s = 0; int c = 0; float th = pk * 0.05f;
+            for (int i = 0; i < x.Length; i++) if (Mathf.Abs(x[i]) >= th) { s += x[i] * x[i]; c++; }
+            float rms = Mathf.Sqrt((float)(s / Mathf.Max(1, c)));
+            float g = Mathf.Min(ceiling / pk, Mathf.Pow(10f, rmsCapDb / 20f) / Mathf.Max(1e-6f, rms));
+            for (int i = 0; i < x.Length; i++)
+            {
+                float v = x[i] * g, a = Mathf.Abs(v);
+                if (a > 0.97f) a = 0.97f + 0.03f * (float)Math.Tanh((a - 0.97f) / 0.03f);
+                x[i] = v < 0f ? -a : a;
+            }
+            return x;
+        }
+
+        /// <summary>Gain so the integrated loudness (BS.1770 K-weighted, see <see cref="SfxMeasure.Lufs"/>) equals <paramref name="lufs"/>, then soft-limit under the ceiling.</summary>
+        public static float[] LevelLufs(float[] x, float lufs, float ceiling)
+        {
+            float now = SfxMeasure.Lufs(x, R);
+            if (now < -90f) return x;
+            float g = Mathf.Pow(10f, (lufs - now) / 20f);
+            float knee = ceiling * 0.6f, span = ceiling - knee;
+            for (int i = 0; i < x.Length; i++)
+            {
+                float v = x[i] * g, a = Mathf.Abs(v);
+                if (a > knee) a = knee + span * (float)Math.Tanh((a - knee) / span);
+                x[i] = v < 0f ? -a : a;
+            }
+            return x;
         }
 
         /// <summary>Gain so the RMS of the active samples (above 5 percent of the peak) equals <paramref name="db"/> dBFS, then soft-limit under the ceiling.</summary>
@@ -430,36 +565,8 @@ namespace PittBradford.XR
 
         // ------------------------------------------------------------------ catalogue generators: interface
 
-        // The interface family shares one key (C major pentatonic: C6 1046, D6 1175, E6 1319, G6 1568, A6 1760) and the same soft bell timbre.
-        public static float[] UiConfirm(Rng r)
-        {
-            var b = Buf(1.0f); float k = J(r, 1f, 0.004f);
-            Chime(b, 1046.5f * k, 0.8f, 0f, 9f); Chime(b, 1568f * k, 0.9f, 0.085f, 7f);
-            return Reverb(b, 0.25f, 0.35f);
-        }
 
-        public static float[] UiError(Rng r)
-        {
-            // two soft falling notes with a triangle-like timbre: clearly "no", but not a buzzer
-            var b = Buf(0.5f); float k = J(r, 1f, 0.01f);
-            for (int p = 0; p < 2; p++)
-            {
-                var t = Buf(0.3f); float f = (p == 0 ? 349f : 262f) * k;
-                Harmonics(t, x => f, 4, 2f, 0.4f);
-                Env(t, 0.008f, 9f);
-                Add(b, t, 1f, p * 0.15f);
-            }
-            Filter(b, F.Low, 1400f);
-            return Reverb(b, 0.12f, 0.2f);
-        }
 
-        public static float[] UiSelect(Rng r)
-        {
-            var b = Buf(0.16f);
-            Chime(b, J(r, 1760f, 0.01f), 0.7f, 0f, 38f, 0.12f);
-            NoiseHit(b, r, 0f, 0.01f, 0.08f, F.Band, 4000f, 1f, 300f);
-            return b;
-        }
 
         public static float[] Button(Rng r)
         {
@@ -544,14 +651,6 @@ namespace PittBradford.XR
             return Reverb(b, 0.22f, 0.4f);
         }
 
-        public static float[] ThudBox(Rng r)
-        {
-            var b = Buf(0.6f);
-            Glide(b, J(r, 150f, 0.08f), 52f, 20f, 1f, 0f, 0.4f, 11f, 0.002f);
-            var n = Pink(r, 0.2f); Filter(n, F.Low, 500f, 0.7f); Env(n, 0.002f, 26f); Add(b, n, 1.1f);
-            Modal(b, r, J(r, 220f, 0.1f), 0.28f, 0f, 30f, Mat.Wood);
-            return Reverb(b, 0.14f, 0.2f);
-        }
 
         public static float[] ConePlace(Rng r)
         {
@@ -588,72 +687,26 @@ namespace PittBradford.XR
             return b;
         }
 
-        public static float[] WaterDrip(Rng r)
-        {
-            var b = Buf(0.7f); float lo = J(r, 560f, 0.15f);
-            Glide(b, lo, lo * 2.6f, 32f, 0.7f, 0f, 0.1f, 36f, 0.001f);
-            Glide(b, lo * 1.5f, lo * 3.0f, 28f, 0.2f, 0.05f, 0.08f, 45f, 0.001f);
-            NoiseHit(b, r, 0f, 0.04f, 0.1f, F.Band, 2400f, 1f, 120f);
-            return Reverb(b, 0.5f, 0.55f);
-        }
 
-        public static float[] WaterPour(Rng r)
-        {
-            float len = 4f;
-            var b = LoopNoise(r, len, x => Filter(x, F.Band, 1500f, 0.5f), 0.5f);
-            var hi = LoopNoise(r, len, x => Filter(x, F.Band, 3800f, 0.6f), 0.5f);
-            var mod = LoopMod(r, len, 6f);
-            for (int i = 0; i < b.Length; i++) b[i] = (b[i] + hi[i] * 0.35f) * (0.65f + 0.35f * mod[i]);
-            // bubble chirps wrap around the loop point
-            var bub = Buf(len + 0.3f);
-            for (int k = 0; k < 80; k++)
-            {
-                float f0 = Range(r, 350f, 800f);
-                Glide(bub, f0, f0 * Range(r, 1.8f, 2.8f), 20f, Range(r, 0.05f, 0.14f), Range(r, 0f, len), 0.1f, 28f, 0.004f);
-            }
-            Add(b, Fold(bub, b.Length), 1f);
-            return b;
-        }
 
-        public static float[] PumpHum(Rng r)
-        {
-            // 60 Hz motor with its harmonics (whole cycles, so the loop is exact), a slow load wobble, bearing noise, a vane tone
-            float len = 2.5f;
-            var b = Buf(len);
-            Tone(b, 60f, 0.55f, 0f, len, 0.01f, 0f); Tone(b, 120f, 0.5f, 0f, len, 0.01f, 0f); Tone(b, 180f, 0.28f, 0f, len, 0.01f, 0f);
-            Tone(b, 240f, 0.12f, 0f, len, 0.01f, 0f); Tone(b, 30f, 0.2f, 0f, len, 0.01f, 0f);
-            var vane = Buf(len); Tone(vane, 420f, 0.12f, 0f, len, 0.01f, 0f); Tone(vane, 840f, 0.04f, 0f, len, 0.01f, 0f);
-            Shape(vane, t => 0.6f + 0.4f * Mathf.Sin(Tau * t * 12f / len * (len)));
-            Add(b, vane, 1f);
-            Shape(b, t => 0.9f + 0.1f * Mathf.Sin(Tau * t / len));
-            var n = LoopNoise(r, len, x => Filter(x, F.Low, 850f), 0.3f); Add(b, n, 0.4f);
-            return b;
-        }
 
         public static float[] GasHiss(Rng r)
         {
+            // a relief valve / pressurised leak: a jet roar in the low mids, a broad hiss above it (pink, band-limited), and slow turbulence
             var b = Pink(r, 1.9f);
-            Filter(b, F.Band, 3200f, 0.45f); Filter(b, F.High, 1400f);
-            var low = Pink(r, 1.9f); Filter(low, F.Band, 1100f, 0.6f);
-            Add(b, low, 0.18f);
+            Filter(b, F.Band, 3000f, 0.5f); Filter(b, F.High, 1400f);
+            var roar = Pink(r, 1.9f); Filter(roar, F.Band, 850f, 0.7f);
+            Add(b, roar, 0.7f);
+            var low = Pink(r, 1.9f); Filter(low, F.Band, 380f, 0.6f);
+            Add(b, low, 0.25f);
             var turb = SlowNoise(r, 1.9f, 22f);
-            for (int i = 0; i < b.Length; i++) b[i] *= 0.9f + 0.1f * turb[i];
-            return Gate(b, 0.07f, 0.7f);
+            for (int i = 0; i < b.Length; i++) b[i] *= 0.88f + 0.12f * turb[i];
+            Gate(b, 0.07f, 0.7f);
+            return Reverb(b, 0.12f, 0.2f);
         }
 
         // ------------------------------------------------------------------ alarms and beeps (softer than before)
 
-        // wail: pitch rises and falls once over the clip, ending where it started, so it loops cleanly
-        public static float[] AlarmSiren(Rng r)
-        {
-            var b = Buf(3f);
-            LoopHarmonics(b, t => 460f + 300f * (0.5f - 0.5f * Mathf.Cos(Tau * t / 3f)), 5, 1.7f, 0.5f);
-            var b2 = Buf(3f);
-            LoopHarmonics(b2, t => 462f * 1.006f + 300f * 1.006f * (0.5f - 0.5f * Mathf.Cos(Tau * t / 3f)), 3, 1.9f, 0.3f);
-            Add(b, b2, 1f);
-            Soft(b, 1.2f);
-            return b;
-        }
 
         public static float[] AlarmSirenRise(Rng r)
         {
@@ -671,29 +724,8 @@ namespace PittBradford.XR
             return Gate(b, 0.06f, 0.35f);
         }
 
-        static void Beep(float[] dst, float f, float amp, float start, float dur, float rel)
-        {
-            var t = Buf(dur);
-            Tone(t, f, amp, 0f, dur, 0.003f, 0f); Tone(t, f * 2f, amp * 0.16f, 0f, dur, 0.003f, 0f); Tone(t, f * 3f, amp * 0.05f, 0f, dur, 0.003f, 0f);
-            Gate(t, 0.006f, rel);
-            Add(dst, t, 1f, start);
-        }
 
-        public static float[] GasMonitorBeep(Rng r)
-        {
-            var b = Buf(0.55f); float f = J(r, 2150f, 0.01f);
-            Beep(b, f, 0.8f, 0f, 0.1f, 0.03f); Beep(b, f, 0.8f, 0.16f, 0.1f, 0.03f);
-            return Reverb(b, 0.08f, 0.12f);
-        }
 
-        public static float[] MonitorAlarm(Rng r)
-        {
-            var b = Buf(1.7f);
-            float[] times = { 0f, 0.14f, 0.28f, 0.56f, 0.70f };
-            float[] freqs = { 880f, 880f, 880f, 1175f, 1175f };
-            for (int i = 0; i < times.Length; i++) Beep(b, freqs[i], 0.8f, times[i], 0.11f, 0.04f);
-            return Reverb(b, 0.12f, 0.25f);
-        }
 
         public static float[] RadioClick(Rng r)
         {
@@ -728,31 +760,7 @@ namespace PittBradford.XR
             return Gate(b, 0.04f, 0.1f);
         }
 
-        public static float[] ForkliftEngineLoop(Rng r)
-        {
-            // low idle: slightly irregular firing, thump + exhaust puff + faint diesel tick, rumble underneath; pulses wrap the loop point
-            float len = 2f; var b = Buf(len + 0.25f);
-            float rate = 22f;
-            for (int p = 0; p < (int)(len * rate); p++)
-            {
-                float t = p / rate + Rnd(r) * 0.004f, a = 0.8f + 0.2f * Rnd(r);
-                Tone(b, 64f, a, t, 0.1f, 0.004f, 34f); Tone(b, 128f, a * 0.45f, t, 0.07f, 0.003f, 50f); Tone(b, 192f, a * 0.14f, t, 0.05f, 0.003f, 60f);
-                NoiseHit(b, r, t, 0.05f, a * 0.3f, F.Low, 420f, 0.7f, 60f, 0.003f);
-                NoiseHit(b, r, t + 0.002f, 0.02f, a * 0.07f, F.Band, 1700f, 1.2f, 160f);
-            }
-            var o = Fold(b, (int)(len * R));
-            var rum = LoopNoise(r, len, x => Filter(x, F.Low, 260f), 0.3f); Add(o, rum, 0.25f);
-            Tone(o, 88f, 0.1f, 0f, len, 0.01f, 0f);
-            FilterLoop(o, F.Low, 1300f);
-            return o;
-        }
 
-        public static float[] ForkliftBeepReverse(Rng r)
-        {
-            var b = Buf(1f);
-            Beep(b, 1000f, 0.8f, 0.02f, 0.44f, 0.02f);
-            return b;
-        }
 
         public static float[] HydraulicWhine(Rng r)
         {
@@ -790,14 +798,6 @@ namespace PittBradford.XR
             return b;
         }
 
-        public static float[] SparkPop(Rng r)
-        {
-            var b = Buf(0.45f);
-            Glide(b, 280f, 110f, 40f, 0.45f, 0f, 0.08f, 40f, 0.001f);
-            NoiseHit(b, r, 0f, 0.15f, 0.5f, F.Band, 2300f, 0.7f, 26f, 0.001f);
-            for (int k = 0; k < 9; k++) NoiseHit(b, r, Range(r, 0.005f, 0.2f), 0.012f, Range(r, 0.2f, 0.8f), F.Band, Range(r, 2200f, 4200f), 1.5f, 200f, 0.0005f);
-            return b;
-        }
 
         public static float[] SmokePuff(Rng r)
         {
@@ -806,147 +806,20 @@ namespace PittBradford.XR
             return Env(b, 0.07f, 4f);
         }
 
-        public static float[] EsdClick(Rng r)
-        {
-            var b = Buf(0.28f);
-            NoiseHit(b, r, 0f, 0.02f, 0.9f, F.Band, 2800f, 0.8f, 200f, 0.0004f);
-            Tone(b, 3100f, 0.2f, 0f, 0.06f, 0.0004f, 110f);
-            Glide(b, 320f, 160f, 40f, 0.35f, 0f, 0.05f, 80f, 0.001f);
-            for (int k = 0; k < 3; k++) NoiseHit(b, r, Range(r, 0.01f, 0.07f), 0.01f, Range(r, 0.1f, 0.3f), F.Band, 3200f, 1f, 260f, 0.0004f);
-            return b;
-        }
 
-        public static float[] MeterBeep(Rng r)
-        {
-            var b = Buf(0.3f);
-            Beep(b, 1000f, 0.8f, 0.01f, 0.2f, 0.05f);
-            return Reverb(b, 0.08f, 0.15f);
-        }
 
         // ------------------------------------------------------------------ ambience and machine loops
 
-        public static float[] WindLoop(Rng r)
-        {
-            float len = 8f;
-            var b = LoopNoise(r, len, x => Filter(x, F.Low, 700f, 0.8f), 0.7f);
-            var whistle = LoopNoise(r, len, x => Filter(x, F.Band, 620f, 9f), 0.7f);
-            var gust = LoopMod(r, len, 0.35f);
-            for (int i = 0; i < b.Length; i++) { float t = (float)i / R; b[i] = (b[i] * 1.3f + whistle[i] * 0.5f * gust[i]) * (0.4f + 0.6f * gust[i]); }
-            return b;
-        }
 
-        public static float[] HvacLoop(Rng r)
-        {
-            float len = 5f;
-            var b = LoopNoise(r, len, x => { Filter(x, F.Low, 600f, 0.6f); Filter(x, F.Low, 800f); }, 0.4f);
-            var air = LoopNoise(r, len, x => Filter(x, F.Band, 1500f, 0.5f), 0.4f); Add(b, air, 0.12f);
-            var t0 = Buf(len);
-            Tone(t0, 120f, 0.12f, 0f, len, 0.01f, 0f); Tone(t0, 240f, 0.05f, 0f, len, 0.01f, 0f); Tone(t0, 60f, 0.1f, 0f, len, 0.01f, 0f);
-            Add(b, t0, 1f);
-            return b;
-        }
 
-        public static float[] PlantDroneLoop(Rng r)
-        {
-            float len = 8f; var b = Buf(len);
-            Tone(b, 55f, 0.5f, 0f, len, 0.01f, 0f); Tone(b, 55.5f, 0.35f, 0f, len, 0.01f, 0f);
-            Tone(b, 82.5f, 0.28f, 0f, len, 0.01f, 0f); Tone(b, 110f, 0.2f, 0f, len, 0.01f, 0f); Tone(b, 165f, 0.07f, 0f, len, 0.01f, 0f);
-            Shape(b, t => 0.85f + 0.15f * Mathf.Sin(Tau * t / len * 4f));
-            var rum = LoopNoise(r, len, x => Filter(x, F.Low, 220f), 0.8f); Add(b, rum, 0.5f);
-            var air = LoopNoise(r, len, x => Filter(x, F.Band, 1000f, 0.7f), 0.8f); Add(b, air, 0.07f);
-            return b;
-        }
 
-        public static float[] FlareRoarLoop(Rng r)
-        {
-            float len = 5f;
-            var b = LoopNoise(r, len, x => Filter(x, F.Low, 1200f, 0.6f), 0.5f);
-            var turb = LoopMod(r, len, 6f);
-            var rum = LoopNoise(r, len, x => Filter(x, F.Low, 150f), 0.5f);
-            for (int i = 0; i < b.Length; i++) b[i] = b[i] * (0.4f + 0.6f * turb[i]) + rum[i] * 1.1f;
-            var cr = Buf(len + 0.05f);
-            for (int k = 0; k < 90; k++) Click(cr, r, Range(r, 0f, len), Range(r, 0.05f, 0.25f), 800f, 4f);
-            Filter(cr, F.Low, 3500f);
-            Add(b, Fold(cr, b.Length), 1f);
-            return b;
-        }
 
         // five scene beds, 12 s each, low level; every tone is a whole number of cycles in 12 s so each bed loops exactly
 
-        public static float[] AmbLobby(Rng r)
-        {
-            float len = 12f;
-            var b = LoopNoise(r, len, x => { Filter(x, F.Low, 650f, 0.7f); Filter(x, F.High, 55f); }, 0.8f);
-            var air = LoopNoise(r, len, x => Filter(x, F.Band, 1300f, 0.5f), 0.8f);
-            var sw = LoopMod(r, len, 0.25f);
-            for (int i = 0; i < b.Length; i++) b[i] = (b[i] + air[i] * 0.16f) * (0.75f + 0.25f * sw[i]);
-            var h = Buf(len); Tone(h, 60f, 0.05f, 0f, len, 0.01f, 0f); Tone(h, 120f, 0.04f, 0f, len, 0.01f, 0f);
-            Add(b, h, 1f);
-            return b;
-        }
 
-        public static float[] AmbHydro(Rng r)
-        {
-            float len = 12f;
-            var b = LoopNoise(r, len, x => { Filter(x, F.Low, 480f, 0.7f); Filter(x, F.High, 45f); }, 0.8f);
-            var h = Buf(len);
-            Tone(h, 82f, 0.14f, 0f, len, 0.01f, 0f); Tone(h, 82.25f, 0.12f, 0f, len, 0.01f, 0f); Tone(h, 123f, 0.06f, 0f, len, 0.01f, 0f); Tone(h, 164f, 0.03f, 0f, len, 0.01f, 0f);
-            Add(b, h, 1f);
-            var tr = LoopNoise(r, len, x => Filter(x, F.Band, 2400f, 0.8f), 0.8f);
-            var m = LoopMod(r, len, 1.2f);
-            for (int i = 0; i < tr.Length; i++) tr[i] *= 0.1f * m[i];
-            Add(b, tr, 1f);
-            var bub = Buf(len + 0.4f);
-            for (int k = 0; k < 26; k++) { float f0 = Range(r, 420f, 900f); Glide(bub, f0, f0 * Range(r, 1.8f, 2.6f), 22f, Range(r, 0.02f, 0.07f), Range(r, 0f, len), 0.12f, 26f, 0.004f); }
-            Add(b, Fold(bub, b.Length), 1f);
-            return b;
-        }
 
-        public static float[] AmbRefinery(Rng r)
-        {
-            float len = 12f;
-            var b = LoopNoise(r, len, x => Filter(x, F.Low, 190f, 0.7f), 0.8f);
-            var h = Buf(len); Tone(h, 55f, 0.18f, 0f, len, 0.01f, 0f); Tone(h, 110f, 0.08f, 0f, len, 0.01f, 0f); Tone(h, 41.25f, 0.1f, 0f, len, 0.01f, 0f);
-            Add(b, h, 1f);
-            var fl = LoopNoise(r, len, x => Filter(x, F.Low, 700f, 0.6f), 0.8f); var fm = LoopMod(r, len, 0.5f);
-            for (int i = 0; i < fl.Length; i++) fl[i] *= 0.5f * (0.5f + 0.5f * fm[i]);
-            Add(b, fl, 1f);
-            var wh = LoopNoise(r, len, x => Filter(x, F.Band, 640f, 10f), 0.8f); var wm = LoopMod(r, len, 0.3f);
-            for (int i = 0; i < wh.Length; i++) wh[i] *= 0.28f * wm[i] * wm[i];
-            Add(b, wh, 1f);
-            var st = LoopNoise(r, len, x => Filter(x, F.Band, 3000f, 0.6f), 0.8f); var sm = LoopMod(r, len, 0.2f);
-            for (int i = 0; i < st.Length; i++) st[i] *= 0.08f * sm[i] * sm[i];
-            Add(b, st, 1f);
-            return b;
-        }
 
-        public static float[] AmbWarehouse(Rng r)
-        {
-            float len = 12f;
-            var b = LoopNoise(r, len, x => { Filter(x, F.Low, 320f, 0.7f); Filter(x, F.High, 40f); }, 0.8f);
-            var air = LoopNoise(r, len, x => Filter(x, F.Band, 900f, 0.4f), 0.8f);
-            var m = LoopMod(r, len, 0.2f);
-            for (int i = 0; i < b.Length; i++) b[i] = (b[i] + air[i] * 0.2f) * (0.7f + 0.3f * m[i]);
-            var h = Buf(len); Tone(h, 100f, 0.07f, 0f, len, 0.01f, 0f); Tone(h, 200f, 0.035f, 0f, len, 0.01f, 0f); Tone(h, 50f, 0.06f, 0f, len, 0.01f, 0f);
-            Add(b, h, 1f);
-            var dock = LoopNoise(r, len, x => Filter(x, F.Band, 480f, 3f), 0.8f); var dm = LoopMod(r, len, 0.25f);
-            for (int i = 0; i < dock.Length; i++) dock[i] *= 0.12f * dm[i];
-            Add(b, dock, 1f);
-            return b;
-        }
 
-        public static float[] AmbBench(Rng r)
-        {
-            float len = 12f;
-            var b = LoopNoise(r, len, x => { Filter(x, F.Low, 1400f, 0.6f); Filter(x, F.High, 120f); }, 0.8f);
-            for (int i = 0; i < b.Length; i++) b[i] *= 0.5f;
-            var h = Buf(len);
-            Tone(h, 60f, 0.14f, 0f, len, 0.01f, 0f); Tone(h, 120f, 0.1f, 0f, len, 0.01f, 0f); Tone(h, 180f, 0.05f, 0f, len, 0.01f, 0f); Tone(h, 240f, 0.02f, 0f, len, 0.01f, 0f);
-            Add(b, h, 1f);
-            var fan = LoopNoise(r, len, x => Filter(x, F.Band, 800f, 0.5f), 0.8f);
-            Add(b, fan, 0.15f);
-            return b;
-        }
 
         // one-shots for the scene ambience director: distant, dull, rare
 
@@ -982,21 +855,7 @@ namespace PittBradford.XR
             return Reverb(b, 0.12f, 0.2f);
         }
 
-        public static float[] FarThud(Rng r)
-        {
-            var b = Buf(0.9f);
-            Glide(b, J(r, 90f, 0.1f), 42f, 14f, 1f, 0f, 0.6f, 8f, 0.004f);
-            var n = Pink(r, 0.3f); Filter(n, F.Low, 260f); Env(n, 0.004f, 16f); Add(b, n, 0.8f);
-            return Reverb(b, 0.4f, 0.8f);
-        }
 
-        public static float[] FarBeep(Rng r)
-        {
-            var b = Buf(1.4f);
-            Beep(b, 1000f, 0.8f, 0f, 0.3f, 0.03f); Beep(b, 1000f, 0.8f, 0.6f, 0.3f, 0.03f);
-            Filter(b, F.Low, 2400f);
-            return Reverb(b, 0.45f, 0.9f);
-        }
 
         // ------------------------------------------------------------------ doors, steps, misc
 
@@ -1024,50 +883,6 @@ namespace PittBradford.XR
             return Reverb(b, 0.22f, 0.35f);
         }
 
-        // heel strike then toe tap; each surface has its own body
-        public static float[] Footstep(Rng r, Surface s)
-        {
-            var b = Buf(0.5f); float toe = Range(r, 0.07f, 0.11f);
-            switch (s)
-            {
-                case Surface.Concrete:
-                    Glide(b, J(r, 115f, 0.1f), 62f, 30f, 0.9f, 0f, 0.12f, 38f, 0.002f);
-                    NoiseHit(b, r, 0f, 0.12f, 0.6f, F.Low, J(r, 1500f, 0.15f), 0.7f, 45f, 0.002f);
-                    NoiseHit(b, r, 0f, 0.05f, 0.14f, F.Band, 3400f, 0.8f, 120f);
-                    Glide(b, 130f, 80f, 30f, 0.4f, toe, 0.08f, 45f, 0.002f);
-                    NoiseHit(b, r, toe, 0.08f, 0.3f, F.Low, 1200f, 0.7f, 55f, 0.002f);
-                    break;
-                case Surface.Metal:
-                    Impact(b, r, 0f, 0.75f, J(r, 340f, 0.1f), Mat.Metal, 2200f, 14f, 85f);
-                    Impact(b, r, toe, 0.35f, J(r, 380f, 0.1f), Mat.Metal, 2000f, 18f);
-                    Tone(b, 95f, 0.35f, 0f, 0.25f, 0.003f, 16f);
-                    break;
-                case Surface.Tile:
-                    Impact(b, r, 0f, 0.85f, J(r, 1500f, 0.06f), Mat.Plastic, 3000f, 40f, 115f);
-                    Impact(b, r, toe, 0.4f, J(r, 1650f, 0.06f), Mat.Plastic, 2800f, 48f);
-                    break;
-                case Surface.Gravel:
-                    for (int k = 0; k < 40; k++)
-                        NoiseHit(b, r, Range(r, 0f, 0.24f), 0.02f, Range(r, 0.1f, 0.45f), F.Band, Range(r, 1700f, 5200f), 2f, 150f, 0.0005f);
-                    NoiseHit(b, r, 0f, 0.15f, 0.5f, F.Low, 900f, 0.7f, 22f, 0.003f);
-                    Glide(b, 110f, 70f, 30f, 0.3f, 0f, 0.09f, 45f, 0.003f);
-                    break;
-                default: // Wood
-                    Modal(b, r, J(r, 190f, 0.08f), 0.8f, 0f, 28f, Mat.Wood);
-                    NoiseHit(b, r, 0f, 0.1f, 0.45f, F.Band, J(r, 450f, 0.12f), 1.6f, 38f, 0.002f);
-                    Glide(b, 125f, 80f, 30f, 0.4f, 0f, 0.1f, 36f, 0.002f);
-                    Modal(b, r, J(r, 210f, 0.08f), 0.3f, toe, 32f, Mat.Wood);
-                    if (r.NextDouble() < 0.25)
-                    {
-                        var cr = Pink(r, 0.18f); float cf = Range(r, 380f, 520f);
-                        FilterVar(cr, F.Band, t => cf * (1f + t * 1.2f), 8f);
-                        Shape(cr, t => Mathf.Sin(Mathf.Clamp01(t / 0.18f) * Mathf.PI));
-                        Add(b, cr, 0.16f, 0.1f);
-                    }
-                    break;
-            }
-            return Reverb(b, 0.1f, 0.18f);
-        }
 
         public static float[] Ding(Rng r)
         {
@@ -1093,14 +908,6 @@ namespace PittBradford.XR
             return Soft(b, 1.3f);
         }
 
-        public static float[] PressureTone(Rng r)
-        {
-            // soft steady tone for pitching with src.pitch: whole cycles in 1 s, so no seam; gentle chorus; very light air
-            var b = Buf(1f);
-            Tone(b, 220f, 0.7f, 0f, 1f, 0.01f, 0f); Tone(b, 221f, 0.3f, 0f, 1f, 0.01f, 0f); Tone(b, 440f, 0.16f, 0f, 1f, 0.01f, 0f); Tone(b, 330f, 0.1f, 0f, 1f, 0.01f, 0f);
-            var n = LoopNoise(r, 1f, x => Filter(x, F.Band, 800f, 1.5f), 0.15f); Add(b, n, 0.04f);
-            return b;
-        }
 
         public static float[] GaugeTick(Rng r)
         {
@@ -1109,5 +916,475 @@ namespace PittBradford.XR
             NoiseHit(b, r, 0f, 0.015f, 0.4f, F.Band, J(r, 2800f, 0.05f), 2f, 160f);
             return b;
         }
+        // ================================================================== round 5 generators (replace the round 4 ones of the same name)
+
+        static float Det(Rng r, float f, float pct) => f * (1f + Rnd(r) * pct);
+
+        // interface family: FM bells (bright attack that mellows, like a real struck bell or tine) with a soft sine body and a detuned twin for width
+        static void UiNote(float[] b, Rng r, float f, float amp, float start, float decay, float ratio = 2f, float index = 1.1f)
+        {
+            FmBell(b, f, amp, start, 1.1f, ratio, index, decay, decay * 1.8f);
+            FmBell(b, f * 1.0035f, amp * 0.45f, start + 0.002f, 1.0f, ratio, index * 0.8f, decay * 1.1f, decay * 2f);
+            Tone(b, f * 0.5f, amp * 0.18f, start, 0.5f, 0.004f, decay * 1.6f);
+        }
+
+        public static float[] UiConfirm(Rng r)
+        {
+            var b = Buf(1.3f); float k = J(r, 1f, 0.004f);
+            UiNote(b, r, 784f * k, 0.8f, 0f, 7f);
+            UiNote(b, r, 1174.7f * k, 0.9f, 0.09f, 6f);
+            Filter(b, F.Low, 6500f);
+            return Reverb(b, 0.3f, 0.45f);
+        }
+
+        public static float[] UiError(Rng r)
+        {
+            // two soft falling notes (a minor third), muted: clearly "no" without a buzzer
+            var b = Buf(0.7f); float k = J(r, 1f, 0.01f);
+            for (int p = 0; p < 2; p++)
+            {
+                float f = (p == 0 ? 392f : 311.1f) * k;
+                FmBell(b, f, 0.8f, p * 0.15f, 0.4f, 1f, 0.9f, 11f, 22f);
+                Tone(b, f * 2f, 0.12f, p * 0.15f, 0.2f, 0.004f, 20f);
+            }
+            Filter(b, F.Low, 2200f);
+            return Reverb(b, 0.18f, 0.25f);
+        }
+
+        public static float[] UiSelect(Rng r)
+        {
+            var b = Buf(0.22f);
+            FmBell(b, J(r, 1568f, 0.01f), 0.7f, 0f, 0.16f, 3.5f, 1.2f, 32f, 70f);
+            NoiseHit(b, r, 0f, 0.008f, 0.06f, F.Band, 3500f, 1f, 350f);
+            return Reverb(b, 0.12f, 0.15f);
+        }
+
+        public static float[] ThudBox(Rng r)
+        {
+            // low thump for weight, a wooden knock in the mids so it still reads on small headset drivers, a dull scrape of cardboard
+            var b = Buf(0.7f);
+            Glide(b, J(r, 170f, 0.08f), 70f, 20f, 0.8f, 0f, 0.35f, 12f, 0.002f);
+            var n = Pink(r, 0.2f); Filter(n, F.Band, 600f, 0.6f); Env(n, 0.002f, 24f); Add(b, n, 1.2f);
+            Modal(b, r, J(r, 240f, 0.1f), 0.6f, 0f, 24f, Mat.Wood);
+            Modal(b, r, J(r, 420f, 0.1f), 0.22f, 0.004f, 34f, Mat.Wood);
+            Scuff(b, r, 0f, 0.09f, 0.25f, 500f, 2400f);
+            return Reverb(b, 0.18f, 0.25f);
+        }
+
+        // ------------------------------------------------------------------ water (Minnaert bubbles: each bubble rings at 3.26/radius Hz with a rising pitch)
+
+        public static float[] WaterDrip(Rng r)
+        {
+            var b = Buf(0.9f); float rad = Range(r, 2.4f, 5.5f);
+            Bubble(b, r, 0.004f, rad, 0.8f);
+            if (r.NextDouble() < 0.6) Bubble(b, r, Range(r, 0.035f, 0.09f), rad * Range(r, 0.45f, 0.75f), 0.3f);
+            NoiseHit(b, r, 0f, 0.03f, 0.1f, F.Band, 1800f, 0.8f, 150f);
+            Modal(b, r, J(r, 900f, 0.2f), 0.05f, 0f, 60f, Mat.Glass);
+            return Reverb(b, 0.55f, 0.6f, 1.2f);
+        }
+
+        public static float[] WaterPour(Rng r)
+        {
+            float len = 4f;
+            var b = LoopNoise(r, len, x => Filter(x, F.Band, 900f, 0.5f), 0.5f);
+            var hi = LoopNoise(r, len, x => Filter(x, F.Band, 2600f, 0.7f), 0.5f);
+            var mod = LoopMod(r, len, 5f);
+            for (int i = 0; i < b.Length; i++) b[i] = (b[i] * 0.55f + hi[i] * 0.12f) * (0.7f + 0.3f * mod[i]);
+            var bub = Buf(len + 0.3f);
+            for (int k = 0; k < 520; k++)
+            {
+                float rad = Mathf.Exp(Range(r, Mathf.Log(1.6f), Mathf.Log(7.5f))), t0 = Range(r, 0f, len);
+                Bubble(bub, r, t0, rad, Range(r, 0.04f, 0.2f) * (0.5f + mod[Mathf.Min(mod.Length - 1, (int)(t0 * R))]));
+            }
+            Add(b, Fold(bub, b.Length), 1f);
+            return b;
+        }
+
+        public static float[] PumpHum(Rng r)
+        {
+            // 60 Hz motor and its harmonics (whole cycles in 2.5 s, so the loop is exact), blade-pass tone, water in the casing, a slow load wobble
+            float len = 2.5f;
+            var b = Buf(len);
+            Tone(b, 60f, 0.28f, 0f, len, 0.01f, 0f); Tone(b, 120f, 0.6f, 0f, len, 0.01f, 0f); Tone(b, 180f, 0.4f, 0f, len, 0.01f, 0f);
+            Tone(b, 240f, 0.22f, 0f, len, 0.01f, 0f); Tone(b, 300f, 0.1f, 0f, len, 0.01f, 0f); Tone(b, 360f, 0.06f, 0f, len, 0.01f, 0f);
+            var vane = Buf(len); Tone(vane, 420f, 0.16f, 0f, len, 0.01f, 0f); Tone(vane, 840f, 0.05f, 0f, len, 0.01f, 0f);
+            Shape(vane, t => 0.6f + 0.4f * Mathf.Sin(Tau * t * 4f / len * 3f));
+            Add(b, vane, 1f);
+            Shape(b, t => 0.92f + 0.08f * Mathf.Sin(Tau * t / len));
+            var n = LoopNoise(r, len, x => { Filter(x, F.Band, 700f, 0.5f); }, 0.3f); Add(b, n, 0.5f);
+            var n2 = LoopNoise(r, len, x => Filter(x, F.Band, 1700f, 0.8f), 0.3f); Add(b, n2, 0.12f);
+            FilterLoop(b, F.High, 70f);
+            return b;
+        }
+
+        public static float[] PressureTone(Rng r)
+        {
+            // a steady pump-and-motor note meant to be pitched with src.pitch while pressure rises: a rich low stack (no pure sine), a light noise band
+            var b = Buf(1f);
+            for (int k = 1; k <= 7; k++) { Tone(b, 190f * k, 0.6f / Mathf.Pow(k, 1.25f), 0f, 1f, 0.01f, 0f); Tone(b, 191f * k, 0.3f / Mathf.Pow(k, 1.25f), 0f, 1f, 0.01f, 0f); }
+            var n = LoopNoise(r, 1f, x => Filter(x, F.Band, 900f, 1f), 0.15f); Add(b, n, 0.12f);
+            return b;
+        }
+
+        // ------------------------------------------------------------------ alarms and beeps
+
+        static void Beep(float[] dst, float f, float amp, float start, float dur, float rel)
+        {
+            // electronic sounder: a soft square-ish wave (odd harmonics, rolled off) that warms up in pitch, a short ring-down after the gate
+            var t = Buf(dur + 0.08f); float ph = 0f;
+            for (int i = 0; i < t.Length; i++)
+            {
+                float tt = (float)i / R, ff = f * (1f + 0.005f * Mathf.Exp(-tt * 80f));
+                ph += Tau * ff / R;
+                float s = Mathf.Sin(ph) + 0.16f * Mathf.Sin(3f * ph) + 0.04f * Mathf.Sin(5f * ph);
+                t[i] = s * amp * 0.7f;
+            }
+            Gate(t, 0.005f, rel);
+            Tone(t, f, amp * 0.12f, dur * 0.97f, 0.08f, 0.001f, 55f);
+            Add(dst, t, 1f, start);
+        }
+
+        public static float[] GasMonitorBeep(Rng r)
+        {
+            var b = Buf(0.6f); float f = J(r, 1750f, 0.01f);
+            Beep(b, f, 0.8f, 0f, 0.1f, 0.03f); Beep(b, f, 0.8f, 0.16f, 0.1f, 0.03f);
+            return Reverb(b, 0.1f, 0.15f);
+        }
+
+        public static float[] MonitorAlarm(Rng r)
+        {
+            var b = Buf(1.7f);
+            float[] times = { 0f, 0.14f, 0.28f, 0.56f, 0.70f };
+            float[] freqs = { 880f, 880f, 880f, 1175f, 1175f };
+            for (int i = 0; i < times.Length; i++) Beep(b, freqs[i], 0.8f, times[i], 0.11f, 0.04f);
+            return b;
+        }
+
+        public static float[] MeterBeep(Rng r)
+        {
+            var b = Buf(0.36f);
+            Beep(b, J(r, 1000f, 0.01f), 0.8f, 0.01f, 0.2f, 0.05f);
+            return Reverb(b, 0.1f, 0.15f);
+        }
+
+        public static float[] ForkliftBeepReverse(Rng r)
+        {
+            // the back-up beeper: one beep a second, a little hollow (a horn-type sounder), the tail wraps round
+            var b = Buf(1f + 0.1f);
+            Beep(b, 1000f, 0.8f, 0.02f, 0.44f, 0.02f);
+            Tone(b, 2000f, 0.05f, 0.02f, 0.44f, 0.01f, 0f);
+            return Fold(b, (int)(R * 1f));
+        }
+
+        public static float[] FarBeep(Rng r)
+        {
+            var b = Buf(1.4f);
+            Beep(b, 1000f, 0.8f, 0f, 0.3f, 0.03f); Beep(b, 1000f, 0.8f, 0.6f, 0.3f, 0.03f);
+            Filter(b, F.Low, 2400f);
+            return Reverb(b, 0.45f, 0.9f, 2f);
+        }
+
+        public static float[] AlarmSiren(Rng r)
+        {
+            // a wailing electronic siren: pitch rises and falls once (it ends where it began, so it loops), a slow vibrato, a detuned twin, a broad resonance
+            var b = Buf(3f);
+            LoopHarmonics(b, t => 450f + 320f * (0.5f - 0.5f * Mathf.Cos(Tau * t / 3f)), 6, 1.5f, 0.5f);
+            var b2 = Buf(3f);
+            LoopHarmonics(b2, t => 453f * 1.007f + 320f * 1.007f * (0.5f - 0.5f * Mathf.Cos(Tau * t / 3f)), 4, 1.8f, 0.3f);
+            Add(b, b2, 1f);
+            var res = Buf(3f); Add(res, b, 1f); FilterLoop(res, F.Band, 1100f, 0.9f); Add(b, res, 0.6f);
+            Soft(b, 1.1f);
+            return b;
+        }
+
+        // ------------------------------------------------------------------ engines and machines
+
+        public static float[] ForkliftEngineLoop(Rng r)
+        {
+            // low diesel idle: irregular firing, each pulse a thump plus an exhaust puff plus a tick of injector knock; the tail wraps round the loop
+            float len = 2f; var b = Buf(len + 0.25f);
+            float rate = 22f;
+            for (int p = 0; p < (int)(len * rate); p++)
+            {
+                float t = p / rate + Rnd(r) * 0.004f, a = 0.8f + 0.2f * Rnd(r);
+                Tone(b, 64f, a * 0.5f, t, 0.1f, 0.004f, 34f); Tone(b, 128f, a * 0.5f, t, 0.07f, 0.003f, 45f); Tone(b, 192f, a * 0.3f, t, 0.06f, 0.003f, 55f);
+                Tone(b, 256f, a * 0.14f, t, 0.05f, 0.003f, 70f);
+                NoiseHit(b, r, t, 0.06f, a * 0.45f, F.Band, 520f, 0.8f, 55f, 0.003f);
+                NoiseHit(b, r, t + 0.002f, 0.03f, a * 0.28f, F.Band, 1500f, 1.2f, 140f);   // injector knock
+            }
+            var o = Fold(b, (int)(len * R));
+            var rum = LoopNoise(r, len, x => Filter(x, F.Band, 350f, 0.5f), 0.3f); Add(o, rum, 0.3f);
+            Tone(o, 88f, 0.08f, 0f, len, 0.01f, 0f);
+            FilterLoop(o, F.High, 55f);
+            FilterLoop(o, F.Low, 1800f);
+            return o;
+        }
+
+        public static float[] FarThud(Rng r)
+        {
+            var b = Buf(1.0f);
+            Glide(b, J(r, 120f, 0.1f), 60f, 14f, 0.8f, 0f, 0.6f, 8f, 0.004f);
+            var n = Pink(r, 0.3f); Filter(n, F.Band, 260f, 0.5f); Env(n, 0.004f, 14f); Add(b, n, 1.1f);
+            Modal(b, r, J(r, 190f, 0.1f), 0.3f, 0f, 14f, Mat.Wood);
+            return Reverb(b, 0.45f, 0.9f, 2f);
+        }
+
+        public static float[] HvacLoop(Rng r)
+        {
+            float len = 5f;
+            var b = LoopNoise(r, len, x => { Filter(x, F.Low, 900f, 0.6f); Filter(x, F.High, 70f); }, 0.4f);
+            var air = LoopNoise(r, len, x => Filter(x, F.Band, 1700f, 0.5f), 0.4f); var am = LoopMod(r, len, 0.4f);
+            for (int i = 0; i < air.Length; i++) air[i] *= 0.3f * (0.7f + 0.3f * am[i]);
+            Add(b, air, 1f);
+            var t0 = Buf(len);
+            Tone(t0, 120f, 0.1f, 0f, len, 0.01f, 0f); Tone(t0, 240f, 0.06f, 0f, len, 0.01f, 0f); Tone(t0, 360f, 0.03f, 0f, len, 0.01f, 0f);
+            Add(b, t0, 1f);
+            return b;
+        }
+
+        public static float[] PlantDroneLoop(Rng r)
+        {
+            float len = 8f; var b = Buf(len);
+            Tone(b, 55f, 0.2f, 0f, len, 0.01f, 0f); Tone(b, 55.5f, 0.15f, 0f, len, 0.01f, 0f);
+            Tone(b, 110f, 0.3f, 0f, len, 0.01f, 0f); Tone(b, 165f, 0.22f, 0f, len, 0.01f, 0f); Tone(b, 220f, 0.14f, 0f, len, 0.01f, 0f); Tone(b, 330f, 0.06f, 0f, len, 0.01f, 0f);
+            Shape(b, t => 0.85f + 0.15f * Mathf.Sin(Tau * t / len * 4f));
+            var rum = LoopNoise(r, len, x => { Filter(x, F.Band, 260f, 0.5f); }, 0.8f); Add(b, rum, 0.5f);
+            var air = LoopNoise(r, len, x => Filter(x, F.Band, 1100f, 0.6f), 0.8f); Add(b, air, 0.18f);
+            FilterLoop(b, F.High, 60f);
+            return b;
+        }
+
+        public static float[] FlareRoarLoop(Rng r)
+        {
+            // a gas flare heard from a distance: a broad breathing roar (mids), a lower rumble, and a fine crackle
+            float len = 5f;
+            var b = LoopNoise(r, len, x => { Filter(x, F.Band, 500f, 0.45f); }, 0.5f);
+            var turb = LoopMod(r, len, 6f);
+            var rum = LoopNoise(r, len, x => Filter(x, F.Low, 180f), 0.5f);
+            var hi = LoopNoise(r, len, x => Filter(x, F.Band, 1600f, 0.6f), 0.5f);
+            for (int i = 0; i < b.Length; i++) b[i] = b[i] * (0.45f + 0.55f * turb[i]) + rum[i] * 0.5f + hi[i] * 0.25f * turb[i];
+            var cr = Buf(len + 0.05f);
+            Crackle(cr, r, 0f, len, 70f, 0.25f, 1200f, 3500f, 600f);
+            Add(b, Fold(cr, b.Length), 1f);
+            FilterLoop(b, F.High, 60f);
+            return b;
+        }
+
+        public static float[] WindLoop(Rng r)
+        {
+            float len = 8f;
+            var b = LoopNoise(r, len, x => { Filter(x, F.Band, 450f, 0.5f); }, 0.7f);
+            var lo = LoopNoise(r, len, x => Filter(x, F.Low, 300f, 0.7f), 0.7f);
+            var whistle = LoopNoise(r, len, x => Filter(x, F.Band, 700f, 8f), 0.7f);
+            var gust = LoopMod(r, len, 0.35f);
+            for (int i = 0; i < b.Length; i++) b[i] = (b[i] * 1.2f + lo[i] * 0.4f + whistle[i] * 0.45f * gust[i]) * (0.35f + 0.65f * gust[i]);
+            FilterLoop(b, F.High, 60f);
+            return b;
+        }
+
+        // five scene beds, 12 s each; every tone is a whole number of cycles in 12 s (loops exactly); balanced across the mids so small headset drivers can show them
+
+        public static float[] AmbLobby(Rng r)
+        {
+            float len = 12f;
+            var b = LoopNoise(r, len, x => { Filter(x, F.Low, 900f, 0.7f); Filter(x, F.High, 70f); }, 0.8f);
+            var air = LoopNoise(r, len, x => Filter(x, F.Band, 1500f, 0.5f), 0.8f);
+            var sw = LoopMod(r, len, 0.25f);
+            for (int i = 0; i < b.Length; i++) b[i] = (b[i] + air[i] * 0.3f) * (0.75f + 0.25f * sw[i]);
+            // distant murmur of people: syllable-rate modulated noise through vowel-like formants (far and soft, so it never reads as speech)
+            for (int v = 0; v < 4; v++)
+            {
+                float f1 = Range(r, 350f, 700f), f2 = Range(r, 900f, 1800f), rate = Range(r, 2.5f, 4.5f);
+                var g = LoopNoise(r, len, x => { Filter(x, F.Band, f1, 3f); }, 0.8f);
+                var g2 = LoopNoise(r, len, x => { Filter(x, F.Band, f2, 3f); }, 0.8f);
+                var m1 = LoopMod(r, len, rate); var m2 = LoopMod(r, len, 0.4f);
+                for (int i = 0; i < g.Length; i++) b[i] += (g[i] + g2[i] * 0.5f) * 0.11f * Mathf.Pow(m1[i], 2f) * m2[i];
+            }
+            var h = Buf(len); Tone(h, 60f, 0.03f, 0f, len, 0.01f, 0f); Tone(h, 120f, 0.04f, 0f, len, 0.01f, 0f); Tone(h, 180f, 0.02f, 0f, len, 0.01f, 0f);
+            Add(b, h, 1f);
+            FilterLoop(b, F.High, 70f);
+            return b;
+        }
+
+        public static float[] AmbHydro(Rng r)
+        {
+            float len = 12f;
+            var b = LoopNoise(r, len, x => { Filter(x, F.Low, 800f, 0.7f); Filter(x, F.High, 70f); }, 0.8f);
+            var flow = LoopNoise(r, len, x => Filter(x, F.Band, 1300f, 0.6f), 0.8f); var fm = LoopMod(r, len, 0.8f);
+            for (int i = 0; i < flow.Length; i++) flow[i] *= 0.4f * (0.6f + 0.4f * fm[i]);
+            Add(b, flow, 1f);
+            var h = Buf(len);
+            Tone(h, 120f, 0.1f, 0f, len, 0.01f, 0f); Tone(h, 120.25f, 0.08f, 0f, len, 0.01f, 0f); Tone(h, 180f, 0.06f, 0f, len, 0.01f, 0f); Tone(h, 240f, 0.04f, 0f, len, 0.01f, 0f);
+            Add(b, h, 1f);
+            var bub = Buf(len + 0.4f);
+            for (int k = 0; k < 60; k++) Bubble(bub, r, Range(r, 0f, len), Mathf.Exp(Range(r, Mathf.Log(2f), Mathf.Log(8f))), Range(r, 0.03f, 0.14f));
+            Add(b, Fold(bub, b.Length), 1f);
+            FilterLoop(b, F.High, 70f);
+            return b;
+        }
+
+        public static float[] AmbRefinery(Rng r)
+        {
+            float len = 12f;
+            var b = LoopNoise(r, len, x => { Filter(x, F.Band, 380f, 0.4f); }, 0.8f);                                  // open-air hush
+            var wind = LoopNoise(r, len, x => Filter(x, F.Band, 700f, 0.7f), 0.8f); var wm = LoopMod(r, len, 0.18f);   // slow gusts
+            for (int i = 0; i < wind.Length; i++) wind[i] *= 0.7f * wm[i] * wm[i];
+            Add(b, wind, 1f);
+            var fl = LoopNoise(r, len, x => Filter(x, F.Band, 520f, 0.5f), 0.8f); var fm = LoopMod(r, len, 0.5f);       // distant flare
+            for (int i = 0; i < fl.Length; i++) fl[i] *= 0.5f * (0.5f + 0.5f * fm[i]);
+            Add(b, fl, 1f);
+            var h = Buf(len); Tone(h, 110f, 0.06f, 0f, len, 0.01f, 0f); Tone(h, 165f, 0.035f, 0f, len, 0.01f, 0f); Tone(h, 82.5f, 0.05f, 0f, len, 0.01f, 0f);
+            Add(b, h, 1f);                                                                                              // plant hum
+            var wh = LoopNoise(r, len, x => Filter(x, F.Band, 640f, 10f), 0.8f); var wm2 = LoopMod(r, len, 0.3f);
+            for (int i = 0; i < wh.Length; i++) wh[i] *= 0.2f * wm2[i] * wm2[i];
+            Add(b, wh, 1f);
+            var st = LoopNoise(r, len, x => Filter(x, F.Band, 3000f, 0.6f), 0.8f); var sm = LoopMod(r, len, 0.2f);       // faint steam
+            for (int i = 0; i < st.Length; i++) st[i] *= 0.06f * sm[i] * sm[i];
+            Add(b, st, 1f);
+            FilterLoop(b, F.High, 60f);
+            return b;
+        }
+
+        public static float[] AmbWarehouse(Rng r)
+        {
+            float len = 12f;
+            var b = LoopNoise(r, len, x => { Filter(x, F.Low, 700f, 0.7f); Filter(x, F.High, 70f); }, 0.8f);           // big hall tone
+            var air = LoopNoise(r, len, x => Filter(x, F.Band, 1100f, 0.4f), 0.8f);
+            var m = LoopMod(r, len, 0.2f);
+            for (int i = 0; i < b.Length; i++) b[i] = (b[i] + air[i] * 0.3f) * (0.7f + 0.3f * m[i]);
+            var h = Buf(len); Tone(h, 100f, 0.06f, 0f, len, 0.01f, 0f); Tone(h, 200f, 0.04f, 0f, len, 0.01f, 0f); Tone(h, 300f, 0.025f, 0f, len, 0.01f, 0f);
+            Add(b, h, 1f);                                                                                              // transformer / light ballast hum
+            var dock = LoopNoise(r, len, x => Filter(x, F.Band, 480f, 3f), 0.8f); var dm = LoopMod(r, len, 0.25f);   // distant machinery
+            for (int i = 0; i < dock.Length; i++) dock[i] *= 0.2f * dm[i];
+            Add(b, dock, 1f);
+            var vent = LoopNoise(r, len, x => Filter(x, F.Band, 2200f, 0.6f), 0.8f); var vm = LoopMod(r, len, 0.35f);   // overhead ventilation
+            for (int i = 0; i < vent.Length; i++) vent[i] *= 0.07f * vm[i];
+            Add(b, vent, 1f);
+            FilterLoop(b, F.High, 70f);
+            return b;
+        }
+
+        public static float[] AmbBench(Rng r)
+        {
+            float len = 12f;
+            var b = LoopNoise(r, len, x => { Filter(x, F.Low, 1600f, 0.6f); Filter(x, F.High, 120f); }, 0.8f);
+            for (int i = 0; i < b.Length; i++) b[i] *= 0.5f;
+            var h = Buf(len);
+            Tone(h, 120f, 0.1f, 0f, len, 0.01f, 0f); Tone(h, 180f, 0.05f, 0f, len, 0.01f, 0f); Tone(h, 240f, 0.04f, 0f, len, 0.01f, 0f); Tone(h, 360f, 0.02f, 0f, len, 0.01f, 0f);
+            Add(b, h, 1f);                                                                                              // mains hum from supplies
+            var fan = LoopNoise(r, len, x => Filter(x, F.Band, 900f, 0.5f), 0.8f);
+            Add(b, fan, 0.3f);
+            var fan2 = LoopNoise(r, len, x => Filter(x, F.Band, 2400f, 0.7f), 0.8f); var f2m = LoopMod(r, len, 0.3f);
+            for (int i = 0; i < fan2.Length; i++) fan2[i] *= 0.06f * (0.5f + 0.5f * f2m[i]);
+            Add(b, fan2, 1f);
+            FilterLoop(b, F.High, 90f);
+            return b;
+        }
+
+        // ------------------------------------------------------------------ electrical
+
+        public static float[] SparkPop(Rng r)
+        {
+            var b = Buf(0.5f);
+            Glide(b, 300f, 130f, 40f, 0.35f, 0f, 0.08f, 40f, 0.001f);
+            NoiseHit(b, r, 0f, 0.15f, 0.3f, F.Band, 1900f, 0.6f, 26f, 0.001f);
+            Crackle(b, r, 0f, 0.22f, 60f, 0.7f, 1400f, 4200f, 500f);
+            return Reverb(b, 0.2f, 0.25f);
+        }
+
+        public static float[] EsdClick(Rng r)
+        {
+            var b = Buf(0.3f);
+            NoiseHit(b, r, 0f, 0.02f, 0.7f, F.Band, 2500f, 0.8f, 220f, 0.0004f);
+            Tone(b, 2600f, 0.12f, 0f, 0.05f, 0.0004f, 130f);
+            Glide(b, 320f, 160f, 40f, 0.3f, 0f, 0.05f, 80f, 0.001f);
+            Crackle(b, r, 0.005f, 0.07f, 90f, 0.25f, 1800f, 3600f, 700f);
+            return Reverb(b, 0.12f, 0.15f);
+        }
+
+        /// <summary>An electric arc / short circuit zap: a dense crackle that thins out, a low "bwomp" and a falling whine.</summary>
+        public static float[] Zap(Rng r)
+        {
+            var b = Buf(0.7f);
+            Crackle(b, r, 0f, 0.18f, 380f, 0.7f, 1300f, 4200f, 450f);
+            Crackle(b, r, 0.12f, 0.3f, 90f, 0.4f, 1200f, 3400f, 450f);
+            Glide(b, 240f, 70f, 14f, 0.7f, 0f, 0.3f, 12f, 0.002f);
+            Glide(b, 1800f, 500f, 9f, 0.18f, 0f, 0.3f, 12f, 0.004f);
+            NoiseHit(b, r, 0f, 0.2f, 0.25f, F.Band, 1700f, 0.5f, 14f, 0.002f);
+            return Reverb(b, 0.25f, 0.3f);
+        }
+
+        /// <summary>A live bench: transformer hum (120 Hz and harmonics) with a slow flutter and sparse crackle.</summary>
+        public static float[] ElectricBuzz(Rng r)
+        {
+            float len = 2.5f; var b = Buf(len);
+            for (int k = 1; k <= 8; k++) Tone(b, 120f * k, 0.5f / Mathf.Pow(k, 0.9f), 0f, len, 0.01f, 0f);
+            Shape(b, t => 0.85f + 0.15f * Mathf.Sin(Tau * t / len * 3f));
+            var n = LoopNoise(r, len, x => Filter(x, F.Band, 1500f, 0.7f), 0.3f); Add(b, n, 0.1f);
+            var cr = Buf(len + 0.05f); Crackle(cr, r, 0f, len, 7f, 0.5f, 1500f, 3500f, 500f);
+            Add(b, Fold(cr, b.Length), 1f);
+            FilterLoop(b, F.High, 80f);
+            return b;
+        }
+
+        // ------------------------------------------------------------------ footsteps (concrete and gravel use recordings; these three are synthesized)
+
+        public static float[] Footstep(Rng r, Surface s)
+        {
+            var b = Buf(0.55f); float toe = Range(r, 0.07f, 0.11f), w = Range(r, 0.85f, 1.15f);
+            switch (s)
+            {
+                case Surface.Concrete:
+                    Glide(b, J(r, 130f, 0.1f), 70f, 30f, 0.7f * w, 0f, 0.12f, 38f, 0.002f);
+                    NoiseHit(b, r, 0f, 0.1f, 0.5f * w, F.Band, J(r, 900f, 0.15f), 0.6f, 50f, 0.002f);
+                    NoiseHit(b, r, 0f, 0.03f, 0.3f, F.Band, J(r, 2600f, 0.1f), 0.8f, 150f, 0.0005f);
+                    Scuff(b, r, 0f, 0.05f, 0.18f, 1200f, 4000f);
+                    Glide(b, 140f, 85f, 30f, 0.3f, toe, 0.08f, 45f, 0.002f);
+                    NoiseHit(b, r, toe, 0.07f, 0.28f, F.Band, 1000f, 0.6f, 60f, 0.002f);
+                    break;
+                case Surface.Metal:
+                    // a steel grating or plate: thump, ringing plate, slap, then the toe
+                    Glide(b, 140f, 80f, 30f, 0.4f * w, 0f, 0.1f, 40f, 0.002f);
+                    Impact(b, r, 0f, 0.75f * w, J(r, 420f, 0.1f), Mat.Metal, 2400f, 20f, 0f);
+                    Modal(b, r, J(r, 870f, 0.1f), 0.18f, 0.001f, 26f, Mat.Metal);
+                    Scuff(b, r, 0f, 0.05f, 0.2f, 900f, 3200f);
+                    Impact(b, r, toe, 0.35f * w, J(r, 470f, 0.1f), Mat.Metal, 2200f, 14f);
+                    break;
+                case Surface.Tile:
+                    // hard shoe on tile: a clear heel click over a hollow floor resonance
+                    NoiseHit(b, r, 0f, 0.012f, 0.55f * w, F.Band, J(r, 2200f, 0.1f), 1f, 260f, 0.0004f);
+                    Modal(b, r, J(r, 1250f, 0.06f), 0.4f * w, 0f, 90f, Mat.Glass);
+                    Glide(b, 170f, 95f, 30f, 0.45f * w, 0f, 0.1f, 36f, 0.002f);
+                    Tone(b, J(r, 220f, 0.05f), 0.14f, 0f, 0.2f, 0.004f, 22f);
+                    Scuff(b, r, 0f, 0.04f, 0.14f, 1500f, 4500f);
+                    NoiseHit(b, r, toe, 0.01f, 0.28f, F.Band, 2000f, 1f, 280f, 0.0004f);
+                    Modal(b, r, J(r, 1350f, 0.06f), 0.18f, toe, 100f, Mat.Glass);
+                    Glide(b, 180f, 105f, 30f, 0.25f, toe, 0.08f, 40f, 0.002f);
+                    break;
+                case Surface.Gravel:
+                    for (int k = 0; k < 40; k++)
+                        NoiseHit(b, r, Range(r, 0f, 0.26f), 0.02f, Range(r, 0.1f, 0.45f), F.Band, Range(r, 1500f, 4500f), 2f, 150f, 0.0005f);
+                    NoiseHit(b, r, 0f, 0.15f, 0.5f, F.Band, 800f, 0.6f, 22f, 0.003f);
+                    Glide(b, 120f, 75f, 30f, 0.25f, 0f, 0.09f, 45f, 0.003f);
+                    break;
+                default: // Wood
+                    Modal(b, r, J(r, 190f, 0.08f), 0.7f * w, 0f, 26f, Mat.Wood);
+                    Modal(b, r, J(r, 410f, 0.08f), 0.25f, 0f, 36f, Mat.Wood);
+                    NoiseHit(b, r, 0f, 0.1f, 0.4f, F.Band, J(r, 600f, 0.12f), 1.2f, 38f, 0.002f);
+                    Glide(b, 140f, 85f, 30f, 0.35f * w, 0f, 0.1f, 36f, 0.002f);
+                    Scuff(b, r, 0f, 0.05f, 0.16f, 800f, 3000f);
+                    Modal(b, r, J(r, 215f, 0.08f), 0.3f, toe, 32f, Mat.Wood);
+                    if (r.NextDouble() < 0.25)
+                    {
+                        var cr = Pink(r, 0.18f); float cf = Range(r, 380f, 520f);
+                        FilterVar(cr, F.Band, t => cf * (1f + t * 1.2f), 8f);
+                        Shape(cr, t => Mathf.Sin(Mathf.Clamp01(t / 0.18f) * Mathf.PI));
+                        Add(b, cr, 0.16f, 0.1f);
+                    }
+                    break;
+            }
+            return Reverb(b, 0.14f, 0.25f);
+        }
+
     }
 }

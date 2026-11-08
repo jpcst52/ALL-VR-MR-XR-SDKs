@@ -1,0 +1,15 @@
+/* Lab v2 page chrome: builds on ../shared/style.css (Pitt palette, fonts from brand-kit). Adds the lab/version switcher and a
+   slightly glassier panel so the lit room shows through. Royal #003594, Gold #FFB81C, Medium Blue #00205B, New Sky #DBEEFF. */
+.panel { background: #04133ae6; border-color: #3b5ea3; box-shadow: 0 22px 60px #00051aaa, inset 0 1px 0 #ffffff14; }
+.heading h1 { font-family: "League Gothic", Impact, sans-serif; font-weight: 400; letter-spacing: 0.01em; font-size: 2.6rem; line-height: 1; }
+.eyebrow { color: #ffb81c; letter-spacing: 0.14em; }
+.version-nav {
+  display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px;
+}
+.version-nav a {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 6px 14px; border-radius: 999px;
+  border: 1px solid #3b5ea3; color: #dbeeff; text-decoration: none; font-weight: 500; font-size: 0.92rem; background: #0b2155;
+}
+.version-nav a:hover { border-color: #ffb81c; }
+.version-nav a[aria-current="page"] { background: #ffb81c; color: #00205b; border-color: #ffb81c; font-weight: 700; }
+.version-nav a[data-v1] { margin-left: auto; background: transparent; color: #b9c9e6; }

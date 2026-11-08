@@ -51,6 +51,19 @@ namespace PittBradford.XR.EditorTools
             }
         }
 
+        /// <summary>
+        /// Re-applies only the OpenXR loader and the Vive / Index / Touch controller profiles, then saves and exits. Run on an existing
+        /// project with -executeMethod PittBradford.XR.EditorTools.Configurator.EnsureControllerProfilesAndExit (it does not touch scenes).
+        /// A project with no interaction profile enabled gets no controller input at all under SteamVR.
+        /// </summary>
+        public static void EnsureControllerProfilesAndExit()
+        {
+            EnableOpenXR(BuildTargetGroup.Standalone);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[setup] OpenXR loader and controller profiles ensured");
+            EditorApplication.Exit(0);
+        }
+
         public static void EnableOpenXR(BuildTargetGroup group)
         {
             if (!EditorBuildSettings.TryGetConfigObject(XRGeneralSettings.k_SettingsKey, out XRGeneralSettingsPerBuildTarget perTarget) || perTarget == null)

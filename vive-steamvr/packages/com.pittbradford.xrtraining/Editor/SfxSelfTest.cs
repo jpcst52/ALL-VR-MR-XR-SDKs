@@ -55,8 +55,61 @@ namespace PittBradford.XR.EditorTools
                     if (wavDir != null && k == 0) WriteWav(Path.Combine(wavDir, src.name + ".wav"), data, src.frequency);
                 }
             }
+            bad += RuntimeParts();
             Debug.Log($"[sfx-test] {(bad == 0 ? "PASS" : "FAIL")}: {total} clips checked, {bad} problems, {all.ElapsedMilliseconds} ms total");
             return bad == 0;
+        }
+
+        /// <summary>Edit-mode checks of the round 5 playback code that does not need play mode: custom rolloff, play gains, shuffled round robin.</summary>
+        static int RuntimeParts()
+        {
+            int bad = 0;
+            var flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
+            var go = new GameObject("sfx-test source");
+            try
+            {
+                var src = go.AddComponent<AudioSource>();
+                src.minDistance = 1.2f; src.maxDistance = 25f;
+                typeof(Sfx).GetMethod("ApplyRolloff", flags).Invoke(null, new object[] { src });
+                var c = src.GetCustomCurve(AudioSourceCurveType.CustomRolloff);
+                float near = c.Evaluate(1.2f / 25f), mid = c.Evaluate(5f / 25f), far = c.Evaluate(1f), past = c.Evaluate(0.9f);
+                bool ok = src.rolloffMode == AudioRolloffMode.Custom && near > 0.9f && mid < near && mid > 0.05f && far < 0.001f && past < mid;
+                Debug.Log($"[sfx-test] {(ok ? "ok  " : "FAIL")} custom rolloff: 1.2 m {near:F2}, 5 m {mid:F2}, 22.5 m {past:F3}, 25 m {far:F3}");
+                if (!ok) bad++;
+            }
+            catch (System.Exception e) { Debug.LogError("[sfx-test] FAIL custom rolloff: " + e.Message); bad++; }
+            finally { Object.DestroyImmediate(go); }
+
+            // loops: file level and in-scene level give a play gain between 0 and 1; one-shots peak at or under -6 dBFS
+            foreach (var kv in SfxCatalog.Defs)
+            {
+                var d = kv.Value;
+                bool ok = d.Loop ? (d.Gain > 0.01f && d.Gain <= 1f && !float.IsNaN(d.Lufs)) : (d.Ceiling <= 0.502f && d.Gain == 1f);
+                if (!ok) { Debug.LogError($"[sfx-test] FAIL catalogue entry {kv.Key}: gain {d.Gain} ceiling {d.Ceiling} lufs {d.Lufs}"); bad++; }
+            }
+
+            // shuffled round robin: over 3 rounds every variation appears once per round and a round never starts with the last clip of the one before
+            var pick = typeof(Sfx).GetMethod("Pick", flags);
+            foreach (var name in new[] { "button", "footstep_metal", "water_drip" })
+            {
+                var seen = new System.Collections.Generic.List<string>();
+                pick.Invoke(null, new object[] { name, false });
+                var set = ((System.Collections.Generic.Dictionary<string, AudioClip[]>)typeof(Sfx).GetField("Clips", flags).GetValue(null))[name];
+                int n = set.Length;
+                ((System.Collections.Generic.Dictionary<string, int>)typeof(Sfx).GetField("OrderPos", flags).GetValue(null))[name] = n;   // start a fresh round
+                for (int i = 0; i < n * 3; i++) seen.Add(((AudioClip)pick.Invoke(null, new object[] { name, false })).GetInstanceID().ToString());
+                bool ok = true;
+                for (int r = 0; r < 3; r++)
+                {
+                    var round = new System.Collections.Generic.HashSet<string>();
+                    for (int i = 0; i < n; i++) round.Add(seen[r * n + i]);
+                    if (round.Count != n) ok = false;
+                    if (r > 0 && seen[r * n] == seen[r * n - 1]) ok = false;
+                }
+                Debug.Log($"[sfx-test] {(ok ? "ok  " : "FAIL")} round robin {name}: {n} variations, 3 rounds");
+                if (!ok) bad++;
+            }
+            return bad;
         }
 
         static AudioClip PickForTest(string name)

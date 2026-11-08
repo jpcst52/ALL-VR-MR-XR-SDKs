@@ -29,3 +29,21 @@ Re-shot after the realism upgrade (see [Rooms, props and people](../README.md#ro
 ![Site Safety Layout](./site-safety-avatars.png)
 
 ![Test bay](./test-bay-avatars.png)
+
+## November 6, 2026: Lab v2 (new look)
+
+Produced by `node multi-player/tools/v2-shots.mjs` (desktop Chrome, software renderer, full detail: shadows and glTF props on). The other participants in the desktop shots are scripted relay clients; the Quest shots are an **emulated Meta Quest 3** (IWER) in lite mode, never a real headset. Render-cost numbers are in [v2-render-cost.json](./v2-render-cost.json) and the [multi-player README](../README.md#lab-v2-circuit-lab-and-safety-lab-with-a-new-look-v1-is-unchanged).
+
+| Capture | What it shows |
+|---|---|
+| [v2-circuit-lab-desktop.png](./v2-circuit-lab-desktop.png) | Circuit Lab v2: workshop with window light, a closed "Motor and bulb" circuit with current dots, the lit bulb and terminal rings. |
+| [v2-circuit-lab-closeup.png](./v2-circuit-lab-closeup.png) | Close-up of the battery, switch, motor and sagging wire. |
+| [v2-circuit-lab-bulb.png](./v2-circuit-lab-bulb.png) | The lit bulb (glass, filament, halo glow) next to the battery and switch. |
+| [v2-circuit-lab-quest.png](./v2-circuit-lab-quest.png) | Emulated Quest 3 inside the session: toolbox, glove hands, the room around the table-top board. |
+| [v2-safety-lab-desktop.png](./v2-safety-lab-desktop.png) | Safety Lab v2: bay with painted deck, Welding bay layout, a pulsing beacon with light beams. |
+| [v2-safety-lab-closeup.png](./v2-safety-lab-closeup.png) | Close-up of the striped barriers, beacon, extinguishers, exit and muster signs. |
+| [v2-safety-lab-quest.png](./v2-safety-lab-quest.png) | Emulated Quest 3 inside the session, Safety Lab. |
+
+![Circuit Lab v2](./v2-circuit-lab-desktop.png)
+
+![Safety Lab v2](./v2-safety-lab-desktop.png)

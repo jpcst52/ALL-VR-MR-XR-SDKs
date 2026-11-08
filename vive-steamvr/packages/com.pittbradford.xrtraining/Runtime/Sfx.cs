@@ -5,15 +5,14 @@ using Rng = System.Random;
 
 namespace PittBradford.XR
 {
-    public enum Surface { Concrete, Metal, Tile, Gravel, Wood }
-
     /// <summary>
     /// The kit's sound library. Call by name: <c>Sfx.Play("valve_turn", pos)</c>. Each name has several variations (a
     /// recorded CC0 sample from Resources/Audio when one exists, otherwise layered synthesis from <see cref="Synth"/>) and
     /// a different one is chosen each time, with a little pitch and volume jitter, so nothing machine-guns. One-shots play
     /// through a small pool of AudioSources, so many sounds do not allocate. Nothing plays while a scene bake is running.
-    /// Every clip is levelled to a loudness target for its kind (ambience below machines below interaction below alarms),
-    /// soft-limited under 0.85 and faded at the ends. See <see cref="SceneAudio"/> for per-scene reverb and ambience.
+    /// Levels (round 5): one-shots peak at about -6 dBFS (quieter kinds lower), loops are normalised to a LUFS-equivalent file level and
+    /// brought to their in-scene level by a play gain (see <see cref="SfxDef.Gain"/>). Spatial sounds use a custom rolloff that fades to
+    /// silence at the maximum distance, and far one-shots are darkened by distance. See <see cref="SceneAudio"/> for per-scene reverb and ambience.
     /// </summary>
     public static class Sfx
     {
@@ -23,115 +22,33 @@ namespace PittBradford.XR
         public static float Master = 1f;
 
         const int PoolSize = 24;
-        /// <summary>Overall level trim in dB added to every target below (they are relative to each other; this sets how loud the set is).</summary>
-        const float Trim = 6f;
 
-        sealed class Def
-        {
-            public Func<Rng, float[]> Gen;
-            public int Rate = 32000, Variants = 4, Priority = 128;
-            public bool Loop;
-            /// <summary>Target loudness: RMS of the active part in dBFS. Ambience about -34, machines -27 to -33, interaction -21 to -26, alarms -20 to -23.</summary>
-            public float Level = -23f;
-            /// <summary>Gentle low-pass in Hz applied to the finished clip (keeps the top end soft on a headset).</summary>
-            public float Lp = 9000f;
-            /// <summary>How much of the scene reverb zone this sound gets (0..1).</summary>
-            public float Mix = 1f;
-        }
-
-        static readonly Dictionary<string, Def> Defs = new Dictionary<string, Def>();
+        static readonly Dictionary<string, SfxDef> Defs = SfxCatalog.Defs;
         static readonly Dictionary<string, AudioClip[]> Clips = new Dictionary<string, AudioClip[]>();
         static readonly Dictionary<string, bool> Sampled = new Dictionary<string, bool>();
         static readonly Dictionary<string, int> Last = new Dictionary<string, int>();
         static readonly HashSet<string> Warned = new HashSet<string>();
+        static readonly Dictionary<string, int[]> Order = new Dictionary<string, int[]>();
+        static readonly Dictionary<string, int> OrderPos = new Dictionary<string, int>();
+        static readonly Dictionary<long, AnimationCurve> Curves = new Dictionary<long, AnimationCurve>();
+        // background generation (see PreloadBackground)
+        sealed class Ready { public string Name; public int V, Rate; public float[] Data; }
+        static readonly System.Collections.Concurrent.ConcurrentQueue<Ready> readyQ = new System.Collections.Concurrent.ConcurrentQueue<Ready>();
+        static readonly Dictionary<string, AudioClip[]> Partial = new Dictionary<string, AudioClip[]>();
+        static int bgGen, bgPending;
+        static bool bgStarted;
         static AudioSource[] pool;
+        static AudioLowPassFilter[] poolLp;
+        static AudioListener listener;
+        static float nextFind;
         static int next;
         static Rng rng = new Rng(7);
-
-        static Sfx()
-        {
-            // interface family (one key, soft bells)
-            Reg("ui_confirm", Synth.UiConfirm, level: -23f, prio: 60, mix: 0.3f);
-            Reg("ui_error", Synth.UiError, level: -23f, prio: 60, mix: 0.3f);
-            Reg("ui_select", Synth.UiSelect, level: -25f, prio: 60, mix: 0.2f);
-            // hands and small objects
-            Reg("button", Synth.Button, level: -22f, prio: 100);
-            Reg("switch", Synth.Switch, level: -22f, prio: 100);
-            Reg("valve_turn", Synth.ValveTurn, level: -23f, lp: 8000f, prio: 100, variants: 5);
-            Reg("grab", Synth.Grab, level: -25f, lp: 7000f, prio: 100);
-            Reg("release", Synth.Release, level: -26f, lp: 7000f, prio: 100);
-            Reg("snap", Synth.Snap, level: -21f, prio: 100, variants: 5);
-            Reg("clink_metal", Synth.ClinkMetal, level: -22f, lp: 5500f, prio: 100, variants: 5);
-            Reg("thud_box", Synth.ThudBox, level: -19f, prio: 100);
-            Reg("cone_place", Synth.ConePlace, level: -22f, prio: 100);
-            Reg("tape", Synth.Tape, level: -26f, lp: 6500f, prio: 110);
-            Reg("spray", Synth.Spray, level: -28f, lp: 7500f, prio: 110);
-            Reg("water_drip", Synth.WaterDrip, level: -24f, prio: 120, variants: 5);
-            Reg("water_pour", Synth.WaterPour, loop: true, rate: 22050, level: -29f, lp: 6500f, prio: 150, variants: 2, mix: 0.6f);
-            Reg("pump_hum", Synth.PumpHum, loop: true, rate: 22050, level: -28f, lp: 3000f, prio: 150, variants: 1, mix: 0.6f);
-            Reg("gas_hiss", Synth.GasHiss, level: -30f, lp: 6500f, prio: 110);
-            // alarms: highest level, but soft attack and a low top end
-            Reg("alarm_siren", Synth.AlarmSiren, loop: true, rate: 22050, level: -20f, lp: 3200f, prio: 40, variants: 1);
-            Reg("alarm_siren_rise", Synth.AlarmSirenRise, level: -21f, lp: 3500f, prio: 40, variants: 1);
-            Reg("alarm_siren_fall", Synth.AlarmSirenFall, level: -21f, lp: 3500f, prio: 40, variants: 1);
-            Reg("gas_monitor_beep", Synth.GasMonitorBeep, level: -24f, lp: 4500f, prio: 50, variants: 2);
-            Reg("monitor_alarm", Synth.MonitorAlarm, loop: true, rate: 22050, level: -23f, lp: 3800f, prio: 50, variants: 1);
-            Reg("radio_click", Synth.RadioClick, level: -25f, lp: 5500f, prio: 110);
-            Reg("radio_static", Synth.RadioStatic, loop: true, rate: 22050, level: -34f, lp: 5000f, prio: 190, variants: 1);
-            // vehicles
-            Reg("forklift_horn", Synth.ForkliftHorn, level: -21f, lp: 3000f, prio: 60, variants: 2);
-            Reg("forklift_engine_loop", Synth.ForkliftEngineLoop, loop: true, rate: 22050, level: -27f, lp: 1800f, prio: 140, variants: 1, mix: 0.6f);
-            Reg("forklift_beep_reverse", Synth.ForkliftBeepReverse, loop: true, rate: 22050, level: -24f, lp: 3500f, prio: 50, variants: 1);
-            Reg("hydraulic_whine", Synth.HydraulicWhine, level: -28f, lp: 3500f, prio: 130, variants: 2);
-            Reg("pallet_drop", Synth.PalletDrop, level: -20f, prio: 100, variants: 5);
-            Reg("mirror_snap", Synth.MirrorSnap, level: -25f, lp: 8000f, prio: 100);
-            Reg("led_on", Synth.LedOn, level: -27f, lp: 7000f, prio: 110);
-            Reg("spark_pop", Synth.SparkPop, level: -26f, lp: 6500f, prio: 100);
-            Reg("smoke_puff", Synth.SmokePuff, level: -30f, lp: 3500f, prio: 130);
-            Reg("esd_click", Synth.EsdClick, level: -27f, lp: 6000f, prio: 110);
-            Reg("meter_beep", Synth.MeterBeep, level: -26f, lp: 4000f, prio: 70, variants: 1);
-            // ambience and machine loops
-            Reg("wind_loop", Synth.WindLoop, loop: true, rate: 22050, level: -34f, lp: 3500f, prio: 200, variants: 1, mix: 0.2f);
-            Reg("hvac_loop", Synth.HvacLoop, loop: true, rate: 22050, level: -33f, lp: 3500f, prio: 200, variants: 1, mix: 0.4f);
-            Reg("plant_drone_loop", Synth.PlantDroneLoop, loop: true, rate: 22050, level: -32f, lp: 3000f, prio: 200, variants: 1, mix: 0.4f);
-            Reg("flare_roar_loop", Synth.FlareRoarLoop, loop: true, rate: 22050, level: -30f, lp: 3500f, prio: 190, variants: 1, mix: 0.3f);
-            Reg("door_open", Synth.DoorOpen, level: -23f, prio: 100, variants: 3);
-            Reg("door_close", Synth.DoorClose, level: -21f, prio: 100, variants: 3);
-            Reg("ding", Synth.Ding, level: -24f, prio: 60, variants: 2, mix: 0.5f);
-            Reg("error_buzz", Synth.ErrorBuzz, level: -23f, lp: 3000f, prio: 50, variants: 2, mix: 0.3f);
-            Reg("pressure_tone", Synth.PressureTone, loop: true, rate: 22050, level: -31f, lp: 3000f, prio: 160, variants: 1, mix: 0.3f);
-            Reg("gauge_tick", Synth.GaugeTick, level: -27f, lp: 7000f, prio: 120);
-            // scene beds (SceneAudio.Begin plays these) and the distant one-shots its director scatters
-            Reg("amb_lobby", Synth.AmbLobby, loop: true, rate: 22050, level: -36f, lp: 3000f, prio: 230, variants: 1, mix: 0.3f);
-            Reg("amb_hydro", Synth.AmbHydro, loop: true, rate: 22050, level: -35f, lp: 3200f, prio: 230, variants: 1, mix: 0.4f);
-            Reg("amb_refinery", Synth.AmbRefinery, loop: true, rate: 22050, level: -35f, lp: 3200f, prio: 230, variants: 1, mix: 0.2f);
-            Reg("amb_warehouse", Synth.AmbWarehouse, loop: true, rate: 22050, level: -36f, lp: 3000f, prio: 230, variants: 1, mix: 0.4f);
-            Reg("amb_bench", Synth.AmbBench, loop: true, rate: 22050, level: -37f, lp: 3000f, prio: 230, variants: 1, mix: 0.3f);
-            // levels are "at 1 m"; the director plays them 3 to 20 m away, so they arrive 10 to 26 dB lower
-            Reg("far_clank", Synth.FarClank, level: -18f, lp: 3200f, prio: 180, variants: 4);
-            Reg("far_creak", Synth.FarCreak, level: -22f, lp: 2800f, prio: 180, variants: 3);
-            Reg("far_steam", Synth.FarSteam, level: -24f, lp: 4500f, prio: 180, variants: 2);
-            Reg("far_relay_tick", Synth.FarRelayTick, level: -22f, lp: 4500f, prio: 180, variants: 3);
-            Reg("far_thud", Synth.FarThud, level: -16f, lp: 1500f, prio: 180, variants: 3);
-            Reg("far_beep", Synth.FarBeep, level: -22f, lp: 2400f, prio: 180, variants: 2);
-            foreach (Surface s in Enum.GetValues(typeof(Surface)))
-            {
-                var surface = s;
-                Reg("footstep_" + s.ToString().ToLowerInvariant(), r => Synth.Footstep(r, surface), level: -26f, lp: 7500f, prio: 130, variants: 6, mix: 0.8f);
-            }
-        }
-
-        static void Reg(string name, Func<Rng, float[]> gen, bool loop = false, int rate = 32000, float level = -23f, float lp = 9000f,
-                        int variants = 4, int prio = 128, float mix = 1f)
-        {
-            Defs[name] = new Def { Gen = gen, Loop = loop, Rate = rate, Level = level + Trim, Lp = lp, Variants = variants, Priority = prio, Mix = mix };
-        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
         {
-            pool = null; next = 0; Enabled = true; Master = 1f;
-            Clips.Clear(); Sampled.Clear(); Last.Clear(); Warned.Clear();
+            pool = null; poolLp = null; listener = null; next = 0; Enabled = true; Master = 1f;
+            Clips.Clear(); Sampled.Clear(); Last.Clear(); Warned.Clear(); Order.Clear(); OrderPos.Clear(); Curves.Clear(); bgGen++; bgStarted = false; Partial.Clear(); while (readyQ.TryDequeue(out _)) { }
         }
 
         // ------------------------------------------------------------------ public API
@@ -166,6 +83,7 @@ namespace PittBradford.XR
         public static AudioSource Play(string name, Vector3 position, float volume = 1f, float pitchJitter = 0.05f)
         {
             if (!Active) return null;
+            PreloadBackground();
             var clip = Pick(name, true);
             if (clip == null) return null;
             var src = Acquire();
@@ -179,6 +97,7 @@ namespace PittBradford.XR
         public static AudioSource Play2D(string name, float volume = 1f)
         {
             if (!Active) return null;
+            PreloadBackground();
             var clip = Pick(name, true);
             if (clip == null) return null;
             var src = Acquire();
@@ -201,16 +120,17 @@ namespace PittBradford.XR
             var src = go.AddComponent<AudioSource>();
             src.playOnAwake = false;
             src.loop = true;
+            if (Active) PreloadBackground();
             var clip = Active ? Pick(name, true) : null;
             if (clip != null)
             {
                 Defs.TryGetValue(name, out var d);
                 src.clip = clip;
-                src.volume = volume * Master;
+                src.volume = Mathf.Clamp01(volume * Master * (d != null ? d.Gain : 1f));
                 src.spatialBlend = 1f;
-                src.rolloffMode = AudioRolloffMode.Logarithmic;
                 src.minDistance = Mathf.Max(0.1f, minDist);
                 src.maxDistance = Mathf.Max(minDist + 0.5f, maxDist);
+                ApplyRolloff(src);
                 src.dopplerLevel = 0f;
                 src.spread = 60f;
                 src.priority = d != null ? d.Priority : 150;
@@ -236,6 +156,68 @@ namespace PittBradford.XR
             else foreach (var n in names) Pick(n, false);
         }
 
+        /// <summary>
+        /// Generates every synthesized sound on a background thread and turns the results into clips a few per frame (see <see cref="SfxPump"/>),
+        /// so nothing has to be built in the middle of play. Starts by itself at the first <see cref="Play"/> or <see cref="Loop"/> and from
+        /// <see cref="SceneAudioBoot"/>; safe to call again. A sound asked for before its turn is built at once on the calling thread.
+        /// Does nothing while muted, outside play mode or during a bake.
+        /// </summary>
+        public static void PreloadBackground()
+        {
+            if (bgStarted || !Active) return;
+            bgStarted = true;
+            int gen = bgGen;
+            var jobs = new List<KeyValuePair<int, string>>();
+            foreach (var kv in Defs)
+            {
+                if (Clips.ContainsKey(kv.Key)) continue;
+                if (Resources.Load<AudioClip>("Audio/" + kv.Key) != null || Resources.Load<AudioClip>("Audio/" + kv.Key + "_1") != null) continue;   // recordings load synchronously
+                jobs.Add(new KeyValuePair<int, string>(kv.Value.Priority, kv.Key));
+            }
+            jobs.Sort((a, b) => a.Key != b.Key ? a.Key.CompareTo(b.Key) : string.CompareOrdinal(a.Value, b.Value));
+            int total = 0; foreach (var j in jobs) total += Defs[j.Value].Variants;
+            bgPending = total;
+            if (total == 0) return;
+            var go = new GameObject("Sfx loader");
+            go.AddComponent<DontBake>();
+            UnityEngine.Object.DontDestroyOnLoad(go);
+            go.AddComponent<SfxPump>();
+            System.Threading.ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try
+                {
+                    foreach (var j in jobs)
+                    {
+                        var def = Defs[j.Value];
+                        for (int v = 0; v < def.Variants; v++)
+                        {
+                            if (gen != bgGen) return;
+                            readyQ.Enqueue(new Ready { Name = j.Value, V = v, Rate = def.Rate, Data = Make(j.Value, def, v) });
+                        }
+                    }
+                }
+                catch (Exception) { /* the main thread builds anything that is missing when it is first asked for */ }
+            });
+        }
+
+        /// <summary>Main-thread half of <see cref="PreloadBackground"/>: builds up to <paramref name="max"/> clips. Returns false when there is nothing left to do.</summary>
+        internal static bool PumpReady(int max)
+        {
+            for (int n = 0; n < max && readyQ.TryDequeue(out var r); n++)
+            {
+                bgPending--;
+                if (Clips.ContainsKey(r.Name)) continue;   // already built synchronously
+                var def = Defs[r.Name];
+                if (!Partial.TryGetValue(r.Name, out var set)) { set = new AudioClip[def.Variants]; Partial[r.Name] = set; }
+                var clip = AudioClip.Create(r.Name + "_" + r.V, r.Data.Length, 1, r.Rate, false);
+                clip.SetData(r.Data, 0);
+                set[r.V] = clip;
+                bool all = true; foreach (var c in set) if (c == null) { all = false; break; }
+                if (all) { Clips[r.Name] = set; Sampled[r.Name] = false; Partial.Remove(r.Name); }
+            }
+            return bgPending > 0 || !readyQ.IsEmpty;
+        }
+
         // ------------------------------------------------------------------ internals
 
         static void Setup(AudioSource src, AudioClip clip, string name, float volume, float jitter, float spatial)
@@ -243,17 +225,61 @@ namespace PittBradford.XR
             Defs.TryGetValue(name, out var d);
             src.loop = false;
             src.clip = clip;
-            src.volume = Mathf.Clamp01(volume * Master * (1f + ((float)rng.NextDouble() * 2f - 1f) * 0.08f));
+            src.volume = Mathf.Clamp01(volume * Master * (d != null ? d.Gain : 1f) * (1f + ((float)rng.NextDouble() * 2f - 1f) * 0.08f));
             src.pitch = 1f + ((float)rng.NextDouble() * 2f - 1f) * jitter;
             src.spatialBlend = spatial;
-            src.rolloffMode = AudioRolloffMode.Logarithmic;
             src.minDistance = 1.2f;
             src.maxDistance = 25f;
+            ApplyRolloff(src);
             src.dopplerLevel = 0f;
             src.spread = 20f;
             src.panStereo = 0f;
             src.priority = d != null ? d.Priority : 128;
             src.reverbZoneMix = spatial > 0f ? (d != null ? d.Mix : 1f) : 0f;
+            DarkenByDistance(src, spatial > 0f);
+        }
+
+        /// <summary>Inverse-distance rolloff (like the built-in logarithmic one) that fades to silence over the last third of the range, so sounds never cut off.</summary>
+        static void ApplyRolloff(AudioSource src)
+        {
+            src.rolloffMode = AudioRolloffMode.Custom;
+            float min = src.minDistance, max = src.maxDistance;
+            long key = ((long)Mathf.RoundToInt(min * 10f) << 32) | (long)Mathf.RoundToInt(max * 10f);
+            if (!Curves.TryGetValue(key, out var c))
+            {
+                var keys = new List<Keyframe>();
+                keys.Add(new Keyframe(0f, 1f));
+                for (float dist = min; dist < max; dist *= 1.5f) keys.Add(new Keyframe(dist / max, Fade(dist, min, max)));
+                keys.Add(new Keyframe(1f, 0f));
+                c = new AnimationCurve(keys.ToArray());
+                for (int i = 0; i < c.length; i++) c.SmoothTangents(i, 0f);
+                Curves[key] = c;
+            }
+            src.SetCustomCurve(AudioSourceCurveType.CustomRolloff, c);
+        }
+
+        static float Fade(float dist, float min, float max)
+        {
+            float v = dist <= min ? 1f : min / dist;
+            float x = Mathf.Clamp01(((dist / max) - 0.65f) / 0.35f);
+            return v * (1f - x * x * (3f - 2f * x));
+        }
+
+        /// <summary>Far one-shots are darker (air absorbs the highs): a low-pass on the pooled voice, set once when the sound starts.</summary>
+        static void DarkenByDistance(AudioSource src, bool spatial)
+        {
+            if (poolLp == null) return;
+            int idx = System.Array.IndexOf(pool, src);
+            if (idx < 0 || poolLp[idx] == null) return;
+            var lp = poolLp[idx];
+            if (!spatial) { lp.enabled = false; return; }
+            if (listener == null && Time.unscaledTime >= nextFind) { nextFind = Time.unscaledTime + 2f; listener = UnityEngine.Object.FindFirstObjectByType<AudioListener>(); }
+            if (listener == null) { lp.enabled = false; return; }
+            float dist = Vector3.Distance(listener.transform.position, src.transform.position);
+            if (dist < 6f) { lp.enabled = false; return; }
+            float t = Mathf.Clamp01((dist - 6f) / 19f);
+            lp.cutoffFrequency = Mathf.Lerp(14000f, 2200f, Mathf.Pow(t, 0.6f));
+            lp.enabled = true;
         }
 
         static AudioSource Acquire()
@@ -264,12 +290,15 @@ namespace PittBradford.XR
                 root.AddComponent<DontBake>();
                 UnityEngine.Object.DontDestroyOnLoad(root);
                 pool = new AudioSource[PoolSize];
+                poolLp = new AudioLowPassFilter[PoolSize];
                 for (int i = 0; i < PoolSize; i++)
                 {
                     var g = new GameObject("voice " + i);
                     g.transform.SetParent(root.transform, false);
                     pool[i] = g.AddComponent<AudioSource>();
                     pool[i].playOnAwake = false;
+                    poolLp[i] = g.AddComponent<AudioLowPassFilter>();   // disabled until a far sound uses the voice
+                    poolLp[i].enabled = false;
                 }
             }
             for (int i = 0; i < PoolSize; i++)
@@ -295,27 +324,41 @@ namespace PittBradford.XR
                 if (warn && Warned.Add(name)) Debug.LogWarning("[Sfx] unknown sound name: " + name);
                 return null;
             }
-            int i = rng.Next(set.Length);
-            if (set.Length > 1 && Last.TryGetValue(name, out int prev) && i == prev) i = (i + 1 + rng.Next(set.Length - 1)) % set.Length;
+            if (set.Length == 1) return set[0];
+            // shuffled round robin: every variation is used once before any repeats, and the first of a new round is never the last of the old one
+            if (!Order.TryGetValue(name, out var ord) || ord.Length != set.Length) { ord = new int[set.Length]; Order[name] = ord; OrderPos[name] = ord.Length; }
+            int pos = OrderPos[name];
+            if (pos >= ord.Length)
+            {
+                int prev = Last.TryGetValue(name, out int p0) ? p0 : -1;
+                for (int k = 0; k < ord.Length; k++) ord[k] = k;
+                for (int k = ord.Length - 1; k > 0; k--) { int j = rng.Next(k + 1); int t = ord[k]; ord[k] = ord[j]; ord[j] = t; }
+                if (ord[0] == prev) { int t = ord[0]; ord[0] = ord[ord.Length - 1]; ord[ord.Length - 1] = t; }
+                pos = 0;
+            }
+            int i = ord[pos]; OrderPos[name] = pos + 1;
             Last[name] = i;
             return set[i];
         }
 
         /// <summary>Polishes a recorded clip like a synthesized one (high-pass, gentle low-pass, fades, loudness target, limiter). Works on clips decompressed on load.</summary>
-        static void LevelSample(AudioClip c, Def def)
+        static void LevelSample(AudioClip c, SfxDef def)
         {
             try
             {
                 var d = new float[c.samples * c.channels];
                 if (!c.GetData(d, 0)) return;
-                if (def == null) def = new Def();
+                if (def == null) def = new SfxDef();
                 if (c.channels == 1)
                 {
-                    Synth.R = c.frequency;
-                    if (def.Lp < 7000f && !def.Loop) Synth.Filter(d, Synth.F.Low, def.Lp, 0.6f); // steeper (24 dB/oct) for bright recordings
-                    Synth.Finish(d, def.Loop, def.Lp, def.Level);
+                    lock (Synth.GenLock)
+                    {
+                        Synth.R = c.frequency;
+                        if (def.Lp < 7000f && !def.Loop) Synth.Filter(d, Synth.F.Low, def.Lp, 0.6f); // steeper (24 dB/oct) for bright recordings
+                        Synth.Finish(d, def.Loop, def.Lp, def.Level, def.Lufs, def.Ceiling);
+                    }
                 }
-                else Synth.Level(d, def.Level, 0.85f);
+                else Synth.LevelPeak(d, def.Level, def.Ceiling);
                 c.SetData(d, 0);
             }
             catch (Exception) { /* compressed-in-memory clips cannot be edited; they play as imported */ }
@@ -337,20 +380,38 @@ namespace PittBradford.XR
             {
                 Sampled[name] = true;
                 foreach (var c in found) LevelSample(c, def);
-                return found.ToArray();
+                if (def == null || !def.Pool) return found.ToArray();
+                var both = new List<AudioClip>(found);
+                both.AddRange(Synthesize(name, def));
+                return both.ToArray();
             }
             Sampled[name] = false;
 
             // 2) synthesis
             if (def == null) return null;
-            var list = new AudioClip[def.Variants];
+            return Synthesize(name, def);
+        }
+
+        /// <summary>Generates and finishes one variation. Locked because <see cref="Synth.R"/> is shared: the background thread and the main thread never generate at the same moment.</summary>
+        static float[] Make(string name, SfxDef def, int v)
+        {
             int seedBase = 0;
             foreach (char ch in name) seedBase = seedBase * 31 + ch;
-            for (int v = 0; v < def.Variants; v++)
+            lock (Synth.GenLock)
             {
                 Synth.R = def.Rate;
                 var data = def.Gen(new Rng(seedBase + v * 7919));
-                Synth.Finish(data, def.Loop, def.Lp, def.Level);
+                Synth.Finish(data, def.Loop, def.Lp, def.Level, def.Lufs, def.Ceiling);
+                return data;
+            }
+        }
+
+        static AudioClip[] Synthesize(string name, SfxDef def)
+        {
+            var list = new AudioClip[def.Variants];
+            for (int v = 0; v < def.Variants; v++)
+            {
+                var data = Make(name, def, v);
                 var clip = AudioClip.Create(name + "_" + v, data.Length, 1, def.Rate, false);
                 clip.SetData(data, 0);
                 list[v] = clip;

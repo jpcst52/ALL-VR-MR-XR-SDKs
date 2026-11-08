@@ -79,7 +79,21 @@ public class Forklift : MonoBehaviour
         f.Route = route;
         f.CrossingPoint = crossing;
         f.BuildModel();
+        if (Application.isPlaying) f.UseRealDriver(); // at runtime only, so the avatar is never baked into the scene
         return f;
+    }
+
+    SeatedDriver realDriver;
+
+    /// <summary>Swaps the primitive driver for the seated Rocketbox avatar when it is in the project (see PeopleBoot).</summary>
+    void UseRealDriver()
+    {
+        var model = SeatedDriver.Create(transform, new Vector3(0f, -0.12f, -0.5f));
+        if (model == null) return;
+        foreach (Transform child in transform)
+            if (child.name.StartsWith("Driver") && child != model.transform) child.gameObject.SetActive(false);
+        realDriver = model;
+        driverHead = model.Head;
     }
 
     /// <summary>Puts the forklift somewhere for a screenshot.</summary>
@@ -513,6 +527,7 @@ public class Forklift : MonoBehaviour
         bool on = Mathf.Repeat(Time.time, 0.7f) < 0.35f;
         beaconMat.SetColor("_EmissionColor", Amber * (on ? 2.5f : 0.15f));
         if (beaconLight != null) beaconLight.intensity = on ? 1.6f : 0f;
+        if (realDriver != null) realDriver.Waving = Time.time < waveUntil;
         if (Time.time < waveUntil) arm.localRotation = Quaternion.Euler(0, 0, 150f + 25f * Mathf.Sin(Time.time * 10f));
         else arm.localRotation = Quaternion.Euler(0, 0, 10f);
         if (bubbleText.Length > 0 && Time.time > bubbleUntil) HideBubble();

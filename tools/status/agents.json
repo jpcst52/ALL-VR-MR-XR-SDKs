@@ -2,71 +2,6 @@
   "outputDir": "",
   "agents": [
     {
-      "id": "webreal",
-      "name": "Web realism pass (D2)",
-      "task": "CC0 textures and lighting on hero Practice Lab scenes",
-      "state": "done",
-      "started": "2026-11-02T02:08:46.127Z",
-      "watch": [
-        "training-simulations"
-      ],
-      "ended": "2026-11-02T02:12:09.892Z",
-      "note": "Lighting, shadows, tone mapping, procedural textures in app.js; 5/5 tests; 3 of 16 shots re-shot; headset FPS untested"
-    },
-    {
-      "id": "circ-builder",
-      "name": "Circulation Builder",
-      "task": "Draft web circulation trainer for biology faculty (D3)",
-      "state": "done",
-      "started": "2026-11-02T03:24:59.449Z",
-      "watch": [
-        "training-simulations",
-        "docs/Task-Status.md"
-      ],
-      "ended": "2026-11-02T03:35:27.271Z",
-      "note": "D3 built: scenario 17, 11 lab tests + 18 relay pass, desktop only; needs faculty review"
-    },
-    {
-      "id": "ui-04",
-      "name": "UI pass: project 04",
-      "task": "Panels/tags/brand plate in Resistor Bench",
-      "state": "done",
-      "started": "2026-11-02T03:40:41.267Z",
-      "watch": [
-        "vive-steamvr/04-resistor-bench"
-      ],
-      "ended": "2026-11-02T03:55:28.469Z",
-      "note": "Project 04 converted to panels/tags, 7 shots, compiles; desktop only; kit fixes suggested"
-    },
-    {
-      "id": "ui-02-03",
-      "name": "UI pass: projects 02-03",
-      "task": "Panels/tags/brand plate in Refinery and Warehouse",
-      "state": "done",
-      "started": "2026-11-02T03:40:41.319Z",
-      "watch": [
-        "vive-steamvr/02-refinery-rounds",
-        "vive-steamvr/03-warehouse-forklift"
-      ],
-      "ended": "2026-11-02T04:00:33.135Z",
-      "note": "02 and 03 converted: panels/tags/plates, 9 shots each, compile; desktop only; not played through"
-    },
-    {
-      "id": "ui-web",
-      "name": "UI review: web",
-      "task": "Professional-look review of launcher and Practice Lab",
-      "state": "done",
-      "started": "2026-11-02T03:40:41.374Z",
-      "watch": [
-        "index.html",
-        "launcher",
-        "training-simulations",
-        "multi-player"
-      ],
-      "ended": "2026-11-02T05:02:42.402Z",
-      "note": "done"
-    },
-    {
       "id": "research-uni",
       "name": "Research: university VR/AR",
       "task": "Survey other universities' VR/AR research, map to our work",
@@ -503,6 +438,66 @@
       ],
       "ended": "2026-11-06T12:08:03.279Z",
       "note": "Lightmap spike: feasible, aisle darker, not rolled out; scene restored"
+    },
+    {
+      "id": "xrsim",
+      "name": "XR Simulator run",
+      "task": "Run Unity scene against Meta XR Simulator",
+      "state": "done",
+      "started": "2026-11-07T01:29:39.221Z",
+      "watch": [
+        "vive-steamvr"
+      ],
+      "ended": "2026-11-07T01:40:55.449Z",
+      "note": "stopped by owner: XrSimCheck.cs had compile errors, removed; refocus on Vive/SteamVR"
+    },
+    {
+      "id": "labv2",
+      "name": "Lab v2",
+      "task": "Circuit and Safety Lab v2 (multi-player/v2)",
+      "state": "done",
+      "started": "2026-11-07T01:46:26.372Z",
+      "watch": [
+        "multi-player"
+      ],
+      "ended": "2026-11-07T02:19:54.167Z",
+      "note": "Lab v2 built in multi-player/v2; v2-check 56/56, toolbox-check 41/41, npm test 64/64; emulator only"
+    },
+    {
+      "id": "vis7",
+      "name": "Unity visual overhaul",
+      "task": "Round 7 visual impact pass on Unity scenes",
+      "state": "done",
+      "started": "2026-11-07T01:46:36.225Z",
+      "watch": [
+        "vive-steamvr"
+      ],
+      "ended": "2026-11-07T02:35:01.165Z",
+      "note": "SceneLook added; 9 scenes re-shot; hand checks pass"
+    },
+    {
+      "id": "snd8",
+      "name": "Unity sound pass 2",
+      "task": "Better sound effects: synthesis upgrade, review WAVs",
+      "state": "done",
+      "started": "2026-11-07T02:35:56.603Z",
+      "watch": [
+        "vive-steamvr"
+      ],
+      "ended": "2026-11-07T03:03:09.229Z",
+      "note": "Sound pass 3 done: synthesis upgrade, 12 CC0 footsteps, new levelling, review page docs/audio-review. Unheard. SceneAudioCheck not re-run (hung Unity PID 56128 on project 04)"
+    },
+    {
+      "id": "retest",
+      "name": "Unity retest",
+      "task": "Capture all four projects windowed",
+      "state": "done",
+      "started": "2026-11-07T04:39:47.371Z",
+      "watch": [
+        "vive-steamvr"
+      ],
+      "ended": "2026-11-07T05:04:36.823Z",
+      "note": "done"
     }
   ]
 }

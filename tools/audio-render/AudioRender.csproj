@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Offline renderer for the kit's sounds: compiles the Unity-free kit files (Synth, SfxCatalog, SfxMeasure) with a tiny
+       Mathf stand-in, so every sound can be rendered to WAV and measured without opening Unity. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <LangVersion>latest</LangVersion>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Kit>..\..\vive-steamvr\packages\com.pittbradford.xrtraining\Runtime\</Kit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs;UnityShim.cs" />
+    <Compile Include="$(Kit)Synth.cs;$(Kit)SfxCatalog.cs;$(Kit)SfxMeasure.cs" />
+  </ItemGroup>
+</Project>

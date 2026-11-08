@@ -2,9 +2,9 @@
 // lies on a loop with the battery.
 
 export const TERMINAL = { battery: 0.4, switch: 0.4, bulb: 0.4, resistor: 0.4, motor: 0.4, wire: 0.6 };
-const CONTACT_DISTANCE = 0.32;
+export const CONTACT_DISTANCE = 0.32;
 
-function terminalPoints(item) {
+export function terminalPoints(item) {
   const reach = TERMINAL[item.part];
   const [x, , z] = item.position;
   const angle = item.rotation[1] ?? 0;
