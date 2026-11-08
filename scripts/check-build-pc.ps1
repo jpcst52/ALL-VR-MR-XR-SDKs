@@ -61,6 +61,40 @@ $missing = @($need | Where-Object { -not (Test-Path (Join-Path $Hub $_)) })
 if (-not $missing.Count) { Add-Row 'Hub licensed files present' 'PASS' 'scenes, Rocketbox and all six art packs found' }
 else { Add-Row 'Hub licensed files present' 'WARN' "missing $($missing.Count) of $($need.Count): the hub cannot build until you unpack the hub-assets zip (scripts\unpack-hub-assets.cmd). Projects 01 to 04 do not need it. Missing: $($missing -join ', ')" }
 
+# 5b. Compile errors like "The call is ambiguous between ... TMPro_ExtensionMethods.Compare" or "RuntimeUtilities.BlitFullscreenTriangle" mean the
+#     same package code is compiled twice. Look for the usual causes.
+$projectsDir = Join-Path $Repo 'vive-steamvr'
+$expected = (Get-Content (Join-Path $Hub 'ProjectSettings\ProjectVersion.txt') -ErrorAction SilentlyContinue | Where-Object { $_ -match '^m_EditorVersion:' }) -replace 'm_EditorVersion:\s*', ''
+if ($expected -and (Test-Path $UnityExe)) {
+  $have = Split-Path (Split-Path (Split-Path $UnityExe -Parent) -Parent) -Leaf
+  if ($have -eq $expected) { Add-Row 'Unity version matches the project' 'PASS' $expected }
+  else { Add-Row 'Unity version matches the project' 'FAIL' "the hub project was made with $expected but this Unity is $have (project files and package versions differ between Unity versions; install $expected)" }
+}
+$dupNames = @('TMP_Text.cs', 'TMP_CharacterInfo.cs', 'RuntimeUtilities.cs', 'PostProcessLayer.cs', 'Unity.TextMeshPro.dll', 'Unity.Postprocessing.Runtime.dll', 'Unity.TextMeshPro.asmdef', 'Unity.Postprocessing.Runtime.asmdef')
+foreach ($proj in Get-ChildItem $projectsDir -Directory -ErrorAction SilentlyContinue | Where-Object { Test-Path (Join-Path $_.FullName 'Assets') }) {
+  $dups = @(Get-ChildItem (Join-Path $proj.FullName 'Assets') -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $dupNames -contains $_.Name })
+  if ($dups.Count) { Add-Row "Duplicate TextMesh Pro or Post Processing code in $($proj.Name)" 'FAIL' ("found in Assets (the packages already provide it, so it compiles twice): " + (($dups | Select-Object -First 4 | ForEach-Object { $_.FullName.Substring($projectsDir.Length + 1) }) -join '; ') + ". Delete that folder (or the whole pack folder that holds it) and reopen.") }
+  $cache = Join-Path $proj.FullName 'Library\PackageCache'
+  if (Test-Path $cache) {
+    $twice = @(Get-ChildItem $cache -Directory | Group-Object { ($_.Name -split '@')[0] } | Where-Object { $_.Count -gt 1 })
+    if ($twice.Count) { Add-Row "Package cache of $($proj.Name)" 'WARN' ("the same package is cached twice: " + (($twice | ForEach-Object { $_.Name }) -join ', ') + ". Close Unity, delete $($proj.Name)\Library and reopen.") }
+  }
+}
+
+# 5c. A built player copied into a project's Assets folder is the most common cause of those duplicate-code errors: its *_Data\Managed
+#     folder holds Unity.TextMeshPro.dll, Unity.Postprocessing.Runtime.dll and more, which Unity then loads next to the real packages.
+foreach ($proj in Get-ChildItem $projectsDir -Directory -ErrorAction SilentlyContinue | Where-Object { Test-Path (Join-Path $_.FullName 'Assets') }) {
+  $assetsRoot = Join-Path $proj.FullName 'Assets'
+  $player = @(Get-ChildItem $assetsRoot -Recurse -Force -ErrorAction SilentlyContinue | Where-Object { ($_.PSIsContainer -and $_.Name -like '*_Data') -or (-not $_.PSIsContainer -and $_.Name -in @('UnityPlayer.dll', 'UnityCrashHandler64.exe', 'GameAssembly.dll')) })
+  if ($player.Count) {
+    $where = ($player | ForEach-Object { $_.FullName.Substring($proj.FullName.Length + 1) } | Select-Object -First 4) -join '; '
+    Add-Row "Built player inside $($proj.Name)\Assets" 'FAIL' "a copy of a build is in the project, so Unity compiles its DLLs too: $where. Close Unity, delete the folder that contains it (and its .meta file), then reopen."
+  }
+}
+$hubKnown = @('Baked', 'Courtyard Props', 'Editor', 'IGBlocks', 'Modern Office', 'Resources', 'Rocketbox', 'Scenes', 'SciFi Warehouse Kit', 'Scripts', 'Settings', 'Shipping Container', 'Warehouse', 'XR')
+$odd = @(Get-ChildItem (Join-Path $Hub 'Assets') -Force -ErrorAction SilentlyContinue | ForEach-Object { $_.Name -replace '\.meta$', '' } | Sort-Object -Unique | Where-Object { $hubKnown -notcontains $_ })
+if ($odd.Count) { Add-Row 'Unexpected items in hub\Assets' 'WARN' ("not part of the standard hub: " + ($odd -join ', ') + ". If you did not add them on purpose, close Unity and delete each one together with its .meta file.") }
+
 # 6. Network, only used by Unity to download packages the first time a project opens
 if (-not $SkipNetwork) {
   try {
