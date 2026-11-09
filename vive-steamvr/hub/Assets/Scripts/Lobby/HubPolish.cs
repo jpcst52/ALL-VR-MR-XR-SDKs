@@ -34,6 +34,7 @@ public class HubPolish : MonoBehaviour
     int oldPixelLights, oldCascades; float oldShadowDistance; bool qualityChanged;
     bool brandPlaced;
     PostProcessLayer layer;
+    bool postFxTried;
     PostProcessVolume volume;
     AudioSource hum;
     HydroTest scenario;
@@ -101,7 +102,12 @@ public class HubPolish : MonoBehaviour
         if (!brandPlaced) { PlaceBrand(rig); brandPlaced = true; }
         if (Resources == null) return;
         var cam = rig.Camera;
-        layer = cam.gameObject.AddComponent<PostProcessLayer>();
+        // the camera may already carry a PostProcessLayer (only one is allowed per object): use it, and never try twice
+        if (postFxTried) return;
+        postFxTried = true;
+        layer = cam.gameObject.GetComponent<PostProcessLayer>();
+        if (layer == null) layer = cam.gameObject.AddComponent<PostProcessLayer>();
+        if (layer == null) { Debug.LogWarning("[polish] could not get a PostProcessLayer on " + cam.name + "; post-processing skipped"); return; }
         layer.Init(Resources);
         layer.volumeTrigger = cam.transform;
         layer.volumeLayer = 1 << 0;

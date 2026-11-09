@@ -4,6 +4,8 @@ The Unity scenes in this repository did not work on the Vive when they were firs
 
 General safety-awareness practice only; this page is about the Vive and the plugin, not about scenario content. **Nothing here has been tried on a headset yet.**
 
+**Progress (2026-11-08, later):** the rebuild has started without waiting for the Vive result. Project 01 is migrated to the plugin and runs in the simulated headset; 02 to 04 and the hub follow. The sample remains the quickest way to learn whether Valve's plugin works on the Vive. See [STEAMVR-REBUILD.md](STEAMVR-REBUILD.md) for what is built and what is unverified.
+
 ## What was found (2026-11-08)
 
 - **Use plugin release 2.8.5b (a beta).** The stable 2.8.0 shows no picture in Unity 6 (the "next up" window never goes away); Valve's fix is in 2.8.5b. Unity 6 starts VR on Direct3D 12 by default, and the plugin's tracker records that the Built-in pipeline does not work with single-pass stereo there. The sample build is therefore **Direct3D 11 only** and uses multi-pass stereo (the Built-in default). (Source: ValveSoftware/steamvr_unity_plugin issues 1129 and 1123 and the 2.8.5b release.)

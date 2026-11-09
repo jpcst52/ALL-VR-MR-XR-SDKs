@@ -33,7 +33,8 @@ namespace PittBradford.XR
         Transform visual;
         Vector3 lastPosition;
         const float GrabRadius = 0.16f;
-        const float RayLength = 4f;
+        /// <summary>How far the pointing ray reaches, metres. The hub lobby raises it so a portal can be picked from across the hall.</summary>
+        public float RayLength = 4f;
 
         public static Hand Create(XRRig rig, bool left)
         {

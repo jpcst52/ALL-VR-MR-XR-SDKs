@@ -108,8 +108,9 @@ public static class HubLobbyDressing
         BoxL(g, "Foot L", new Vector3(-1.7f, 0.025f, 0.06f), new Vector3(0.12f, 0.05f, 1.0f), new Color(0.16f, 0.17f, 0.2f), 0.5f, 0.6f);
         BoxL(g, "Foot R", new Vector3(1.7f, 0.025f, 0.06f), new Vector3(0.12f, 0.05f, 1.0f), new Color(0.16f, 0.17f, 0.2f), 0.5f, 0.6f);
         P.Text(g, header, new Vector3(0, 3.15f, -0.02f), 0.2f, Color.white, TextAnchor.MiddleCenter, true);
-        float[] xs = { -1.05f, 1.05f, -1.05f, 1.05f }, ys = { 2.18f, 2.18f, 0.93f, 0.93f };
-        for (int i = 0; i < 4 && i < tex.Length; i++) Picture(g, "pic" + (i + 1), new Vector3(xs[i], ys[i], -0.02f), 1.8f, tex[i], captions[i]);
+        // 1.6 m pictures: the caption under the top row now sits clear of the frames of the row below (it used to touch their top edge)
+        float[] xs = { -1.05f, 1.05f, -1.05f, 1.05f }, ys = { 2.2f, 2.2f, 0.88f, 0.88f };
+        for (int i = 0; i < 4 && i < tex.Length; i++) Picture(g, "pic" + (i + 1), new Vector3(xs[i], ys[i], -0.02f), 1.6f, tex[i], captions[i]);
         // a track light bar above (no real light: pictures are unlit, and every extra pixel light costs a pass per object)
         var bar = Facing(g, "Light bar", pos + Vector3.up * 3.75f + faceDir.normalized * 0.9f, faceDir);
         BoxL(bar, "Bar", Vector3.zero, new Vector3(2.4f, 0.06f, 0.1f), new Color(0.16f, 0.17f, 0.2f), 0.5f, 0.6f);

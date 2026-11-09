@@ -386,9 +386,7 @@ public static class HubSceneDressing
         Put(back, "Pipes 06", 7.1f, 6.1f, 90f, 0f, 0.8f);
         Put(back, "Ladder_03a", 4.6f, 6.0f, 0f);
         Tint(Put(back, "Pallet", -5.6f, 5.2f, 10f), new Color(2.4f, 2.1f, 1.7f));
-        Tint(Put(back, "Crate Long", -5.6f, 5.2f, 10f, 0.2f), new Color(2.4f, 2.1f, 1.7f));
         Tint(Put(back, "Pallet", -3.9f, 5.5f, 80f), new Color(2.4f, 2.1f, 1.7f));
-        Tint(Put(back, "Crate Short", -3.9f, 5.5f, 80f, 0.2f), new Color(2.4f, 2.1f, 1.7f));
         Put(back, "Barrel", 6.4f, 5.7f);
         Put(back, "Barrel", 6.9f, 5.0f, 40f);
         Put(back, "Barrel", 5.9f, 4.9f, 80f);
@@ -412,7 +410,7 @@ public static class HubSceneDressing
         // --- front wall: receiving stack beside the door (hand truck, cartons, pallets, barrels), sprinkler runs overhead
         var front = Group(root, "Front wall storage");
         Put(front, "HandTruck", -0.4f, -6.0f, 20f);
-        Put(front, "Cardboard_boxGroup01a", 1.0f, -5.9f, 0f);
+        // (removed 2026-11-08: "Cardboard_boxGroup01a" is a stack of raspberry and banana produce boxes, which read as fruit crates in a plant bay)
         Put(front, "Box_Pallet03", 2.6f, -5.9f, 0f);
         Put(front, "Crate_closed", 4.0f, -6.0f, 15f);
         Put(front, "Garbage Bin", 5.3f, -6.2f);

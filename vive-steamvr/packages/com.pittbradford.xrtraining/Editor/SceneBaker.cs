@@ -35,7 +35,7 @@ namespace PittBradford.XR.EditorTools
         /// <summary>Objects with these components are never baked (unless they were already in the scene file).</summary>
         static readonly Type[] RuntimeOnly =
         {
-            typeof(XRRig), typeof(Hand), typeof(TaskBoard), typeof(WhyCue), typeof(CaptureDriver), typeof(Camera), typeof(AudioListener),
+            typeof(XRRig), typeof(Hand), typeof(CaptureDriver), typeof(Camera), typeof(AudioListener),
         };
 
         [Serializable] class RootEntry { public string Host = ""; }

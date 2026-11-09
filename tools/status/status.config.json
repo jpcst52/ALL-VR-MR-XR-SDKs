@@ -8,7 +8,7 @@
   "taskFile": "../../docs/Task-Status.md",
   "repos": [
     {
-      "name": "ALL-VR-MR-XR-SDKs",
+      "name": "xr-training-lab",
       "path": "../.."
     }
   ],

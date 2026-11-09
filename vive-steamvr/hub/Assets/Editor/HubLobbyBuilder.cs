@@ -61,6 +61,8 @@ public static class HubLobbyBuilder
         // Reception corner, seating and coffee lounge, plants and people (HubSceneDressing.DressLobby); the portals, board and pads stay clear
         HubSceneDressing.DressLobby(dressing);
 
+        HubLobbyGlass.Build(); // glass walls, frosted band, glazed roof, ground and a reflection probe, saved as scene objects
+
         Directory.CreateDirectory("Assets/Scenes/Local");
         HubDressing.SaveScene("Lobby");
     }

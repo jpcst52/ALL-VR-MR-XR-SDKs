@@ -934,11 +934,11 @@ public partial class WarehouseForklift : MonoBehaviour, IShotScript
                 "Signal the driver, wait for the stop, cross at the stripes",
                 "Cone the spill and the bent rack upright, then radio",
             }, 4.0f, 1.35f);
-        board.SetFooter("Trigger = press, grip = grab. Desktop: WASD, hold right mouse to look, click, E to grab.");
+        board.SetFooter("Trackpad: hold, aim, release = teleport. Trigger = press, grip = grab. Desktop: WASD, mouse look, click = trigger, E = grip, Esc frees mouse.");
         // The board hangs in a fixed spot, so players on the floor see its back: give it a solid one
         // (same panel size as TaskBoard.Create uses for width 4.0, text scale 1.35, four steps).
         const float k = 1.35f, bw = 4.0f;
-        float bh = 1.05f * k + 4 * 0.095f * k;
+        float bh = TaskBoard.PanelHeight(k, 4);
         SignBack(board.transform, new Vector3(0, -bh / 2f + 0.25f, 0.02f), new Vector2(bw + 0.06f, bh + 0.06f));
     }
 

@@ -70,7 +70,7 @@ const NATIVE = [
 ];
 
 export async function buildRunGuide(file) {
-  const { pres, C } = newDeck({ title: "Run the XR examples", footer: "ALL-VR-MR-XR-SDKs  |  Run guide" });
+  const { pres, C } = newDeck({ title: "Run the XR examples", footer: "xr-training-lab  |  Run guide" });
 
   // 1 title
   section(pres, "Start");

@@ -149,6 +149,7 @@ namespace PittBradford.XR.EditorTools
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             new GameObject("Scenario").AddComponent<T>();
             Directory.CreateDirectory(Path.GetDirectoryName(path));
+            SceneRigHook.PlaceInActiveScene(); // SteamVR projects: Player, Teleporting and a TeleportArea are saved in the scene
             EditorSceneManager.SaveScene(scene, path);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(path, true) };
             Debug.Log("[setup] scene saved: " + path);

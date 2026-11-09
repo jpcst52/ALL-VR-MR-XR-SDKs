@@ -67,6 +67,7 @@ public partial class RefineryRounds : MonoBehaviour, IShotScript
     // ------------------------------------------------------------------------------------------------- state
     XRRig rig;
     TaskBoard board;
+    readonly TaskBoard[] taskBoards = new TaskBoard[8]; // one saved board per task, made once
     Transform boardAnchor;
     bool boardMoving;
     Vector3 lastFwd = Vector3.forward;
@@ -273,8 +274,12 @@ public partial class RefineryRounds : MonoBehaviour, IShotScript
         // a little left of centre: the task board floats to the right of the view
         why.WhyOffset = new Vector2(-0.22f, -0.3f);
         why.AskOffset = new Vector2(-0.4f, -0.08f);
-        boardAnchor = new GameObject("Task board anchor").transform;
+        why.Prepare(Question); // the question panel is part of the scene, hidden until asked
+        boardAnchor = P.Node("Task board anchor", transform).transform;
         SnapBoardToView();
+        // While the scene is baked in the editor, build every task's board so all of them are saved in the scene;
+        // at play each task just shows its saved board.
+        if (Bake.Staging) for (int bt = 1; bt < TaskTitles.Length; bt++) StartTask(bt);
         StartTask(0);
 
         SetWind(Weather.Fallback);
@@ -657,7 +662,7 @@ public partial class RefineryRounds : MonoBehaviour, IShotScript
         P.Box(root, "Board post", V(TablePos.x + 0.68f, 1.3f, TablePos.z + 0.4f), V(0.04f, 0.9f, 0.04f), darkSteel, false);
         var pre = Sign(root, "Pre-entry board", V(TablePos.x, 1.45f, TablePos.z + 0.37f), Vector3.back, new Vector2(1.55f, 0.66f), Navy, P.Gold, 0.07f);
         SignText(pre, "PRE-ENTRY STATION", 0.19f, 0.09f, P.Gold);
-        SignText(pre, "1. Grab the monitor (grip / E)\n2. Hold it at the bump-test unit\n3. Press the green BUMP TEST button", -0.08f, 0.05f, Color.white, false, -0.68f, TextAnchor.MiddleLeft);
+        SignText(pre, "1. Grab the monitor (grip, or E at the desk)\n2. Hold it at the bump-test unit\n3. Press the green BUMP TEST button", -0.08f, 0.05f, Color.white, false, -0.68f, TextAnchor.MiddleLeft);
 
         // Bump-test station: a small test-gas unit with a button.
         bumpPos = V(TablePos.x + 0.45f, 0.98f, TablePos.z);
@@ -1090,8 +1095,12 @@ public partial class RefineryRounds : MonoBehaviour, IShotScript
     {
         task = t;
         boardTask = t;
-        if (board) Destroy(board.gameObject);
-        board = TaskBoard.Create(boardAnchor, boardAnchor.position, boardAnchor.rotation, TaskTitles[t], TaskSubs[t], TaskSteps[t], 3.0f, 1.0f);
+        if (board) board.gameObject.SetActive(false);
+        if (taskBoards[t] == null)
+            taskBoards[t] = TaskBoard.Create(boardAnchor, boardAnchor.position, boardAnchor.rotation, TaskTitles[t], TaskSubs[t], TaskSteps[t], 3.0f, 1.0f, "Task Board " + (t + 1));
+        else taskBoards[t].ResetProgress();
+        board = taskBoards[t];
+        board.gameObject.SetActive(true);
         RefreshFooter();
     }
 
@@ -1200,7 +1209,7 @@ public partial class RefineryRounds : MonoBehaviour, IShotScript
         bool near = monitorHeld && Vector3.Distance(monitor.position, bumpPos) < reach;
         if (!near)
         {
-            if (task == 0) board.Say("Pick up the monitor (grip / E) and hold it at the station.", Warn);
+            if (task == 0) board.Say("Pick up the monitor (grip, or E at the desk) and hold it at the station.", Warn);
             return;
         }
         Sfx.Play("button", bumpPos, 0.8f);

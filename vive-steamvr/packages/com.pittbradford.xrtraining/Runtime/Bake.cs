@@ -27,6 +27,23 @@ namespace PittBradford.XR
         /// <summary>True while a baked world is present and its objects are being adopted.</summary>
         public static bool Active => adoption;
 
+        /// <summary>
+        /// True only in the editor while the bake tool is building the scene to save it. Scenario code uses it to also build
+        /// the parts that exist only later in play (for example the boards of the other tasks), so they are saved in the scene.
+        /// Always false in a player.
+        /// </summary>
+        public static bool Staging
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return UnityEditor.SessionState.GetString(StageKey, "") == "play";
+#else
+                return false;
+#endif
+            }
+        }
+
 #if UNITY_EDITOR
         /// <summary>Editor only: every object a helper created or adopted this play session (what the bake tool saves).</summary>
         public static readonly HashSet<GameObject> Tracked = new HashSet<GameObject>();

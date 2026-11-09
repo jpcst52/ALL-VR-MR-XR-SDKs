@@ -37,9 +37,11 @@ public class PerfProbe : MonoBehaviour
         public string file;
         System.Collections.IEnumerator Start()
         {
+            Debug.Log("[perf] boot, file " + file);
             yield return new WaitForSeconds(4f);
             PittBradford.XR.CaptureDriver.StopXrForPerf();
             yield return null;
+            Debug.Log("[perf] begin");
             Begin(file, UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, 120);
             while (!Finished) yield return null;
             yield return null;

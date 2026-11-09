@@ -1,0 +1,9 @@
+{
+  "name": "PittBradford.XRTraining.SteamVR.Editor",
+  "rootNamespace": "PittBradford.XR.EditorTools",
+  "references": ["PittBradford.XRTraining", "PittBradford.XRTraining.Editor", "SteamVR"],
+  "includePlatforms": ["Editor"],
+  "excludePlatforms": [],
+  "autoReferenced": true,
+  "defineConstraints": ["PB_STEAMVR"]
+}

@@ -1,7 +1,7 @@
 {
   "name": "PittBradford.XRTraining.SteamVR",
   "rootNamespace": "PittBradford.XR.SteamVRBackend",
-  "references": ["PittBradford.XRTraining", "SteamVR"],
+  "references": ["PittBradford.XRTraining", "SteamVR", "Unity.InputSystem"],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

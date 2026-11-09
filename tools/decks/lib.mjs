@@ -36,7 +36,7 @@ export function newDeck({ title, footer }) {
   const pres = new pptxgen();
   pres.layout = "LAYOUT_WIDE"; // 13.33 x 7.5 in
   pres.title = title;
-  pres.author = "ALL-VR-MR-XR-SDKs";
+  pres.author = "xr-training-lab";
   pres.theme = { headFontFace: THEME.headFontFace, bodyFontFace: THEME.bodyFontFace };
   const C = pres.SchemeColor;
   pres.defineSlideMaster({

@@ -98,6 +98,7 @@ public static class HubDressing
         FixBrokenMaterials();
         Directory.CreateDirectory(LocalScenes);
         string path = $"{LocalScenes}/{name}.unity";
+        PittBradford.XR.EditorTools.SceneRigHook.PlaceInActiveScene(); // Player, Teleporting and a TeleportArea are saved in the scene
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), path);
         AddToBuild(path);
         Debug.Log("[dress] scene saved: " + path);

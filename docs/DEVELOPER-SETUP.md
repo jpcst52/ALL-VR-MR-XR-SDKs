@@ -21,8 +21,8 @@ What you need depends on what you work on:
 | PowerShell | 5.1 or 7 | build and check scripts in `scripts\` |
 
 ```
-git clone https://github.com/jpcst52/ALL-VR-MR-XR-SDKs.git
-cd ALL-VR-MR-XR-SDKs
+git clone https://github.com/jpcst52/xr-training-lab.git
+cd xr-training-lab
 npm install
 ```
 

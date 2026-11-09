@@ -17,7 +17,7 @@ async function maybeShot(slide, C, relative, opts) {
 }
 
 export async function buildRepository(file) {
-  const { pres, C } = newDeck({ title: "XR training repository guide", footer: "ALL-VR-MR-XR-SDKs  |  Repository guide" });
+  const { pres, C } = newDeck({ title: "XR training repository guide", footer: "xr-training-lab  |  Repository guide" });
 
   // 1 ---- title
   section(pres, "Introduction");

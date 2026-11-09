@@ -64,6 +64,11 @@ public static class SteamVRProjectSetup
         var handler = projectSettings.FindProperty("activeInputHandler");
         if (handler != null && handler.intValue != 2) { handler.intValue = 2; projectSettings.ApplyModifiedProperties(); }
 
+        // The values SteamVR's "Recommended project settings" window asks for, so it stops popping up (it nags until they are set or ignored).
+        PlayerSettings.SplashScreen.show = false;
+        PlayerSettings.defaultScreenWidth = 1024; PlayerSettings.defaultScreenHeight = 768;
+        PlayerSettings.resizableWindow = true;
+
         // Switches on the kit's SteamVR backend (Runtime/SteamVR in the kit package).
         var target = NamedBuildTarget.Standalone;
         string defines = PlayerSettings.GetScriptingDefineSymbols(target);

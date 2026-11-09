@@ -2,11 +2,11 @@
 
 The browser examples are published as a static website so a headset or phone can open them by typing or scanning an address. No PC, relay or certificate warning is needed.
 
-**Address:** `https://jpcst52.github.io/ALL-VR-MR-XR-SDKs/`
+**Address:** `https://jpcst52.github.io/xr-training-lab/`
 
 ![QR code for the GitHub Pages address](images/pages-qr.png)
 
-The same code is drawn offline by the site's own `qr.html` page (`https://jpcst52.github.io/ALL-VR-MR-XR-SDKs/qr.html`), which also lets you type a different address. I generated the QR image with the repository's bundled generator but have not scanned it with a phone, so scan it once before you print it.
+The same code is drawn offline by the site's own `qr.html` page (`https://jpcst52.github.io/xr-training-lab/qr.html`), which also lets you type a different address. I generated the QR image with the repository's bundled generator but have not scanned it with a phone, so scan it once before you print it.
 
 **Status: set up but not yet live or tested.** The site builds and passes the local check described below (served under the same sub-path). It has not been pushed or opened on the real Pages host, and nothing here has been tried on any headset.
 
@@ -60,12 +60,12 @@ From the repository root (Node 22; the check uses the Playwright installed in `t
 ```
 npm run build:site        # node scripts/build-webxr.mjs  -> site/
 npm run check:site        # node tools/pages/site-check.mjs
-node tools/pages/serve-subpath.mjs        # serve site/ at http://localhost:8151/ALL-VR-MR-XR-SDKs/
+node tools/pages/serve-subpath.mjs        # serve site/ at http://localhost:8151/xr-training-lab/
 ```
 
 `scripts/build-webxr.mjs` assembles `site/` (git-ignored): the launcher as `index.html`, the browser examples, `vendor/`, `assets/`, the multi-player pages (not the relay server, tests or `node_modules`), the guides the menu opens and the images they use (pictures in the browser examples' guides up to 3 MB, in other guides up to 700 KB; larger ones show as a missing image in the viewer), `.nojekyll`, `404.html` and `qr.html`. It leaves out `vive-steamvr`, `tools`, `branding` (except the approved `logo.png`), `assets-private`, tests and `node_modules`. It prints the total size and the biggest files.
 
-The check serves `site/` under `/ALL-VR-MR-XR-SDKs/` (a sub-path, like Pages, so a link starting with `/` would fail), blocks every non-local request, and then: loads each web page in the menu with no console error or failed request, confirms every tile, screenshot and guide link resolves, opens guides in the viewer, checks `404.html`, and pretends the host is `github.io` to confirm the menu and the relay pages say there is no relay. It uses an emulated desktop browser, not a headset.
+The check serves `site/` under `/xr-training-lab/` (a sub-path, like Pages, so a link starting with `/` would fail), blocks every non-local request, and then: loads each web page in the menu with no console error or failed request, confirms every tile, screenshot and guide link resolves, opens guides in the viewer, checks `404.html`, and pretends the host is `github.io` to confirm the menu and the relay pages say there is no relay. It uses an emulated desktop browser, not a headset.
 
 ## Related
 
@@ -73,4 +73,4 @@ The check serves `site/` under `/ALL-VR-MR-XR-SDKs/` (a sub-path, like Pages, so
 
 ## The flat list page (`pages.html`)
 
-`pages.html` (`https://jpcst52.github.io/ALL-VR-MR-XR-SDKs/pages.html`) is one plain page with a large link for every WebXR page in this repository (read from `launcher/examples.json`, so it stays current) and for the other GitHub Pages sites: Alumni Weekend 2026 and the BMW 325xi 3D viewer. It is meant to be opened once in a headset browser and bookmarked. To add another site, add a line to the `OTHER_SITES` list at the bottom of the file.
+`pages.html` (`https://jpcst52.github.io/xr-training-lab/pages.html`) is one plain page with a large link for every WebXR page in this repository (read from `launcher/examples.json`, so it stays current) and for the other GitHub Pages sites: Alumni Weekend 2026 and the BMW 325xi 3D viewer. It is meant to be opened once in a headset browser and bookmarked. To add another site, add a line to the `OTHER_SITES` list at the bottom of the file.

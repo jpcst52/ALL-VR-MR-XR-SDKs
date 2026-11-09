@@ -2,118 +2,6 @@
   "outputDir": "",
   "agents": [
     {
-      "id": "research-uni",
-      "name": "Research: university VR/AR",
-      "task": "Survey other universities' VR/AR research, map to our work",
-      "state": "done",
-      "started": "2026-11-02T03:52:58.656Z",
-      "watch": [
-        "docs/research"
-      ],
-      "ended": "2026-11-02T04:07:58.818Z",
-      "note": "40 verified entries added (76 total), landscape doc written; abstracts only, no full texts; outreach leads need owner"
-    },
-    {
-      "id": "why-web",
-      "name": "Why-cues: web Practice Lab",
-      "task": "Why this step cues + rationale question in web hydro/refinery scenarios",
-      "state": "done",
-      "started": "2026-11-02T04:20:26.808Z",
-      "watch": [
-        "training-simulations"
-      ],
-      "ended": "2026-11-02T04:46:10.727Z",
-      "note": "Why-this-matters + rationale in web lab: 16 of 17 scenarios, 18 lab tests + ui-check pass; desktop/emulator only"
-    },
-    {
-      "id": "why-unity",
-      "name": "Why-cues: Unity 01 and 02",
-      "task": "Why this step cues + rationale question in HydroTest and RefineryRounds",
-      "state": "done",
-      "started": "2026-11-02T04:20:26.860Z",
-      "watch": [
-        "vive-steamvr/packages",
-        "vive-steamvr/02-refinery-rounds"
-      ],
-      "ended": "2026-11-02T04:38:29.845Z",
-      "note": "01 and 02: Why-this-matters + rationale; compiled, scripted capture pass; not hand-played"
-    },
-    {
-      "id": "ped-03",
-      "name": "Pedestrian hazard: project 03",
-      "task": "Walking pedestrian + pause-and-ask awareness check",
-      "state": "done",
-      "started": "2026-11-02T04:20:26.911Z",
-      "watch": [
-        "vive-steamvr/03-warehouse-forklift"
-      ],
-      "ended": "2026-11-02T04:43:20.651Z",
-      "note": "Pedestrian + awareness check in 03: compiled, scripted self-test PASS (2 of 3 as designed); not hand-played; no headset"
-    },
-    {
-      "id": "sky-assets",
-      "name": "Seasonal sky assets",
-      "task": "Pick and download 4 CC0 seasonal panoramas, credits, manifest",
-      "state": "done",
-      "started": "2026-11-02T04:31:19.034Z",
-      "watch": [
-        "assets"
-      ],
-      "ended": "2026-11-02T04:37:52.716Z",
-      "note": "4 CC0 Poly Haven skies + credits + manifest; no verified Bradford photo found; not loaded in apps yet"
-    },
-    {
-      "id": "menu-web",
-      "name": "Menu: thumbnails + skies (web)",
-      "task": "Thumbnails on cards and glitch-transition seasonal skies in web",
-      "state": "done",
-      "started": "2026-11-02T04:31:19.139Z",
-      "watch": [
-        "training-simulations"
-      ],
-      "ended": "2026-11-02T04:55:44.374Z",
-      "note": "Web menu: 17 thumbnails + seasonal glitch sky (shader, stereo-safe), tests 20/20, 16/16, ui 48/48, offline 9/9; emulator only"
-    },
-    {
-      "id": "menu-unity",
-      "name": "Menu: skies + thumbnails (Unity)",
-      "task": "Glitch-transition seasonal sky in kit + hub lobby thumbnails",
-      "state": "done",
-      "started": "2026-11-02T04:31:19.314Z",
-      "watch": [
-        "vive-steamvr/packages",
-        "vive-steamvr/hub"
-      ],
-      "ended": "2026-11-02T04:50:04.587Z",
-      "note": "Unity lobby: open terrace, seasonal glitch sky, portal thumbnails; editor-verified desktop; screenshots in docs/images/hub-sky-*"
-    },
-    {
-      "id": "bake-infra",
-      "name": "Bake scenes: tool + Refinery pilot",
-      "task": "Kit adopt-or-create helpers, Bake menu, bake Refinery Rounds scene",
-      "state": "done",
-      "started": "2026-11-02T05:40:23.889Z",
-      "watch": [
-        "vive-steamvr/packages",
-        "vive-steamvr/02-refinery-rounds"
-      ],
-      "ended": "2026-11-02T06:09:42.527Z",
-      "note": "Bake+adopt tool built; Refinery baked: 393 objects in scene; image diff <=0.30% pixels; scripted run passes; other projects compile"
-    },
-    {
-      "id": "bake-01",
-      "name": "Bake: project 01 (kit HydroTest)",
-      "task": "Convert HydroTest to bake+adopt and bake project 01 scene",
-      "state": "done",
-      "started": "2026-11-02T06:10:47.131Z",
-      "watch": [
-        "vive-steamvr/01-hydrostatic-test",
-        "vive-steamvr/packages"
-      ],
-      "ended": "2026-11-02T06:21:51.485Z",
-      "note": "Project 01 baked: 217 GameObjects; HydroTest converted; image diff worst 2.04% (>8) / 0.28% (>32); scripted run passes"
-    },
-    {
       "id": "bake-03",
       "name": "Bake: project 03",
       "task": "Convert WarehouseForklift to bake+adopt and bake scene",
@@ -498,6 +386,116 @@
       ],
       "ended": "2026-11-07T05:04:36.823Z",
       "note": "done"
+    },
+    {
+      "id": "migrate",
+      "name": "Migrate 02-04",
+      "task": "SteamVR migrate+build+simulate projects 02,03,04",
+      "state": "done",
+      "started": "2026-11-09T01:19:07.800Z",
+      "watch": [
+        "vive-steamvr",
+        "scripts"
+      ],
+      "ended": "2026-11-09T01:28:15.445Z",
+      "note": "02,03,04 migrated, built, ran in sim: 0 exceptions; controllers untested"
+    },
+    {
+      "id": "docs",
+      "name": "SteamVR docs",
+      "task": "Write STEAMVR-REBUILD.md, update docs and Task-Status",
+      "state": "done",
+      "started": "2026-11-09T01:19:07.863Z",
+      "watch": [
+        "docs"
+      ],
+      "ended": "2026-11-09T01:20:27.963Z",
+      "note": "STEAMVR-REBUILD.md written; simulator/sample/builds/quickstart docs and K1 row updated"
+    },
+    {
+      "id": "hub",
+      "name": "Migrate hub",
+      "task": "SteamVR setup+build+simulate hub",
+      "state": "done",
+      "started": "2026-11-09T01:25:44.878Z",
+      "watch": [
+        "vive-steamvr/hub"
+      ],
+      "ended": "2026-11-09T01:35:11.035Z",
+      "note": "Hub migrated, built, lobby runs in sim, 0 exceptions; scenario hand-off unverified"
+    },
+    {
+      "id": "optimise",
+      "name": "Optimise + hints",
+      "task": "Hub draw-call and lighting pass; fix scenario hint text; compile check",
+      "state": "done",
+      "started": "2026-11-09T01:35:11.129Z",
+      "watch": [
+        "vive-steamvr"
+      ],
+      "ended": "2026-11-09T01:56:17.146Z",
+      "note": "Hint text fixed (compile-checked); optimisation NOT done: 4,295 draw calls figure stale (hub README says ~1,284); 03 reads 2,294"
+    },
+    {
+      "id": "editorfix",
+      "name": "Editor Play errors",
+      "task": "Diagnose NullRefs on Play, WASD not moving, settings popup",
+      "state": "done",
+      "started": "2026-11-09T01:47:48.353Z",
+      "watch": [
+        "vive-steamvr"
+      ],
+      "ended": "2026-11-09T01:51:07.496Z",
+      "note": "Fixes compiled, not run in Play: Input System keys, settings guard, smaller desk hand; NREs diagnosed as recompile-in-play (suspected)"
+    },
+    {
+      "id": "scenerig",
+      "name": "Player in scenes",
+      "task": "Place Valve Player+Teleporting in every scene; backend adopts it; lobby TeleportArea",
+      "state": "done",
+      "started": "2026-11-09T01:53:34.315Z",
+      "watch": [
+        "vive-steamvr"
+      ],
+      "ended": "2026-11-09T02:11:04.533Z",
+      "note": "Player+Teleporting+TeleportArea saved in all 9 scenes; other runtime spawners remain (audit table); panel overflow partly done"
+    },
+    {
+      "id": "panels",
+      "name": "Panels + lobby glass",
+      "task": "Bake task board/why panels as scene objects, fix text overflow everywhere, then glass building + quality in lobby",
+      "state": "done",
+      "started": "2026-11-09T02:12:07.019Z",
+      "watch": [
+        "vive-steamvr"
+      ],
+      "ended": "2026-11-09T02:56:13.611Z",
+      "note": "Panels baked, overflow 9->0 (audit), lobby glass built, 5 rebuilt, 0 exceptions in sim"
+    },
+    {
+      "id": "deskfix",
+      "name": "Hands in desk mode + remove crates",
+      "task": "Make controllers/hands usable at the desk in all scenes; remove fruit crates from Hydrostatic scene",
+      "state": "done",
+      "started": "2026-11-09T03:08:26.988Z",
+      "watch": [
+        "vive-steamvr"
+      ],
+      "ended": "2026-11-09T03:35:05.816Z",
+      "note": "Desk mode self-test PASS in 01-04+hub; E grabs at range; throwable NRE fixed; 3 fruit-crate objects removed; OpenXR switch not recommended"
+    },
+    {
+      "id": "consistency",
+      "name": "Explain + make consistent",
+      "task": "Audit 5 Unity projects, write docs/UNITY-PROJECTS-GUIDE.md, make hub and projects behave the same (hands, hints, controls)",
+      "state": "done",
+      "started": "2026-11-09T03:51:24.744Z",
+      "watch": [
+        "vive-steamvr",
+        "docs"
+      ],
+      "ended": "2026-11-09T05:05:04.159Z",
+      "note": "Guide written; standby-freeze root cause fixed in kit; Lobby portals pointable (needs menu run in hub); sync script; desk self-test PASS"
     }
   ]
 }

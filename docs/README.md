@@ -10,6 +10,7 @@ General safety-awareness practice only: none of the scenarios is a procedure, pe
 |---|---|
 | Run the demo, a Unity project, the hub, or a headset | [HOW-TO-RUN.md](HOW-TO-RUN.md) |
 | Set up a new PC (Node, Unity, SteamVR, Meta XR Simulator, checks) | [DEVELOPER-SETUP.md](DEVELOPER-SETUP.md) |
+| Understand the Unity projects: hub vs the four projects, the kit, scenes, keys, what is verified | [UNITY-PROJECTS-GUIDE.md](UNITY-PROJECTS-GUIDE.md) |
 | Check the Vive with Valve's own SteamVR sample (first step of the SteamVR rebuild) | [STEAMVR-SAMPLE.md](STEAMVR-SAMPLE.md) |
 | Test the Vive builds with no headset (SteamVR's simulated headset) and the web examples (emulated Quest) | [STEAMVR-SIMULATOR.md](STEAMVR-SIMULATOR.md) |
 | Get the builds onto the VR Stage PC and run them (one page, start to finish) | [VR-STAGE-QUICKSTART.md](VR-STAGE-QUICKSTART.md) |

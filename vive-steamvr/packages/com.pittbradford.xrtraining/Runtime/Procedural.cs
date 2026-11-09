@@ -420,7 +420,7 @@ namespace PittBradford.XR
         /// Font material that respects depth. Unity's default font shader ignores it, so text would show through walls
         /// and panels; PittBradford/Text depth-tests and uses the font atlas as an alpha mask.
         /// </summary>
-        internal static Material TextMaterial
+        public static Material TextMaterial
         {
             get
             {

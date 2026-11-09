@@ -24,6 +24,8 @@ The projects are built one at a time. For each, Unity is started with `-projectP
 
 After each build the script checks the log for `error CS`, requires the line `[build] Succeeded` and the `.exe`, then copies the build folder. A failed project is reported and the next one still runs; the exit code is 1 if any failed.
 
+**SteamVR plugin migration (in progress, 2026-11-08).** Projects are being moved from the custom OpenXR rig to Valve's SteamVR plugin. A migrated project needs `powershell -File scripts\setup-steamvr.ps1 -Projects <folder>` before `build-vive` (it is not run automatically yet; Unity editors closed). Only project 01 is migrated so far, and only tested in SteamVR's simulated headset; 02 to 04 and the hub may still be the old build, and no migrated build has been tried on a real Vive. See [STEAMVR-REBUILD.md](STEAMVR-REBUILD.md). The OpenXR-runtime step below applies to the old builds.
+
 ## What you get
 
 ```

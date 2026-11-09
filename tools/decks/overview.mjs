@@ -2,7 +2,7 @@ import { avatarsSlide, dashboardSlide, demoDaySlide, hubSlide, nextStepsSlide, r
 import { applyDeckTheme, bullets, callout, card, chip, contentSlide, entries, img, label, newDeck, numberDot, section, shot, steps, text } from "./lib.mjs";
 
 export async function buildOverview(file) {
-  const { pres, C } = newDeck({ title: "VR, MR, and AR SDK examples: project overview", footer: "ALL-VR-MR-XR-SDKs  |  Project overview" });
+  const { pres, C } = newDeck({ title: "VR, MR, and AR SDK examples: project overview", footer: "xr-training-lab  |  Project overview" });
 
   // 1 ---------------------------------------------------------------- title
   section(pres, "Introduction");

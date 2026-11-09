@@ -1,4 +1,4 @@
-// Checks the built site/ as GitHub Pages will serve it: under the sub-path /ALL-VR-MR-XR-SDKs/, with every
+// Checks the built site/ as GitHub Pages will serve it: under the sub-path /xr-training-lab/, with every
 // non-localhost request blocked. Starts its own server on 8151 and stops it at the end.
 //   node scripts/build-webxr.mjs && node tools/pages/site-check.mjs
 // Checks: every web page in launcher/examples.json loads with no console error, failed request or HTTP error; every launcher
@@ -14,7 +14,7 @@ const repo = join(here, "..", "..");
 const { chromium } = await import(pathToFileURL(join(repo, "tools", "vr-capture", "node_modules", "playwright", "index.mjs")).href);
 if (!existsSync(join(repo, "site", "index.html"))) { console.error("site/ is missing: run node scripts/build-webxr.mjs first"); process.exit(2); }
 
-const PORT = 8151, PREFIX = "/ALL-VR-MR-XR-SDKs/";
+const PORT = 8151, PREFIX = "/xr-training-lab/";
 const base = `http://localhost:${PORT}${PREFIX}`;
 const PAGES_ORIGIN = "https://jpcst52.github.io";
 const data = JSON.parse(readFileSync(join(repo, "site", "launcher", "examples.json"), "utf8"));

@@ -16,7 +16,7 @@ const args = process.argv.slice(2);
 const withDecks = args.includes("--with-decks");
 const outArg = args.indexOf("--out");
 const site = resolve(outArg >= 0 ? args[outArg + 1] : join(repo, "site"));
-const PAGES_URL = "https://jpcst52.github.io/ALL-VR-MR-XR-SDKs/";
+const PAGES_URL = "https://jpcst52.github.io/xr-training-lab/";
 const IMAGE_CAP = 700_000; // bytes; larger images referenced from guides are skipped and listed
 // Guides of the browser examples keep their pictures up to 3 MB; every other guide (the Unity project notes, docs) up to 700 KB.
 const capFor = (md, target) => (/^(README\.md|training-simulations\/|a-frame\/|threejs\/|babylonjs\/|webxr\/|multi-player\/)/.test(md) ? 3_000_000 : IMAGE_CAP);

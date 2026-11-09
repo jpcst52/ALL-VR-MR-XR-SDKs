@@ -1,5 +1,5 @@
 // Static server for the built site, serving it under a sub-path like GitHub Pages does for a project site.
-//   node tools/pages/serve-subpath.mjs [port] [prefix]     defaults: 8151 /ALL-VR-MR-XR-SDKs/
+//   node tools/pages/serve-subpath.mjs [port] [prefix]     defaults: 8151 /xr-training-lab/
 // Anything outside the prefix is a 404 (so an absolute "/something" link that works at a root host fails here, as it would
 // on Pages). Unknown paths inside the prefix return site/404.html with status 404, like Pages.
 import { createServer } from "node:http";
@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".gltf": "model/gltf+json", ".glb": "model/gltf-binary", ".bin": "application/octet-stream", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".gif": "image/gif", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".md": "text/markdown; charset=utf-8", ".wasm": "application/wasm", ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation", ".txt": "text/plain; charset=utf-8" };
 
-export function startSubpathServer({ port = 8151, prefix = "/ALL-VR-MR-XR-SDKs/", root = resolve(here, "..", "..", "site") } = {}) {
+export function startSubpathServer({ port = 8151, prefix = "/xr-training-lab/", root = resolve(here, "..", "..", "site") } = {}) {
   const server = createServer((request, response) => {
     const url = new URL(request.url, "http://x");
     const send404 = () => {
@@ -36,7 +36,7 @@ export function startSubpathServer({ port = 8151, prefix = "/ALL-VR-MR-XR-SDKs/"
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const port = Number(process.argv[2] ?? 8151), prefix = process.argv[3] ?? "/ALL-VR-MR-XR-SDKs/";
+  const port = Number(process.argv[2] ?? 8151), prefix = process.argv[3] ?? "/xr-training-lab/";
   await startSubpathServer({ port, prefix });
   console.log(`serving site/ on http://localhost:${port}${prefix}`);
 }

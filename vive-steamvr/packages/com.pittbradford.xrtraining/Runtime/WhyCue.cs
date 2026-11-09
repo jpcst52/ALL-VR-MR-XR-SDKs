@@ -85,33 +85,53 @@ namespace PittBradford.XR
         RationaleQuestion pending;
         Action<bool> pendingDone, onDone;
 
-        readonly Dictionary<TextMesh, float> baseSize = new Dictionary<TextMesh, float>();
-        struct FitItem { public TextMesh Text; public float MaxWidth; public int Frame; }
-        readonly List<FitItem> toFit = new List<FitItem>();
+        RationaleQuestion built;
 
-        /// <summary>Creates the cue object (panels are built hidden).</summary>
+        /// <summary>
+        /// The cue object with its panels (hidden). In a baked scene the object and its panels are adopted from the scene
+        /// file; the code that makes them runs only while the scene is baked in the editor.
+        /// </summary>
         public static WhyCue Create(Transform parent = null)
         {
-            var go = new GameObject("Why cue");
-            if (parent != null) go.transform.SetParent(parent, false);
-            return go.AddComponent<WhyCue>();
+            var go = P.Node("Why cue", parent);
+            var cue = P.Ensure<WhyCue>(go);
+            cue.Init();
+            return cue;
         }
 
-        void Awake()
+        void Start() { Init(); }
+
+        /// <summary>Builds (or adopts) the reason panel once.</summary>
+        void Init()
         {
+            if (why != null) return;
             BuildWhyPanel();
+        }
+
+        /// <summary>
+        /// Builds the panel for the scenario's question now (hidden), so it is part of the saved scene. Call it once after
+        /// setting the panel's distance, offset and scale. <see cref="Ask"/> then only fills in the answers.
+        /// </summary>
+        public void Prepare(RationaleQuestion q)
+        {
+            Init();
+            if (q == null || q.Options == null || q.Options.Length == 0) return;
+            BuildQuestion(q);
+            built = q;
+            ask.gameObject.SetActive(false);
         }
 
         // ------------------------------------------------------------------------------------------- reasons
 
         void BuildWhyPanel()
         {
-            why = new GameObject("Why this matters").transform;
-            why.SetParent(transform, false);
+            why = P.Node("Why this matters", transform).transform;
             Ui.Panel(why, "Panel", Vector3.zero, new Vector2(WhyW, WhyH), Fill, P.Gold, 0.08f);
             float left = -WhyW / 2f + 0.07f;
-            P.Text(why, Heading, new Vector3(left, WhyH / 2f - 0.085f, -0.012f), 0.058f, P.Gold, TextAnchor.MiddleLeft, true);
-            whyBody = P.Text(why, "", new Vector3(left, WhyH / 2f - 0.14f, -0.012f), 0.047f, Color.white, TextAnchor.UpperLeft);
+            var head = P.Text(why, Heading, new Vector3(left, WhyH / 2f - 0.085f, -0.012f), 0.058f, P.Gold, TextAnchor.MiddleLeft, true, "Heading");
+            TextFit.Add(head, WhyW - 0.14f, 0f, false);
+            whyBody = P.Text(why, "", new Vector3(left, WhyH / 2f - 0.14f, -0.012f), 0.047f, Color.white, TextAnchor.UpperLeft, false, "Reason");
+            TextFit.Add(whyBody, WhyW - 0.14f, WhyH - 0.14f - 0.035f, true);
             why.gameObject.SetActive(false);
         }
 
@@ -121,7 +141,8 @@ namespace PittBradford.XR
             if (string.IsNullOrEmpty(reason)) return;
             Debug.Log("[why] " + (Muted ? "(muted) " : "") + reason);
             if (Muted) return;
-            SetText(whyBody, Wrap(reason, 42), WhyW - 0.14f);
+            Init();
+            whyBody.text = reason; // its TextFit breaks the lines with the real font and keeps the block inside the panel
             bool wasVisible = why.gameObject.activeSelf;
             why.gameObject.SetActive(true);
             whyShownAt = Time.time;
@@ -157,7 +178,9 @@ namespace PittBradford.XR
             Answered = false;
             AnsweredBest = false;
             Chosen = -1;
-            BuildQuestion(q);
+            if (ask == null || built != q) { BuildQuestion(q); built = q; }
+            else ResetQuestion(q);
+            ask.gameObject.SetActive(true);
             PlaceNow(ask, AskDistance, AskOffset, true);
             Debug.Log("[why] question: " + q.Prompt);
         }
@@ -166,25 +189,27 @@ namespace PittBradford.XR
         {
             if (ask != null) Destroy(ask.gameObject);
             rowPress.Clear(); rowFaces.Clear(); rowFeedback.Clear();
-            ask = new GameObject("Rationale question").transform;
-            ask.SetParent(transform, false);
+            ask = P.Node("Rationale question", transform).transform;
             ask.localScale = Vector3.one * AskScale;
 
             const float W = 1.56f, pad = 0.08f;
             float inner = W - 2f * pad;
-            string prompt = Wrap(q.Prompt, 54);
+            // Line breaks and panel height come from the real font's measured widths and line spacing
+            float fbWidth = inner - 0.04f;
+            string prompt = TextFit.WrapMeasured(q.Prompt, 0.054f, true, inner);
             int promptLines = Lines(prompt);
             var opts = new string[q.Options.Length];
             var optLines = new int[q.Options.Length];
             int fbLines = 1;
             for (int i = 0; i < q.Options.Length; i++)
             {
-                opts[i] = Wrap(q.Options[i], 50);
+                opts[i] = TextFit.WrapMeasured(q.Options[i], 0.05f, false, inner - 0.18f);
                 optLines[i] = Lines(opts[i]);
                 string fb = FeedbackText(q, i, i); // longest prefix this row can get
-                fbLines = Mathf.Max(fbLines, Lines(Wrap(fb, FeedbackChars)));
+                fbLines = Mathf.Max(fbLines, Lines(TextFit.WrapMeasured(fb, 0.04f, false, fbWidth)));
             }
-            const float headBlock = 0.2f, promptLine = 0.074f, optLine = 0.064f, fbLine = 0.054f;
+            const float headBlock = 0.2f;
+            float promptLine = TextFit.LineHeight(0.054f, true) * 1.03f, optLine = TextFit.LineHeight(0.05f) * 1.03f, fbLine = TextFit.LineHeight(0.04f) * 1.03f;
             float rowsH = 0f;
             for (int i = 0; i < opts.Length; i++) rowsH += 0.085f + optLines[i] * optLine + fbLines * fbLine + 0.05f;
             float H = 0.06f + headBlock + promptLines * promptLine + 0.05f + rowsH + 0.2f;
@@ -192,21 +217,22 @@ namespace PittBradford.XR
             Ui.Panel(ask, "Panel", Vector3.zero, new Vector2(W, H), Fill, P.Gold, 0.045f);
             float left = -W / 2f + pad;
             float y = H / 2f - 0.11f;
-            P.Text(ask, Heading + ": ONE QUESTION", new Vector3(left, y, -0.012f), 0.06f, P.Gold, TextAnchor.MiddleLeft, true);
+            TextFit.Add(P.Text(ask, Heading + ": ONE QUESTION", new Vector3(left, y, -0.012f), 0.06f, P.Gold, TextAnchor.MiddleLeft, true, "Heading"), inner, 0f, false);
             y -= 0.075f;
-            hint = P.Text(ask, "Point and pull the trigger to choose.  Desktop: click, or press 1, 2 or 3.", new Vector3(left, y, -0.012f), 0.036f, P.Sky, TextAnchor.MiddleLeft);
-            Fit(hint, inner);
+            hint = P.Text(ask, "Point and pull the trigger to choose.  Desktop: click, or press 1, 2 or 3.", new Vector3(left, y, -0.012f), 0.036f, P.Sky, TextAnchor.MiddleLeft, false, "Hint");
+            hint.text = HintText;
+            TextFit.Add(hint, inner, 0f, false);
             y -= 0.06f;
-            var pt = P.Text(ask, prompt, new Vector3(left, y, -0.012f), 0.054f, Color.white, TextAnchor.UpperLeft, true);
-            Fit(pt, inner);
+            var pt = P.Text(ask, prompt, new Vector3(left, y, -0.012f), 0.054f, Color.white, TextAnchor.UpperLeft, true, "Question");
+            pt.text = prompt;
+            TextFit.Add(pt, inner, promptLines * promptLine, false);
             y -= promptLines * promptLine + 0.05f;
 
             string[] letters = { "A", "B", "C", "D" };
             for (int i = 0; i < opts.Length; i++)
             {
                 float rowH = 0.06f + optLines[i] * optLine;
-                var row = new GameObject("Option " + letters[Mathf.Min(i, 3)]).transform;
-                row.SetParent(ask, false);
+                var row = P.Node("Option " + letters[Mathf.Min(i, 3)], ask).transform;
                 row.localPosition = new Vector3(0f, y - rowH / 2f, -0.006f);
                 var faces = new GameObject[3];
                 faces[0] = Ui.Panel(row, "Face", Vector3.zero, new Vector2(inner, rowH), RowFill, null).gameObject;
@@ -214,27 +240,50 @@ namespace PittBradford.XR
                 faces[2] = Ui.Panel(row, "Face other", Vector3.zero, new Vector2(inner, rowH), OtherFill, null).gameObject;
                 faces[1].SetActive(false); faces[2].SetActive(false);
                 rowFaces.Add(faces);
-                P.Text(row, letters[Mathf.Min(i, 3)], new Vector3(-inner / 2f + 0.06f, 0f, -0.012f), 0.06f, P.Gold, TextAnchor.MiddleCenter, true);
-                var ot = P.Text(row, opts[i], new Vector3(-inner / 2f + 0.13f, (optLines[i] - 1) * optLine / 2f, -0.012f), 0.05f, Color.white, TextAnchor.MiddleLeft);
-                Fit(ot, inner - 0.18f);
-                var col = row.gameObject.AddComponent<BoxCollider>();
+                TextFit.Add(P.Text(row, letters[Mathf.Min(i, 3)], new Vector3(-inner / 2f + 0.06f, 0f, -0.012f), 0.06f, P.Gold, TextAnchor.MiddleCenter, true, "Letter"), 0.1f, 0f, false);
+                var ot = P.Text(row, opts[i], new Vector3(-inner / 2f + 0.13f, 0f, -0.012f), 0.05f, Color.white, TextAnchor.MiddleLeft, false, "Option text");
+                ot.text = opts[i];
+                TextFit.Add(ot, inner - 0.18f, rowH - 0.02f, false);
+                var col = P.Ensure<BoxCollider>(row.gameObject);
                 col.size = new Vector3(inner, rowH, 0.03f);
-                var press = row.gameObject.AddComponent<Pressable>();
+                var press = P.Ensure<Pressable>(row.gameObject);
                 press.Label = "Option " + letters[Mathf.Min(i, 3)];
                 int idx = i;
                 press.Pressed += h => Answer(idx);
                 rowPress.Add(press);
                 y -= rowH + 0.025f;
-                var fb = P.Text(ask, "", new Vector3(left + 0.02f, y, -0.012f), 0.04f, P.Sky, TextAnchor.UpperLeft);
+                var fb = P.Text(ask, "", new Vector3(left + 0.02f, y, -0.012f), 0.04f, P.Sky, TextAnchor.UpperLeft, false, "Feedback " + letters[Mathf.Min(i, 3)]);
+                fb.text = "";
+                TextFit.Add(fb, fbWidth, fbLines * fbLine, true);
                 rowFeedback.Add(fb);
                 y -= fbLines * fbLine + 0.05f;
             }
             y -= 0.02f;
-            result = P.Text(ask, "", new Vector3(left, y, -0.012f), 0.052f, Color.white, TextAnchor.MiddleLeft, true);
-            resultSub = P.Text(ask, "", new Vector3(left, y - 0.065f, -0.012f), 0.036f, P.Sky, TextAnchor.MiddleLeft);
+            result = P.Text(ask, "", new Vector3(left, y, -0.012f), 0.052f, Color.white, TextAnchor.MiddleLeft, true, "Result");
+            result.text = "";
+            TextFit.Add(result, inner, 0f, false);
+            resultSub = P.Text(ask, "", new Vector3(left, y - 0.065f, -0.012f), 0.036f, P.Sky, TextAnchor.MiddleLeft, false, "Result detail");
+            resultSub.text = "";
+            TextFit.Add(resultSub, inner, 0f, false);
         }
 
-        const int FeedbackChars = 70;
+        const string HintText = "Point and pull the trigger to choose.  Desktop: click, or press 1, 2 or 3.";
+
+        /// <summary>Puts a prepared (baked) question panel back to its unanswered state.</summary>
+        void ResetQuestion(RationaleQuestion q)
+        {
+            for (int i = 0; i < rowPress.Count; i++)
+            {
+                rowPress[i].SetHover(false);
+                rowPress[i].Interactable = true;
+                rowFaces[i][0].SetActive(true);
+                rowFaces[i][1].SetActive(false);
+                rowFaces[i][2].SetActive(false);
+                rowFeedback[i].text = "";
+            }
+            result.text = ""; resultSub.text = "";
+            hint.text = HintText;
+        }
 
         static string FeedbackText(RationaleQuestion q, int i, int chosen)
         {
@@ -258,14 +307,12 @@ namespace PittBradford.XR
                 rowFaces[i][0].SetActive(!best && !mine);
                 rowFaces[i][1].SetActive(best);
                 rowFaces[i][2].SetActive(mine && !best);
-                SetText(rowFeedback[i], Wrap(FeedbackText(Question, i, index), FeedbackChars), 1.38f);
+                rowFeedback[i].text = FeedbackText(Question, i, index); // its TextFit breaks the lines
                 rowFeedback[i].color = best ? Good : mine ? Warn : P.Sky;
             }
             result.text = AnsweredBest ? "Reasoning: best answer chosen." : "Reasoning: not the best answer this time. See the feedback above.";
             result.color = AnsweredBest ? Good : Warn;
-            Fit(result, 1.4f);
             resultSub.text = "Practice feedback, recorded apart from the procedure score. Not a certification.";
-            Fit(resultSub, 1.4f);
             if (hint) hint.text = "Answer recorded.";
             Debug.Log($"[why] answered {"ABCD"[Mathf.Min(index, 3)]} ({(AnsweredBest ? "best answer" : "not the best answer")}) for: {Question.Topic}");
             onDone?.Invoke(AnsweredBest);
@@ -295,6 +342,7 @@ namespace PittBradford.XR
 
         void Update()
         {
+            if (why == null) return;
             if (why.gameObject.activeSelf && Time.time >= whyUntil) why.gameObject.SetActive(false);
             if (pending != null && (!ReasonVisible || Time.time - whyShownAt >= AskDelay)) OpenPending();
 
@@ -312,7 +360,7 @@ namespace PittBradford.XR
 
         void LateUpdate()
         {
-            FitPending();
+            if (why == null) return;
             var view = View;
             if (view == null) return;
             bool capture = TagFacing.ViewOverride != null;
@@ -401,31 +449,5 @@ namespace PittBradford.XR
 
         static int Lines(string s) { int n = 1; foreach (char c in s) if (c == '\n') n++; return n; }
 
-        void SetText(TextMesh tm, string s, float maxWidth)
-        {
-            if (baseSize.TryGetValue(tm, out var size)) tm.characterSize = size;
-            tm.text = s;
-            Fit(tm, maxWidth);
-        }
-
-        /// <summary>Shrinks the text next frame if it came out wider than <paramref name="maxWidth"/> (fonts vary by machine).</summary>
-        void Fit(TextMesh tm, float maxWidth)
-        {
-            if (!baseSize.ContainsKey(tm)) baseSize[tm] = tm.characterSize;
-            toFit.Add(new FitItem { Text = tm, MaxWidth = maxWidth, Frame = Time.frameCount });
-        }
-
-        void FitPending()
-        {
-            for (int i = toFit.Count - 1; i >= 0; i--)
-            {
-                var item = toFit[i];
-                if (item.Text == null) { toFit.RemoveAt(i); continue; }
-                if (Time.frameCount <= item.Frame) continue; // the text mesh is rebuilt by the next frame
-                float w = item.Text.GetComponent<MeshRenderer>().localBounds.size.x;
-                if (w > item.MaxWidth && w > 0f) item.Text.characterSize *= item.MaxWidth / w;
-                toFit.RemoveAt(i);
-            }
-        }
     }
 }

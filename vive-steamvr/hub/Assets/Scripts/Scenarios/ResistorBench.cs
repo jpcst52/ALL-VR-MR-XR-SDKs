@@ -139,6 +139,7 @@ public class ResistorBench : MonoBehaviour, IShotScript
         // the bench top is between the player and anything 1.6 m ahead, so keep the panels above it and closer
         why.WhyDistance = 1.2f; why.WhyOffset = new Vector2(0f, 0.1f);
         why.AskDistance = 1.2f; why.AskOffset = new Vector2(0f, 0.15f); why.AskScale = 0.6f;
+        why.Prepare(Question); // the question panel is part of the scene, hidden until asked
         rig.Area = new Bounds(new Vector3(0, 0, -0.4f), new Vector3(5f, 1f, 1.1f));
         rig.Camera.backgroundColor = new Color(0.1f, 0.11f, 0.13f);
         rig.Camera.clearFlags = CameraClearFlags.SolidColor;
@@ -969,7 +970,7 @@ public class ResistorBench : MonoBehaviour, IShotScript
             "Work out the LED resistor; test a part in the tray",
             "Sulfur-rich air: fit an anti-sulfur part, switch on",
         }, 3.4f, 1.15f);
-        board.SetFooter("Point + trigger = press. Grip = grab. Desktop: click = press, E = grab, WASD, right mouse = look.");
+        board.SetFooter("Trackpad: hold, aim, release = teleport. Point + trigger = press, grip = grab. Desktop: WASD, mouse look, click = trigger, E = grip, Esc frees mouse.");
     }
 
     void MakeButton(Transform parent, string name, Vector3 pos, Color color, System.Action onPress)

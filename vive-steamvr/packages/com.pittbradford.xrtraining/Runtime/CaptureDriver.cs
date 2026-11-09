@@ -153,6 +153,7 @@ namespace PittBradford.XR
 
         internal static void Quit(int code)
         {
+            Debug.Log("[capture] quit " + code + "\n" + System.Environment.StackTrace);
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.Exit(code);
 #else

@@ -1,5 +1,5 @@
 {
-  "updated": "11/3/2026, 3:00:13 PM",
+  "updated": "11/9/2026, 12:04:09 AM",
   "suites": [
     {
       "name": "Practice Lab scenarios",
@@ -270,6 +270,14 @@
       "failed": 0,
       "skipped": 0,
       "when": "11/3/2026, 3:00:13 PM",
+      "note": ""
+    },
+    {
+      "name": "Unity desk self-test (simulated headset players 01-04; editor Play hub copy: Lobby + 4 scenarios)",
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0,
+      "when": "11/9/2026, 12:04:09 AM",
       "note": ""
     }
   ]

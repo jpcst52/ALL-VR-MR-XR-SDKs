@@ -98,6 +98,7 @@ public partial class HydroTest : MonoBehaviour, IShotScript
         BuildDetail();
         BuildBoardAndSigns();
         why = WhyCue.Create(transform);
+        why.Prepare(Question); // the question panel is part of the scene, hidden until asked
 
         rig = XRRig.Create(new Vector3(0, 0, -3.6f), 0f);
         rig.Area = new Bounds(new Vector3(0, 0, 0), new Vector3(11.4f, 1f, 10.6f));
@@ -298,7 +299,7 @@ public partial class HydroTest : MonoBehaviour, IShotScript
             "Hold 15 s from behind the yellow line",
             "Stop pump, open DRAIN, then open VENT",
         }, 3.9f, 1.4f);
-        board.SetFooter("Point at valves and buttons and press the trigger. Grab blind flanges with the grip.");
+        board.SetFooter("Point at valves and buttons and press the trigger. Grab blind flanges with the grip. Teleport: hold the trackpad, aim, release. Desktop: WASD, mouse look, click = trigger, E = grip, Esc frees mouse.");
         // Conditions board on the right wall
         var wp = new Vector3(5.6f, 2.4f, -1.0f);
         var go = P.Node("Conditions", transform).transform;

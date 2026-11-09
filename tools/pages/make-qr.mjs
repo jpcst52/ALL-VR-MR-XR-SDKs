@@ -6,7 +6,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const url = process.argv[2] ?? "https://jpcst52.github.io/ALL-VR-MR-XR-SDKs/";
+const url = process.argv[2] ?? "https://jpcst52.github.io/xr-training-lab/";
 const qrcode = new Function(readFileSync(join(repo, "vendor", "qrcode", "qrcode.js"), "utf8") + "; return qrcode;")();
 const q = qrcode(0, "M");
 q.addData(url);

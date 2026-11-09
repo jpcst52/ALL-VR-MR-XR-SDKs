@@ -46,6 +46,7 @@ public class LobbyHub : MonoBehaviour, IShotScript
         public Transform Root;
         public TextMesh Status;
         public Material Gate;
+        public Pressable Select;
         public float Dwell;
     }
 
@@ -56,8 +57,14 @@ public class LobbyHub : MonoBehaviour, IShotScript
         rig.Camera.backgroundColor = P.MediumBlue;
         rig.Camera.clearFlags = CameraClearFlags.SolidColor;
         rig.Area = new Bounds(Vector3.zero, new Vector3(HallWidth - 1.5f, 1, HallDepth - 1.5f));
-        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-        RenderSettings.ambientLight = new Color(0.55f, 0.58f, 0.64f);
+        // The portals are up to 14 m away from where the visitor starts: let the pointing ray reach across the hall
+        if (rig.Left != null) rig.Left.RayLength = 20f;
+        if (rig.Right != null) rig.Right.RayLength = 20f;
+        // Soft sky-lit hall: a gradient (brighter from above, cooler floor bounce) instead of one flat grey
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+        RenderSettings.ambientSkyColor = new Color(0.66f, 0.74f, 0.86f);
+        RenderSettings.ambientEquatorColor = new Color(0.56f, 0.59f, 0.65f);
+        RenderSettings.ambientGroundColor = new Color(0.36f, 0.37f, 0.41f);
 
         // Seasonal sky (SeasonSky, from the kit): show it through the open roof and name the season on the welcome board
         sky = FindFirstObjectByType<SeasonSky>();
@@ -141,14 +148,18 @@ public class LobbyHub : MonoBehaviour, IShotScript
         var board = boardGo.transform;
         if (P.IsNew(boardGo)) board.localPosition = new Vector3(0, 6.6f, HallDepth / 2 - 0.3f);
         Ui.Panel(board, "Panel", new Vector3(0, 0, 0.02f), new Vector2(11.2f, 2.0f), new Color(0f, 0.13f, 0.36f, 0.98f), P.Gold, 0.05f);
-        P.Text(board, "Pitt-Bradford XR Training Hub", new Vector3(0, 0.38f, -0.06f), 0.62f, Color.white, TextAnchor.MiddleCenter, true);
-        P.Text(board, "Step onto a portal's pad and wait a moment to start.   Desktop: keys 1-4.", new Vector3(0, -0.22f, -0.06f), 0.24f, P.Sky, TextAnchor.MiddleCenter);
-        P.Text(board, "General safety-awareness practice, not a procedure or certification.", new Vector3(0, -0.62f, -0.06f), 0.18f, P.Gold, TextAnchor.MiddleCenter);
+        // Every text is limited to its panel by a TextFit (saved on the text): measured with the real font, 0.5 m margin each side of the 11.2 m board
+        const float boardText = 10.2f;
+        TextFit.Add(P.Text(board, "Pitt-Bradford XR Training Hub", new Vector3(0, 0.38f, -0.06f), 0.62f, Color.white, TextAnchor.MiddleCenter, true, "Title"), boardText, 0f, false);
+        TextFit.Add(P.Text(board, "Step on a pad and wait, or point at a doorway and press the trigger.   Desktop: click it, or keys 1-4.", new Vector3(0, -0.22f, -0.06f), 0.24f, P.Sky, TextAnchor.MiddleCenter, false, "Instructions"), boardText, 0f, false);
+        TextFit.Add(P.Text(board, "General safety-awareness practice, not a procedure or certification.", new Vector3(0, -0.62f, -0.06f), 0.18f, P.Gold, TextAnchor.MiddleCenter, false, "Disclaimer"), boardText, 0f, false);
 
         // Season chip: a tab on top of the board's right-hand corner (filled in by ShowSeason; hidden without a season sky)
         seasonChip = Ui.Panel(board, "Season chip", new Vector3(4.3f, 1.3f, 0.0f), new Vector2(2.1f, 0.72f), new Color(0.05f, 0.2f, 0.48f, 1f), P.Gold, 0.09f);
-        seasonText = P.Text(seasonChip, "", new Vector3(0, 0.06f, -0.012f), 0.3f, Color.white, TextAnchor.MiddleCenter, true);
-        seasonNote = P.Text(seasonChip, "", new Vector3(0, -0.21f, -0.012f), 0.12f, P.Sky, TextAnchor.MiddleCenter);
+        seasonText = P.Text(seasonChip, "", new Vector3(0, 0.06f, -0.012f), 0.3f, Color.white, TextAnchor.MiddleCenter, true, "Season");
+        TextFit.Add(seasonText, 1.8f, 0f, false);
+        seasonNote = P.Text(seasonChip, "", new Vector3(0, -0.21f, -0.012f), 0.12f, P.Sky, TextAnchor.MiddleCenter, false, "Season note");
+        TextFit.Add(seasonNote, 1.8f, 0f, false);
 
         for (int i = 0; i < Entries.Length; i++)
             BuildPortal(root, Entries[i], i, new Vector3((i - (Entries.Length - 1) / 2f) * PortalSpacing, 0f, PortalZ));
@@ -162,7 +173,7 @@ public class LobbyHub : MonoBehaviour, IShotScript
             hint.localRotation = Quaternion.Euler(0, 180, 0);
         }
         Ui.Panel(hint, "Panel", Vector3.zero, new Vector2(8.6f, 0.5f), new Color(0f, 0.13f, 0.36f, 0.97f), P.Gold, 0.08f);
-        P.Text(hint, "In any scenario: hold both grips (or press Backspace) to come back here.", new Vector3(0, -0.02f, -0.012f), 0.2f, Color.white, TextAnchor.MiddleCenter);
+        TextFit.Add(P.Text(hint, "In any scenario: hold both grips (or press Backspace) to come back here.", new Vector3(0, -0.02f, -0.012f), 0.2f, Color.white, TextAnchor.MiddleCenter, false, "Hint text"), 8.0f, 0f, false);
     }
 
     void BuildPortal(Transform parent, Entry e, int index, Vector3 pos)
@@ -178,15 +189,20 @@ public class LobbyHub : MonoBehaviour, IShotScript
         P.Box(p, "Post R", new Vector3(w / 2, h / 2, 0), new Vector3(t, h, t), frameMat);
         P.Box(p, "Lintel", new Vector3(0, h + t / 2, 0), new Vector3(w + t, t, t), frameMat);
         // The glowing doorway; its own material instance so the glow can pulse
-        var gate = P.Box(p, "Gate", new Vector3(0, h / 2, 0), new Vector3(w - t, h, 0.04f), P.Transparent(new Color(e.Color.r, e.Color.g, e.Color.b, 0.45f)), false);
+        // It has a collider and a Pressable (both saved in the scene), so pointing at the doorway and pressing the trigger (desktop: left click) starts the scenario
+        var gate = P.Box(p, "Gate", new Vector3(0, h / 2, 0), new Vector3(w - t, h, 0.04f), P.Transparent(new Color(e.Color.r, e.Color.g, e.Color.b, 0.45f)));
+        var select = P.Ensure<Pressable>(gate);
+        select.Label = e.Title;
+        select.Pressed += hand => Go(e);
         var gateMat = gate.GetComponent<Renderer>().material;
         // A pad on the floor marks where to stand
         P.Cyl(p, "Pad", new Vector3(0, 0.01f, -1.5f), TriggerRadius, 0.02f, Vector3.up, accent, false);
         P.Cyl(p, "Pad inner", new Vector3(0, 0.02f, -1.5f), TriggerRadius * 0.82f, 0.02f, Vector3.up, P.Mat(new Color(0.95f, 0.96f, 0.98f), 0f, 0.3f), false);
 
-        Ui.Panel(p, "Sign", new Vector3(0, h + 0.95f, 0.03f), new Vector2(w + 0.8f, 1.2f), Color.Lerp(e.Color, Color.black, 0.25f), Color.white, 0.04f);
-        P.Text(p, (index + 1) + "  " + e.Title, new Vector3(0, h + 1.27f, -0.05f), 0.3f, Color.white, TextAnchor.MiddleCenter, true);   // title and blurb are 0.5 m apart so the two lines of the blurb never touch the title
-        P.Text(p, e.Blurb, new Vector3(0, h + 0.74f, -0.05f), 0.14f, Color.white, TextAnchor.MiddleCenter);
+        // 4.0 m sign (portals are 4.4 m apart); title and blurb are fitted to 3.6 m so the text keeps 0.2 m inside each edge
+        Ui.Panel(p, "Sign", new Vector3(0, h + 0.95f, 0.03f), new Vector2(4.0f, 1.2f), Color.Lerp(e.Color, Color.black, 0.25f), Color.white, 0.04f);
+        TextFit.Add(P.Text(p, (index + 1) + "  " + e.Title, new Vector3(0, h + 1.27f, -0.05f), 0.3f, Color.white, TextAnchor.MiddleCenter, true, "Sign title"), 3.6f, 0f, false);   // title and blurb are 0.5 m apart so the two lines of the blurb never touch the title
+        TextFit.Add(P.Text(p, e.Blurb, new Vector3(0, h + 0.74f, -0.05f), 0.14f, Color.white, TextAnchor.MiddleCenter, false, "Sign blurb"), 3.6f, 0.4f, false);
 
         // Thumbnail of the scenario inside the doorway, on a rounded white frame (skipped if the image is missing)
         var thumb = string.IsNullOrEmpty(e.Thumb) ? null : Resources.Load<Texture2D>("Thumbnails/" + e.Thumb);
@@ -204,7 +220,8 @@ public class LobbyHub : MonoBehaviour, IShotScript
             }
         }
 
-        var status = P.Text(p, "Step on the pad", new Vector3(0, 0.04f, -1.5f), 0.14f, new Color(0.1f, 0.12f, 0.18f), TextAnchor.MiddleCenter, true);
+        var status = P.Text(p, "Step on the pad", new Vector3(0, 0.04f, -1.5f), 0.14f, new Color(0.1f, 0.12f, 0.18f), TextAnchor.MiddleCenter, true, "Pad status");
+        TextFit.Add(status, 2.0f, 0f, false);
         status.transform.localRotation = Quaternion.Euler(90, 0, 0); // lies flat, readable from the south
 
         var lampGo = P.Node("Lamp", p);
@@ -218,7 +235,7 @@ public class LobbyHub : MonoBehaviour, IShotScript
             lamp.color = Color.Lerp(e.Color, Color.white, 0.65f);
         }
 
-        portals.Add(new PortalState { Entry = e, Root = p, Status = status, Gate = gateMat });
+        portals.Add(new PortalState { Entry = e, Root = p, Status = status, Gate = gateMat, Select = select });
     }
 
     // ------------------------------------------------------------------ play
@@ -235,7 +252,8 @@ public class LobbyHub : MonoBehaviour, IShotScript
             bool on = Vector2.Distance(new Vector2(feet.x, feet.z), new Vector2(pad.x, pad.z)) < TriggerRadius;
             ps.Dwell = on ? ps.Dwell + Time.deltaTime : Mathf.Max(0f, ps.Dwell - Time.deltaTime * 2f);
             float f = Mathf.Clamp01(ps.Dwell / DwellSeconds);
-            ps.Status.text = on ? "Starting " + Mathf.RoundToInt(f * 100f) + "%" : "Step on the pad";
+            bool pointed = ps.Select != null && ((rig.Right != null && rig.Right.Hover == ps.Select) || (rig.Left != null && rig.Left.Hover == ps.Select));
+            ps.Status.text = on ? "Starting " + Mathf.RoundToInt(f * 100f) + "%" : pointed ? "Press the trigger" : "Step on the pad";
             var c = ps.Entry.Color;
             ps.Gate.color = new Color(c.r, c.g, c.b, Mathf.Lerp(0.35f, 0.9f, f));
             if (f >= 1f) { Go(ps.Entry); return; }

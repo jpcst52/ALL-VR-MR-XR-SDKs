@@ -21,7 +21,7 @@ If the PC that holds the hub's licensed files is remote and you work at a lab PC
 **Way 2: build at the lab PC.** Then the lab PC needs all of this, in this order:
 
 1. **Unity 6000.3.20f1** installed through Unity Hub with *Windows Build Support (Mono)*, and Unity licensed or signed in on that PC.
-2. **The repository:** `git clone https://github.com/jpcst52/ALL-VR-MR-XR-SDKs.git` (or `git pull`). This gives projects 01 to 04 everything they need.
+2. **The repository:** `git clone https://github.com/jpcst52/xr-training-lab.git` (or `git pull`). This gives projects 01 to 04 everything they need.
 3. **The hub's licensed files** (only if you want the hub). They are not in git. On the Build PC run `scripts\pack-hub-assets.cmd` (writes `builds\hub-assets-<date>.zip`; 2,084 MB on 2026-11-08, about 3 GB unpacked). Get that file to the lab PC by whatever private route you have: remote-desktop file copy, a USB drive, or a private network share. It holds licensed Asset Store files, so move it only between your own machines and keep it out of GitHub, email and shared folders; check the packs' license terms if unsure.
 4. **Close Unity, then unpack before opening the hub in Unity:** drag the zip onto `scripts\unpack-hub-assets.cmd`.
 5. **Run `scripts\check-build-pc.cmd`.** It checks Unity and its Windows module, the repository, that no editor is open, free disk space (about 11 GB), the hub's files, and the Unity package server, and says what to fix. It changes nothing.
@@ -32,7 +32,7 @@ If Way 2 hits trouble, Way 1 is the fallback: the builds on the Build PC are alr
 
 ## Step 1: get the builds (pick one)
 
-**A. The builds already exist on the Build PC.** Folders in `C:\GitHub\ALL-VR-MR-XR-SDKs\builds\vive\`: `01-...`, `02-...`, `03-...`, `04-...`, `hub`, each with its `.exe`. As of 2026-11-08 the hub folder includes the lobby music and sky fix. Skip to step 2.
+**A. The builds already exist on the Build PC.** Folders in `C:\GitHub\xr-training-lab\builds\vive\`: `01-...`, `02-...`, `03-...`, `04-...`, `hub`, each with its `.exe`. As of 2026-11-08 the hub folder includes the lobby music and sky fix. Skip to step 2.
 
 **B. Rebuild all five on the Build PC** (after pulling new changes). Close every Unity editor, then double-click **`scripts\build-all-vive.cmd`**. About 45 minutes on the first PC (the hub is about 11), a few minutes on a faster lab PC. It opens `builds\vive` when it finishes. A project that fails is reported and the others still build; logs are in `builds\logs\`. Details: [BUILDS.md](BUILDS.md).
 
@@ -60,7 +60,7 @@ Copy whole folders from `builds\vive\` (USB drive or local network) to the Stage
 What to look at, per build, is in [LAB-TEST-TODAY.md](LAB-TEST-TODAY.md) section 3, and the longer Pass/Fail sheet is [demo-day/HARDWARE-TEST-SESSION.md](demo-day/HARDWARE-TEST-SESSION.md). For the hub in particular:
 
 - It opens in the lobby: four portals with thumbnails, a sky photo, music starting after a few seconds (press M on the desktop window to mute).
-- **Teleport:** push a thumbstick or press the trackpad forward, aim the arc, release. Right or left on a stick turns 45 degrees.
+- **Teleport:** push a thumbstick or press the trackpad forward, aim the arc, release. Right or left on a stick turns 45 degrees. (This describes the old OpenXR builds. Builds migrated to Valve's SteamVR plugin, so far only project 01, use Valve's teleport: hold the trackpad, aim at the floor area, release. Neither is verified on a real Vive; see [STEAMVR-REBUILD.md](STEAMVR-REBUILD.md).)
 - **Portals:** stand on a pad for about 1.4 seconds; the scenario loads. Hold both grips for 1.5 seconds (Backspace on the desktop) to go back to the lobby.
 - Please note: controller feel (the Vive trackpad is the least certain part), comfort, frame rate (the SteamVR frame-time overlay is enough), whether text is readable and reads in both eyes, the seated forklift driver pose in 03, and how the sound and lighting look and sound.
 

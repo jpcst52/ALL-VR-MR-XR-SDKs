@@ -2,7 +2,7 @@ import { avatarsSlide, demoDaySlide, hydrotestSlide } from "./newslides.mjs";
 import { applyDeckTheme, bullets, callout, card, chip, code, contentSlide, entries, img, label, newDeck, numberDot, section, shot, steps, text } from "./lib.mjs";
 
 export async function buildMultiplayer(file) {
-  const { pres, C } = newDeck({ title: "Multiplayer WebXR examples", footer: "ALL-VR-MR-XR-SDKs  |  Multiplayer WebXR" });
+  const { pres, C } = newDeck({ title: "Multiplayer WebXR examples", footer: "xr-training-lab  |  Multiplayer WebXR" });
 
   // 1 title
   section(pres, "Introduction");
