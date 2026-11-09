@@ -25,6 +25,10 @@ namespace PittBradford.XR
         public Pressable Hover { get; private set; }
 
         InputAction trigger, grip, stick, stickClick;
+        IHandInput external;
+        bool lastTrigger, lastGrip, keepVisualHidden;
+        /// <summary>True when a backend does the picking up (SteamVR's Throwable), so this hand does not.</summary>
+        public bool ExternalGrab;
         LineRenderer ray;
         Transform visual;
         Vector3 lastPosition;
@@ -54,6 +58,25 @@ namespace PittBradford.XR
             hand.BuildVisual();
             return hand;
         }
+
+        /// <summary>For a backend: a hand that follows <paramref name="host"/> (the backend's own tracked hand object) and reads its buttons from <paramref name="input"/>.</summary>
+        public static Hand Attach(Transform host, XRRig rig, bool left, IHandInput input, bool ownVisual)
+        {
+            var go = new GameObject(left ? "PB Left Hand" : "PB Right Hand");
+            go.transform.SetParent(host, false);
+            var hand = go.AddComponent<Hand>();
+            hand.IsLeft = left;
+            hand.Rig = rig;
+            hand.external = input;
+            hand.ExternalGrab = true;
+            hand.BuildVisual();
+            hand.keepVisualHidden = !ownVisual;
+            if (!ownVisual && hand.visual != null) hand.visual.gameObject.SetActive(false);
+            return hand;
+        }
+
+        /// <summary>For a backend: the object this hand holds changed (the backend did the grabbing).</summary>
+        public void SetHeld(Grabbable g) { Held = g; }
 
         static InputAction Button(string binding)
         {
@@ -115,12 +138,13 @@ namespace PittBradford.XR
         void Update()
         {
             bool headset = XRRig.Headset;
-            if (!headset) DesktopPose();
+            if (!headset && external == null) DesktopPose();
             // the model is always on (also with no controller tracked); only a scenario's own hide call turns it off
-            if (visual != null && !visual.gameObject.activeSelf) visual.gameObject.SetActive(true);
+            if (visual != null && !keepVisualHidden && !visual.gameObject.activeSelf) visual.gameObject.SetActive(true);
             ReadInput(headset);
             UpdateVelocity();
             UpdatePointer();
+            if (ExternalGrab) return;
             if (GripDown && Held == null) TryGrab();
             if (GripUp && Held != null) Release();
             if (Held != null && !GripHeld && headset) Release();
@@ -128,6 +152,15 @@ namespace PittBradford.XR
 
         void ReadInput(bool headset)
         {
+            if (external != null)
+            {
+                bool t = external.Trigger, g = external.Grip;
+                TriggerDown = t && !lastTrigger; TriggerUp = !t && lastTrigger; TriggerHeld = t;
+                GripDown = g && !lastGrip; GripUp = !g && lastGrip; GripHeld = g;
+                lastTrigger = t; lastGrip = g;
+                Stick = external.Stick; StickClick = external.StickClick;
+                return;
+            }
             if (headset)
             {
                 TriggerDown = trigger.WasPressedThisFrame(); TriggerUp = trigger.WasReleasedThisFrame(); TriggerHeld = trigger.IsPressed();
@@ -169,8 +202,9 @@ namespace PittBradford.XR
             lastPosition = transform.position;
         }
 
-        Vector3 PointOrigin => XRRig.Headset ? transform.position : Rig.Camera.transform.position;
-        Vector3 PointDirection => XRRig.Headset ? transform.forward : Rig.Camera.transform.forward;
+        bool PointsFromHand => XRRig.Headset || external != null;
+        Vector3 PointOrigin => PointsFromHand ? transform.position : Rig.Camera.transform.position;
+        Vector3 PointDirection => PointsFromHand ? transform.forward : Rig.Camera.transform.forward;
 
         void UpdatePointer()
         {
@@ -188,10 +222,10 @@ namespace PittBradford.XR
                 Hover = found;
                 if (Hover != null) Hover.SetHover(true);
             }
-            if (ray != null && (!IsLeft || XRRig.Headset))
+            if (ray != null && (!IsLeft || PointsFromHand))
             {
-                ray.enabled = (!IsLeft || XRRig.Headset) && !SuppressRay;
-                ray.SetPosition(0, XRRig.Headset ? transform.position : transform.position + transform.forward * 0.05f);
+                ray.enabled = (!IsLeft || PointsFromHand) && !SuppressRay;
+                ray.SetPosition(0, PointsFromHand ? transform.position : transform.position + transform.forward * 0.05f);
                 ray.SetPosition(1, end);
             }
             if (TriggerDown && Hover != null) Hover.Press(this);
@@ -229,6 +263,7 @@ namespace PittBradford.XR
 
         public void Haptic(float amplitude = 0.4f, float seconds = 0.08f)
         {
+            if (external != null) { external.Haptic(amplitude, seconds); return; }
             var device = UnityEngine.InputSystem.InputSystem.GetDevice<UnityEngine.InputSystem.XR.XRControllerWithRumble>(IsLeft ? UnityEngine.InputSystem.CommonUsages.LeftHand : UnityEngine.InputSystem.CommonUsages.RightHand);
             device?.SendImpulse(amplitude, seconds);
         }

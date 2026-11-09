@@ -25,7 +25,7 @@ export async function buildRepository(file) {
     const slide = pres.addSlide({ masterName: "TITLE", sectionTitle: "Introduction" });
     slide.addText("REPOSITORY GUIDE  /  2026", { placeholder: "eyebrow" });
     slide.addText("XR training\nrepository", { placeholder: "title" });
-    text(slide, "A tour of every folder: browser demos, multiplayer WebXR, a 17-scenario Practice Lab, four Unity projects and a lobby hub, native SDK samples, tools, tests, research and documentation.", { x: 0.7, y: 3.8, w: 6.2, h: 1.3, fontSize: 16, color: C.background2, objectName: "Title description" });
+    text(slide, "A tour of every folder: browser demos, multiplayer WebXR, an 11-scenario Practice Lab, four Unity projects and a lobby hub, native SDK samples, tools, tests, research and documentation.", { x: 0.7, y: 3.8, w: 6.2, h: 1.3, fontSize: 16, color: C.background2, objectName: "Title description" });
     chip(slide, C, "University of Pittsburgh at Bradford", { x: 0.7, y: 5.55, w: 3.6, name: "Chip owner" });
     chip(slide, C, "Demo: Nov 13, 2026", { x: 4.45, y: 5.55, w: 2.3, color: C.accent3, name: "Chip demo" });
     await maybeShot(slide, C, "docs/images/hub-r2-lobby-3-gallery-and-portal.png", { x: 7.9, y: 0.6, w: 4.85, h: 2.75, caption: "Hub lobby (desktop editor render, local assets)", name: "Title hub" });
@@ -40,7 +40,7 @@ export async function buildRepository(file) {
   {
     const slide = contentSlide(pres, { section: "The repository", eyebrow: "02 / REPOSITORY MAP", title: "What is in each folder" });
     const left = [
-      ["training-simulations/", "Fieldwork XR Practice Lab: 17 short scenarios in the browser, optional WebXR view."],
+      ["training-simulations/", "Fieldwork XR Practice Lab: 11 short scenarios in the browser, optional WebXR view."],
       ["multi-player/", "WebSocket relay and the shared Circuit Lab, Site Safety Layout and hydrostatic test."],
       ["a-frame/  threejs/  babylonjs/  webxr/", "One small browser demo per library, each with its own README and screenshot."],
       ["brand-kit/  vendor/", "Web brand kit (bar, fonts, panels, sky) and offline copies of the libraries."],
@@ -64,11 +64,11 @@ export async function buildRepository(file) {
   // 5 ---- practice lab
   section(pres, "Browser");
   {
-    const slide = contentSlide(pres, { section: "Browser", eyebrow: "04 / FIELDWORK XR PRACTICE LAB", title: "Seventeen short scenarios in the browser" });
+    const slide = contentSlide(pres, { section: "Browser", eyebrow: "04 / FIELDWORK XR PRACTICE LAB", title: "Eleven short scenarios in the browser" });
     await maybeShot(slide, C, "training-simulations/screenshots/02-catalog.png", { x: 0.6, y: 1.75, w: 3.7, h: 4.9, caption: "Scenario catalogue", name: "Lab catalogue" });
     await maybeShot(slide, C, "training-simulations/screenshots/03-scenario-1-work-at-height.png", { x: 4.45, y: 1.75, w: 3.7, h: 4.9, caption: "Work at height, hands-on task", name: "Lab scenario" });
     bullets(slide, C, [
-      "Five groups: everyday business, community and field research, high-risk industrial, manufacturing quality, and a draft life-science scenario.",
+      "Three groups, all hands-on and mechanical: high-risk industrial, manufacturing quality, and a draft life-science scenario.",
       "Click glowing points in a 3D scene to do each step. Every option has feedback; critical mistakes are flagged.",
       "'Why this matters' panels and a reasoning question are scored apart from the procedure.",
       "Optional WebXR view with a controller; checked in an emulated Quest 3, not on a headset.",

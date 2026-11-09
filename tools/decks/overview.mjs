@@ -10,7 +10,7 @@ export async function buildOverview(file) {
     const slide = pres.addSlide({ masterName: "TITLE", sectionTitle: "Introduction" });
     slide.addText("PROJECT OVERVIEW  /  2026", { placeholder: "eyebrow" });
     slide.addText("VR · MR · AR\nSDK examples", { placeholder: "title" });
-    text(slide, "XR training examples for general safety awareness: ten SDK and framework demos, three multiplayer WebXR themes, a 17-scenario web Practice Lab, and four Unity projects with a lobby hub.", { x: 0.7, y: 3.8, w: 6.2, h: 1.3, fontSize: 18, color: C.background2, objectName: "Subtitle" });
+    text(slide, "XR training examples for general safety awareness: ten SDK and framework demos, three multiplayer WebXR themes, an 11-scenario web Practice Lab, and four Unity projects with a lobby hub.", { x: 0.7, y: 3.8, w: 6.2, h: 1.3, fontSize: 18, color: C.background2, objectName: "Subtitle" });
     chip(slide, C, "13 examples", { x: 0.7, y: 5.55, w: 1.7, name: "Chip examples" });
     chip(slide, C, "11 scenarios", { x: 2.55, y: 5.55, w: 1.8, color: C.accent3, name: "Chip scenarios" });
     chip(slide, C, "VR emulator captures", { x: 4.5, y: 5.55, w: 2.3, color: C.accent2, name: "Chip VR" });
@@ -137,8 +137,6 @@ export async function buildOverview(file) {
     await shot(slide, C, img("training-simulations/screenshots/02-catalog.png"), { x: 0.6, y: 1.75, w: 3.9, h: 4.9, caption: "Scenario catalog", name: "Catalog screenshot" });
     await shot(slide, C, img("training-simulations/screenshots/03-scenario-1-work-at-height.png"), { x: 4.7, y: 1.75, w: 3.9, h: 4.9, caption: "Work at height · hands-on task", name: "Task screenshot", crop: { left: 0, top: 130, width: 620, height: 780 } });
     entries(slide, C, [
-      ["3 business", "Welcome a walk-in, make a safe work area, check a delivery."],
-      ["3 research", "Informed consent, sample custody, field observation."],
       ["6 industrial", "Work at height, control room, battery limits, window cleaning, welding, electrical isolation."],
       ["4 manufacturing quality", "Lot sampling, hydrostatic test, pipe-spool welding, resistor selection. Generic, inspired by regional industry."],
       ["1 life science (draft)", "Circulation Builder, labelled draft for faculty review."],

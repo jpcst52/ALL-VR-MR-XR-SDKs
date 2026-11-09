@@ -160,7 +160,7 @@ foreach ($name in $all) {
     $log = Join-Path $LogDir "$name.log"
     $dest = Join-Path $OutRoot $name
 
-    $unityArgs = @('-projectPath', "`"$path`"", '-executeMethod', $target.Method, '-quit', '-logFile', "`"$log`"")
+    $unityArgs = @('-accept-apiupdate', '-projectPath', "`"$path`"", '-executeMethod', $target.Method, '-quit', '-logFile', "`"$log`"")
     if ($Batchmode) { $unityArgs = @('-batchmode') + $unityArgs }
     Write-Host "  method : $($target.Method)  ->  $exeRel (inside the project)"
     Write-Host "  command: `"$UnityExe`" $($unityArgs -join ' ')"
@@ -170,7 +170,9 @@ foreach ($name in $all) {
     if ($DryRun) { $row.Status = 'DRY RUN'; continue }
 
     if (Test-Path $builtDir) { Remove-Item -Recurse -Force $builtDir }   # no stale output
-    $p = Start-Process -FilePath $UnityExe -ArgumentList $unityArgs -Wait -PassThru
+    $p = Start-Process -FilePath $UnityExe -ArgumentList $unityArgs -PassThru
+    $p.WaitForExit()   # not -Wait: that also waits for a UnityCrashHandler64 that can outlive Unity
+    Get-Process UnityCrashHandler64 -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
     $logText = if (Test-Path $log) { Get-Content -Raw $log } else { '' }
     $errs = @([regex]::Matches($logText, '(?m)^.*error CS\d+.*$') | ForEach-Object { $_.Value.Trim() })
     if ($errs.Count) { throw "compile errors ($($errs.Count)); first: $($errs[0]). See $log" }

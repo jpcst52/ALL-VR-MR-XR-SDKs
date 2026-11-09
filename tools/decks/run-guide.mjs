@@ -146,7 +146,7 @@ export async function buildRunGuide(file) {
   section(pres, "Practice Lab");
   {
     const slide = contentSlide(pres, { section: "Practice Lab", eyebrow: "BROWSER / TRAINING", title: "Fieldwork XR Practice Lab | 11 hands-on scenarios" });
-    text(slide, "Business, research, industrial, manufacturing-quality, and one draft life-science scenario. Enter a name, pick a scenario, and carry out each task in the 3D scene.", { x: 0.6, y: 1.4, w: 12, h: 0.35, fontSize: 14, color: C.background2, objectName: "Subtitle" });
+    text(slide, "Industrial, manufacturing-quality, and one draft life-science scenario. Enter a name, pick a scenario, and carry out each task in the 3D scene.", { x: 0.6, y: 1.4, w: 12, h: 0.35, fontSize: 14, color: C.background2, objectName: "Subtitle" });
     card(slide, C, { x: 0.6, y: 1.95, w: 4.6, h: 4.75, name: "Lab instructions card" });
     label(slide, C, "RUN FROM THE REPOSITORY ROOT", { x: 0.85, y: 2.15, w: 4, color: C.accent2, name: "Lab run label" });
     code(slide, C, "python -m http.server 8000\nhttp://localhost:8000/\n  training-simulations/", { x: 0.85, y: 2.5, w: 4.1, h: 1.1, size: 12, name: "Lab command" });

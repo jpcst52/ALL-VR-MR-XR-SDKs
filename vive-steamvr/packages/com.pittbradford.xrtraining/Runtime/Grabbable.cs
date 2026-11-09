@@ -19,6 +19,25 @@ namespace PittBradford.XR
         {
             rb = GetComponent<Rigidbody>();
             rb.useGravity = UseGravity;
+            XRBackends.Grab?.Setup(this);
+        }
+
+        /// <summary>For a backend that picks the object up itself (SteamVR's Throwable): tell the scenario it was grabbed.</summary>
+        public void NotifyGrabbed(Hand hand)
+        {
+            if (Snapped != null) { Snapped.Clear(); Snapped = null; }
+            if (hand != null) { hand.SetHeld(this); hand.Haptic(0.5f, 0.1f); }
+            Sfx.Play("grab", transform.position, 0.6f);
+            Grabbed?.Invoke(this);
+        }
+
+        /// <summary>For a backend: the object was let go. It snaps into a matching zone if one is close.</summary>
+        public void NotifyDropped(Hand hand)
+        {
+            if (hand != null) hand.SetHeld(null);
+            Dropped?.Invoke(this);
+            if (SnapZone.TrySnap(this)) return;
+            Sfx.Play("release", transform.position, 0.5f);
         }
 
         public void BeginGrab(Hand hand)

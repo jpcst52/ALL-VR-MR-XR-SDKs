@@ -14,6 +14,10 @@ namespace PittBradford.XR
         public Camera Camera { get; private set; }
         public Hand Left { get; private set; }
         public Hand Right { get; private set; }
+        /// <summary>True when a backend (the SteamVR Interaction System) owns the head, hands, teleporting and turning; the kit then only adds footsteps.</summary>
+        public bool External { get; private set; }
+        /// <summary>Set by a backend: turns the player to face a world point.</summary>
+        public System.Action<Vector3> ExternalLookAt;
         public static bool Headset => XRSettings.isDeviceActive;
 
         public float MoveSpeed = 2.0f;
@@ -25,8 +29,10 @@ namespace PittBradford.XR
         public bool SmoothLocomotion = false;
         public Teleporter Teleport { get; private set; }
         public bool LocomotionEnabled = true;
-        /// <summary>Optional limits so a player cannot walk out of the training area.</summary>
-        public Bounds? Area;
+        /// <summary>Optional limits so a player cannot walk out of the training area. With a backend, this is where the player may teleport.</summary>
+        public Bounds? Area { get => area; set { area = value; AreaChanged?.Invoke(value); } }
+        Bounds? area;
+        public event System.Action<Bounds?> AreaChanged;
 
         /// <summary>Footsteps while walking (stick or keys): the surface decides which sound. Set to false to silence them.</summary>
         public bool Footsteps = true;
@@ -37,6 +43,11 @@ namespace PittBradford.XR
 
         public static XRRig Create(Vector3 position, float yawDegrees = 0f)
         {
+            if (XRBackends.Rig != null)
+            {
+                var external = XRBackends.Rig.CreateRig(position, yawDegrees);
+                if (external != null) return external;
+            }
             var root = new GameObject("XR Rig");
             root.transform.SetPositionAndRotation(position, Quaternion.Euler(0, yawDegrees, 0));
             var rig = root.AddComponent<XRRig>();
@@ -62,6 +73,18 @@ namespace PittBradford.XR
             return rig;
         }
 
+        /// <summary>For a backend: a rig whose head, hands and movement belong to someone else.</summary>
+        public static XRRig CreateExternal(Transform root, Camera camera)
+        {
+            var rig = root.gameObject.AddComponent<XRRig>();
+            rig.External = true;
+            rig.Camera = camera;
+            rig.lastPosition = camera.transform.position;
+            return rig;
+        }
+
+        public void SetHands(Hand left, Hand right) { Left = left; Right = right; }
+
         internal static InputActionProperty Prop(string binding)
         {
             var action = new InputAction("pose", InputActionType.Value, binding);
@@ -71,13 +94,20 @@ namespace PittBradford.XR
 
         void Update()
         {
+            if (External) { Footstep(); return; }
             if (!LocomotionEnabled) return;
             if (Headset) HeadsetLocomotion();
             else DesktopLocomotion();
             ClampToArea();
-            var p = transform.position;
+            Footstep();
+        }
+
+        void Footstep()
+        {
+            var p = External ? FeetPosition : transform.position;
             var moved = new Vector3(p.x - lastPosition.x, 0f, p.z - lastPosition.z).magnitude;
             lastPosition = p;
+            // a teleport is not a walk: no footsteps for jumps over a metre
             if (Footsteps && moved > 0f && moved < 1f)
             {
                 stepDistance += moved;
@@ -142,6 +172,7 @@ namespace PittBradford.XR
 
         public void LookAt(Vector3 target)
         {
+            if (External) { ExternalLookAt?.Invoke(target); return; }
             var d = target - Camera.transform.position;
             yaw = Quaternion.LookRotation(d).eulerAngles.y;
             pitch = Mathf.DeltaAngle(0, Quaternion.LookRotation(d).eulerAngles.x);

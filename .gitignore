@@ -53,3 +53,17 @@ builds.zip
 
 vive-steamvr/steamvr-sample/
 vive-steamvr/steamvr-sample-test/
+
+# SteamVR plugin files are imported by scripts/setup-steamvr.ps1 (Valve distributes them; about 100 MB per project)
+vive-steamvr/*/Assets/SteamVR/
+vive-steamvr/*/Assets/SteamVR.meta
+vive-steamvr/*/Assets/SteamVR_Input/
+vive-steamvr/*/Assets/SteamVR_Input.meta
+vive-steamvr/*/Assets/SteamVR_Resources/
+vive-steamvr/*/Assets/SteamVR_Resources.meta
+vive-steamvr/*/Assets/StreamingAssets/
+vive-steamvr/*/Assets/StreamingAssets.meta
+vive-steamvr/*/Assets/Editor/SteamVRProjectSetup.cs
+vive-steamvr/*/Assets/Editor/SteamVRProjectSetup.cs.meta
+vive-steamvr/*/Assets/Resources/PBSteamVR/
+vive-steamvr/*/Assets/Resources/PBSteamVR.meta

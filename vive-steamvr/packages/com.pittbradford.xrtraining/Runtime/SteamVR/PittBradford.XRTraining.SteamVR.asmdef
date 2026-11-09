@@ -1,0 +1,11 @@
+{
+  "name": "PittBradford.XRTraining.SteamVR",
+  "rootNamespace": "PittBradford.XR.SteamVRBackend",
+  "references": ["PittBradford.XRTraining", "SteamVR"],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "autoReferenced": true,
+  "defineConstraints": ["PB_STEAMVR"]
+}

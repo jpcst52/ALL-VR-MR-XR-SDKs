@@ -35,7 +35,7 @@ $Setup = Join-Path $Repo 'vive-steamvr\steamvr-setup\SteamVRSampleSetup.cs'
 
 function Run-Unity([string]$name, [string[]]$more, [switch]$NoProject, [switch]$AllowCompileErrors) {
   $log = Join-Path $LogDir "steamvr-sample-$name.log"
-  $a = @('-batchmode', '-nographics')
+  $a = @('-batchmode', '-nographics', '-accept-apiupdate')
   if (-not $NoProject) { $a += @('-projectPath', "`"$Project`"") }
   $a += $more
   $a += @('-logFile', "`"$log`"")
