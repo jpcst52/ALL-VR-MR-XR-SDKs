@@ -73,6 +73,17 @@ namespace PittBradford.XR.SteamVRBackend
                 player.trackingOriginTransform.RotateAround(head.position, Vector3.up, turn);
             };
             root.AddComponent<FloorOrigin>().Camera = camera;
+            var desk = root.AddComponent<DeskMode>();
+            desk.Player = player; desk.Camera = camera; desk.Rig = rig; desk.Right = right;
+            // Simulator only: SteamVR's simulated headset reports a height of 0, which puts the eyes on the floor. scripts/steamvr-simulator.ps1 -Run passes
+            // -pbHeadOffset <metres> to lift the origin; a real headset reports its own height and is never given the argument.
+            var args = System.Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length - 1; i++)
+                if (args[i] == "-pbHeadOffset" && float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var lift))
+                {
+                    player.trackingOriginTransform.localPosition += Vector3.up * lift;
+                    Debug.Log("[steamvr] simulator head offset +" + lift.ToString("0.00") + " m");
+                }
             rig.AreaChanged += area => TeleportAreas.Rebuild(rig, area);
             if (rig.Area.HasValue) TeleportAreas.Rebuild(rig, rig.Area);
             Debug.Log("[steamvr] rig built on the SteamVR Interaction System (Player, Teleporting, Throwable)");
@@ -117,6 +128,72 @@ namespace PittBradford.XR.SteamVRBackend
             }
         }
 
+        /// <summary>
+        /// For a headset with no tracked controllers (SteamVR's simulated headset, or a Vive whose wands are off): the keyboard and mouse stand in.
+        /// W A S D walk, the mouse looks, left click is the trigger (presses what the ray points at), E is the grip. Picking things up with Valve's
+        /// Throwable needs a tracked hand, so that part still needs real controllers. Off whenever a controller is tracked.
+        /// </summary>
+        sealed class DeskMode : MonoBehaviour
+        {
+            public Player Player; public Camera Camera; public XRRig Rig; public KitHand Right;
+            public static bool Active;
+            float started;
+
+            void Start() { started = Time.realtimeSinceStartup; Active = false; }
+            void OnDestroy() { Active = false; }
+
+            static bool ControllerTracked()
+            {
+                var list = new List<InputDevice>();
+                InputDevices.GetDevicesWithCharacteristics(InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.TrackedDevice, list);
+                foreach (var d in list)
+                    if (d.TryGetFeatureValue(CommonUsages.isTracked, out var tracked) && tracked) return true;
+                return false;
+            }
+
+            void Update()
+            {
+                bool controller = ControllerTracked();
+                if (!Active)
+                {
+                    if (Time.realtimeSinceStartup - started < 3f || controller) return;
+                    Active = true;
+                    // the simulated headset also reports a head height of 0
+                    if (Camera.transform.position.y - transform.position.y < 0.5f) Player.trackingOriginTransform.localPosition += Vector3.up * 1.6f;
+                    if (Right != null) { Right.transform.SetParent(Camera.transform, false); Right.transform.localPosition = new Vector3(0.12f, -0.1f, 0.25f); Right.transform.localRotation = Quaternion.identity; }
+                    Cursor.lockState = CursorLockMode.Locked;
+                    // the window shows one eye of the headset picture; a window of another shape stretches it
+                    if (!Screen.fullScreen) Screen.SetResolution(756, 850, false);
+                    Debug.Log("[steamvr] no controller is tracked: keyboard and mouse mode (WASD walk, mouse look, left click trigger, E grip, Esc frees the mouse)");
+                }
+                else if (controller) { Active = false; Cursor.lockState = CursorLockMode.None; return; }
+
+                if (Input.GetKeyDown(KeyCode.Escape)) Cursor.lockState = CursorLockMode.None;
+                if (Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked) { Cursor.lockState = CursorLockMode.Locked; }
+
+                var origin = Player.trackingOriginTransform;
+                var head = Camera.transform;
+                if (Cursor.lockState == CursorLockMode.Locked)
+                {
+                    origin.RotateAround(head.position, Vector3.up, Input.GetAxis("Mouse X") * 3f);
+                    float pitch = -Input.GetAxis("Mouse Y") * 3f;
+                    float current = Mathf.Asin(Mathf.Clamp(head.forward.y, -1f, 1f)) * Mathf.Rad2Deg;
+                    if (current + (-pitch) < 80f && current + (-pitch) > -80f) origin.RotateAround(head.position, head.right, pitch);
+                }
+                var flat = head.forward; flat.y = 0f; flat.Normalize();
+                var right = head.right; right.y = 0f; right.Normalize();
+                var move = flat * ((Input.GetKey(KeyCode.W) ? 1f : 0f) - (Input.GetKey(KeyCode.S) ? 1f : 0f))
+                         + right * ((Input.GetKey(KeyCode.D) ? 1f : 0f) - (Input.GetKey(KeyCode.A) ? 1f : 0f));
+                if (move.sqrMagnitude > 0f)
+                {
+                    var next = head.position + move.normalized * 2f * Time.deltaTime;
+                    if (Rig.Area.HasValue) next = Rig.Area.Value.ClosestPoint(new Vector3(next.x, Rig.Area.Value.center.y, next.z));
+                    var delta = new Vector3(next.x - head.position.x, 0f, next.z - head.position.z);
+                    origin.position += delta;
+                }
+            }
+        }
+
         public void Setup(Grabbable g)
         {
             if (g.GetComponent<Throwable>() != null) return;
@@ -154,8 +231,9 @@ namespace PittBradford.XR.SteamVRBackend
 
             public HandInput(ValveHand hand) { this.hand = hand; source = hand.handType; }
 
-            public bool Trigger => (pinch ??= SteamVR_Input.GetBooleanAction("GrabPinch"))?.GetState(source) ?? false;
-            public bool Grip => (grip ??= SteamVR_Input.GetBooleanAction("GrabGrip"))?.GetState(source) ?? false;
+            bool Desk => DeskMode.Active && source == SteamVR_Input_Sources.RightHand;
+            public bool Trigger => Desk ? Input.GetMouseButton(0) : (pinch ??= SteamVR_Input.GetBooleanAction("GrabPinch"))?.GetState(source) ?? false;
+            public bool Grip => Desk ? Input.GetKey(KeyCode.E) : (grip ??= SteamVR_Input.GetBooleanAction("GrabGrip"))?.GetState(source) ?? false;
             public Vector2 Stick => Vector2.zero;
             public bool StickClick => false;
             public void Haptic(float amplitude, float seconds) => hand.TriggerHapticPulse(Mathf.Max(0.01f, seconds), 150f, Mathf.Clamp01(amplitude));

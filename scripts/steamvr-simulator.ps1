@@ -104,7 +104,7 @@ if ($Run) {
   if (-not (Test-Path $Run)) { throw "Not found: $Run" }
   if (-not (Get-Process vrserver -ErrorAction SilentlyContinue)) { throw 'SteamVR is not running. Run -Enable first.' }
   $log = Join-Path $env:TEMP ("sim-run-" + [IO.Path]::GetFileNameWithoutExtension($Run) + '.log')
-  $p = Start-Process -FilePath $Run -ArgumentList @('-screen-width', '960', '-screen-height', '540', '-logFile', "`"$log`"") -PassThru
+  $p = Start-Process -FilePath $Run -ArgumentList @('-screen-width', '960', '-screen-height', '540', '-pbHeadOffset', '1.6', '-logFile', "`"$log`"") -PassThru
   Start-Sleep -Seconds $Seconds
   if ($Shot) {
     Add-Type -AssemblyName System.Drawing
