@@ -1,5 +1,5 @@
 {
-  "name": "all-vr-mr-xr-sdks",
+  "name": "xr-training-lab",
   "private": true,
   "description": "Repository-level scripts. Each example has its own package.json.",
   "scripts": {
