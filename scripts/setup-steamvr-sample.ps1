@@ -12,7 +12,7 @@
 .PARAMETER Project
   Project folder to create. Default: vive-steamvr\steamvr-sample.
 .PARAMETER UnityExe
-  Unity.exe. Default: $env:UNITY_EXE, else C:\Program Files\Unity\Hub\Editor\6000.3.20f1\Editor\Unity.exe.
+  Unity.exe. Default: $env:UNITY_EXE, else D:\Program Files\Unity\Editor\6000.3.20f1\Editor\Unity.exe.
 .PARAMETER PluginPackage
   A steamvr_*.unitypackage you already downloaded (skips the download).
 #>
@@ -25,7 +25,7 @@ $Asset = 'steamvr_2_8_5.unitypackage'
 $Repo = Split-Path -Parent $PSScriptRoot
 if (-not $Project) { $Project = Join-Path $Repo 'vive-steamvr\steamvr-sample' }
 if (-not $UnityExe) { $UnityExe = $env:UNITY_EXE }
-if (-not $UnityExe) { $UnityExe = 'C:\Program Files\Unity\Hub\Editor\6000.3.20f1\Editor\Unity.exe' }
+if (-not $UnityExe) { $UnityExe = 'D:\Program Files\Unity\Editor\6000.3.20f1\Editor\Unity.exe' }
 if (-not (Test-Path $UnityExe)) { throw "Unity.exe not found: $UnityExe. Install Unity 6000.3.20f1 or set UNITY_EXE." }
 $open = Get-CimInstance Win32_Process -Filter "Name='Unity.exe'" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -and $_.CommandLine -like "*$($Project.TrimEnd('\'))*" }
 if ($open) { throw 'That project is open in a Unity editor. Close it first.' }

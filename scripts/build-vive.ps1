@@ -19,7 +19,7 @@
 .PARAMETER Projects
   Build only these project folder names, for example -Projects 01-hydrostatic-test,04-resistor-bench.
 .PARAMETER UnityExe
-  Path to Unity.exe (6000.3.20f1). Default: $env:UNITY_EXE, else C:\Program Files\Unity\Hub\Editor\6000.3.20f1\Editor\Unity.exe.
+  Path to Unity.exe (6000.3.20f1). Default: $env:UNITY_EXE, else D:\Program Files\Unity\Editor\6000.3.20f1\Editor\Unity.exe.
 .PARAMETER DryRun
   (alias -WhatIf) Print what would run; do not start Unity, write builds or zips.
 .PARAMETER NoZip
@@ -45,7 +45,7 @@ $LogDir = Join-Path $Repo 'builds\logs'
 $Stamp = Get-Date -Format 'yyyy-MM-dd'
 
 if (-not $UnityExe) { $UnityExe = $env:UNITY_EXE }
-if (-not $UnityExe) { $UnityExe = 'C:\Program Files\Unity\Hub\Editor\6000.3.20f1\Editor\Unity.exe' }
+if (-not $UnityExe) { $UnityExe = 'D:\Program Files\Unity\Editor\6000.3.20f1\Editor\Unity.exe' }
 
 $all = @('01-hydrostatic-test', '02-refinery-rounds', '03-warehouse-forklift', '04-resistor-bench')
 if ($IncludeHub) { $all += 'hub' }

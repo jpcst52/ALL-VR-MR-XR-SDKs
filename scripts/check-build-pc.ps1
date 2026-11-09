@@ -4,7 +4,7 @@
   for a build that cannot work. Changes nothing. Guide: docs\VR-STAGE-QUICKSTART.md
 
 .PARAMETER UnityExe
-  Path to Unity.exe (6000.3.20f1). Default: $env:UNITY_EXE, else C:\Program Files\Unity\Hub\Editor\6000.3.20f1\Editor\Unity.exe.
+  Path to Unity.exe (6000.3.20f1). Default: $env:UNITY_EXE, else D:\Program Files\Unity\Editor\6000.3.20f1\Editor\Unity.exe.
 .PARAMETER SkipNetwork
   Do not test the connection to the Unity package server.
 #>
@@ -15,7 +15,7 @@ $ErrorActionPreference = 'Continue'
 $Repo = Split-Path -Parent $PSScriptRoot
 $Hub = Join-Path $Repo 'vive-steamvr\hub'
 if (-not $UnityExe) { $UnityExe = $env:UNITY_EXE }
-if (-not $UnityExe) { $UnityExe = 'C:\Program Files\Unity\Hub\Editor\6000.3.20f1\Editor\Unity.exe' }
+if (-not $UnityExe) { $UnityExe = 'D:\Program Files\Unity\Editor\6000.3.20f1\Editor\Unity.exe' }
 
 $rows = @()
 function Add-Row([string]$name, [string]$status, [string]$detail) { $script:rows += [pscustomobject]@{ Check = $name; Result = $status; Detail = $detail } }

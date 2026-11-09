@@ -4,7 +4,7 @@
 # Use a project that is NOT open in the Unity editor (Unity allows one editor per project).
 param(
     [string]$Project = "02-refinery-rounds",
-    [string]$Unity = "C:\Program Files\Unity\Hub\Editor\6000.3.20f1\Editor\Unity.exe"
+    [string]$Unity = "D:\Program Files\Unity\Editor\6000.3.20f1\Editor\Unity.exe"
 )
 $root = Split-Path -Parent $PSScriptRoot
 $path = Join-Path $root "vive-steamvr\$Project"

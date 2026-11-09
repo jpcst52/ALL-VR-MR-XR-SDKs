@@ -24,7 +24,7 @@ $Asset = 'steamvr_2_8_5.unitypackage'
 $Repo = Split-Path -Parent $PSScriptRoot
 $Vive = Join-Path $Repo 'vive-steamvr'
 if (-not $UnityExe) { $UnityExe = $env:UNITY_EXE }
-if (-not $UnityExe) { $UnityExe = 'C:\Program Files\Unity\Hub\Editor\6000.3.20f1\Editor\Unity.exe' }
+if (-not $UnityExe) { $UnityExe = 'D:\Program Files\Unity\Editor\6000.3.20f1\Editor\Unity.exe' }
 if (-not (Test-Path $UnityExe)) { throw "Unity.exe not found: $UnityExe" }
 if (-not $Projects) { $Projects = @('01-hydrostatic-test', '02-refinery-rounds', '03-warehouse-forklift', '04-resistor-bench') }
 if ($IncludeHub) { $Projects += 'hub' }
