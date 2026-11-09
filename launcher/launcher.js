@@ -1,7 +1,12 @@
 // Builds the launcher from examples.json. All URLs are relative so the page works from
 // `python -m http.server` and when the relay serves the repository root at "/".
+// The same script builds the home page (index.html) and the sub pages (launcher/section.html?s=<section id>),
+// which show the sections marked "subpage": true. Sub pages set data-root="../" on <body>.
 (function () {
   "use strict";
+
+  var ROOT = document.body.getAttribute("data-root") || "";
+  var IS_SUBPAGE = document.body.getAttribute("data-page") === "section";
 
   function el(tag, props, children) {
     var node = document.createElement(tag);
@@ -20,11 +25,14 @@
     return "badge";
   }
 
+  function searchText(ex) { return [ex.title, ex.summary, ex.note, ex.status, ex.badges.join(" "), ex.id].join(" ").toLowerCase(); }
+  function shortTitle(s) { return s.title.replace(/ \(.*\)/, ""); }
+
   function tile(ex) {
     var shot;
     if (ex.screenshot) {
       shot = el("div", { class: "shot" }, [
-        el("img", { src: ex.screenshot, alt: "" }),
+        el("img", { src: ROOT + ex.screenshot, alt: "" }),
         ex.screenshotNote ? el("span", { class: "shotnote", text: ex.screenshotNote }) : null
       ]);
     } else {
@@ -39,8 +47,8 @@
       badges,
       el("span", { class: "go", text: ex.webServed === false ? "Open the project notes" : "Launch" })
     ]);
-    var a = el("a", { class: "tile", href: /\.md$/i.test(ex.url) ? "launcher/doc.html?f=" + encodeURIComponent(ex.url) : ex.url, id: "tile-" + ex.id }, [shot, body]);
-    a.setAttribute("data-search", [ex.title, ex.summary, ex.note, ex.status, ex.badges.join(" "), ex.id].join(" ").toLowerCase());
+    var a = el("a", { class: "tile", href: /\.md$/i.test(ex.url) ? ROOT + "launcher/doc.html?f=" + encodeURIComponent(ex.url) : ROOT + ex.url, id: "tile-" + ex.id }, [shot, body]);
+    a.setAttribute("data-search", searchText(ex));
     a.setAttribute("aria-label", ex.title + ". " + ex.status + ". " + ex.badges.join(", ") + (ex.note ? ". " + ex.note : ""));
     return a;
   }
@@ -53,7 +61,9 @@
     // jump links
     var jump = document.getElementById("jump");
     jump.appendChild(el("a", { href: "#path", text: "Demo path" }));
-    data.sections.forEach(function (s) { jump.appendChild(el("a", { href: "#sec-" + s.id, text: s.title.replace(/ \(.*\)/, "") })); });
+    var home = data.sections.filter(function (s) { return !s.subpage; });
+    var sub = data.sections.filter(function (s) { return s.subpage; });
+    home.forEach(function (s) { jump.appendChild(el("a", { href: "#sec-" + s.id, text: shortTitle(s) })); });
     jump.appendChild(el("a", { href: "launcher/guides.html", text: "Guides and decks" }));
 
     // demo path
@@ -77,7 +87,7 @@
 
     // sections
     var host = document.getElementById("sections");
-    data.sections.forEach(function (s) {
+    home.forEach(function (s) {
       var sec = el("section", { class: "block", id: "sec-" + s.id, "aria-labelledby": "h-" + s.id });
       sec.appendChild(el("h2", { id: "h-" + s.id, text: s.title }));
       sec.appendChild(el("p", { class: "intro", text: s.intro }));
@@ -86,6 +96,24 @@
       sec.appendChild(grid);
       host.appendChild(sec);
     });
+
+    // sections that live on their own page: linked from the bottom
+    var more = document.getElementById("more");
+    if (sub.length) {
+      more.appendChild(el("h2", { id: "more-h", text: "More examples" }));
+      more.appendChild(el("p", { class: "intro", text: "These have their own page." }));
+      var ul = el("ul");
+      sub.forEach(function (s) {
+        var list = data.examples.filter(function (e) { return e.section === s.id; });
+        var a = el("a", { href: "launcher/section.html?s=" + encodeURIComponent(s.id), id: "more-" + s.id }, [
+          document.createTextNode(shortTitle(s)),
+          el("small", { text: list.length + (list.length === 1 ? " example" : " examples") })
+        ]);
+        a.setAttribute("data-search", [s.title, s.intro].concat(list.map(searchText)).join(" ").toLowerCase());
+        ul.appendChild(el("li", {}, [a]));
+      });
+      more.appendChild(ul);
+    } else more.hidden = true;
 
     // relay hint: multiplayer pages need the relay, which serves this same site on its own port
     var port = String(data.meta.relayPort);
@@ -115,6 +143,7 @@
     var q = document.getElementById("q"), clear = document.getElementById("clear"), count = document.getElementById("count");
     var links = [].slice.call(document.querySelectorAll("#sections .tile"));
     var path = document.getElementById("path");
+    var more = document.getElementById("more"), moreLinks = [].slice.call(more.querySelectorAll("a"));
     q.disabled = false;
 
     function apply() {
@@ -127,9 +156,21 @@
       [].forEach.call(document.querySelectorAll("section.block[id^=sec-]"), function (sec) {
         sec.hidden = !!terms.length && !sec.querySelector(".tile:not([hidden])");
       });
+      // sub pages: keep the bottom link when one of that page's examples matches
+      var extra = 0;
+      moreLinks.forEach(function (a) {
+        var hay = a.getAttribute("data-search"), ok = terms.every(function (t) { return hay.indexOf(t) >= 0; });
+        a.parentNode.hidden = !ok;
+        if (ok) extra++;
+      });
+      more.hidden = !moreLinks.length || (!!terms.length && !extra);
       path.hidden = !!terms.length;
       clear.hidden = !terms.length;
-      count.textContent = terms.length ? (shown ? shown + " match" + (shown === 1 ? "" : "es") + " for “" + q.value.trim() + "”." : "Nothing matches “" + q.value.trim() + "”. Try a shorter word.") : "";
+      var said = "“" + q.value.trim() + "”";
+      count.textContent = !terms.length ? "" :
+        shown ? shown + " match" + (shown === 1 ? "" : "es") + " for " + said + "." + (extra ? " More on the pages linked at the bottom." : "") :
+        extra ? "No tile on this page has " + said + ", but the pages linked at the bottom do." :
+        "Nothing matches " + said + ". Try a shorter word.";
     }
     function visible() { return links.filter(function (a) { return !a.closest("[hidden]"); }); }
 
@@ -151,10 +192,29 @@
 
   // The Pitt-Bradford + CIST brand bar is built by brand-kit/brand.js (logo if the local file exists, else a wordmark).
 
-  fetch("launcher/examples.json").then(function (r) {
+  // A sub page: one section's tiles, with a link back to the main menu.
+  function renderSection(data) {
+    var id = new URLSearchParams(location.search).get("s");
+    var s = data.sections.filter(function (x) { return x.id === id; })[0];
+    var host = document.getElementById("sections");
+    if (!s) {
+      host.appendChild(el("p", { class: "noscript", text: "There is no section called “" + (id || "") + "”. Go back to the main menu." }));
+      return;
+    }
+    document.title = shortTitle(s) + " · Pitt-Bradford XR Training";
+    document.getElementById("title").textContent = shortTitle(s);
+    document.getElementById("subtitle").textContent = s.intro;
+    var grid = el("div", { class: "grid" });
+    data.examples.filter(function (e) { return e.section === s.id; }).forEach(function (e) { grid.appendChild(tile(e)); });
+    host.appendChild(el("section", { class: "block", id: "sec-" + s.id, "aria-label": s.title }, [grid]));
+  }
+
+  fetch(ROOT + "launcher/examples.json").then(function (r) {
     if (!r.ok) throw new Error("HTTP " + r.status);
     return r.json();
-  }).then(function (data) { render(data); setupFinder(); }).catch(function (err) {
+  }).then(function (data) {
+    if (IS_SUBPAGE) renderSection(data); else { render(data); setupFinder(); }
+  }).catch(function (err) {
     document.getElementById("sections").appendChild(el("p", { class: "noscript", text: "Could not load launcher/examples.json (" + err.message + "). Serve this folder over http, for example python -m http.server 8101." }));
   });
 })();

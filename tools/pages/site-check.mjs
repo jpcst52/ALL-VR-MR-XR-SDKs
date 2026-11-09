@@ -66,8 +66,18 @@ try {
     const { page, context, problems } = await open(base);
     await page.waitForSelector(".tile");
     const tiles = await page.locator(".tile").count();
-    if (tiles !== data.examples.length) problems.push(`expected ${data.examples.length} tiles, found ${tiles}`);
-    const hrefs = await page.$$eval(".tile, #tools .group a", (as) => as.map((a) => a.href));
+    // sections marked "subpage" are on launcher/section.html, linked from the bottom of the home page
+    const sub = data.sections.filter((s) => s.subpage).map((s) => s.id);
+    const want = data.examples.filter((e) => !sub.includes(e.section)).length;
+    if (tiles !== want) problems.push(`expected ${want} tiles, found ${tiles}`);
+    const hrefs = await page.$$eval(".tile, #tools .group a, #more a", (as) => as.map((a) => a.href));
+    for (const id of sub) {
+      await page.goto(`${base}launcher/section.html?s=${id}`, { waitUntil: "load" });
+      await page.waitForSelector(".tile");
+      hrefs.push(...await page.$$eval(".tile", (as) => as.map((a) => a.href)));
+    }
+    await page.goto(base, { waitUntil: "load" });
+    await page.waitForSelector(".tile");
     const imgs = await page.$$eval(".tile img", (is) => is.map((i) => i.src));
     for (const h of [...new Set([...hrefs, ...imgs])]) if (!(await fetchOk(h))) problems.push(`does not resolve: ${h}`);
     // the Markdown files the viewer fetches

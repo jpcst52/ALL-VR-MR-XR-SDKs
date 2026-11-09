@@ -61,6 +61,14 @@ a:focus-visible, button:focus-visible {
 }
 .jump a:hover { background: var(--gold); color: var(--navy); border-color: var(--gold); }
 
+/* sub pages (guides, section): link back to the main menu */
+.crumbs { margin-top: 1rem; }
+.crumbs a {
+  color: #fff; font-weight: 700; text-decoration: none; padding: 0.45rem 0.9rem;
+  border: 2px solid var(--gold); border-radius: 999px; min-height: 2.75rem; display: inline-flex; align-items: center;
+}
+.crumbs a:hover { background: var(--gold); color: var(--navy); }
+
 .relay-note {
   margin-top: 1rem; padding: 0.9rem 1.1rem; border-radius: var(--radius);
   background: var(--wait-bg); color: var(--wait); border: 2px solid var(--gold); font-weight: 500;

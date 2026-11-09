@@ -7,6 +7,12 @@
   },
   "sections": [
     {
+      "id": "fieldwork",
+      "title": "Fieldwork XR Practice Lab",
+      "intro": "Hands-on practice scenarios with consequences, feedback and a score. Runs in a desktop browser; the ENTER VR button appears only where the browser and headset support WebXR.",
+      "subpage": true
+    },
+    {
       "id": "browser",
       "title": "Browser demos",
       "intro": "Run in any WebGL browser on this PC. Each has a desktop fallback; the ENTER VR button appears only where the browser and headset support WebXR."
@@ -24,7 +30,8 @@
     {
       "id": "native",
       "title": "Native SDK examples (source)",
-      "intro": "One small example per SDK. They need their own toolchain (Unity packages, Android Studio or Xcode) and are not served here, so each tile opens its notes with the setup steps."
+      "intro": "One small example per SDK. They need their own toolchain (Unity packages, Android Studio or Xcode) and are not served here, so each tile opens its notes with the setup steps.",
+      "subpage": true
     },
     {
       "id": "quest",
@@ -87,7 +94,7 @@
       "id": "training-lab",
       "title": "Fieldwork XR Practice Lab",
       "summary": "Seventeen hands-on practice scenarios with consequences, feedback and a score.",
-      "section": "browser",
+      "section": "fieldwork",
       "badges": [
         "Browser"
       ],

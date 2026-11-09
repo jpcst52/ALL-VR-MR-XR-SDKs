@@ -13,6 +13,9 @@ const repo = join(here, "..", "..");
 const base = (process.env.LAUNCHER_URL ?? "http://localhost:8101/").replace(/\/?$/, "/");
 const shots = process.argv.includes("--shots");
 const data = JSON.parse(readFileSync(join(repo, "launcher", "examples.json"), "utf8"));
+// sections marked "subpage" are on launcher/section.html?s=<id>, linked from the bottom of the home page
+const subSections = data.sections.filter((s) => s.subpage);
+const homeExamples = data.examples.filter((e) => !subSections.some((s) => s.id === e.section));
 
 const browser = await chromium.launch({ channel: "chrome", args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 let failed = 0;
@@ -46,7 +49,8 @@ for (const vp of [{ width: 1600, height: 1000 }, { width: 420, height: 900 }]) {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);
   if (await page.locator(".tools .group a").count() !== 0) problems.push(`${vp.width}px: the guides should be on launcher/guides.html, not the home page`);
   if (await page.locator('a[href="launcher/guides.html"]').count() < 1) problems.push(`${vp.width}px: the home page does not link to launcher/guides.html`);
-  if (tiles !== data.examples.length) problems.push(`${vp.width}px: expected ${data.examples.length} tiles, found ${tiles}`);
+  if (tiles !== homeExamples.length) problems.push(`${vp.width}px: expected ${homeExamples.length} tiles, found ${tiles}`);
+  for (const s of subSections) if (await page.locator(`#more a[href="launcher/section.html?s=${s.id}"]`).count() !== 1) problems.push(`${vp.width}px: the home page does not link to the ${s.id} sub page at the bottom`);
   if (fonts.includes(false)) problems.push(`${vp.width}px: a brand font failed to load`);
   if (overflow) problems.push(`${vp.width}px: horizontal overflow`);
   console.log(`page ${vp.width}x${vp.height}: tiles=${tiles} fonts=${fonts.join("/")} overflow=${overflow}`);
@@ -102,7 +106,7 @@ console.table(rows);
 // 4. search, keyboard and legend
 {
   const { context, page } = await load({ width: 1200, height: 900 });
-  const total = data.examples.length;
+  const total = homeExamples.length;
   const vis = () => page.locator(".tile:not([hidden])").count();
   const guidesVis = async () => 0; // guides are on their own page now (checked in section 5)
   if (await page.locator(".legend li").count() !== 3) problems.push("search: status legend should list 3 kinds");
@@ -111,7 +115,7 @@ console.table(rows);
   if (!(await page.evaluate(() => document.activeElement && document.activeElement.id === "q"))) problems.push("search: '/' does not focus the box");
   await page.keyboard.type("forklift");
   const hits = await vis();
-  const expected = data.examples.filter((e) => [e.title, e.summary, e.note ?? "", e.status, e.badges.join(" "), e.id].join(" ").toLowerCase().includes("forklift")).length;
+  const expected = homeExamples.filter((e) => [e.title, e.summary, e.note ?? "", e.status, e.badges.join(" "), e.id].join(" ").toLowerCase().includes("forklift")).length;
   if (hits !== expected || hits === 0 || hits >= total) problems.push(`search: 'forklift' shows ${hits} tiles, expected ${expected} of ${total}`);
   if (!/match/.test(await page.locator("#count").innerText())) problems.push("search: the result count is not announced");
   if (!(await page.locator("#path").isHidden())) problems.push("search: demo path should hide while filtering");
@@ -146,6 +150,22 @@ console.table(rows);
   await page.fill("#q", "zzzznothing");
   if ((await page.locator("#tools li:not([hidden])").count()) !== 0) problems.push("guides page: a miss should show no links");
   console.log(`guides page: ${got}/${want} links`);
+  await context.close();
+}
+
+// 6. the sub pages: each lists its section's tiles, links back to the menu, and its tile links and images resolve
+for (const s of subSections) {
+  const { context, page } = await load({ width: 1200, height: 900 });
+  await page.goto(new URL("launcher/section.html?s=" + s.id, base).href, { waitUntil: "networkidle" });
+  await page.waitForSelector(".tile");
+  const want = data.examples.filter((e) => e.section === s.id).length;
+  const got = await page.locator(".tile").count();
+  if (got !== want) problems.push(`${s.id} page: expected ${want} tiles, found ${got}`);
+  if (await page.locator('a[href="../"]').count() < 1) problems.push(`${s.id} page: no link back to the main menu`);
+  const urls = await page.$$eval(".tile, .tile img", (ns) => ns.map((n) => n.href || n.src));
+  for (const u of urls) { const f = new URL(u).searchParams.get("f"); const r = await fetch(f ? new URL(f, base) : u); if (r.status !== 200) problems.push(`${s.id} page: ${u} returned ${r.status}`); }
+  if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(`${s.id} page: horizontal overflow`);
+  console.log(`${s.id} page: ${got}/${want} tiles`);
   await context.close();
 }
 
