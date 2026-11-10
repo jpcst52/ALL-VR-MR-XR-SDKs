@@ -4,7 +4,7 @@
   Throwable). Guide: docs\STEAMVR-REBUILD.md
 
 .DESCRIPTION
-  For each project: download the plugin once (Valve, BSD-3-Clause, release 2.8.5b) -> import -> fix four lines Unity 6.3 rejects
+  For each project: download the plugin once (Valve, BSD-3-Clause, release 2.8.5b) -> copy its files in (unpacked here, without Unity) -> fix four lines Unity 6.3 rejects
   (PhysicMaterial is now PhysicsMaterial) -> generate Steam Input actions from Valve's example files -> OpenVR loader, Direct3D 11,
   the PB_STEAMVR define that switches the kit's SteamVR backend on, and the Player and Teleporting prefabs the backend loads.
   The plugin files (about 100 MB per project) are git-ignored; this script puts them back. Run it again any time; finished steps are skipped.
@@ -48,6 +48,40 @@ function Invoke-UnityStep([string]$project, [string]$name, [string[]]$more, [swi
   return $text
 }
 
+# A .unitypackage is a gzip tar of <guid>\ folders: 'pathname' (first line = where the asset goes), 'asset' (absent for a folder)
+# and 'asset.meta'. Unpack it once into TEMP, then copy every entry to its place in the project, .meta files included (they carry
+# the GUIDs the scenes and prefabs refer to). Only paths under Assets/SteamVR are accepted; that folder is git-ignored.
+function Copy-PluginFiles([string]$package, [string]$projectPath) {
+  $item = Get-Item -LiteralPath $package
+  $unpacked = Join-Path $env:TEMP ("pb-unpacked-" + $item.BaseName + "-" + $item.Length)
+  $done = Join-Path $unpacked '.done'
+  if (-not (Test-Path $done)) {
+    if (Test-Path $unpacked) { Remove-Item -Recurse -Force $unpacked }
+    New-Item -ItemType Directory -Force $unpacked | Out-Null
+    $tar = Join-Path $env:SystemRoot 'System32\tar.exe'   # ships with Windows 10 and 11
+    if (-not (Test-Path $tar)) { $tar = 'tar' }
+    Write-Host "  unpacking $($item.Name) ..."
+    & $tar -xzf $package -C $unpacked
+    if ($LASTEXITCODE -ne 0) { throw "tar could not unpack $package (exit code $LASTEXITCODE)" }
+    Set-Content -Path $done -Value 'ok'
+  }
+  $files = 0
+  foreach ($entry in Get-ChildItem -LiteralPath $unpacked -Directory) {
+    $nameFile = Join-Path $entry.FullName 'pathname'
+    if (-not (Test-Path -LiteralPath $nameFile)) { continue }
+    $rel = ([IO.File]::ReadAllLines($nameFile))[0].Trim()
+    if ($rel -notmatch '^Assets/SteamVR(/|$)' -or $rel -match '(^|/)\.\.(/|$)') { throw "Unexpected path in the plugin package: $rel" }
+    $dest = Join-Path $projectPath ($rel -replace '/', '\')
+    New-Item -ItemType Directory -Force (Split-Path -Parent $dest) | Out-Null
+    $asset = Join-Path $entry.FullName 'asset'
+    $meta = Join-Path $entry.FullName 'asset.meta'
+    if (Test-Path -LiteralPath $asset) { Copy-Item -LiteralPath $asset -Destination $dest -Force; $files++ }
+    else { New-Item -ItemType Directory -Force $dest | Out-Null }
+    if (Test-Path -LiteralPath $meta) { Copy-Item -LiteralPath $meta -Destination ($dest + '.meta') -Force }
+  }
+  return $files
+}
+
 $pkg = $PluginPackage
 if (-not $pkg) {
   $pkg = Join-Path $env:TEMP $Asset
@@ -76,11 +110,18 @@ foreach ($project in $Projects) {
   }
   if ($changed) { [IO.File]::WriteAllText($manifest, ($json | ConvertTo-Json -Depth 10), (New-Object Text.UTF8Encoding($false))) }
 
-  if (-not (Test-Path (Join-Path $path 'Assets\SteamVR'))) {
-    # the import start itself stops on the four known compile errors (fixed next); the files are copied in by then
-    [void](Invoke-UnityStep $project 'import' @('-importPackage', "`"$pkg`"", '-quit') -AllowCompileErrors)
+  # The plugin files are copied in here, without Unity. On a PC that has never had them (a fresh clone) Unity cannot do it:
+  # the committed manifest names the OpenVR package as a .tgz INSIDE Assets\SteamVR, and the kit compiles against the plugin
+  # (PB_STEAMVR), so Unity stops on the missing package or on compile errors before -importPackage runs.
+  # The marker makes a copy that was interrupted start again.
+  $marker = Join-Path $LogDir "steamvr-$project-extracting.marker"
+  if ((Test-Path $marker) -or -not (Test-Path (Join-Path $path 'Assets\SteamVR'))) {
+    Set-Content -Path $marker -Value (Get-Date -Format o)
+    $count = Copy-PluginFiles $pkg $path
+    Remove-Item $marker -Force
+    Write-Host "  copied $count plugin files into Assets\SteamVR"
   }
-  if (-not (Test-Path (Join-Path $path 'Assets\SteamVR'))) { throw "The plugin files were not imported into $project. See builds\logs\steamvr-$project-import.log" }
+  if (-not (Test-Path (Join-Path $path 'Assets\SteamVR\OpenVRUnityXRPackage\Editor'))) { throw "The plugin files were not copied into $project." }
 
   foreach ($f in @('Assets\SteamVR\InteractionSystem\Core\Scripts\HandCollider.cs', 'Assets\SteamVR\InteractionSystem\Longbow\Scripts\Arrow.cs')) {
     $file = Join-Path $path $f

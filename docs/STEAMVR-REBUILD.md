@@ -41,7 +41,7 @@ Close every Unity editor first. Unity 6000.3.20f1 is required. About 15 minutes 
 
 1. `powershell -File scripts\setup-steamvr.ps1 -Projects 02-refinery-rounds`
    - One project per call (a comma list does not work through `-File`). The hub needs `-IncludeHub` and its licensed local files (`Assets\Scenes\Local\Lobby.unity`, `Assets\Rocketbox`; see [BUILD-THE-HUB.md](BUILD-THE-HUB.md)).
-   - Steps, each skipped if already done: add the packages the plugin needs to `manifest.json`; import the plugin; patch `HandCollider.cs` and `Arrow.cs` (`PhysicMaterial` renamed `PhysicsMaterial`, an error in Unity 6.3); copy `SteamVRProjectSetup.cs` into `Assets/Editor`; generate Steam Input actions from Valve's example; assign the OpenVR loader, Direct3D 11 and the `PB_STEAMVR` define; compile.
+   - Steps, each skipped if already done: add the packages the plugin needs to `manifest.json`; copy the plugin files into `Assets\SteamVR` (the script unpacks the `.unitypackage` itself, without Unity); patch `HandCollider.cs` and `Arrow.cs` (`PhysicMaterial` renamed `PhysicsMaterial`, an error in Unity 6.3); copy `SteamVRProjectSetup.cs` into `Assets/Editor`; generate Steam Input actions from Valve's example; assign the OpenVR loader, Direct3D 11 and the `PB_STEAMVR` define; compile.
 2. `powershell -File scripts\build-vive.ps1 -Projects 02-refinery-rounds`
    - `build-vive` does not yet run `setup-steamvr` by itself for a project that lacks `Assets\SteamVR` (to do).
 3. Test in the simulated headset: `scripts\steamvr-simulator.ps1 -Enable`, then `-Run builds\vive\<project>\<Name>.exe -Shot out.png -Seconds 35`, then `-Disable` (the script edits SteamVR settings for the whole PC). Label screenshots "SteamVR simulated headset", never a real headset.
@@ -52,6 +52,7 @@ Close every Unity editor first. Unity 6000.3.20f1 is required. About 15 minutes 
 - Builds and setup need `-accept-apiupdate`, otherwise the API Updater dialog blocks batch mode.
 - Do not use `Start-Process -Wait` with Unity: a lingering `UnityCrashHandler64` keeps it waiting. The scripts use `WaitForExit` and kill the crash handler.
 - Write `manifest.json` without a BOM.
+- On a PC without the plugin files (a fresh clone) Unity cannot import them with `-importPackage`: the committed `manifest.json` names the OpenVR package as a `.tgz` inside `Assets\SteamVR`, and the kit compiles against the plugin (`PB_STEAMVR`), so Unity stops on "Tarball package cannot be found" or on compile errors first. The Hub shows the same error when such a project is opened. `setup-steamvr.ps1` therefore copies the files out of the `.unitypackage` (a gzip tar) with `tar`, `.meta` files included.
 - Plugin 2.8.5b is needed (stable 2.8.0 shows no picture in Unity 6); Direct3D 11 only, multi-pass stereo ([STEAMVR-SAMPLE.md](STEAMVR-SAMPLE.md)).
 - The simulated headset sits on the floor unless the floor offset is set; the sign mistake once made the scenes look broken ([STEAMVR-SIMULATOR.md](STEAMVR-SIMULATOR.md)).
 
