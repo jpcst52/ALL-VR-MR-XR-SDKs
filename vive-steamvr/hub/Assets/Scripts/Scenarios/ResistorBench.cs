@@ -961,7 +961,8 @@ public class ResistorBench : MonoBehaviour, IShotScript
 
     void BuildTaskBoard()
     {
-        var boardPos = new Vector3(-2.5f, 2.1f, 0.9f);
+        // On the empty left wall: at (-2.5, 0.9) the 3.5 m panel lay across the parts shelving, the clock and the ESD sign, and ran into the back wall
+        var boardPos = new Vector3(-3.3f, 2.1f, -1.1f);
         var look = Quaternion.LookRotation(boardPos - new Vector3(0, 1.6f, -0.35f));
         board = TaskBoard.Create(transform, boardPos, look, "Resistor selection bench", "Generic education  |  5 V, 20 mA LED circuit", new[]
         {

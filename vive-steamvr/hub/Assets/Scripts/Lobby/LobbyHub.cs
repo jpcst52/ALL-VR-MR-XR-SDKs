@@ -173,7 +173,7 @@ public class LobbyHub : MonoBehaviour, IShotScript
             hint.localRotation = Quaternion.Euler(0, 180, 0);
         }
         Ui.Panel(hint, "Panel", Vector3.zero, new Vector2(8.6f, 0.5f), new Color(0f, 0.13f, 0.36f, 0.97f), P.Gold, 0.08f);
-        TextFit.Add(P.Text(hint, "In any scenario: hold both grips (or press Backspace) to come back here.", new Vector3(0, -0.02f, -0.012f), 0.2f, Color.white, TextAnchor.MiddleCenter, false, "Hint text"), 8.0f, 0f, false);
+        TextFit.Add(P.Text(hint, "In any scenario: point at the Lobby panel on your left hand (or hold both grips) to come back here.", new Vector3(0, -0.02f, -0.012f), 0.2f, Color.white, TextAnchor.MiddleCenter, false, "Hint text"), 8.0f, 0f, false);
     }
 
     void BuildPortal(Transform parent, Entry e, int index, Vector3 pos)

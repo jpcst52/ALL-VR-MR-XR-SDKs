@@ -439,6 +439,9 @@ namespace PittBradford.XR
         public static TextMesh Text(Transform parent, string s, Vector3 localPos, float height, Color color, TextAnchor anchor = TextAnchor.MiddleLeft, bool bold = false, string name = "Text")
         {
             var found = Bake.TryAdopt(parent, name);
+            // A scene baked before a text was given its own name still holds it as "Text". Without this, the new named text is made
+            // next to the old one and every title shows twice (the Lobby did exactly that after its texts were named for TextFit).
+            if (found == null && name != "Text") found = Bake.TryAdopt(parent, "Text");
             if (found != null)
             {
                 var baked = Ensure<TextMesh>(found);

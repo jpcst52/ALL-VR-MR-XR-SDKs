@@ -23,7 +23,7 @@ The hub imports Asset Store packs (IGBlocks warehouse, Sci-Fi Warehouse Kit, Mod
 Run **Pitt-Bradford > Build hub: lobby and all scenarios**. It saves five scenes under `Assets/Scenes/Local/` and registers them in the build settings (Lobby first): `Lobby`, `HydrostaticTest_Hub` (dressed with the packs), and plain `RefineryRounds_Hub`, `WarehouseForklift_Hub`, `ResistorBench_Hub`.
 
 - **Portals:** step onto a portal's pad and stay about 1.4 s (progress shows on the pad), or press 1-4 on the desktop. `Assets/Scripts/Lobby/LobbyHub.cs` builds the hall from primitives, so the lobby itself needs no packs; the builder only adds a few office props.
-- **Back to the lobby:** in any scenario hold both grips for 1.5 s, or press Backspace (`ReturnToLobby.cs`). A hint shows for the first 8 seconds.
+- **Back to the lobby:** in any scenario, point at the small "Lobby" panel floating above the left controller and press the trigger (desktop: aim the crosshair at it and click). Holding both grips for 1.5 s or pressing Backspace also works (`ReturnToLobby.cs`). A hint shows for the first 10 seconds.
 - **Scenario scripts:** `Assets/Scripts/Scenarios/` holds copies of the scripts from projects 02-04. If you change those projects, copy the scripts here again.
 
 Checked in the editor (play mode): the lobby renders, and standing on pad 2 loaded `RefineryRounds_Hub`.

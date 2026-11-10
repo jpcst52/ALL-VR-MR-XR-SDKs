@@ -329,7 +329,7 @@ public static class HubLobbyDressing
         P.Text(ib, "1  Walk to a pad (or press 1 to 4 on a desktop).", new Vector3(-1.62f, 0.4f, -0.012f), 0.11f, P.Sky, TextAnchor.MiddleLeft);
         P.Text(ib, "2  Wait a moment: the scenario loads.", new Vector3(-1.62f, 0.12f, -0.012f), 0.11f, P.Sky, TextAnchor.MiddleLeft);
         P.Text(ib, "3  Follow the task board and the why-panels.", new Vector3(-1.62f, -0.16f, -0.012f), 0.11f, P.Sky, TextAnchor.MiddleLeft);
-        P.Text(ib, "4  Hold both grips (Backspace) to return here.", new Vector3(-1.62f, -0.44f, -0.012f), 0.11f, P.Sky, TextAnchor.MiddleLeft);
+        P.Text(ib, "4  Point at the Lobby panel on your left hand to return.", new Vector3(-1.62f, -0.44f, -0.012f), 0.11f, P.Sky, TextAnchor.MiddleLeft);
         P.Text(ib, "General safety awareness, not a procedure or certification.", new Vector3(0, -0.93f, -0.012f), 0.085f, Gold, TextAnchor.MiddleCenter);
         HubSceneDressing.Put(info, "Plant 4", 11.1f, 8.2f);
         HubSceneDressing.Put(info, "Plant 2", 11.1f, 4.1f);

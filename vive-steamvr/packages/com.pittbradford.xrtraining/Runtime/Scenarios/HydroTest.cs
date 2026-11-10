@@ -288,7 +288,8 @@ public partial class HydroTest : MonoBehaviour, IShotScript
 
     void BuildBoardAndSigns()
     {
-        var boardPos = new Vector3(-2.3f, 2.05f, -0.4f);
+        // Off to the left of the blind-flange table (x -3.3 to -1.9): the 4 m x 2.5 m panel used to hang right in front of it and hide the flanges
+        var boardPos = new Vector3(-5.0f, 2.5f, -1.2f);
         var look = Quaternion.LookRotation(boardPos - new Vector3(0, 1.6f, -3.6f));
         board = TaskBoard.Create(transform, boardPos, look, "Hydrostatic test", "Shell-and-tube heat exchanger HX-101  |  150 psi test", new[]
         {
