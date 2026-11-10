@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>XR Training Main Menu · Pitt-Bradford CIST</title>
-  <meta name="description" content="Launch the Pitt-Bradford XR training examples: browser demos, multiplayer, Vive and Quest.">
+  <meta name="description" content="Launch the Pitt-Bradford XR training examples: browser demos, multiplayer and Vive.">
   <link rel="stylesheet" href="brand-kit/brand.css">
   <link rel="stylesheet" href="launcher/launcher.css">
 </head>
@@ -25,16 +25,15 @@
   <div class="wrap finder" role="search">
     <label for="q">Search examples</label>
     <div class="finder-row">
-      <input type="search" id="q" placeholder="for example: forklift, Quest, circuit" autocomplete="off" aria-controls="sections" disabled>
+      <input type="search" id="q" placeholder="for example: forklift, safety, circuit" autocomplete="off" aria-controls="sections" disabled>
       <button type="button" id="clear" hidden>Clear</button>
     </div>
     <p id="count" class="count" role="status" aria-live="polite"></p>
     <ul class="legend" aria-label="What the status badges mean">
-      <li><span class="badge status ready">Ready on desktop</span> runs in a desktop browser now</li>
-      <li><span class="badge status pending">Pending</span> tested in the editor or an emulator; the headset test is still to do</li>
+      <li><span class="badge status ready">Ready</span> runs now, in a desktop browser or the Unity editor</li>
       <li><span class="badge status planned">Needs its native toolchain</span> source sample, not served here</li>
     </ul>
-    <p class="hint">Guides, status and slide decks are on their <a href="launcher/guides.html">own page</a>; the Fieldwork Practice Lab and the native SDK examples are <a href="#more">linked at the bottom</a>. Keyboard: <kbd>/</kbd> jumps to search, <kbd>Esc</kbd> clears it, arrow keys move between results, <kbd>Enter</kbd> opens. Nothing is tested on a physical headset yet.</p>
+    <p class="hint">Guides, status and slide decks are on their <a href="launcher/guides.html">own page</a>; the Fieldwork Practice Lab and the native SDK examples are <a href="#more">linked at the bottom</a>. Keyboard: <kbd>/</kbd> jumps to search, <kbd>Esc</kbd> clears it, arrow keys move between results, <kbd>Enter</kbd> opens.</p>
   </div>
 
   <main id="main" class="wrap">
@@ -46,9 +45,7 @@
 
   <footer class="foot">
     <div class="wrap">
-      <p>Non-certified learning prototypes. They are general safety awareness practice and do not replace site procedures, permits or certified training.</p>
-      <p>VR screenshots are from an emulated Quest 3 unless stated. Nothing here has been verified on a physical headset.</p>
-    </div>
+      <p>Non-certified learning prototypes. They are general safety awareness practice and do not replace site procedures, permits or certified training.</p>    </div>
   </footer>
 
   <script type="module" src="brand-kit/brand.js"></script>

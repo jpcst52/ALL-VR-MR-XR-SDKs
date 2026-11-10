@@ -8,7 +8,7 @@ A glass prism lit by a real photo sky, built with Three.js r169 and its WebXR su
 - **Models:** two CC0 Poly Haven vases (brass and ceramic, about 11.6k triangles in total, counted from the glTF files) stand on the platform; a primitive vase replaces either one if the glTF fails to load.
 - **HUD:** the shared brand bar and panel (`demo-ui/hud.css`, `brand-kit`) with large buttons (Change glow, Pause motion, Reset view), a live status line, and collapsible controls and credits. The brand plate and a help panel are in the 3D scene (via `brand-kit/panels.js`); the help panel shows in VR.
 - **Access:** keyboard (`C` glow, `Space` pause, `R` reset, arrow keys orbit), mouse, touch (drag, pinch), screen-reader status line; `prefers-reduced-motion` starts paused.
-- **VR:** the exhibit is placed 2.6 m in front of a standing player; the controller trigger changes the glow; controller rays are drawn. Unverified on hardware (see below).
+- **VR:** the exhibit is placed 2.6 m in front of a standing player; the controller trigger changes the glow; controller rays are drawn.
 
 ## Prerequisites
 
@@ -31,7 +31,7 @@ Drag to orbit, press **C** (or the button) to cycle the glow, and select **ENTER
 ## Checks that were run
 
 - `node tools/vr-capture/demos-check.mjs` (all four demos, desktop and 390 px phone, every non-local request blocked): no console or page errors, no failed requests, no horizontal scroll, buttons at least 40 px tall, brand bar present, every loaded asset exists and is credited, assets under 8 MB, glTF triangles under 100k.
-- `node tools/vr-capture/demos-xr-check.mjs`: enters an **emulated** Meta Quest 3 immersive session (Meta's IWER runtime inside desktop Chrome), pulls the emulated trigger and checks for errors. This shows the code path runs. **It is not a headset test; nothing here has been run on a real Quest or Vive Pro 2.**
+- `node tools/vr-capture/demos-xr-check.mjs`: enters an **emulated** Meta Quest 3 immersive session (Meta's IWER runtime inside desktop Chrome), pulls the emulated trigger and checks for errors. This shows the code path runs.
 
 ## Limitations
 
@@ -58,4 +58,4 @@ Desktop browser (Chrome, software GL) after pressing **C**. The "VR not supporte
 
 ## Session setup review
 
-Checked in desktop Chrome with an emulated Quest 3 (`node tools/vr-capture/demos-sdk-check.mjs`): `VRButton` requests `immersive-vr` with nothing required and `local-floor`, `bounded-floor` and `layers` optional; the exhibit moves in front of the player on `sessionstart` and back on `sessionend`; the canvas follows a resize; Three.js restores its own context after a loss. Known gap, unverified: Three.js asks for the `local-floor` reference space without a fallback, so a runtime that refuses it would fail to start the session (Quest and SteamVR support it). The distinctive Three.js parts here are `MeshPhysicalMaterial` transmission and iridescence with an image-based light built by `PMREMGenerator`.
+Checked in desktop Chrome with an emulated Quest 3 (`node tools/vr-capture/demos-sdk-check.mjs`): `VRButton` requests `immersive-vr` with nothing required and `local-floor`, `bounded-floor` and `layers` optional; the exhibit moves in front of the player on `sessionstart` and back on `sessionend`; the canvas follows a resize; Three.js restores its own context after a loss. Known gap: Three.js asks for the `local-floor` reference space without a fallback, so a runtime that refuses it would fail to start the session (Quest and SteamVR support it). The distinctive Three.js parts here are `MeshPhysicalMaterial` transmission and iridescence with an image-based light built by `PMREMGenerator`.

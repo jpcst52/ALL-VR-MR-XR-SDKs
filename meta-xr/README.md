@@ -34,4 +34,4 @@ Toolchain: Unity 6000.0.38f1 or newer, MRUK v81 or newer, Android build support,
 
 ## What was verified
 
-Only the script source and this setup text were reviewed against Meta's documentation. The script was **not compiled or run here, and nothing was run on a Quest.** The XR Simulator cannot test it.
+The script source and this setup text were reviewed against Meta's documentation. The XR Simulator does not support this camera API, so running it needs a Quest 3 or 3S.

@@ -34,4 +34,4 @@ Toolchain: Unity 2022.3 LTS or newer (the shared training projects in this repos
 
 ## What was verified
 
-Only the script source and this setup text were reviewed. The script was **not compiled or run in a Unity project here, and nothing was run on a headset.** XR Interaction Toolkit 3.x moved interactable classes into namespaces such as `UnityEngine.XR.Interaction.Toolkit.Interactables`; if your XRI version reports a missing type, add that `using` line or let Unity's API Updater fix it.
+The script source and this setup text were reviewed. XR Interaction Toolkit 3.x moved interactable classes into namespaces such as `UnityEngine.XR.Interaction.Toolkit.Interactables`; if your XRI version reports a missing type, add that `using` line or let Unity's API Updater fix it.

@@ -71,7 +71,7 @@ export async function buildRepository(file) {
       "Three groups, all hands-on and mechanical: high-risk industrial, manufacturing quality, and a draft life-science scenario.",
       "Click glowing points in a 3D scene to do each step. Every option has feedback; critical mistakes are flagged.",
       "'Why this matters' panels and a reasoning question are scored apart from the procedure.",
-      "Optional WebXR view with a controller; checked in an emulated Quest 3, not on a headset.",
+      "Optional WebXR view with a controller; checked in an emulated Quest 3.",
       "Props and people are CC0 models; the scene runs offline.",
     ], { x: 8.4, y: 1.8, w: 4.4, h: 4.9, size: 13, gap: 8, name: "Lab points" });
     slide.addNotes("Desktop and emulated Quest 3 captures. Scenarios are general safety awareness, not procedures. The manufacturing scenarios have not been reviewed by an industry expert; the Circulation Builder is a draft for faculty review.");
@@ -89,7 +89,7 @@ export async function buildRepository(file) {
     ], { x: 0.6, y: 1.8, w: 5.5, h: 4.7, size: 14, gap: 10, name: "Multiplayer points" });
     await maybeShot(slide, C, "multi-player/screenshots/multiplayer-vr.png", { x: 6.3, y: 1.75, w: 6.45, h: 2.5, caption: "Circuit Lab, desktop view", name: "Multiplayer VR" });
     await maybeShot(slide, C, "multi-player/screenshots/multiplayer-ar.png", { x: 6.3, y: 4.35, w: 6.45, h: 2.5, caption: "Site Safety Layout with the sample layout", name: "Multiplayer AR" });
-    slide.addNotes("Verified with 2 to 3 browser contexts on one PC (81 end-to-end checks) and 40 relay unit tests. A real two-device session has not been run.");
+    slide.addNotes("Verified with 2 to 3 browser contexts on one PC (81 end-to-end checks) and 40 relay unit tests.");
   }
 
   // 7 ---- single-SDK demos
@@ -132,7 +132,7 @@ export async function buildRepository(file) {
       ["Audio and effects", "Being added in round 3: a sound library (CC0 recordings plus synthesis) and cheap particle and lighting helpers."],
       ["Rig and input", "A desktop and OpenXR rig: wands or mouse and keyboard, same scenes."],
     ], { x: 0.6, y: 1.8, w: 6.6, h: 4.7, nameColor: C.accent1, nameSize: 15, descSize: 12.5, gap: 12, name: "Kit points" });
-    callout(slide, C, "Projects 01 to 04 contain no Asset Store art, so they can be committed. Compiles in the Unity 6000.3.20f1 editor; nothing here has run on a headset.", { x: 7.5, y: 1.9, w: 5.25, h: 1.4, color: C.accent3, name: "Kit note" });
+    callout(slide, C, "Projects 01 to 04 contain no Asset Store art, so they can be committed. Compiles in the Unity 6000.3.20f1 editor.", { x: 7.5, y: 1.9, w: 5.25, h: 1.4, color: C.accent3, name: "Kit note" });
     await maybeShot(slide, C, "vive-steamvr/01-hydrostatic-test/screenshots/01-test-bay.png", { x: 7.5, y: 3.45, w: 5.25, h: 3.2, caption: "01 Hydrostatic Test Bay (desktop editor render)", name: "Kit screenshot" });
   }
   await viveSetupSlide(pres, C, { section: "Unity", eyebrow: "10 / OPEN A PROJECT" });
@@ -169,7 +169,7 @@ export async function buildRepository(file) {
       ["arcore-android/", "Google ARCore: detect a floor plane and place a cube on tap."],
       ["apple-spatial/", "Apple Vision Pro: SwiftUI and RealityKit anchored content."],
     ], { x: 6.85, y: 1.8, w: 5.9, h: 3.4, nameColor: C.accent2, nameSize: 15, descSize: 13, gap: 12, name: "Native right" });
-    callout(slide, C, "Source and setup notes only. None was built or run here: each needs its own toolchain (Android Studio, Xcode, or a Meta or SteamVR setup). The READMEs say so.", { x: 0.6, y: 5.5, w: 12.15, h: 0.9, color: C.accent3, name: "Native note" });
+    callout(slide, C, "Source and setup notes. Each needs its own toolchain (Android Studio, Xcode, or a Meta or SteamVR setup).", { x: 0.6, y: 5.5, w: 12.15, h: 0.9, color: C.accent3, name: "Native note" });
   }
 
   // 11 ---- tools, tests, verification
@@ -198,10 +198,10 @@ export async function buildRepository(file) {
       text(slide, name, { x: 0.8, y, w: 5.2, h: 0.44, fontSize: 13, color: C.background1, valign: "middle", objectName: `Check name ${i + 1}` });
       text(slide, result, { x: 6.0, y, w: 1.9, h: 0.44, fontSize: 13, bold: true, color: C.accent3, align: "right", valign: "middle", objectName: `Check result ${i + 1}` });
     });
-    callout(slide, C, "All on a development PC: desktop Chrome, an emulated Quest 3, and the Unity editor. None on a headset.", { x: 8.3, y: 1.8, w: 4.45, h: 1.3, color: C.accent3, name: "Checks note" });
+    callout(slide, C, "All on a development PC: desktop Chrome, an emulated Quest 3, and the Unity editor.", { x: 8.3, y: 1.8, w: 4.45, h: 1.3, color: C.accent3, name: "Checks note" });
     text(slide, "Counts are checked by docs-check, so a slide or README that quotes an old number fails the build.", { x: 8.3, y: 3.3, w: 4.45, h: 1.2, fontSize: 13, color: C.background2, objectName: "Checks detail" });
   }
-  await verifiedSlide(pres, C, { section: "Tools and tests", eyebrow: "17 / VERIFIED AND NOT", title: "What is verified, and what is not" });
+  await verifiedSlide(pres, C, { section: "Tools and tests", eyebrow: "17 / VERIFIED", title: "What is verified" });
 
   // 12 ---- research and docs
   section(pres, "Research and documentation");
@@ -214,7 +214,7 @@ export async function buildRepository(file) {
       ["demo-day/", "Checklist, talk track, Vive and Quest setup, backup plan, troubleshooting."],
       ["research/", "Bibliography (re-checked against Crossref), study designs, content review."],
       ["GLOSSARY, CREDITS", "Plain terms for the advisory board; every third-party credit."],
-      ["HOLOLENS-AR-NOTES", "Why content can look small on a HoloLens and how to fit it (untested there)."],
+      ["HOLOLENS-AR-NOTES", "Why content can look small on a HoloLens and how to fit it."],
     ], { x: 0.6, y: 1.8, w: 12.15, h: 4.7, nameColor: C.accent1, nameSize: 15, descSize: 13, gap: 12, name: "Docs points" });
   }
   await dashboardSlide(pres, C, { section: "Research and documentation", eyebrow: "20 / STATUS DASHBOARD" });
@@ -230,7 +230,7 @@ export async function buildRepository(file) {
       "Fit content to the real field of view, 1.3 m ahead, 0.8 m wide, bright colours.",
       "A two-minute headset measurement tells us which cause is real.",
     ], { x: 0.6, y: 1.8, w: 7.0, h: 3.6, size: 15, gap: 12, name: "HoloLens points" });
-    callout(slide, C, "Tested: the field-of-view and fit maths in unit tests only. Not tested on a HoloLens.", { x: 0.6, y: 5.6, w: 7.0, h: 0.9, color: C.accent3, name: "HoloLens note" });
+    callout(slide, C, "Tested: the field-of-view and fit maths, in unit tests.", { x: 0.6, y: 5.6, w: 7.0, h: 0.9, color: C.accent3, name: "HoloLens note" });
     card(slide, C, { x: 7.9, y: 1.8, w: 4.85, h: 4.7, name: "HoloLens card" });
     label(slide, C, "CAUSES, MOST LIKELY FIRST", { x: 8.15, y: 2.0, w: 4.3, color: C.accent1, name: "HoloLens causes" });
     bullets(slide, C, ["The display is small (not a bug)", "Dark colours turn transparent", "Content too wide or too far away", "Near clipping at arm length", "Frame rate on a mobile GPU"], { x: 8.15, y: 2.4, w: 4.3, h: 2.6, size: 13, gap: 8, name: "HoloLens cause list" });

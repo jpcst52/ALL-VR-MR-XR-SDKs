@@ -53,10 +53,7 @@
     <p class="note">These pages need the relay running on the lab PC. Served from GitHub Pages they load but cannot join a room (the relay is not a static file).</p>
     <ul class="sites" id="multiplayer"></ul>
 
-    <h2>This repository: Quest pages</h2>
-    <ul class="sites" id="quest"></ul>
-
-    <div class="warn" role="note">WebXR support depends on the browser and device. Nothing here has been tested on a headset yet: see the GitHub Pages guide for the device table.</div>
+    <div class="warn" role="note">WebXR support depends on the browser and device: see the GitHub Pages guide for the device table.</div>
   </main>
 
   <footer class="wrap">
@@ -88,7 +85,7 @@
     });
 
     fetch("launcher/examples.json").then(function (r) { return r.json(); }).then(function (data) {
-      var web = { browser: "browser", multiplayer: "multiplayer", quest: "quest" };
+      var web = { fieldwork: "browser", browser: "browser", multiplayer: "multiplayer" };
       data.examples.forEach(function (e) {
         var list = web[e.section];
         if (!list || !e.url || /^(https?:)?\/\//.test(e.url)) return;

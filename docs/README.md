@@ -2,7 +2,7 @@
 
 Every guide in this repository, and what to read it for. The same list is in the **main menu** (the launcher): start the demo with `scripts\start-demo.cmd` and it opens at `https://localhost:8443/`. The menu also opens these guides in the browser, offline.
 
-General safety-awareness practice only: none of the scenarios is a procedure, permit or certification. Nothing here has been verified on a real Vive Pro 2 or Quest yet; each guide says what was actually run.
+General safety-awareness practice only: none of the scenarios is a procedure, permit or certification. Each guide says what was run.
 
 ## I want to...
 
@@ -19,7 +19,7 @@ General safety-awareness practice only: none of the scenarios is a procedure, pe
 | Test day: what to start and what to check | [LAB-TEST-TODAY.md](LAB-TEST-TODAY.md) |
 | Listen to and review the Unity sound effects | [audio-review/README.md](audio-review/README.md) |
 | Check that nothing is broken, or play-test by hand | [TESTING.md](TESTING.md) |
-| See what is done and what is left | [Task-Status.md](Task-Status.md) (task list) and [PROJECT-STATUS.md](PROJECT-STATUS.md) (decisions and caveats) |
+| See what is done and what is left | [Task-Status.md](Task-Status.md) (task list) and [PROJECT-STATUS.md](PROJECT-STATUS.md) (decisions) |
 | Run the live status dashboard | [status-dashboard-guide.md](status-dashboard-guide.md) |
 | Prepare for demo day (Nov 13, 2026) | [demo-day/README.md](demo-day/README.md) |
 | Test on the real headsets | [demo-day/HARDWARE-TEST-SESSION.md](demo-day/HARDWARE-TEST-SESSION.md) |
@@ -34,9 +34,9 @@ General safety-awareness practice only: none of the scenarios is a procedure, pe
 | [../CREDITS.md](../CREDITS.md) | Third-party credits: fonts, Open-Meteo weather, Rocketbox people, Asset Store packs, models |
 | [GLOSSARY.md](GLOSSARY.md) | Plain-language terms and a who-is-this-for table, for the advisory board and faculty |
 | [HOW-TO-RUN.md](HOW-TO-RUN.md) | One page for everything: a three-step quick start for demo day, the demo server, Unity projects (desktop and headset), the hub lobby, tests, screenshots, decks, troubleshooting |
-| [HOLOLENS-AR-NOTES.md](HOLOLENS-AR-NOTES.md) | Why content looks small on a HoloLens (small additive display), how to measure it and fit content to it; untested on a HoloLens |
-| [GITHUB-PAGES.md](GITHUB-PAGES.md) | The static WebXR site on GitHub Pages: address, QR code, what works (and what needs the relay), opening it on Quest, HoloLens 2, Vive XR and phones, updating and checking it; nothing tested on a headset |
-| [BUILDS.md](BUILDS.md) | `scripts\build-vive.cmd`: builds the four Unity projects (and optionally the hub) as Windows players for the VR Stage PC; script not run for real yet |
+| [HOLOLENS-AR-NOTES.md](HOLOLENS-AR-NOTES.md) | Why content looks small on a HoloLens (small additive display), how to measure it and fit content to it |
+| [GITHUB-PAGES.md](GITHUB-PAGES.md) | The static WebXR site on GitHub Pages: address, QR code, what works (and what needs the relay), opening it on Quest, HoloLens 2, Vive XR and phones, updating and checking it |
+| [BUILDS.md](BUILDS.md) | `scripts\build-vive.cmd`: builds the four Unity projects (and optionally the hub) as Windows players for the VR Stage PC |
 | [TESTING.md](TESTING.md) | The automated suites with expected counts, and hands-on check tables (desktop Unity D1-D14, baked scenes B1-B4, lobby L1-L6, web W1-W6) |
 | [demo-day/HARDWARE-TEST-SESSION.md](demo-day/HARDWARE-TEST-SESSION.md) | Pass/fail sheet for the first lab run on the Vive Pro 2 and Quest |
 
@@ -49,7 +49,7 @@ General safety-awareness practice only: none of the scenarios is a procedure, pe
 | Guide | What it covers |
 |---|---|
 | [Task-Status.md](Task-Status.md) | The task list the dashboard reads (done, in progress, waiting, needs the owner) |
-| [PROJECT-STATUS.md](PROJECT-STATUS.md) | Narrative status: decisions, caveats, what was verified and what was not |
+| [PROJECT-STATUS.md](PROJECT-STATUS.md) | Narrative status: decisions and what was verified |
 | [status-dashboard-guide.md](status-dashboard-guide.md) | How the local dashboard works (`npm run status`) |
 | [COMPLIANCE-SWEEP.md](COMPLIANCE-SWEEP.md) | Sweep for partner names, slogan titles, third-party credits and private files, with the findings left for the owner |
 

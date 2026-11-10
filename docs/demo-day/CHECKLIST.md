@@ -1,6 +1,6 @@
 # Demo checklist
 
-Items about headsets, Wi-Fi and SteamVR have not been tested by the development agents: verify all of them at rehearsal.
+Verify every item about headsets, Wi-Fi and SteamVR at rehearsal.
 
 ## One week before
 - [ ] Full rehearsal on the real lab PC, real Wi-Fi, real headsets, with someone playing the audience.

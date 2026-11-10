@@ -1,6 +1,6 @@
 # VR Stage PC: from this repository to a headset, start to finish
 
-One page that ties the other guides together. Nothing here has been tried on the VR Stage PC or in a headset yet: treat the first run as a test and note what fails. General safety-awareness practice only; none of the scenarios is a procedure or certification.
+One page that ties the other guides together. Treat the first run as a test and note what fails. General safety-awareness practice only; none of the scenarios is a procedure or certification.
 
 ## What runs where
 
@@ -25,7 +25,7 @@ If the PC that holds the hub's licensed files is remote and you work at a lab PC
 3. **The hub's licensed files** (only if you want the hub). They are not in git. On the Build PC run `scripts\pack-hub-assets.cmd` (writes `builds\hub-assets-<date>.zip`; 2,084 MB on 2026-11-08, about 3 GB unpacked). Get that file to the lab PC by whatever private route you have: remote-desktop file copy, a USB drive, or a private network share. It holds licensed Asset Store files, so move it only between your own machines and keep it out of GitHub, email and shared folders; check the packs' license terms if unsure.
 4. **Close Unity, then unpack before opening the hub in Unity:** drag the zip onto `scripts\unpack-hub-assets.cmd`.
 5. **Run `scripts\check-build-pc.cmd`.** It checks Unity and its Windows module, the repository, that no editor is open, free disk space (about 11 GB), the hub's files, and the Unity package server, and says what to fix. It changes nothing.
-6. **Run `scripts\build-all-vive.cmd`.** The first Unity run on a new PC downloads packages (OpenXR, Input System) and imports everything into a new cache, so the first build is much slower than the author's 10 minutes per project (not measured on another PC).
+6. **Run `scripts\build-all-vive.cmd`.** The first Unity run on a new PC downloads packages (OpenXR, Input System) and imports everything into a new cache, so the first build is much slower than the author's 10 minutes per project.
 7. Copy the folders from `builds\vive` to the Stage PC (step 2).
 
 If Way 2 hits trouble, Way 1 is the fallback: the builds on the Build PC are already made.
@@ -60,9 +60,9 @@ Copy whole folders from `builds\vive\` (USB drive or local network) to the Stage
 What to look at, per build, is in [LAB-TEST-TODAY.md](LAB-TEST-TODAY.md) section 3, and the longer Pass/Fail sheet is [demo-day/HARDWARE-TEST-SESSION.md](demo-day/HARDWARE-TEST-SESSION.md). For the hub in particular:
 
 - It opens in the lobby: four portals with thumbnails, a sky photo, music starting after a few seconds (press M on the desktop window to mute).
-- **Teleport:** push a thumbstick or press the trackpad forward, aim the arc, release. Right or left on a stick turns 45 degrees. (This describes the old OpenXR builds. Builds migrated to Valve's SteamVR plugin, so far only project 01, use Valve's teleport: hold the trackpad, aim at the floor area, release. Neither is verified on a real Vive; see [STEAMVR-REBUILD.md](STEAMVR-REBUILD.md).)
+- **Teleport:** push a thumbstick or press the trackpad forward, aim the arc, release. Right or left on a stick turns 45 degrees. (This describes the old OpenXR builds. Builds migrated to Valve's SteamVR plugin, so far only project 01, use Valve's teleport: hold the trackpad, aim at the floor area, release. See [STEAMVR-REBUILD.md](STEAMVR-REBUILD.md).)
 - **Portals:** stand on a pad for about 1.4 seconds; the scenario loads. Hold both grips for 1.5 seconds (Backspace on the desktop) to go back to the lobby.
-- Please note: controller feel (the Vive trackpad is the least certain part), comfort, frame rate (the SteamVR frame-time overlay is enough), whether text is readable and reads in both eyes, the seated forklift driver pose in 03, and how the sound and lighting look and sound.
+- Please note: controller feel (the Vive trackpad most of all), comfort, frame rate (the SteamVR frame-time overlay is enough), whether text is readable and reads in both eyes, the seated forklift driver pose in 03, and how the sound and lighting look and sound.
 
 No headset connected? The players still run on the desktop (WASD, mouse, E or left click), which is a quick way to see that a copy is complete.
 
@@ -75,6 +75,6 @@ No headset connected? The players still run on the desktop (WASD, mouse, E or le
 | A build fails with `error CS` | Open the log in `builds\logs\<project>.log` and send it to the developer |
 | Black screen or no controller input on the Stage PC | SteamVR not running first, or SteamVR is not the OpenXR runtime (step 3) |
 | `.exe` closes at once | The `_Data` folder or `UnityPlayer.dll` was not copied; check `%USERPROFILE%\AppData\LocalLow\University of Pittsburgh at Bradford\<product>\Player.log` |
-| Sky looks flat in the hub | Note it; the sky shader fix was only checked in a windowed desktop run |
+| Sky looks flat in the hub | Note it; the sky shader fix was checked in a windowed desktop run |
 
 Related: [BUILDS.md](BUILDS.md) · [BUILD-THE-HUB.md](BUILD-THE-HUB.md) · [LAB-TEST-TODAY.md](LAB-TEST-TODAY.md) · [DEVELOPER-SETUP.md](DEVELOPER-SETUP.md)

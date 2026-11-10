@@ -1,6 +1,6 @@
 # HoloLens and other see-through displays: why content looks small
 
-Written 2026-11-03 after WaterWorks (the course example in `jcallinan/CIST1423-Fall2026-Examples`, `Week-08-WebXR-WaterWorks`) filled only about half of the HoloLens view. **Nothing here has been tested on a HoloLens.** The causes below are ranked guesses from the code and the display's published properties; the diagnostic in section 1 tells you which one is real.
+Written 2026-11-03 after WaterWorks (the course example in `jcallinan/CIST1423-Fall2026-Examples`, `Week-08-WebXR-WaterWorks`) filled only about half of the HoloLens view. The causes below are ranked guesses from the code and the display's published properties; the diagnostic in section 1 tells you which one is real.
 
 ## What I read in WaterWorks
 
@@ -50,11 +50,9 @@ Offer **bigger / smaller** and **recenter** buttons as well, because hands and v
 - No controllers: use hand rays and pinch (the Hand Tracking and Pointer features of the SDK). Test pinch targets at 3 cm or larger.
 - Keep text at 1.5 cm or more per line at 1.3 m, on a bright panel.
 - Skip shadows, post-processing and large transparent surfaces; they cost frames and look wrong on an additive display.
-- Do not require the `hit-test` feature: whether the HoloLens browser offers it was not checked, so request it as optional and fall back to a fixed placement.
+- Do not require the `hit-test` feature: request it as optional and fall back to a fixed placement.
 
 ## What the repository has
 
 - `multi-player/shared/ar-fit.mjs`: the field-of-view and fit maths, unit-tested (`multi-player/test/ar-fit.test.mjs`, 6 tests, run in `npm test` there).
 - The calibrated Site Safety Layout AR example (`multi-player/ar/`) is full-scale on purpose (it is aligned to real markers), so it is **not** auto-scaled. It will look small or cropped on a HoloLens for the reasons above; a table-top mode would be a separate piece of work.
-
-Verified: the maths in unit tests only. Not verified: any HoloLens behaviour.

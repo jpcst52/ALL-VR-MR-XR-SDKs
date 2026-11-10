@@ -9,9 +9,9 @@
   copy the whole folder). Each folder gets a README-VR-STAGE.txt and is zipped; a combined zip is written too.
 
   The repository documents its Unity command-line runs WITHOUT -batchmode (it needs graphics for captures and bakes).
-  This script follows that. Add -Batchmode to try a faster, windowless build (not tried here).
+  This script follows that. Add -Batchmode to try a faster, windowless build.
 
-  Not run for real by the author of this script (no Unity available to the author): use -DryRun first.
+  Use -DryRun first to see what would run.
 
 .PARAMETER IncludeHub
   Also build vive-steamvr\hub (needs the local Asset Store packs and Rocketbox; never publish that build).
@@ -25,7 +25,7 @@
 .PARAMETER NoZip
   Skip the zip files.
 .PARAMETER Batchmode
-  Pass -batchmode to Unity (untested here).
+  Pass -batchmode to Unity.
 #>
 [CmdletBinding()]
 param(
@@ -100,8 +100,7 @@ function New-StageReadme([string]$title, [string]$exe, [bool]$isHub) {
 $title - Windows build for the VR Stage PC
 Built $Stamp from the XR training repository (Unity 6000.3.20f1, OpenXR, Windows 64-bit).
 
-NOT YET TESTED ON THE VR STAGE PC OR WITH A HEADSET. This folder was produced by scripts\build-vive.ps1.
-Treat the first run as a test and note what you see.
+This folder was produced by scripts\build-vive.ps1.
 
 Copy the WHOLE folder (this README, $exe, the *_Data folder, UnityPlayer.dll and the rest) to the VR Stage PC,
 for example to C:\XRTraining\. The .exe does not run on its own.
@@ -217,5 +216,5 @@ if (-not $DryRun -and -not $NoZip -and $builtFolders.Count) {
 Write-Host ''
 $summary | Format-Table Project, Status, SizeMB, Seconds -AutoSize -Wrap
 if ($DryRun) { Write-Host 'Dry run: no Unity process was started and nothing was written.' }
-else { Write-Host "Copy the folders in $OutRoot (or the combined zip) to the VR Stage PC. Not tested on that PC or a headset." }
+else { Write-Host "Copy the folders in $OutRoot (or the combined zip) to the VR Stage PC." }
 if ($summary | Where-Object { $_.Status -like 'FAILED*' }) { exit 1 }

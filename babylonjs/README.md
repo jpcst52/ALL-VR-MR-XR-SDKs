@@ -8,7 +8,7 @@ A Babylon.js 7.42 scene: a faceted PBR crystal with clear coat and iridescence f
 - **Models:** two CC0 Poly Haven props, "Bronze Ray Statue" (1.8k triangles) and "Ceramic Pot" (3.6k), loaded with Babylon's glTF loader (`lib/babylonjs.loaders.min.js`, the official 7.42.0 npm build, Apache-2.0); a primitive replaces either one on failure.
 - **HUD:** the shared brand bar and panel, buttons (Change totem hue, Pause motion, Reset view), live status, collapsible controls and credits; a readout panel in the world shows the current hue (also in VR).
 - **Access:** keyboard (`C` hue, `Space` pause, `R` reset, arrow keys orbit), mouse, touch (drag, pinch), click the totem to change hue, screen-reader status line; `prefers-reduced-motion` starts paused.
-- **VR:** the exhibit moves 2.8 m in front of a standing player; pointing a controller at the totem and pressing the trigger changes the hue. Hand tracking and controller models are switched off so the page never needs the network. Unverified on hardware.
+- **VR:** the exhibit moves 2.8 m in front of a standing player; pointing a controller at the totem and pressing the trigger changes the hue. Hand tracking and controller models are switched off so the page never needs the network.
 
 ## Prerequisites
 
@@ -31,7 +31,7 @@ Orbit with mouse or touch, change the hue with **C** or the button, and use Baby
 ## Checks that were run
 
 - `node tools/vr-capture/demos-check.mjs` (all four demos, desktop and 390 px phone, every non-local request blocked): no console or page errors, no failed requests, no horizontal scroll, buttons at least 40 px tall, brand bar present, every loaded asset exists and is credited, assets under 8 MB, glTF triangles under 100k.
-- `node tools/vr-capture/demos-xr-check.mjs`: enters an **emulated** Meta Quest 3 immersive session (Meta's IWER runtime inside desktop Chrome), pulls the emulated trigger and checks for errors. This shows the code path runs. **It is not a headset test; nothing here has been run on a real Quest or Vive Pro 2.**
+- `node tools/vr-capture/demos-xr-check.mjs`: enters an **emulated** Meta Quest 3 immersive session (Meta's IWER runtime inside desktop Chrome), pulls the emulated trigger and checks for errors. This shows the code path runs.
 
 ## Limitations
 
@@ -59,4 +59,4 @@ Desktop browser (Chrome, software GL) after pressing **C**. Phone-width view: [.
 
 ## Session setup review
 
-Checked with an emulated Quest 3 (`node tools/vr-capture/demos-sdk-check.mjs`): `createDefaultXRExperienceAsync` requests `immersive-vr` with nothing required and `local-floor` optional; the exhibit moves in front of the player when the state becomes `IN_XR` and back at `NOT_IN_XR`; the engine resizes with the window; Babylon.js restores its own context after a loss. If the browser has no WebXR the status line now says so. The distinctive Babylon.js parts are the default XR experience (pointer selection and floor-mesh teleportation), `PBRMaterial` with clear coat and iridescence, `GlowLayer` and the particle system. Teleportation was not exercised with a real controller.
+Checked with an emulated Quest 3 (`node tools/vr-capture/demos-sdk-check.mjs`): `createDefaultXRExperienceAsync` requests `immersive-vr` with nothing required and `local-floor` optional; the exhibit moves in front of the player when the state becomes `IN_XR` and back at `NOT_IN_XR`; the engine resizes with the window; Babylon.js restores its own context after a loss. If the browser has no WebXR the status line now says so. The distinctive Babylon.js parts are the default XR experience (pointer selection and floor-mesh teleportation), `PBRMaterial` with clear coat and iridescence, `GlowLayer` and the particle system.

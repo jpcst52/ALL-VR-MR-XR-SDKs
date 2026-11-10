@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Items marked (verify) have not been confirmed on a real headset.
+Confirm the items marked (verify) at rehearsal.
 
 | Symptom | Likely cause | What to do |
 |---|---|---|

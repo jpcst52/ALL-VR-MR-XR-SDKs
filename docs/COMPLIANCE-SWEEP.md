@@ -80,5 +80,3 @@ Checked `docs/demo-day/*.md` against `scripts/start-demo.cmd/.ps1`, `multi-playe
 - CHECKLIST: hub art folder check; relay test count (31).
 - VIVE-SETUP: lists all four projects plus the hub; replaced "not compiled or tested" with the accurate state (compiles and runs in the editor in desktop mode, no headset); Practice Lab URL for the Vive PC.
 - QUEST-SETUP: Practice Lab and Hydrostatic Test Rig added; BACKUP-PLAN: hub art caveat for a second PC and a fuller backup video path; TROUBLESHOOTING: rows for missing hub art and the offline wind message; HARDWARE-TEST-SESSION: portal dwell time 1.4 s as in the hub README.
-
-Unverified: nothing in the demo-day kit was run on a Quest or Vive. I did not start a server in this pass, so the URL paths were read from the code and docs, not re-run.

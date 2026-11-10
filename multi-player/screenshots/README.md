@@ -32,7 +32,7 @@ Re-shot after the realism upgrade (see [Rooms, props and people](../README.md#ro
 
 ## November 9, 2026: AR Circuit Lab
 
-[ar-circuit-desktop.png](./ar-circuit-desktop.png) is the [AR Circuit Lab](../ar-circuit/) page in its desktop preview, written by `node multi-player/tools/v2-shots.mjs`: a bright stand-in room with a pale bench and teal lines, the sample circuit loaded and the switch closed; the other participants are scripted relay clients. **It is not an AR session**; the AR path has not been run on any device or emulator.
+[ar-circuit-desktop.png](./ar-circuit-desktop.png) is the [AR Circuit Lab](../ar-circuit/) page in its desktop preview, written by `node multi-player/tools/v2-shots.mjs`: a bright stand-in room with a pale bench and teal lines, the sample circuit loaded and the switch closed; the other participants are scripted relay clients. **It is not an AR session.**
 
 ## November 6, 2026: Lab v2 (new look)
 

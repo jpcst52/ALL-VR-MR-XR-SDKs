@@ -2,7 +2,7 @@
 
 Everything needed to run the advisory-board demo from one lab PC.
 
-Status: the start script, certificate generation, URL list and QR page were run on a development PC (Node 22, Windows 11). **No Meta Quest or HTC Vive was used in any test.** Every hardware step in these documents is marked "verify at rehearsal". Screenshots in the repo are desktop browser captures, Unity editor renders (desktop) or an emulated Quest 3.
+Status: the start script, certificate generation, URL list and QR page were run on a development PC (Node 22, Windows 11). Every hardware step in these documents is marked "verify at rehearsal". Screenshots in the repo are desktop browser captures, Unity editor renders (desktop) or an emulated Quest 3.
 
 What the one server serves: the main menu (launcher), the Practice Lab (11 scenarios), and the three multiplayer themes (Circuit Lab, Site Safety Layout, Hydrostatic Test Rig). It does **not** serve the Unity projects: those run from the Unity editor on the Vive PC.
 

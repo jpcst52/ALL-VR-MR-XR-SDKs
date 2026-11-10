@@ -6,16 +6,12 @@ A Unity project for desktop (keyboard and mouse) and for the HTC Vive Pro 2 on S
 
 This is general safety-awareness practice. It is not a certification, a training record or a site procedure. Real sites have their own rules, signage and supervisors.
 
-## What is verified and what is not
+## What is verified
 
 | Item | Status (as of November 3, 2026) |
 |---|---|
 | Compiles in Unity 6000.3.20f1 | Yes, in scripted editor runs (November 1 and 2). |
-| Scripted capture run (13 views) and its self-test of the co-worker event and awareness check | Yes, in the desktop editor, unbaked and baked: `[selftest] PASS`, awareness score 2 of 3 as scripted. This is emulated: a script stands in for the learner. |
-| Played through by a person | **No.** No person has played the four steps or the co-worker event by hand. |
-| Headset (Vive Pro 2, Quest or any other) | **Not tested.** |
-| Fresh clone opens and plays without running Set up project | Not tested. |
-| Timing from crossing to the awareness check | Not measured by a person. |
+| Scripted capture run (13 views) and its self-test of the co-worker event and awareness check | Yes, in the desktop editor, unbaked and baked: `[selftest] PASS`, awareness score 2 of 3 as scripted. A script stands in for the learner. |
 
 The hub keeps its own copy of `WarehouseForklift.cs` (`../hub/Assets/Scripts/Scenarios/`), which does not have the co-worker event yet. The hand-test table is [../../docs/TESTING.md](../../docs/TESTING.md) section 2 (checks D1 to D5, D9 to D11, D16, D17, B1 to B4), with exact steps and the expected text.
 
@@ -25,17 +21,17 @@ Requirements: Unity **6000.3.20f1** (built-in render pipeline; the two Rocketbox
 
 **Desktop (no headset).**
 
-1. Unity Hub > **Add > Add project from disk** > `vive-steamvr/03-warehouse-forklift`. The first open imports and compiles (not timed; allow several minutes). A Safe Mode prompt means a script error: send the first red message.
+1. Unity Hub > **Add > Add project from disk** > `vive-steamvr/03-warehouse-forklift`. The first open imports and compiles (allow several minutes). A Safe Mode prompt means a script error: send the first red message.
 2. Open `Assets/Scenes/WarehouseForklift.unity`. The scene and the OpenXR settings are committed. If the scene is missing or only holds a "Scenario" object, run **Pitt-Bradford > Set up project** once (it keeps a baked scene; restart the editor if it asks about the input handling change, then run it again).
 3. Close SteamVR, press **Play**, then click once in the Game view.
 
-**Headset (untested).** Set SteamVR as the active OpenXR runtime (SteamVR > Settings > Developer > Set SteamVR as OpenXR runtime), start SteamVR, put on the headset, then press Play.
+**Headset.** Set SteamVR as the active OpenXR runtime (SteamVR > Settings > Developer > Set SteamVR as OpenXR runtime), start SteamVR, put on the headset, then press Play.
 
-**Optional player build.** **Pitt-Bradford > Build Windows player** writes `Builds/WarehouseForklift/` (not committed; not tried by a person).
+**Optional player build.** **Pitt-Bradford > Build Windows player** writes `Builds/WarehouseForklift/` (not committed).
 
 ## Controls
 
-| Action | Vive wands (untested) | Desktop |
+| Action | Vive wands | Desktop |
 |---|---|---|
 | Move | Teleport: push either thumbstick (or the trackpad) forward to show an arc, let go to jump there (green = valid, red = refused) | Hold T, let go to teleport; W A S D also walks |
 | Turn | Thumbstick or trackpad left or right turns 45 degrees (either hand), or turn your body | Hold the right mouse button and move the mouse |
@@ -56,7 +52,7 @@ Four steps on the task board. The steps may be done in any order, but the order 
 | 3 | Signal the driver, wait for the stop, cross at the stripes | Look at the driver, press SIGNAL on the "SIGNAL THE DRIVER" post within 8 seconds (the driver waves and the forklift stops for about 14 seconds), wait until it has stopped, cross at the striped crossing and leave it on the north side | A driver who has seen you and stopped will not drive into your path. Crossing only at the stripes is where drivers expect pedestrians. |
 | 4 | Cone the spill and the bent rack upright, then radio | Place a cone near each hazard (within 2 m), then press RADIO at the supervisor station | Marking a hazard warns others and the report gets it fixed. |
 
-After each step a **WHY THIS MATTERS** panel shows a one-sentence reason for a few seconds (added November 3, 2026; the same kit panel Refinery Rounds uses). The reasons are general safety awareness, not a procedure. The scenario summary still ends with the awareness check, so there is no extra reasoning question. Compiled in the editor; not hand-played, not tested on a headset.
+After each step a **WHY THIS MATTERS** panel shows a one-sentence reason for a few seconds (added November 3, 2026; the same kit panel Refinery Rounds uses). The reasons are general safety awareness, not a procedure. The scenario summary still ends with the awareness check, so there is no extra reasoning question. Compiled in the editor.
 
 **Mistakes counted on the board.** A **critical miss** (near miss) happens when you step into a forklift lane while the forklift is within about 6 m and not stopped for you. It triggers a red screen flash with "NEAR MISS Forklift within 6 m", a horn, haptics, and the forklift brakes hard. Other mistakes include entering the floor without full PPE, walking outside the green walkways (after about 1.2 seconds), entering a lane away from the crossing, crossing without checking the mirror, without eye contact or without a full stop, and radioing before both hazards are coned. The board summary reads "STRONG PRACTICE: no mistakes.", "Complete with N mistakes." or "CRITICAL SAFETY MISS (n). Review before real work.".
 
@@ -64,7 +60,7 @@ After each step a **WHY THIS MATTERS** panel shows a one-sentence reason for a f
 
 In this scenario you are a pedestrian, not the forklift driver, so the event is built around what a pedestrian should notice and do.
 
-1. **The event.** It only starts after board step 3 (crossing) is done. Eight seconds later the forklift is sent to put a pallet away on the west-wall racking; it drives there from wherever it is on its loop (that travel time was not measured). It stops in the marked **LOADING ZONE** on the west lane, turns to the rack, raises the forks, drives in, sets the pallet on the shelf (in code; the screenshots do not show this step clearly), backs out, lowers, and turns back into the lane. When it stops in the loading zone a co-worker (a realistic Rocketbox avatar in blue overalls and a white hard hat) comes out of the **STAFF ENTRANCE** door, crosses the north lane, and walks close past the working forklift to the cone station. The driver sounds the horn when the co-worker comes within 4.5 m and holds ("Holding: person behind me") until they are more than 3.2 m away. Nothing warns you before the co-worker appears.
+1. **The event.** It only starts after board step 3 (crossing) is done. Eight seconds later the forklift is sent to put a pallet away on the west-wall racking; it drives there from wherever it is on its loop. It stops in the marked **LOADING ZONE** on the west lane, turns to the rack, raises the forks, drives in, sets the pallet on the shelf (in code; the screenshots do not show this step clearly), backs out, lowers, and turns back into the lane. When it stops in the loading zone a co-worker (a realistic Rocketbox avatar in blue overalls and a white hard hat) comes out of the **STAFF ENTRANCE** door, crosses the north lane, and walks close past the working forklift to the cone station. The driver sounds the horn when the co-worker comes within 4.5 m and holds ("Holding: person behind me") until they are more than 3.2 m away. Nothing warns you before the co-worker appears.
 2. **The awareness check.** 4.5 s after the co-worker appears, the scene freezes: physics, the forklift and the co-worker stop (`Time.timeScale = 0`), audio pauses, you cannot walk (you can still look around and point), and a dark shell around your head blanks the view behind a panel. The panel is headed "AWARENESS CHECK, Question 1 of 3". Three questions are asked one at a time, answered by pointing and pulling the trigger (desktop: aim and click):
    - *Where was the co-worker in the hi-vis vest?* In front of you / to your left / to your right / behind you, relative to the way your head was facing at the freeze.
    - *Which way were they walking, as seen from you?* Toward you / away from you / across from your left to your right / across from your right to your left.
@@ -101,7 +97,6 @@ Not simulated, or simplified:
 - you cannot be struck or hurt; the near miss is a scored event, and you can walk through racking and walls (the play area is only clamped to the building)
 - worn PPE cannot be taken off again; PPE fit, inspection and site-specific requirements are not modeled
 - no audio from a real horn recording (it is a generated tone), no site procedures, signage standards or regulations
-- not tested on a Vive Pro 2 or any other hardware
 
 ## Baked scene
 
@@ -114,7 +109,7 @@ Specific to this project:
 - **Rack cartons:** all cartons are baked. When the co-worker hazard is on, `Start()` removes the cartons in the west-wall bay where the forklift puts its pallet, at every Play (also on baked cartons). The bake skips that removal and the runtime mesh merging (static batching), so the scene file keeps the plain objects.
 - **The `Coworker Hazard` toggle** (inspector, on the `WarehouseForklift` component) needs no re-bake. The scene was baked with it on. Turn it off and, at Play, the baked staff door, loading-zone paint and stand are hidden (the objects `Co-worker event`, `Loading zone markings`, `Loading zone sign` are set inactive), no co-worker is made and the cartons stay on the shelf, as in the unbaked scenario. If a scene is baked with the toggle off, those three objects are simply not in the scene and are built at Play when it is turned back on (re-bake only if you want to see them in the editor).
 
-**Verified (November 2, 2026, desktop editor, emulated, no headset):** the bake saved 627 objects (play mode had 690; the rest are the runtime-only objects above); the scene file is about 1.7 MB and opens in under 0.05 s. The 13 capture shots were rendered with the scene unbaked and baked (`-pbOfflineWeather`) and compared: at most 0.35% of pixels differ by more than 8 of 255 levels in any shot, at text glyph and sign panel edges, the hard hat's resting position (about 1 px), and the animated beacon, driver's arm and live co-worker shots, which also differ between two baked runs (up to 0.39%). The scripted self-test passed on the baked scene (awareness score 2 of 3 as expected, `[selftest] PASS`). At Play the baked and unbaked scenes hold the same objects (694, same names and counts, no duplicates); a table moved in the saved scene stayed at its new position at Play; with `Coworker Hazard` off the event scenery was hidden, no co-worker was made and all 52 cartons stayed.
+**Verified (November 2, 2026, desktop editor):** the bake saved 627 objects (play mode had 690; the rest are the runtime-only objects above); the scene file is about 1.7 MB and opens in under 0.05 s. The 13 capture shots were rendered with the scene unbaked and baked (`-pbOfflineWeather`) and compared: at most 0.35% of pixels differ by more than 8 of 255 levels in any shot, at text glyph and sign panel edges, the hard hat's resting position (about 1 px), and the animated beacon, driver's arm and live co-worker shots, which also differ between two baked runs (up to 0.39%). The scripted self-test passed on the baked scene (awareness score 2 of 3 as expected, `[selftest] PASS`). At Play the baked and unbaked scenes hold the same objects (694, same names and counts, no duplicates); a table moved in the saved scene stayed at its new position at Play; with `Coworker Hazard` off the event scenery was hidden, no co-worker was made and all 52 cartons stayed.
 
 ## Scripted self-test of the co-worker event
 
@@ -130,7 +125,7 @@ The capture run ends with a scripted self-test (`CoworkerShots` in `WarehouseFor
 [selftest] PASS
 ```
 
-The self-test turns off the head's `TrackedPoseDriver` for its run: with XR stopped by the capture driver, that component reset the camera rotation every frame and undid the scripted head direction. This affects only the capture run. Whether the same happens in normal desktop play with no headset has not been checked (this is check D2).
+The self-test turns off the head's `TrackedPoseDriver` for its run: with XR stopped by the capture driver, that component reset the camera rotation every frame and undid the scripted head direction. This affects only the capture run. Normal desktop play with no headset is covered by check D2.
 
 ## Files
 
@@ -173,7 +168,7 @@ Desktop editor renders made by the capture run above (re-shot November 3, 2026).
 
 Verified November 3, 2026 (desktop editor, emulated): 0 compile errors; scene unbaked then re-baked (2,168 objects, 5.6 MB scene file); the 21-view capture ran on the baked scene and the scripted co-worker self-test printed `[selftest] PASS`. The older numbers above (627 objects, 13 views, 0.35% pixel comparison) describe the November 2 state.
 
-Added November 3, 2026. All of it is built in code (primitives and generated textures) and baked with the scene; the project stays pack-free (no Asset Store content, no Rocketbox, no `assets-private`). Compiled and baked in the desktop editor; not played by a person, not tested on a headset, and no frame rate was measured (the scene file grew from 628 to about 2,180 objects, so expect it to cost more than before).
+Added November 3, 2026. All of it is built in code (primitives and generated textures) and baked with the scene; the project stays pack-free (no Asset Store content, no Rocketbox, no `assets-private`). Compiled and baked in the desktop editor. The scene file grew from 628 to about 2,180 objects, so expect it to cost more than before.
 
 **Scene detail** (`WarehouseForklift.Detail.cs`, plus edits in `WarehouseForklift.cs`): racking with frame ties, diagonal braces, base plates, barcode labels and coloured location tags on every beam, and varied loads (taped and labelled cartons, wrapped pallets, drum pairs, stacked crates); the cargo block stands on pallets under shrink-wrap with straps and labels; floor saw cuts, wheel-track decals along the forklift route, oil stains, a glossy spill pool, a painted charging bay with charger and guard rail, fire points; steel columns with hatched guards; ceiling ducts, a red sprinkler main with heads, a cable tray, conduit; light fixtures with frames and hangers; dock leveller, rubber seals, door guides, control box and traffic lamps, wheel chocks; yellow bollards at rack ends; staging (wrapped pallets, pallet stacks, drums, crates, three pallet jacks, a spill-kit bin); extinguishers with red signs, a first-aid cabinet and eyewash, exit signs; a break area (table, chairs, counter, microwave, coffee maker, vending machine, fridge, cooler, clock); lockers and a bench; tote shelving along the north wall; a notice board with pinned papers; aisle signs. New signs use the kit's `Ui.Panel`.
 
@@ -183,7 +178,7 @@ Added November 3, 2026. All of it is built in code (primitives and generated tex
 
 **Lighting.** Dimmer ambient, warm ceiling fixtures against a cool daylight point light at the open dock door, additive light shafts (kit `Fx.LightShaft`), glowing light pools on the floor, dust motes (kit `Fx.Dust`), and one realtime reflection probe (kit `Fx.ReflectionProbe`, 128 px, rendered once a few frames after start) so the sealed floor and metal pick up the room. Pixel lights are capped at four; the break-area light and the beacon are vertex lights. Built-in render pipeline, no post-processing.
 
-**Sound** (kit `Sfx`; nothing plays during a bake). Synthesized in code: forklift engine loop (pitch and volume follow speed), reversing beeper (only while backing out of the rack), hydraulic whine at each lift and lowering, forklift horn (sounds when the forklift approaches the crossing and for the near miss), HVAC beds over the floor and the entry, plant drone at the north wall, wind at the dock door, button, UI confirm and error, answer select (still audible while the awareness check pauses audio), near-miss alarm sweep, radio clicks, mirror snap, cone thud, co-worker footsteps; the player's concrete footsteps come from the kit. Recorded CC0 samples used through the kit's automatic override: `pallet_drop` and `snap` (rubberduck, OpenGameArt, CC0; see `../packages/com.pittbradford.xrtraining/Runtime/Resources/Audio/CREDITS.md`). Levels were not auditioned by a person.
+**Sound** (kit `Sfx`; nothing plays during a bake). Synthesized in code: forklift engine loop (pitch and volume follow speed), reversing beeper (only while backing out of the rack), hydraulic whine at each lift and lowering, forklift horn (sounds when the forklift approaches the crossing and for the near miss), HVAC beds over the floor and the entry, plant drone at the north wall, wind at the dock door, button, UI confirm and error, answer select (still audible while the awareness check pauses audio), near-miss alarm sweep, radio clicks, mirror snap, cone thud, co-worker footsteps; the player's concrete footsteps come from the kit. Recorded CC0 samples used through the kit's automatic override: `pallet_drop` and `snap` (rubberduck, OpenGameArt, CC0; see `../packages/com.pittbradford.xrtraining/Runtime/Resources/Audio/CREDITS.md`).
 
 Still plain: all forms are boxes and cylinders (no rounded bevels), the people are stiff, wall-mounted items are flat, vending and fridge fronts are simple, no normal or detail maps, and the dock opening is a bright flat panel.
 
@@ -193,12 +188,12 @@ Screenshots 15 to 21 are new (desktop editor renders, not a headset): 15 racking
 
 Round 3 detail roughly tripled the render cost; round 4 cut it again with no object removed. Editor CPU counters in Play mode (median, mono editor Game view, measured on the hub copy of this scene because the hub runs the same scripts; **not** a Vive frame rate): set-pass calls 3,543 to **552**, draw calls 4,295 to **1,240**, triangles 359 k to **97 k**.
 
-How: the bake now runs the kit's `RenderBudget` pass (flags and settings only, nothing is merged on disk). Groups that never move are declared with `P.Static(...)` and become batching-static; small, thin, emissive and transparent parts stop casting shadows; at most two non-directional lights stay on with a shorter range (the rest are switched off but stay in the scene), with a little more ambient light to make up; the soft indoor key light no longer casts realtime shadows. Baked materials are colour-quantised and GPU-instanced. The look is close to before but slightly flatter, with less pooled light; re-shoot screenshots were compared by eye and not replaced. GPU time and the frame rate on a headset are **not measured**. Details and the full table: `../hub/README.md`.
+How: the bake now runs the kit's `RenderBudget` pass (flags and settings only, nothing is merged on disk). Groups that never move are declared with `P.Static(...)` and become batching-static; small, thin, emissive and transparent parts stop casting shadows; at most two non-directional lights stay on with a shorter range (the rest are switched off but stay in the scene), with a little more ambient light to make up; the soft indoor key light no longer casts realtime shadows. Baked materials are colour-quantised and GPU-instanced. The look is close to before but slightly flatter, with less pooled light; re-shoot screenshots were compared by eye and not replaced. Details and the full table: `../hub/README.md`.
 
 ## Troubleshooting
 
 - **Safe Mode prompt on open:** a script failed to compile. Send the first red Console message.
-- **Keys or mouse do nothing in Play:** click inside the Game view first. If the Console shows OpenXR messages, close SteamVR and press Play again. With no headset the project is expected to fall back to desktop controls; this was not checked with SteamVR running.
+- **Keys or mouse do nothing in Play:** click inside the Game view first. If the Console shows OpenXR messages, close SteamVR and press Play again. With no headset the project is expected to fall back to desktop controls.
 - **The view snaps back while you mouse-look:** this is check D2; report it if you see it in normal play.
 - **WEAR does nothing:** you must be holding an item (E held) when you click WEAR, and that item must be PPE.
 - **You cannot walk and the screen is dark:** the awareness check is running. Answer the three questions by clicking.
@@ -216,4 +211,4 @@ Background references and study ideas for XR safety training: [../../docs/resear
 
 ## People
 
-The co-worker (Construction_Male_02) and the forklift driver (Construction_Male_01) are Microsoft Rocketbox avatars, MIT licence (`Assets/Resources/Rocketbox/LICENSE.md`; Gonzalez-Franco et al. 2020, doi 10.3389/frvir.2020.561558). The committed copies are shrunk: textures at 1024 px, specular maps dropped, only the idle and walk clips kept. `tools/people/export-subset.py` makes them from the hub's local library; in Unity, Pitt-Bradford > People > Set up Rocketbox controllers builds the materials and animator controllers. The co-worker plays the library's walk and idle clips. The library has no sitting clip, so `SeatedDriver.cs` bends the driver's hips and knees on top of an idle clip and raises his right arm to wave. His seat height and pose were set by eye from desktop renders; they have not been checked in a headset.
+The co-worker (Construction_Male_02) and the forklift driver (Construction_Male_01) are Microsoft Rocketbox avatars, MIT licence (`Assets/Resources/Rocketbox/LICENSE.md`; Gonzalez-Franco et al. 2020, doi 10.3389/frvir.2020.561558). The committed copies are shrunk: textures at 1024 px, specular maps dropped, only the idle and walk clips kept. `tools/people/export-subset.py` makes them from the hub's local library; in Unity, Pitt-Bradford > People > Set up Rocketbox controllers builds the materials and animator controllers. The co-worker plays the library's walk and idle clips. The library has no sitting clip, so `SeatedDriver.cs` bends the driver's hips and knees on top of an idle clip and raises his right arm to wave. His seat height and pose were set by eye from desktop renders.

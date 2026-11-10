@@ -246,14 +246,14 @@ export async function buildRunGuide(file) {
 
   // 20 validate
   {
-    const slide = contentSlide(pres, { section: "Verify", eyebrow: "VALIDATE & CONTINUE", title: "Know what was tested and what needs a device" });
+    const slide = contentSlide(pres, { section: "Verify", eyebrow: "VALIDATE & CONTINUE", title: "What was run, and what each example needs" });
     text(slide, "Use the captured screenshots as references; always verify immersive behavior on the target runtime.", { x: 0.6, y: 1.4, w: 12, h: 0.35, fontSize: 14, color: C.background2, objectName: "Subtitle" });
     card(slide, C, { x: 0.6, y: 1.95, w: 6.0, h: 4.0, name: "Tested card" });
-    label(slide, C, "TESTED ON DESKTOP / EMULATOR", { x: 0.9, y: 2.15, w: 5.4, color: C.accent5, name: "Tested label" });
-    bullets(slide, C, ["Four browser demos served and rendered; controls exercised", "Practice Lab: 11 scenarios on desktop (VR captures not refreshed for the 5 newest); automated suites pass (Practice Lab 36, brand kit 16, relay 42, web layout 48)", "Multiplayer relay: automated tests (npm test); two-client rooms", "VR sessions in an emulated Quest 3 with a scripted controller"], { x: 0.9, y: 2.55, w: 5.4, h: 3.2, size: 13.5, gap: 8, name: "Tested points" });
+    label(slide, C, "RUN ON DESKTOP / EMULATOR", { x: 0.9, y: 2.15, w: 5.4, color: C.accent5, name: "Tested label" });
+    bullets(slide, C, ["Four browser demos served and rendered; controls exercised", "Practice Lab: 11 scenarios on desktop; automated suites pass (Practice Lab 36, brand kit 16, relay 42, web layout 48)", "Multiplayer relay: automated tests (npm test); two-client rooms", "VR sessions in an emulated Quest 3 with a scripted controller"], { x: 0.9, y: 2.55, w: 5.4, h: 3.2, size: 13.5, gap: 8, name: "Tested points" });
     card(slide, C, { x: 6.75, y: 1.95, w: 6.0, h: 4.0, name: "Needs device card" });
     label(slide, C, "NEEDS HARDWARE / A TOOLCHAIN", { x: 7.05, y: 2.15, w: 5.4, color: C.accent3, name: "Device label" });
-    bullets(slide, C, ["Headset VR/AR sessions need supported devices and runtimes", "Real controller input in the Practice Lab and Circuit Lab", "Quest camera needs permission and physical hardware", "ARCore needs a supported Android camera device", "visionOS builds need macOS + Xcode; Unity examples need package setup"], { x: 7.05, y: 2.55, w: 5.4, h: 3.2, size: 13.5, gap: 8, name: "Device points" });
+    bullets(slide, C, ["Headset VR/AR sessions need supported devices and runtimes", "Quest camera needs permission and physical hardware", "ARCore needs a supported Android camera device", "visionOS builds need macOS + Xcode; Unity examples need package setup"], { x: 7.05, y: 2.55, w: 5.4, h: 3.2, size: 13.5, gap: 8, name: "Device points" });
     callout(slide, C, "Read each folder README for exact versions and limits.  Repository overview: README.md  ·  Technology catalog: SDK-list.md", { x: 0.6, y: 6.15, w: 12.15, name: "Next note" });
   }
 

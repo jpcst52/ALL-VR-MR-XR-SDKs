@@ -2,7 +2,7 @@
 
 `scripts\build-vive.cmd` (or `scripts\build-vive.ps1`) makes Windows 64-bit standalone players of the Unity training projects so the `.exe` folders can be copied to the VR Stage PC (HTC Vive Pro 2 with SteamVR).
 
-**Honest status.** Run for real on 2026-11-08 on the author's PC: all four projects build (148 to 204 MB each, about 10 minutes each). The first run failed because `SceneLook.cs` used `Light.shadowRadius`, an editor-only API that the editor accepts but a player build rejects; that is fixed. The Warehouse build was started once without a window and ran 25 s with no crash. **No build has been run on a headset or on the VR Stage PC.** Lesson: the editor compile check (`scripts/unity-compile-check.ps1`) does not catch editor-only APIs in Runtime code, so build one project after kit edits.
+**Status.** Run for real on 2026-11-08 on the author's PC: all four projects build (148 to 204 MB each, about 10 minutes each). The first run failed because `SceneLook.cs` used `Light.shadowRadius`, an editor-only API that the editor accepts but a player build rejects; that is fixed. The Warehouse build was started once without a window and ran 25 s with no crash. Lesson: the editor compile check (`scripts/unity-compile-check.ps1`) does not catch editor-only APIs in Runtime code, so build one project after kit edits.
 
 ## Run it
 
@@ -18,13 +18,13 @@ powershell -ExecutionPolicy Bypass -File scripts\build-vive.ps1 -IncludeHub    #
 
 `npm run build:vive` runs the same script. Options: `-UnityExe <path>` (or set `UNITY_EXE`; default `C:\Program Files\Unity\Hub\Editor\6000.3.20f1\Editor\Unity.exe`), `-Projects <names>`, `-NoZip`, `-Batchmode`, `-DryRun` (alias `-WhatIf`).
 
-The projects are built one at a time. For each, Unity is started with `-projectPath <project> -executeMethod ProjectSetup.BuildWindows -quit -logFile builds\logs\<project>.log`. `ProjectSetup.BuildWindows` already exists in projects 01 to 04 (it is the menu item Pitt-Bradford > Build Windows player and calls the kit's `Configurator.BuildWindows`, which builds the scenes enabled in Build Settings for Windows 64-bit). The repository's other Unity command-line runs (captures, bakes) are documented without `-batchmode` because they need graphics, so the script does not pass it either; `-Batchmode` is there to try, untested. Each Unity start takes minutes (script compile, shaders, player build): expect a long first run.
+The projects are built one at a time. For each, Unity is started with `-projectPath <project> -executeMethod ProjectSetup.BuildWindows -quit -logFile builds\logs\<project>.log`. `ProjectSetup.BuildWindows` already exists in projects 01 to 04 (it is the menu item Pitt-Bradford > Build Windows player and calls the kit's `Configurator.BuildWindows`, which builds the scenes enabled in Build Settings for Windows 64-bit). The repository's other Unity command-line runs (captures, bakes) are documented without `-batchmode` because they need graphics, so the script does not pass it either; `-Batchmode` is there to try. Each Unity start takes minutes (script compile, shaders, player build): expect a long first run.
 
 **The hub needs files that are not in git.** Its scenes (`Assets\Scenes\Local`), baked data and the licensed Asset Store packs and Rocketbox people are git-ignored, so on a fresh checkout the script reports the hub as SKIPPED (listing what is missing) and still builds the other four. To build the hub on another PC follow [BUILD-THE-HUB.md](BUILD-THE-HUB.md) (pack the files on the lab PC with `scripts\pack-hub-assets.cmd`, unpack them with `scripts\unpack-hub-assets.cmd`). Projects 01 to 04 build from a plain checkout. The combined zip `XR-Training-Vive-<date>.zip` holds projects 01 to 04 only; the hub has its own `hub.zip` and must stay off GitHub and shared drives.
 
 After each build the script checks the log for `error CS`, requires the line `[build] Succeeded` and the `.exe`, then copies the build folder. A failed project is reported and the next one still runs; the exit code is 1 if any failed.
 
-**SteamVR plugin migration (in progress, 2026-11-08).** Projects are being moved from the custom OpenXR rig to Valve's SteamVR plugin. A migrated project needs `powershell -File scripts\setup-steamvr.ps1 -Projects <folder>` before `build-vive` (it is not run automatically yet; Unity editors closed). Only project 01 is migrated so far, and only tested in SteamVR's simulated headset; 02 to 04 and the hub may still be the old build, and no migrated build has been tried on a real Vive. See [STEAMVR-REBUILD.md](STEAMVR-REBUILD.md). The OpenXR-runtime step below applies to the old builds.
+**SteamVR plugin migration (in progress, 2026-11-08).** Projects are being moved from the custom OpenXR rig to Valve's SteamVR plugin. A migrated project needs `powershell -File scripts\setup-steamvr.ps1 -Projects <folder>` before `build-vive` (it is not run automatically yet; Unity editors closed). Only project 01 is migrated so far and runs in SteamVR's simulated headset; 02 to 04 and the hub may still be the old build. See [STEAMVR-REBUILD.md](STEAMVR-REBUILD.md). The OpenXR-runtime step below applies to the old builds.
 
 ## What you get
 
@@ -55,7 +55,7 @@ The `.exe` keeps the name the project gives it (not the folder name) because Uni
 
 ## The hub
 
-`-IncludeHub` builds `vive-steamvr\hub` (lobby and the four scenarios) into `builds\vive\hub\XRTrainingHub.exe`, using `HubBuild.BuildWindows` in `vive-steamvr\hub\Assets\Editor\HubBuild.cs`. It uses local Asset Store packs and Rocketbox people: copy that build to the lab PC only and never publish it. First built 2026-11-08 (about 1 GB, 11 minutes, `-IncludeHub -Projects hub` builds only the hub); it was built but never started, so lobby navigation in the player is unverified. The hub is usually open in the owner's editor, which blocks the build. The combined zip holds projects 01 to 04 only; the hub has its own `hub.zip`.
+`-IncludeHub` builds `vive-steamvr\hub` (lobby and the four scenarios) into `builds\vive\hub\XRTrainingHub.exe`, using `HubBuild.BuildWindows` in `vive-steamvr\hub\Assets\Editor\HubBuild.cs`. It uses local Asset Store packs and Rocketbox people: copy that build to the lab PC only and never publish it. First built 2026-11-08 (about 1 GB, 11 minutes, `-IncludeHub -Projects hub` builds only the hub). The hub is usually open in the owner's editor, which blocks the build. The combined zip holds projects 01 to 04 only; the hub has its own `hub.zip`.
 
 ## If it fails
 

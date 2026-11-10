@@ -148,7 +148,7 @@ input{width:100%;box-sizing:border-box;padding:8px;font:inherit;border:1px solid
 <main><div class="card" id="qr" role="img" aria-label="QR code for the address below"></div>
 <p><code id="addr"></code></p>
 <label for="u">Address to encode</label><input id="u" type="url" spellcheck="false">
-<p>Scan with the headset's or phone's camera, or type the address in its browser. Open the <a href="./">main menu</a>. The code is drawn on this page with a bundled library, so it also works offline. Not tested on any headset.</p></main>
+<p>Scan with the headset's or phone's camera, or type the address in its browser. Open the <a href="./">main menu</a>. The code is drawn on this page with a bundled library, so it also works offline.</p></main>
 <script src="vendor/qrcode/qrcode.js"></script>
 <script>
 (function(){var def=${JSON.stringify(PAGES_URL)};

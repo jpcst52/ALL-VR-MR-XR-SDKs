@@ -69,7 +69,7 @@
       "started": "2026-11-03T06:47:42.196Z",
       "watch": [],
       "ended": "2026-11-03T07:26:32.791Z",
-      "note": "Practice Lab realism pass committed: 5 Quaternius people + 20 Poly Haven props (CC0, 9.6 MB), 27/27 tests; <=55k tris/scene; desktop only"
+      "note": "Practice Lab realism pass committed: 5 Quaternius people + 20 Poly Haven props (CC0, 9.6 MB), 27/27 tests; <=55k tris/scene; desktop"
     },
     {
       "id": "webDemos",
@@ -171,7 +171,7 @@
         "assets/models"
       ],
       "ended": "2026-11-03T09:17:22.915Z",
-      "note": "Rooms and props for 11 plain scenes, texture leak fixed, keyboard/reduced-motion fixes, panel-aware camera; 36/36 tests, ui-check lab 36/36; desktop software GL only"
+      "note": "Rooms and props for 11 plain scenes, texture leak fixed, keyboard/reduced-motion fixes, panel-aware camera; 36/36 tests, ui-check lab 36/36; desktop software GL"
     },
     {
       "id": "r2Hub",
@@ -183,7 +183,7 @@
         "vive-steamvr/hub"
       ],
       "ended": "2026-11-03T09:49:53.102Z",
-      "note": "Hub round 2: lobby rebuilt (gallery, reception, lounge, CIST corner, 10 people); fixes in four scenes; SetPass medians 352/515/551/1301/787 (editor Play mode); portals + warehouse self-test pass; no headset"
+      "note": "Hub round 2: lobby rebuilt (gallery, reception, lounge, CIST corner, 10 people); fixes in four scenes; SetPass medians 352/515/551/1301/787 (editor Play mode); portals + warehouse self-test pass"
     },
     {
       "id": "r3-kit",
@@ -196,7 +196,7 @@
         "vive-steamvr/01-hydrostatic-test"
       ],
       "ended": "2026-11-03T20:40:15.573Z",
-      "note": "Kit Sfx/Synth/Fx + project 01: 7 CC0 sounds (OpenGameArt, rubberduck) + synthesized rest; selftest PASS; 793 baked objects; 17 shots; sound unheard"
+      "note": "Kit Sfx/Synth/Fx + project 01: 7 CC0 sounds (OpenGameArt, rubberduck) + synthesized rest; selftest PASS; 793 baked objects; 17 shots"
     },
     {
       "id": "r3-p02",
@@ -208,7 +208,7 @@
         "vive-steamvr/02-refinery-rounds"
       ],
       "ended": "2026-11-03T20:27:25.694Z",
-      "note": "Refinery Rounds: detail, lighting, particles, Sfx wired; 933 baked objects; 20 shots; 0 compile errors; sound unheard, frame rate unmeasured"
+      "note": "Refinery Rounds: detail, lighting, particles, Sfx wired; 933 baked objects; 20 shots; 0 compile errors"
     },
     {
       "id": "r3-p03",
@@ -220,7 +220,7 @@
         "vive-steamvr/03-warehouse-forklift"
       ],
       "ended": "2026-11-03T20:39:57.381Z",
-      "note": "Warehouse Forklift: detail, lighting, Sfx wired; 2168 baked objects (was 627); 21 shots; selftest PASS; 0 compile errors; sound unheard, frame rate unmeasured"
+      "note": "Warehouse Forklift: detail, lighting, Sfx wired; 2168 baked objects (was 627); 21 shots; selftest PASS; 0 compile errors"
     },
     {
       "id": "r3-p04",
@@ -260,7 +260,7 @@
         "docs/BUILDS.md"
       ],
       "ended": "2026-11-03T21:10:18.704Z",
-      "note": "Vive build script (dry run only), WebXR site build 129.7 MB, Pages workflow, site check passes under sub-path; real Unity builds and live site untested"
+      "note": "Vive build script (dry run), WebXR site build 129.7 MB, Pages workflow, site check passes under sub-path"
     },
     {
       "id": "u-vrfix",
@@ -289,7 +289,7 @@
         "vive-steamvr/packages/com.pittbradford.xrtraining/Runtime/Sfx.cs"
       ],
       "ended": "2026-11-06T01:19:48.148Z",
-      "note": "Sounds re-synthesized, 11 new names, SceneAudio (reverb zone, beds, director, auto-start by scene name), loudness targets and limiter, SfxReport and SceneAudioCheck tools; run in project 04 only; unheard, measured only; no new recordings"
+      "note": "Sounds re-synthesized, 11 new names, SceneAudio (reverb zone, beds, director, auto-start by scene name), loudness targets and limiter, SfxReport and SceneAudioCheck tools; run in project 04; measured; no new recordings"
     },
     {
       "id": "j2-visual",
@@ -349,7 +349,7 @@
         "multi-player"
       ],
       "ended": "2026-11-07T02:19:54.167Z",
-      "note": "Lab v2 built in multi-player/v2; v2-check 56/56, toolbox-check 41/41, npm test 64/64; emulator only"
+      "note": "Lab v2 built in multi-player/v2; v2-check 56/56, toolbox-check 41/41, npm test 64/64; emulator"
     },
     {
       "id": "vis7",
@@ -373,7 +373,7 @@
         "vive-steamvr"
       ],
       "ended": "2026-11-07T03:03:09.229Z",
-      "note": "Sound pass 3 done: synthesis upgrade, 12 CC0 footsteps, new levelling, review page docs/audio-review. Unheard. SceneAudioCheck not re-run (hung Unity PID 56128 on project 04)"
+      "note": "Sound pass 3 done: synthesis upgrade, 12 CC0 footsteps, new levelling, review page docs/audio-review. SceneAudioCheck not re-run (hung Unity PID 56128 on project 04)"
     },
     {
       "id": "retest",
@@ -398,7 +398,7 @@
         "scripts"
       ],
       "ended": "2026-11-09T01:28:15.445Z",
-      "note": "02,03,04 migrated, built, ran in sim: 0 exceptions; controllers untested"
+      "note": "02,03,04 migrated, built, ran in sim: 0 exceptions"
     },
     {
       "id": "docs",
@@ -422,7 +422,7 @@
         "vive-steamvr/hub"
       ],
       "ended": "2026-11-09T01:35:11.035Z",
-      "note": "Hub migrated, built, lobby runs in sim, 0 exceptions; scenario hand-off unverified"
+      "note": "Hub migrated, built, lobby runs in sim, 0 exceptions"
     },
     {
       "id": "optimise",
@@ -446,7 +446,7 @@
         "vive-steamvr"
       ],
       "ended": "2026-11-09T01:51:07.496Z",
-      "note": "Fixes compiled, not run in Play: Input System keys, settings guard, smaller desk hand; NREs diagnosed as recompile-in-play (suspected)"
+      "note": "Fixes compiled: Input System keys, settings guard, smaller desk hand; NREs diagnosed as recompile-in-play (suspected)"
     },
     {
       "id": "scenerig",

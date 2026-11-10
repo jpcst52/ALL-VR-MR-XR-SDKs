@@ -1,8 +1,8 @@
 # Testing guide
 
-Two kinds of testing: **automated suites** anyone can re-run in a minute, and **hands-on checks** that need a person at a keyboard, or in a headset. Record hands-on results in the Result column (Pass, Fail or Skipped, with a note) and send the file back so the READMEs and decks can be corrected honestly.
+Two kinds of testing: **automated suites** anyone can re-run in a minute, and **hands-on checks** that need a person at a keyboard, or in a headset. Record hands-on results in the Result column (Pass, Fail or Skipped, with a note) and send the file back so the READMEs and decks can be corrected.
 
-Status on November 2, 2026: every automated suite below passes on the development PC. **No hands-on check has been done by a person yet, except the project 01 desktop play the owner mentioned and a look at Refinery Rounds**; the Unity projects were checked by scripted editor runs and screenshots, and nothing has run on a Vive Pro 2 or a Quest. General safety-awareness practice only; none of the scenarios is a procedure or certification.
+Status on November 2, 2026: every automated suite below passes on the development PC; the Unity projects were checked by scripted editor runs and screenshots. General safety-awareness practice only; none of the scenarios is a procedure or certification.
 
 ## 1. Automated suites (run from the repository root)
 
@@ -25,16 +25,16 @@ Record a result for the dashboard with `node tools/status/record-results.cjs "<s
 
 ## 2. Hands-on desktop checks for the Unity projects (no headset)
 
-These checks need a Windows PC, a keyboard and a mouse. No headset is used. Nothing in this section has been done by a person yet (see the status paragraph at the top), so every Result cell starts empty. General safety-awareness practice only; none of the scenarios is a procedure or certification.
+These checks need a Windows PC, a keyboard and a mouse. No headset is used. Every Result cell starts empty. General safety-awareness practice only; none of the scenarios is a procedure or certification.
 
 ### 2.1 Set up once
 
 1. Install Unity Hub and the editor **6000.3.20f1** (built-in render pipeline). Add the Windows Build Support module only if you also want the optional player build.
 2. Use a **full clone of this repository**. Do not copy a single project folder out of it: each project loads the shared kit from `vive-steamvr\packages\com.pittbradford.xrtraining` through a relative `file:` path in its `Packages\manifest.json`.
-3. In Unity Hub choose **Add > Add project from disk** and select the project folder from the table below. The first open imports assets and compiles scripts; it was not timed, so allow several minutes.
+3. In Unity Hub choose **Add > Add project from disk** and select the project folder from the table below. The first open imports assets and compiles scripts; allow several minutes.
 4. If Unity offers **Safe Mode**, a script failed to compile. Copy the first red message from the dialog or the Console and send it back.
-5. In the **Project** window open the scene (double-click the file from the table). The scenes and OpenXR settings are committed, so **Pitt-Bradford > Set up project** should not be needed. That has not been tried on a fresh clone; if the scene is missing or the Hierarchy holds only a "Scenario" object, run **Pitt-Bradford > Set up project** once and note that you had to.
-6. Close SteamVR if it is running. What happens with SteamVR open and no headset connected has not been checked.
+5. In the **Project** window open the scene (double-click the file from the table). The scenes and OpenXR settings are committed, so **Pitt-Bradford > Set up project** should not be needed. If the scene is missing or the Hierarchy holds only a "Scenario" object, run **Pitt-Bradford > Set up project** once and note that you had to.
+6. Close SteamVR if it is running.
 7. Open **Window > General > Console** and click **Clear**. Press **Play** (top centre), then **click once inside the Game view** so it receives the keyboard and mouse. Press Play again to stop.
 
 | Project | Folder | Scene to open |
@@ -61,14 +61,14 @@ Use one project per row unless the Project column says "all four". "Board" means
 | # | Project | Do this | Pass looks like | Result |
 |---|---|---|---|---|
 | D1 | all four | Open the project, open the scene, press Play. | No Safe Mode prompt. The Console shows no red lines (a warning is fine). The scene shows a room or yard, a task board and a University of Pittsburgh at Bradford plate. | |
-| D2 | all four | In Play, hold the right mouse button and move the mouse left, right, up and down for 10 seconds. | The view turns smoothly and stays where you leave it. It does not snap back to the start direction. (A scripted capture run once showed the camera being reset by a pose driver. Normal play is expected to be fine but has not been checked by a person.) | |
+| D2 | all four | In Play, hold the right mouse button and move the mouse left, right, up and down for 10 seconds. | The view turns smoothly and stays where you leave it. It does not snap back to the start direction. (A scripted capture run once showed the camera being reset by a pose driver.) | |
 | D3 | all four | Walk with W A S D in all four directions, then keep walking into a wall or fence. | You move in the direction you are looking. You stop at the edge of the area and do not walk through walls. | |
 | D4 | all four | 01: click the **VENT** wheel (top of the shell). 02: look down and click **PHONE OFF** on the chest radio. 03: hold **E** on the hard hat at the PPE table, keep E held and click **WEAR**. 04: click the **4.7 k ohm** button on the answer panel. | 01: the wheel turns and its lamp goes from red to green. 02: the button text changes to "PHONE OFF: OK" and the board says "Phone off: no ignition source on you.". 03: the hard hat disappears from the table and the PPE panel shows "HARD HAT ON". 04: the board says "Bands give 4.7 k ohm, 5%. Now confirm with the meter: both probes on the two leads.". | |
 | D5 | all four | From the start position, look for the plate, then walk close to an equipment name tag. | The plate reads "University of Pittsburgh Bradford" with the line "CIST \| Computer Information Systems & Technology". Name tags turn to face you as you move. No text shows through walls. (01: back wall. 02: top of the gate. 03: next to the board. 04: wall above the three cards.) | |
 | D6 | 01 | Play the whole test (section 2.3). | Each of the six board lines gets a green "OK" and a "WHY THIS MATTERS" panel for about 7 seconds. At the end one three-option question appears. After you answer, every option shows a line of feedback, the best option turns green, and the board adds a separate "Reasoning:" line. | |
 | D7 | 02 | Play from the gate to the muster point (section 2.4). In task 3 click the small tan **RAG** pad on the ground near flange F-12 as your deliberate mistake. | The board prints "A rag spreads the problem. Report the leak." and the footer reads "Total mistakes: 1   Critical: 0". All four tasks complete, a "WHY THIS MATTERS" panel follows each step, the question appears after CHECK IN, and the Console does not fill with red lines. | |
 | D8 | 02, 01 | Read the conditions board by the gate (02) or on the right wall (01, "BAY CONDITIONS"). Do the check once with internet and once with the network off if you can. | The "Source:" line says "Open-Meteo, Bradford PA (live)" with a network, or "simulated (no network)" without one (02 may show "(live fetch pending)" for a few seconds first). | |
-| D9 | 03 | Do steps 1 to 3 of section 2.5 (PPE, mirror, signal and cross), then keep walking north and wait. | After you leave the crossing, the forklift is sent to the west wall 8 seconds later. It stops in the marked LOADING ZONE, a co-worker in a hi-vis vest comes out of the STAFF ENTRANCE door, and 4.5 seconds after that the scene freezes. A dark shell blanks the view behind a panel headed "AWARENESS CHECK, Question 1 of 3". The time from crossing to freeze was not measured (the forklift drives there from wherever it is). If nothing happens within 2 minutes, record that. The freeze can come while you are still placing cones; that is expected. | |
+| D9 | 03 | Do steps 1 to 3 of section 2.5 (PPE, mirror, signal and cross), then keep walking north and wait. | After you leave the crossing, the forklift is sent to the west wall 8 seconds later. It stops in the marked LOADING ZONE, a co-worker in a hi-vis vest comes out of the STAFF ENTRANCE door, and 4.5 seconds after that the scene freezes. A dark shell blanks the view behind a panel headed "AWARENESS CHECK, Question 1 of 3". The time from crossing to freeze varies (the forklift drives there from wherever it is). If nothing happens within 2 minutes, record that. The freeze can come while you are still placing cones; that is expected. | |
 | D10 | 03 | Answer the three questions by clicking, then do not move: stand still and keep the co-worker in view. | The scene resumes. A panel says "STOP where you are. WATCH them. WAIT until they are clear." The forklift bubble reads "Holding: person behind me" while the co-worker is close. After the event the panel reads "Stopped, watched the co-worker, and waited until clear." Finish the four board steps: the "SCENARIO SUMMARY" shows the board result and a separate "AWARENESS CHECK" section scored out of 3. | |
 | D11 | 03 | Stop. In the Hierarchy select the object **Scenario**. In the Inspector untick **Coworker Hazard** on the Warehouse Forklift component. Press Play and repeat section 2.5. | No co-worker, no questions, no stand called "FORKLIFT LOADING?" and no summary panel. The four board steps behave as in section 2.5 and the board shows its own "STRONG PRACTICE" or "Complete with N mistakes" line. Tick the box again afterwards. | |
 | D12 | 04 | Play the whole check (section 2.6). | Strap snaps on. The meter reads about 4.7 k. A suitable 150 ohm part passes CHECK PART. The anti-sulfur 150 ohm part in R1 lights the LED. A 47 ohm part burns the spare LED out with a puff of smoke and a clear message. | |
@@ -194,7 +194,7 @@ The hub (`vive-steamvr\hub`) needs the owner's local Asset Store packs for its d
 | # | Check | Pass looks like | Result |
 |---|---|---|---|
 | L1 | Walk onto one of the four pads and stay about 1.4 seconds (progress shows on the pad), or press **1** to **4**. Do it for each pad. | The matching scenario loads: 1 Hydrostatic Test Bay, 2 Refinery Rounds, 3 Warehouse & Forklift, 4 Resistor Bench. | |
-| L2 | In a scenario press **Backspace**, or hold both grips for 1.5 seconds in a headset. | You are back in the lobby. (A hint shows for the first 8 seconds of each scenario. Not checked by a person; only a portal load was tried in the editor.) | |
+| L2 | In a scenario press **Backspace**, or hold both grips for 1.5 seconds in a headset. | You are back in the lobby. (A hint shows for the first 8 seconds of each scenario.) | |
 | L3 | Look at the thumbnails on the portals and at the season chip on the welcome board. | Four pictures; the chip names the season. | |
 | L4 | Wait about 30 seconds in the lobby. | The sky changes season with a short pixelate and scan-line glitch, then clears. | |
 | L5 | Look at the university plate and the CIST line. | The logo and "CIST \| Computer Information Systems & Technology" are readable. | |

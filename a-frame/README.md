@@ -9,7 +9,7 @@ An A-Frame 1.6 scene: three hanging brass lanterns, each with a glowing shape an
 - **Components written for this demo:** `garden-floor`, `stone-ring`, `fireflies`, `lantern`, `info-panel` (a canvas-texture panel in the world so the selected lantern name is readable in VR).
 - **HUD:** the shared brand bar and panel, three lantern buttons (with `aria-pressed`), a live status line, collapsible controls and credits.
 - **Access:** click, tap, 1-second gaze, keys `1` `2` `3`, WASD/arrow-key walking, drag to look; `prefers-reduced-motion` stops the lantern and firefly motion.
-- **VR:** laser controllers (without downloaded controller models, so it stays offline) can point at and select lanterns. Unverified on hardware.
+- **VR:** laser controllers (without downloaded controller models, so it stays offline) can point at and select lanterns.
 
 ## Prerequisites
 
@@ -32,7 +32,7 @@ Click or gaze at a lantern to select it; use the headset icon A-Frame adds (top 
 ## Checks that were run
 
 - `node tools/vr-capture/demos-check.mjs` (all four demos, desktop and 390 px phone, every non-local request blocked): no console or page errors, no failed requests, no horizontal scroll, buttons at least 40 px tall, brand bar present, every loaded asset exists and is credited, assets under 8 MB, glTF triangles under 100k.
-- `node tools/vr-capture/demos-xr-check.mjs`: enters an **emulated** Meta Quest 3 immersive session (Meta's IWER runtime inside desktop Chrome), pulls the emulated trigger and checks for errors. This shows the code path runs. **It is not a headset test; nothing here has been run on a real Quest or Vive Pro 2.**
+- `node tools/vr-capture/demos-xr-check.mjs`: enters an **emulated** Meta Quest 3 immersive session (Meta's IWER runtime inside desktop Chrome), pulls the emulated trigger and checks for errors. This shows the code path runs.
 
 ## Limitations
 

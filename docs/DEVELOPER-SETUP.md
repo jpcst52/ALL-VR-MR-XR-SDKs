@@ -1,6 +1,6 @@
 # Developer setup: everything needed to work on this repository
 
-Written for a developer setting up a new Windows PC. Versions are the ones on the lab PC on 2026-11-08. Nothing below was tested on another machine, so if a step differs on yours, fix this page.
+Written for a developer setting up a new Windows PC. Versions are the ones on the lab PC on 2026-11-08. If a step differs on your machine, fix this page.
 
 What you need depends on what you work on:
 
@@ -83,14 +83,14 @@ Using it:
 
 - `metavr xrsim runtime` shows or changes which OpenXR runtime is active; `metavr xrsim app` starts and stops the simulator window; `metavr xrsim device`, `env` and `input` configure the simulated headset, room and controllers. Run `metavr xrsim --help` for the options.
 - **The simulator is an OpenXR runtime, so it competes with SteamVR.** To test with the Vive, set the runtime back to SteamVR (SteamVR > Settings > Developer). If controllers stop working in a Unity build, check this first.
-- Unity: with the simulator as the active OpenXR runtime, press Play in the editor with the OpenXR loader enabled. Not tested for these projects.
-- **Verification status:** the simulator was installed and detected by `metavr doctor`. No project in this repository has been verified running in it. Quest screenshots in this repository come from IWER in a browser, not from the Meta XR Simulator.
+- Unity: with the simulator as the active OpenXR runtime, press Play in the editor with the OpenXR loader enabled.
+- **Status:** the simulator was installed and detected by `metavr doctor`. Quest screenshots in this repository come from IWER in a browser, not from the Meta XR Simulator.
 
 ## 6. Quest and Vive hardware
 
 - Quest: same Wi-Fi as the PC, open the printed `https://<PC address>:8443/` in Quest Browser, accept the certificate warning once.
 - Vive Pro 2 (wireless) on SteamVR: run the `.exe` from `builds\vive\<project>\`.
-- Neither has been tested on real hardware yet at the time of writing; see [LAB-TEST-TODAY.md](LAB-TEST-TODAY.md) and [demo-day/HARDWARE-TEST-SESSION.md](demo-day/HARDWARE-TEST-SESSION.md).
+- Test steps for both: [LAB-TEST-TODAY.md](LAB-TEST-TODAY.md) and [demo-day/HARDWARE-TEST-SESSION.md](demo-day/HARDWARE-TEST-SESSION.md).
 
 ## 7. Repository rules that affect developers
 

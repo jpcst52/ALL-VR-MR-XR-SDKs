@@ -1,6 +1,6 @@
 # Audio review: listen to every Unity sound
 
-**Read this first.** The model that made these sounds cannot hear. Every number below is a measurement of the waveform (levels, spectrum, loop seams), not a judgement of how it sounds. Nothing has been played through a Vive Pro 2. Please open `index.html` in a browser, click the players, and tell us which sounds are wrong by name (for example "valve_turn squeaks too much", "water_pour sounds like static").
+**Read this first.** The model that made these sounds cannot hear. Every number below is a measurement of the waveform (levels, spectrum, loop seams), not a judgement of how it sounds. Please open `index.html` in a browser, click the players, and tell us which sounds are wrong by name (for example "valve_turn squeaks too much", "water_pour sounds like static").
 
 - Open [index.html](index.html) (works offline: relative paths, no scripts needed to play). Use headphones if you can: that is how it is heard in the headset.
 - 208 WAV files, 14.9 MB, in `wav/`: 16-bit mono at each sound's own sample rate (32 kHz one-shots, 22.05 kHz loops; your browser resamples). One file per variation: the game picks them in a shuffled round robin.

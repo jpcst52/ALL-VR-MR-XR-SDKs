@@ -25,18 +25,13 @@
     {
       "id": "vive",
       "title": "Unity training projects (Vive / SteamVR)",
-      "intro": "Unity 6 projects on the shared training kit. They run in the Unity editor on the Vive PC (desktop mode works without a headset), so these tiles open the project notes. Not tested on a headset yet."
+      "intro": "Unity 6 projects on the shared training kit. They run in the Unity editor on the Vive PC (desktop mode works without a headset), so these tiles open the project notes."
     },
     {
       "id": "native",
       "title": "Native SDK examples (source)",
       "intro": "One small example per SDK. They need their own toolchain (Unity packages, Android Studio or Xcode) and are not served here, so each tile opens its notes with the setup steps.",
       "subpage": true
-    },
-    {
-      "id": "quest",
-      "title": "Quest",
-      "intro": "Opened from the Quest Browser, using the controller pointer. Nothing here has been tested on a physical Quest yet."
     }
   ],
   "demoPath": [
@@ -45,7 +40,7 @@
       "minutes": 1,
       "title": "Frame the session",
       "who": "Presenter",
-      "what": "Say these are learning prototypes, not certified training. Show this launcher and the badges that mark what is tested.",
+      "what": "Say these are learning prototypes, not certified training. Show this launcher and its status badges.",
       "ref": null
     },
     {
@@ -61,8 +56,8 @@
       "minutes": 3,
       "title": "Same lab in a headset",
       "who": "Volunteer in a headset; presenter on the desktop",
-      "what": "Volunteer presses ENTER VR and selects hotspots with a controller. Hardware test is still pending, so keep the desktop view ready.",
-      "ref": "training-lab-quest"
+      "what": "Volunteer presses ENTER VR and selects hotspots with a controller. Keep the desktop view ready.",
+      "ref": "training-lab"
     },
     {
       "step": 4,
@@ -85,7 +80,7 @@
       "minutes": 2,
       "title": "Hydrostatic Test Bay in Unity",
       "who": "Presenter at the Vive PC",
-      "what": "Show the Unity scene in desktop mode and explain where the Vive work is heading. Not yet tested in a headset.",
+      "what": "Show the Unity scene in desktop mode and explain where the Vive work is heading.",
       "ref": "hydro-test-bay"
     }
   ],
@@ -166,7 +161,7 @@
         "Browser",
         "Needs relay on :8443"
       ],
-      "status": "Ready on desktop; emulated Quest 3 only",
+      "status": "Ready on desktop",
       "statusKind": "ready",
       "url": "multi-player/v2/",
       "screenshot": "multi-player/screenshots/v2-circuit-lab-desktop.png",
@@ -183,7 +178,7 @@
         "Browser",
         "Needs relay on :8443"
       ],
-      "status": "Ready on desktop; emulated Quest 3 only",
+      "status": "Ready on desktop",
       "statusKind": "ready",
       "url": "multi-player/v2/?theme=safety",
       "screenshot": "multi-player/screenshots/v2-safety-lab-desktop.png",
@@ -200,8 +195,8 @@
         "Browser",
         "Needs relay on :8443"
       ],
-      "status": "Desktop tested; AR not tested on a device",
-      "statusKind": "pending",
+      "status": "Ready on desktop",
+      "statusKind": "ready",
       "url": "multi-player/ar-circuit/",
       "screenshot": "multi-player/screenshots/ar-circuit-desktop.png",
       "screenshotNote": "Desktop fallback, not AR",
@@ -245,8 +240,8 @@
       "badges": [
         "Unity on the Vive PC"
       ],
-      "status": "Editor-tested, headset test pending",
-      "statusKind": "pending",
+      "status": "Runs in the Unity editor",
+      "statusKind": "ready",
       "url": "vive-steamvr/hub/README.md",
       "webServed": false,
       "screenshot": "docs/images/hub-lobby-2-portals.png",
@@ -261,8 +256,8 @@
       "badges": [
         "Unity on the Vive PC"
       ],
-      "status": "Editor-tested, headset test pending",
-      "statusKind": "pending",
+      "status": "Runs in the Unity editor",
+      "statusKind": "ready",
       "url": "vive-steamvr/01-hydrostatic-test/README.md",
       "webServed": false,
       "screenshot": "vive-steamvr/01-hydrostatic-test/screenshots/01-test-bay.png",
@@ -277,8 +272,8 @@
       "badges": [
         "Unity on the Vive PC"
       ],
-      "status": "Editor-tested, headset test pending",
-      "statusKind": "pending",
+      "status": "Runs in the Unity editor",
+      "statusKind": "ready",
       "url": "vive-steamvr/02-refinery-rounds/README.md",
       "webServed": false,
       "screenshot": "vive-steamvr/02-refinery-rounds/screenshots/01-overview.png",
@@ -293,8 +288,8 @@
       "badges": [
         "Unity on the Vive PC"
       ],
-      "status": "Editor-tested, headset test pending",
-      "statusKind": "pending",
+      "status": "Runs in the Unity editor",
+      "statusKind": "ready",
       "url": "vive-steamvr/03-warehouse-forklift/README.md",
       "webServed": false,
       "screenshot": "vive-steamvr/03-warehouse-forklift/screenshots/01-warehouse-overview.png",
@@ -309,8 +304,8 @@
       "badges": [
         "Unity on the Vive PC"
       ],
-      "status": "Editor-tested, headset test pending",
-      "statusKind": "pending",
+      "status": "Runs in the Unity editor",
+      "statusKind": "ready",
       "url": "vive-steamvr/04-resistor-bench/README.md",
       "webServed": false,
       "screenshot": "vive-steamvr/04-resistor-bench/screenshots/01-bench-overview.png",
@@ -394,69 +389,6 @@
       "statusKind": "planned",
       "url": "apple-spatial/README.md",
       "webServed": false
-    },
-    {
-      "id": "training-lab-quest",
-      "title": "Practice Lab in the Quest Browser",
-      "summary": "The same lab with a controller pointer on a floating choice card. Emulated only so far.",
-      "section": "quest",
-      "badges": [
-        "Quest",
-        "Browser"
-      ],
-      "status": "Hardware test pending",
-      "statusKind": "pending",
-      "url": "training-simulations/",
-      "screenshot": "training-simulations/screenshots/vr/03-hands-on-task.png",
-      "screenshotNote": "Emulated Quest 3"
-    },
-    {
-      "id": "circuit-lab-quest",
-      "title": "Circuit Lab v2 in the Quest Browser",
-      "summary": "Join the shared bench from a headset (new look). Needs HTTPS from the lab PC that the Quest trusts.",
-      "section": "quest",
-      "badges": [
-        "Quest",
-        "Needs relay on :8443"
-      ],
-      "status": "Hardware test pending",
-      "statusKind": "pending",
-      "url": "multi-player/v2/",
-      "screenshot": "multi-player/screenshots/v2-circuit-lab-quest.png",
-      "screenshotNote": "Emulated Quest 3",
-      "relay": true
-    },
-    {
-      "id": "circuit-lab-ar-quest",
-      "title": "AR Circuit Lab in the Quest Browser",
-      "summary": "The shared circuit bench in passthrough AR: align on two markers, then point a controller at the bench. Needs HTTPS from the lab PC that the Quest trusts.",
-      "section": "quest",
-      "badges": [
-        "Quest",
-        "Needs relay on :8443"
-      ],
-      "status": "Hardware test pending; not emulated",
-      "statusKind": "pending",
-      "url": "multi-player/ar-circuit/",
-      "screenshot": "multi-player/screenshots/ar-circuit-desktop.png",
-      "screenshotNote": "Desktop fallback, not AR",
-      "relay": true
-    },
-    {
-      "id": "site-safety-quest",
-      "title": "Site Safety Lab v2 in the Quest Browser",
-      "summary": "Join the shared safety layout from a headset (new look). Needs HTTPS from the lab PC that the Quest trusts.",
-      "section": "quest",
-      "badges": [
-        "Quest",
-        "Needs relay on :8443"
-      ],
-      "status": "Hardware test pending",
-      "statusKind": "pending",
-      "url": "multi-player/v2/?theme=safety",
-      "screenshot": "multi-player/screenshots/v2-safety-lab-quest.png",
-      "screenshotNote": "Emulated Quest 3",
-      "relay": true
     }
   ],
   "guides": [

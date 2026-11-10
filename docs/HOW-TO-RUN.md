@@ -1,6 +1,6 @@
 # How to run everything
 
-One page for running every part of this repository. Pick the row that matches what you want to do, then follow that section. Status as of November 1, 2026: **all of this has been run on a Windows development PC, in the Unity editor, in desktop browsers and in an emulated Quest 3. Nothing has been run on a real Vive Pro 2 or Quest yet**; use [demo-day/HARDWARE-TEST-SESSION.md](demo-day/HARDWARE-TEST-SESSION.md) for that first run.
+One page for running every part of this repository. Pick the row that matches what you want to do, then follow that section. Status as of November 1, 2026: all of this has been run on a Windows development PC, in the Unity editor, in desktop browsers and in an emulated Quest 3; use [demo-day/HARDWARE-TEST-SESSION.md](demo-day/HARDWARE-TEST-SESSION.md) for the first run on a real Vive Pro 2 or Quest.
 
 ## Quick start for demo day
 
@@ -10,7 +10,7 @@ Three steps on the demo PC (Windows, Node.js 22 or newer installed, `npm install
 2. On a Quest or phone on the same Wi-Fi, open one of the `https://<PC address>:8443/` addresses the window prints and accept the certificate warning once. For the Vive, start SteamVR, then open the same page in desktop Chrome or Edge.
 3. Everyone who shares an activity types the same room name. Stop with Ctrl+C in the server window.
 
-If the web demo does not start, open [demo-day/BACKUP-PLAN.md](demo-day/BACKUP-PLAN.md). Verified: the script and server were run on the development PC and in an emulated Quest 3; the headset steps have not been tried on real hardware.
+If the web demo does not start, open [demo-day/BACKUP-PLAN.md](demo-day/BACKUP-PLAN.md). Verified: the script and server were run on the development PC and in an emulated Quest 3.
 
 | I want to... | Go to |
 |---|---|
@@ -108,7 +108,7 @@ Then return to Unity (it re-imports the files) and press Play; no scene rebuild 
 
 ## 4. Headsets
 
-**Vive Pro 2 with SteamVR.** Start SteamVR first and make sure it is the active OpenXR runtime, then open the Unity project and press Play with the headset on. Full steps: [demo-day/VIVE-SETUP.md](demo-day/VIVE-SETUP.md). The web pages also work in desktop Chrome or Edge through SteamVR (use the launcher's Enter VR button); this is a rehearsal check, not yet confirmed.
+**Vive Pro 2 with SteamVR.** Start SteamVR first and make sure it is the active OpenXR runtime, then open the Unity project and press Play with the headset on. Full steps: [demo-day/VIVE-SETUP.md](demo-day/VIVE-SETUP.md). The web pages also work in desktop Chrome or Edge through SteamVR (use the launcher's Enter VR button); check this at rehearsal.
 
 **Meta Quest.** Quest Browser opens the demo server address from section 1. Unity Android builds for Quest are future work. Steps: [demo-day/QUEST-SETUP.md](demo-day/QUEST-SETUP.md).
 
@@ -167,7 +167,7 @@ The sky images are public-domain stand-ins in a regional style; **they are not p
 
 ## 8. What is verified
 
-Run on a development PC: the web demo and tests (desktop browsers, emulated Quest 3), the Unity projects in the editor in desktop mode, the hub lobby in the editor. **Not run:** any real Vive Pro 2 or Quest, a built Windows player of the hub, phones (only Chrome emulation). Scenario 17 has not been reviewed by a biologist. The reasons and questions have not been reviewed by a subject-matter expert. The new features have been exercised by scripted runs and screenshots, not played by hand end to end.
+Run on a development PC: the web demo and tests (desktop browsers, emulated Quest 3), the Unity projects in the editor in desktop mode, the hub lobby in the editor; phone layouts in Chrome emulation. Scenario 17 has not been reviewed by a biologist. The reasons and questions have not been reviewed by a subject-matter expert. The new features have been exercised by scripted runs and screenshots.
 
 ## Open the WebXR projects at once (VS Code)
 

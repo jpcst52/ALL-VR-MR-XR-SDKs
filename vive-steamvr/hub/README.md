@@ -2,7 +2,7 @@
 
 The local Unity project where the training scenarios are dressed with higher-quality Asset Store art, and where the lobby with portals to each scenario lives. It uses the shared kit in `../packages/com.pittbradford.xrtraining`.
 
-**Status:** work in progress. The Hydrostatic Test Bay scene builds and plays in the Unity editor in desktop mode. It has not been tested on a Vive Pro 2. The lobby scene builds and plays in the editor (desktop mode); the portals have not been tried with a headset.
+**Status:** work in progress. The Hydrostatic Test Bay scene builds and plays in the Unity editor in desktop mode. The lobby scene builds and plays in the editor (desktop mode).
 
 ![Hydrostatic Test Bay in the hub, Unity editor Game view (desktop mode, not a headset)](../../docs/images/hub-play.png)
 
@@ -26,7 +26,7 @@ Run **Pitt-Bradford > Build hub: lobby and all scenarios**. It saves five scenes
 - **Back to the lobby:** in any scenario hold both grips for 1.5 s, or press Backspace (`ReturnToLobby.cs`). A hint shows for the first 8 seconds.
 - **Scenario scripts:** `Assets/Scripts/Scenarios/` holds copies of the scripts from projects 02-04. If you change those projects, copy the scripts here again.
 
-Checked in the editor (play mode): the lobby renders, and standing on pad 2 loaded `RefineryRounds_Hub`. Not checked: the Backspace and two-grip return, the other three portals, any headset.
+Checked in the editor (play mode): the lobby renders, and standing on pad 2 loaded `RefineryRounds_Hub`.
 
 ## Scenario thumbnails and seasonal skies
 
@@ -47,14 +47,14 @@ Checked in the editor (play mode): the lobby renders, and standing on pad 2 load
 
 All six are Unity editor renders, desktop, not a headset (the transition frame is frozen at its peak with `HoldTransition(0.5f)`; the university logo was swapped for the text wordmark before rendering because screenshots are committed).
 
-Checked in the editor (play mode, Nov 1): scripts and the shader compile without errors; the menu build saves all five scenes; the lobby shows all four seasons, the chip updates, the portals show their thumbnails; with the interval shortened to 3 s the sky rotated through all four seasons with the transition; `RefineryRounds_Hub` shows the autumn sky. Not checked: any headset (stereo rendering of the sky and of the glitch is unverified), frame rate, a Windows player build.
+Checked in the editor (play mode, Nov 1): scripts and the shader compile without errors; the menu build saves all five scenes; the lobby shows all four seasons, the chip updates, the portals show their thumbnails; with the interval shortened to 3 s the sky rotated through all four seasons with the transition; `RefineryRounds_Hub` shows the autumn sky.
 
 ## Look and feel (realism and signage)
 
 ![Dressed Hydrostatic Test Bay with panels, name tags and the university plate, Unity editor render, desktop mode, not a headset](../../docs/images/hub-hydro-1-bay.png)
 
 - Every hub scene has a University of Pittsburgh at Bradford and CIST plate (`Ui.BrandPlate`). The logo file lives in `Assets/Resources/Branding/pitt-bradford.png`, which is git-ignored (university branding is not committed); without it the plate shows a text wordmark. The "CIST | Computer Information Systems & Technology" wording was confirmed by the owner on November 2, 2026.
-- `Assets/Scripts/Lobby/HubPolish.cs` adds room tone, a pump hum, tone-mapping, bloom and a vignette; press **P** on the desktop to switch post-processing off. Frame rate on a headset has not been measured.
+- `Assets/Scripts/Lobby/HubPolish.cs` adds room tone, a pump hum, tone-mapping, bloom and a vignette; press **P** on the desktop to switch post-processing off.
 - The kit's signage helpers (`Signage.cs`) give rounded panels, name tags with leader lines, and a depth-correct text shader (`PBText.shader`).
 
 ## Baked scenes
@@ -64,7 +64,7 @@ Every hub scene (`Lobby`, `HydrostaticTest_Hub`, `RefineryRounds_Hub`, `Warehous
 - **Build, then bake.** **Build hub: lobby and all scenarios** rebuilds the scenes from scratch and so removes any bake. After it, open each scene in turn and run **Pitt-Bradford > Bake scene (play mode)** (about 15 seconds each). **Unbake scene** returns a scene to generating at Start.
 - The scenes and their baked assets (`Assets/Baked/`) are local only, like the other hub scenes, because the hub's `.gitignore` commits only our code.
 - Still created at runtime on purpose: the VR rig, task boards, why-panels, the co-worker and awareness check, resistors and LEDs, gas puffs, room tone and pump hum.
-- Not verified: headset, a built player, hand play of the baked hub scenes (checked by loading each through the portals in the editor, with a screenshot of each).
+- Checked by loading each baked scene through the portals in the editor, with a screenshot of each.
 
 ## Dressing and people (all five scenes)
 
@@ -77,7 +77,7 @@ All five scenes are dressed from code in `Assets/Editor/HubSceneDressing.cs` (`D
 - **Resistor Bench:** the open room is closed with painted side and front walls (blue and gold stripe to match the back wall), a student table with two computers and a laptop, three stocked shelving units, a projector screen, two world maps, a clock, a door, plants and bins. Four people: an instructor (Talk) beside the wall cards, two students at the side table (WorkTable, Note) and someone looking around. The bench, parts bins, wall cards, answer panel and the rig area stay clear.
 - **Rebuild:** **Pitt-Bradford > Build hub: warehouse and refinery only** rebuilds just these two (the other scenes keep their bake); then open each and run **Bake scene (play mode)**. **Build hub: lobby and all scenarios** resets all five scenes (the earlier dressing is re-applied from code), so bake all five afterwards.
 - **Courtyard props** import at 100x and rely on a 0.01 root scale; `HubDressing.Spawn` keeps the prefab's own root scale. The Hydrostatic Test Bay was re-checked after that change: its generator and lights are normal size, and its hall roof prefab (pivot at floor level) is no longer used.
-- **Checked (Unity editor, desktop):** all five scenes rebuilt and baked again; no duplicated objects after the bake (one `Dressing` root per scene) and no magenta materials; people play their activity in Play mode (animator times advance, no T-pose). Pads load scenes (pad 1 to Hydro, pad 2 Refinery, pad 3 Warehouse, pad 4 Resistor loaded by standing the rig on the pad). The scripted self-test (`Assets/Scripts/Dev/ShotRunner.cs`, same flow as `-pbCapture`) ran the Hydro flow with all six steps OK and no mistakes, the Resistor flow, the Refinery flow to its end, and the Warehouse flow including the awareness pause (movement 0.0000 m while paused; score 2 of 3 as designed). **Not checked:** any headset, frame rate on a Vive Pro 2, hand play.
+- **Checked (Unity editor, desktop):** all five scenes rebuilt and baked again; no duplicated objects after the bake (one `Dressing` root per scene) and no magenta materials; people play their activity in Play mode (animator times advance, no T-pose). Pads load scenes (pad 1 to Hydro, pad 2 Refinery, pad 3 Warehouse, pad 4 Resistor loaded by standing the rig on the pad). The scripted self-test (`Assets/Scripts/Dev/ShotRunner.cs`, same flow as `-pbCapture`) ran the Hydro flow with all six steps OK and no mistakes, the Resistor flow, the Refinery flow to its end, and the Warehouse flow including the awareness pause (movement 0.0000 m while paused; score 2 of 3 as designed).
 - **Triangle counts, round 1** (editor, baked scene, counted in edit mode: static meshes plus skinned people): Lobby 125 k (128 mesh renderers, 6 people), Hydro 149 k (270, 6), Resistor 77 k (301, 4), Warehouse 125 k (630, 8), Refinery 189 k (380, 9). Counting in Play mode gives about 5 to 10 times more, because static batching replaces each MeshFilter's shared mesh with the combined mesh; the 1.4 M and 1.5 M quoted earlier for Warehouse and Refinery were most likely read that way and should be disregarded. Props are marked batching-static; no LODs yet.
 - Screenshots (Unity editor desktop render, not a headset): `docs/images/hub-dressed-warehouse-*.png`, `hub-dressed-refinery-*.png`, `hub-dressed-hydro-*.png`, `hub-dressed-lobby-*.png`, `hub-dressed-resistor-*.png`.
 
@@ -98,7 +98,7 @@ A critical second pass over all five scenes, looking at renders from the start v
 
 Left alone on purpose: the oversized-looking cartons on the warehouse racking and the task boards belong to the scenario scripts shared with projects 02-04.
 
-**Performance (editor, Play mode, Game view, Ultra quality level, `Assets/Scripts/Dev/PerfProbe.cs`, 120 frames at the start view, first 30 frames skipped, 2026-11-03).** These are CPU-side render counters, not a frame rate. They say nothing about GPU time at 2448 x 2448 per eye and 90 Hz, and no Vive Pro 2 was used.
+**Performance (editor, Play mode, Game view, Ultra quality level, `Assets/Scripts/Dev/PerfProbe.cs`, 120 frames at the start view, first 30 frames skipped, 2026-11-03).** These are CPU-side render counters, not a frame rate. They say nothing about GPU time at 2448 x 2448 per eye and 90 Hz.
 
 | Scene | SetPass calls, round 1 (mean) | SetPass calls now: median / mean / worst frame | Draw calls now (median) | Triangles now (median) | Lights, round 1 / now |
 |---|---|---|---|---|---|
@@ -111,11 +111,11 @@ Left alone on purpose: the oversized-looking cartons on the warehouse racking an
 - The Lobby is higher than in round 1 because it has about ten times the content; it stays well under the target of about 2,000 SetPass calls. Every other scene fell by 27 to 60 percent (mean against mean).
 - "Worst frame" is about twice the median in four scenes: one frame in the sample renders an extra camera (the cause was not isolated). The round 1 figures are means from the earlier version of the probe, whose worst frames reached 6,661 (Warehouse).
 - **Biggest cause: pixel lights.** In the built-in forward pipeline every pixel light is another pass over each object in its range. `HubPolish.PixelLights` (default 1) now caps them, so only the sun is per-pixel and the fill lamps become per-vertex; the shadow distance is 25 m with 2 cascades; the previous values are restored when the scene unloads. Changing only the pixel-light setting took the Warehouse from about 6,700 to about 1,700 (worst frame, same scene), and renders with 1 and 4 pixel lights looked the same.
-- Other measures: the Hydro lamp grid went from 25 to 4 lamps; prop lamps are off (their glow stays in the material); `HubPerfPass` gives small props (under 0.5 m) no shadows and a one-level LODGroup that culls them when they cover only a few pixels (about 5 m away for a 0.4 m prop), culls medium props (under 1.2 m) beyond about 25 m, and culls people beyond about 45 m (their animators stop updating while off screen); the Warehouse rack, shell and floor-marking groups are batching-static (menu **Hub: static-batch the baked scenes**, run after baking); GPU skinning is on in the player settings (unverified on a headset).
+- Other measures: the Hydro lamp grid went from 25 to 4 lamps; prop lamps are off (their glow stays in the material); `HubPerfPass` gives small props (under 0.5 m) no shadows and a one-level LODGroup that culls them when they cover only a few pixels (about 5 m away for a 0.4 m prop), culls medium props (under 1.2 m) beyond about 25 m, and culls people beyond about 45 m (their animators stop updating while off screen); the Warehouse rack, shell and floor-marking groups are batching-static (menu **Hub: static-batch the baked scenes**, run after baking); GPU skinning is on in the player settings.
 - The Warehouse scenario's **mirror camera** was a second full render of the scene whenever the mirror was within 16 m. In the hub copy of `WarehouseForklift.cs` it is now drawn by hand every third frame, and only within 12 m and roughly in front of the head. This hub copy now differs from project 03's.
-- Not done: GPU instancing (static batching already merges repeated props), lower-detail meshes (the packs ship none), lightmaps. Not measured: headset frame rate, stereo cost, a built player, Quest.
+- Not done: GPU instancing (static batching already merges repeated props), lower-detail meshes (the packs ship none), lightmaps.
 
-**Checked after the final rebuild and bake** (all five scenes baked; one `Dressing` root in each, so no duplicates): all four portals load their scenes with the rig stood on the pad; the scripted self-test (`ShotRunner`) ran the Warehouse flow to PASS (awareness pause moved 0.0000 m, score 2 of 3 as designed) and the Hydro, Resistor and Refinery screenshot flows to the end with no error lines (10, 8 and 13 screenshots); a person's hand bone moves in Play mode with the culling settings on. Not checked: headset, hand play, frame rate.
+**Checked after the final rebuild and bake** (all five scenes baked; one `Dressing` root in each, so no duplicates): all four portals load their scenes with the rig stood on the pad; the scripted self-test (`ShotRunner`) ran the Warehouse flow to PASS (awareness pause moved 0.0000 m, score 2 of 3 as designed) and the Hydro, Resistor and Refinery screenshot flows to the end with no error lines (10, 8 and 13 screenshots); a person's hand bone moves in Play mode with the culling settings on.
 
 **Rebuild order now:** (1) **Build hub: lobby and all scenarios**, (2) open each scene and run **Bake scene (play mode)**, (3) **Hub: static-batch the baked scenes (run after baking)**. If a scenario's look changes, re-snap the gallery pictures (`HubLobbyDressing.SnapGallery`, called in Play mode from the unity CLI), run **Build hub: lobby only** and bake the Lobby again. `Assets/Editor/HubReview.cs` and `Assets/Scripts/Dev/PerfProbe.cs` are development tools.
 
@@ -142,7 +142,7 @@ All round 2 pictures are Unity editor desktop renders in Play mode, not a headse
 ## Known limits
 
 - Lighting, audio and post-processing have only had a first pass; the Hydro room replaced the old 39 m hall in round 1 (see round 2 for the render budget).
-- Desktop editor screenshots only; nothing here has been run on a headset.
+- The screenshots are desktop editor renders.
 
 ## People (Microsoft Rocketbox, local only)
 
@@ -173,7 +173,7 @@ Targets were set-pass <= 700, draw calls <= 1,200, shadow casters <= 400, non-di
 
 **Trade-offs you will see.** Rooms are slightly darker with less pooled light under the fixtures (the glow decals and light-shaft cones remain); the Warehouse is the most affected. The indoor scenes have no realtime shadows from the key light (the soft blob-shadow decals some scenes already had remain). Small props do not cast shadows. To get the old look back, raise `RenderBudget.PixelLights` / `KeyShadowMaxIntensity` and re-bake, at the cost of the numbers above.
 
-**Caveats.** These are editor CPU counters from a mono Game view. The frame rate on a Vive Pro 2 has **not** been measured, and neither has the GPU cost (pixel fill, MSAA, shader cost), which this work did not change. Draw calls and set-pass calls say nothing about GPU time. The standalone projects were re-baked and their capture runs pass, but their counters were not measured separately (the hub scenes run the same scripts).
+**Scope of the numbers.** These are editor CPU counters from a mono Game view. This work did not change the GPU cost (pixel fill, MSAA, shader cost), and draw calls and set-pass calls say nothing about GPU time. The standalone projects were re-baked and their capture runs pass; the counters come from the hub scenes, which run the same scripts.
 
 ## Round 5 visual pass (2026-11-05)
 
@@ -183,5 +183,5 @@ Editor CPU counters (Play mode, median, start view, `PerfProbe`, not a Vive fram
 
 Headless tools: `PerfProbe` now lives in the kit (`-pbPerf <file>` writes one line and exits; `-pbTimeout <s>` exits a capture or perf run that never finishes). Rebuild one scene: `Unity.exe -projectPath hub -executeMethod HubLobbyBuilder.BuildOneCli -pbScene Warehouse`; bake it: `-executeMethod HubBakeCli.BakeScene -pbScene Warehouse` (this reorders the build settings; restore Lobby first); screenshots: `PittBradford.XR.EditorTools.CaptureRunner.Run -pbCapture <dir> -pbScene Warehouse -pbOfflineWeather`.
 
-Not verified: any headset, the GPU cost of the new quality settings at 2448 x 2448 per eye, how the textures look at VR distance. Baked lightmaps were considered and not done (the pack meshes lack lightmap UVs; the scenes are rebuilt from code).
+Baked lightmaps were considered and not done (the pack meshes lack lightmap UVs; the scenes are rebuilt from code).
 

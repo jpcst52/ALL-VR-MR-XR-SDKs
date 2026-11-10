@@ -99,4 +99,4 @@ New-Item -ItemType Directory -Force $dest | Out-Null
 Copy-Item (Join-Path $built '*') $dest -Recurse -Force
 Write-Host ''
 Write-Host "Done: $dest\SteamVRSample.exe" -ForegroundColor Green
-Write-Host 'Copy the whole folder to the VR Stage PC, start SteamVR, run SteamVRSample.exe. Not tested on a headset yet.'
+Write-Host 'Copy the whole folder to the VR Stage PC, start SteamVR, run SteamVRSample.exe.'

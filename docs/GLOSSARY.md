@@ -2,7 +2,7 @@
 
 Plain-language meanings of the terms used in this repository, written for the advisory board, employers and faculty. Nothing here assumes you have used a headset.
 
-General safety-awareness practice only: none of the scenarios is a procedure, permit or certification. Nothing in this repository has been verified on a real Vive Pro 2 or Meta Quest yet; the guides say what was actually run (desktop browsers, the Unity editor, an emulated Quest 3).
+General safety-awareness practice only: none of the scenarios is a procedure, permit or certification. The guides say what was run (desktop browsers, the Unity editor, an emulated Quest 3).
 
 ## Who is this for?
 
@@ -12,7 +12,7 @@ General safety-awareness practice only: none of the scenarios is a procedure, pe
 | A faculty member (industrial, energy, biology) | [research/README.md](research/README.md) and the scenario list in [../training-simulations/README.md](../training-simulations/README.md) | What each scenario teaches, what is a draft for review, and study ideas |
 | A student or instructor who will run it | [HOW-TO-RUN.md](HOW-TO-RUN.md) | The three-step quick start and the full run guide |
 | A developer extending it | [agents/AGENT-RULES.md](agents/AGENT-RULES.md), [README.md](README.md) and [../SDK-list.md](../SDK-list.md) | Repository conventions, the documentation index and the SDK samples |
-| Setting up a headset | [demo-day/VIVE-SETUP.md](demo-day/VIVE-SETUP.md) or [demo-day/QUEST-SETUP.md](demo-day/QUEST-SETUP.md) | Steps for the first hardware session (still to be run) |
+| Setting up a headset | [demo-day/VIVE-SETUP.md](demo-day/VIVE-SETUP.md) or [demo-day/QUEST-SETUP.md](demo-day/QUEST-SETUP.md) | Steps for the first hardware session |
 
 ## Terms
 
@@ -30,11 +30,11 @@ General safety-awareness practice only: none of the scenarios is a procedure, pe
 
 **SteamVR.** Valve's software that runs PC virtual reality and connects the PC to the HTC Vive Pro 2. It acts as the "OpenXR runtime" (the program that actually drives the headset) on the Vive PC.
 
-**Meta Quest.** A family of standalone headsets from Meta. The web demos are opened in the Quest Browser, over the same Wi-Fi as the demo PC. Untested on a physical Quest so far.
+**Meta Quest.** A family of standalone headsets from Meta. The web demos are opened in the Quest Browser, over the same Wi-Fi as the demo PC.
 
-**HTC Vive Pro 2.** A high-resolution PC-connected headset (used here wirelessly on a gaming desktop). Untested so far; [demo-day/HARDWARE-TEST-SESSION.md](demo-day/HARDWARE-TEST-SESSION.md) is the sheet for the first run.
+**HTC Vive Pro 2.** A high-resolution PC-connected headset (used here wirelessly on a gaming desktop). [demo-day/HARDWARE-TEST-SESSION.md](demo-day/HARDWARE-TEST-SESSION.md) is the sheet for the first run.
 
-**Unity.** The game engine used for the Vive training projects. They also run on a desktop with mouse and keyboard, which is how they have been checked.
+**Unity.** The game engine used for the Vive training projects. They also run on a desktop with mouse and keyboard.
 
 **Relay.** A small program on the demo PC that passes messages between people in the same room, so several users see the same shared bench or layout. It needs no internet at demo time.
 

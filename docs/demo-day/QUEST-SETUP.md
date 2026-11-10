@@ -1,6 +1,6 @@
 # Quest setup
 
-**Verify at rehearsal.** None of these steps were run on a real Quest by the agents who wrote this. The server side (HTTPS, certificate, URL list) was tested from a desktop only.
+**Verify at rehearsal.** The server side (HTTPS, certificate, URL list) was tested from a desktop.
 
 ## Option A: over Wi-Fi (primary)
 

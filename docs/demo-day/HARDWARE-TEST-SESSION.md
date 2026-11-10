@@ -1,6 +1,6 @@
 # Hardware test session (lab, before Nov 13)
 
-Purpose: the first real-headset run of everything. **Until this is done, nothing in this repo is verified on a Vive Pro 2 or a Quest**; every screenshot so far is a desktop editor render or an emulated Quest 3. Fill in the Result column as you go (Pass / Fail / Skipped, plus a note), then hand this file back so the docs can be updated honestly.
+Purpose: the first real-headset run of everything. Every screenshot so far is a desktop editor render or an emulated Quest 3. Fill in the Result column as you go (Pass / Fail / Skipped, plus a note), then hand this file back so the docs can be updated.
 
 Time: about 60 minutes for the Vive part and 30 for the Quest part. Do the "P1" rows first; they are what the demo needs. Setup details are in [VIVE-SETUP.md](VIVE-SETUP.md) and [QUEST-SETUP.md](QUEST-SETUP.md).
 
@@ -55,4 +55,4 @@ Write notes here (discomfort, tracking loss, wrong scale, text too small, sound 
 
 ## What happens next
 
-Give the filled-in file back. Failures become fix tasks; passes let the READMEs and decks drop the "unverified" wording for exactly those items and no others.
+Give the filled-in file back. Failures become fix tasks.

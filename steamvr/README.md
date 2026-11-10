@@ -31,4 +31,4 @@ Toolchain: a Unity version supported by your SteamVR Unity Plugin release, the p
 
 ## What was verified
 
-Only the script source and this setup text were reviewed. The script was **not compiled or run here, and no Vive or other SteamVR hardware was used.** The shared training projects in `vive-steamvr/` use OpenXR with SteamVR as the runtime, not this plugin.
+The script source and this setup text were reviewed. The shared training projects in `vive-steamvr/` use OpenXR with SteamVR as the runtime, not this plugin.

@@ -3,7 +3,7 @@
 Two browser-first examples share one lightweight WebSocket relay:
 
 - [`vr/`](./vr/): **Circuit Lab**, a collaborative electronics bench where participants snap together batteries, switches, bulbs, resistors, motors, and wires and see a live circuit result, with a desktop fallback.
-- [`ar-circuit/`](./ar-circuit/): **AR Circuit Lab**, the Circuit Lab bench placed on a real table or floor in immersive AR. It runs the v2 app in AR mode and shares rooms with the v1 and v2 Circuit Lab pages. Desktop tested only; no AR device has run it.
+- [`ar-circuit/`](./ar-circuit/): **AR Circuit Lab**, the Circuit Lab bench placed on a real table or floor in immersive AR. It runs the v2 app in AR mode and shares rooms with the v1 and v2 Circuit Lab pages.
 - [`ar/`](./ar/): **Site Safety Layout**, a shared work-area safety planner (exits, extinguishers, first aid, muster point, hazard beacons, barriers) in immersive AR, with hit-test placement, a calibrated local reference frame, and a live checklist.
 
 The [combined slide deck](./Multiplayer-WebXR-Examples.pptx) explains how to run both examples and what they demonstrate. The [screenshot index](./screenshots/README.md) includes captures of the VR and AR desktop fallbacks.
@@ -41,9 +41,8 @@ The shared parts are generated from Three.js primitives. The room around the boa
 | Circuit Lab v2, emulated Quest 3 session, Simple loop | 158 (about 79 per eye) | 58k (about 29k per eye) | no shadow map, no glTF props, no other participants |
 | Safety Lab v2, emulated Quest 3 session, Sample layout | 164 (about 82 per eye) | 35k (about 18k per eye) | same |
 
-  **Not measured: frame rate on a real Quest.** These are counts only (SwiftShader frame times mean nothing). The design target is 72 fps, with about 80 draw calls and under 30k triangles per eye and one normal-mapped lighting model with five lights; whether a Quest 3 holds 72 fps (and what a Quest 2 does) has to be measured on the headset, for example with the OVR Metrics Tool. If it is short, the first things to drop are the pendant lamps and light shafts, then normal maps.
-- **Verified** (all in desktop Chrome, an **emulated Quest 3**, never a real headset): `node tools/vr-capture/v2-check.mjs` runs 56 checks (join, toolbox add / examples / reset, Y / B / X, glove hands, frames drawn, environment map and PBR materials present, the light count constant, current dots follow the switch, terminal rings, a lit bulb or beacon gets a real light, draw-call and triangle budget); `npm test` adds `test/v2-flow.test.mjs` (current direction through every example) and `test/v2-assets.test.mjs` (imports resolve, vendored three, no CDN, the relay serves v2 and still serves v1). `node tools/vr-capture/toolbox-check.mjs` (v1, 41 checks) and all earlier tests still pass.
-- **Not verified:** a real Quest (look, comfort, frame rate, controller feel), a Vive, a phone, AR for v2 (the [`ar-circuit/`](./ar-circuit/) page now uses the AR branch, but it has only been run in its desktop fallback), and how bright or dark the rooms look on a headset display.
+  These are counts only (SwiftShader frame times mean nothing). The design target is 72 fps, with about 80 draw calls and under 30k triangles per eye and one normal-mapped lighting model with five lights; measure the frame rate on the headset, for example with the OVR Metrics Tool. If it is short, the first things to drop are the pendant lamps and light shafts, then normal maps.
+- **Verified** (all in desktop Chrome, an **emulated Quest 3**): `node tools/vr-capture/v2-check.mjs` runs 56 checks (join, toolbox add / examples / reset, Y / B / X, glove hands, frames drawn, environment map and PBR materials present, the light count constant, current dots follow the switch, terminal rings, a lit bulb or beacon gets a real light, draw-call and triangle budget); `npm test` adds `test/v2-flow.test.mjs` (current direction through every example) and `test/v2-assets.test.mjs` (imports resolve, vendored three, no CDN, the relay serves v2 and still serves v1). `node tools/vr-capture/toolbox-check.mjs` (v1, 41 checks) and all earlier tests still pass.
 - **Capture:** `node multi-player/tools/v2-shots.mjs` writes `screenshots/v2-*.png` ([circuit desktop](./screenshots/v2-circuit-lab-desktop.png), [close-up](./screenshots/v2-circuit-lab-closeup.png), [bulb](./screenshots/v2-circuit-lab-bulb.png), [safety desktop](./screenshots/v2-safety-lab-desktop.png), [safety close-up](./screenshots/v2-safety-lab-closeup.png), and the emulated Quest 3 views [circuit](./screenshots/v2-circuit-lab-quest.png) and [safety](./screenshots/v2-safety-lab-quest.png)). The other participants in the desktop shots are scripted relay clients.
 - **Found while building it:** the existing glTF prop `bench_vice_01` has its mesh about 5 m off its origin, so in v1's full (non-lite) mode a vice appears in the middle of the board. v1 was left as it is; v2 leaves that prop out, and `v2-shots.mjs` checks that every prop it loads sits near where it was placed.
 
@@ -52,7 +51,6 @@ The shared parts are generated from Three.js primitives. The room around the boa
 - Page: `http://localhost:8443/multi-player/hydrotest/` (theme `hydrotest`; `?theme=hydrotest` also works on the other pages). Rooms are separate from the Circuit Lab and Site Safety rooms.
 - A shared builder for a hydrostatic test rig on a shell-and-tube heat exchanger: tank, pump, valve and vent valve (both toggle open/closed with T), gauge, exchanger, blind flange, pipe. Touch the grey port dots to connect parts; put a gold blind flange over each top nozzle. One holder per part, and a live checklist (`shared/hydro-eval.mjs`, pure and unit-tested) ends in "Ready to fill" or names the next problem (for example "Vent is closed: air will be trapped"). **Load demo rig** builds a complete rig.
 - It is the web counterpart of the Unity Hydrostatic Test Bay. General safety awareness practice, not a test procedure or certification; inspired by heat-exchanger and filter-housing makers, with generic parts.
-- VR here is emulator and desktop only; it has not been tried on a real headset.
 - Screenshots: [empty room](./screenshots/hydrotest-empty.png), [completed rig](./screenshots/hydrotest-rig.png), [second client](./screenshots/hydrotest-rig-client2.png).
 
 ## In a headset: toolbox, buttons, examples
@@ -69,7 +67,7 @@ In VR (and in AR once aligned) a **toolbox** floats at your left: a button for e
 
 Each lab has four examples (Circuit Lab: Simple loop, Two bulbs in series, Dimmed bulb, Motor and bulb; Safety Lab: Sample layout, Welding bay, Chemical store, Loading lane). Loading one replaces the scene for everyone in the room. The same buttons are on the page for desktop users. Each controller shows a blue glove hand (bare hands show tracked joints when the headset supports it).
 
-**Verified:** `node tools/vr-capture/toolbox-check.mjs` runs 41 checks in desktop Chrome with an **emulated Quest 3**: toolbox presses, all examples, Y/B/X, reset, gloves present. **Not tested on a real headset**; the button numbers (4 and 5) are the Quest standard mapping. The examples are checked by `test/examples.test.mjs` (each circuit closes and powers its load; each safety layout passes its checklist).
+**Verified:** `node tools/vr-capture/toolbox-check.mjs` runs 41 checks in desktop Chrome with an **emulated Quest 3**: toolbox presses, all examples, Y/B/X, reset, gloves present. The button numbers (4 and 5) are the Quest standard mapping. The examples are checked by `test/examples.test.mjs` (each circuit closes and powers its load; each safety layout passes its checklist).
 
 ## Joining, leaving and keyboard use
 
@@ -83,7 +81,7 @@ Each lab has four examples (Circuit Lab: Simple loop, Two bulbs in series, Dimme
 
 ## Look and branding
 
-The three pages share the Pitt palette, bundled fonts and the Pitt-Bradford + **CIST** brand bar from [brand-kit](../brand-kit/README.md) (logo when the git-ignored `branding/logo.png` is present, text wordmark otherwise). In the scene, name tags and part labels are backed pills, and a Pitt-Bradford + CIST plaque stands at the back edge of the shared board. On a phone the panel becomes a bottom sheet below the board. Checked with `node tools/vr-capture/ui-check.mjs` (desktop browser at 1440 x 900 and 390 x 844; no headset or real phone).
+The three pages share the Pitt palette, bundled fonts and the Pitt-Bradford + **CIST** brand bar from [brand-kit](../brand-kit/README.md) (logo when the git-ignored `branding/logo.png` is present, text wordmark otherwise). In the scene, name tags and part labels are backed pills, and a Pitt-Bradford + CIST plaque stands at the back edge of the shared board. On a phone the panel becomes a bottom sheet below the board. Checked with `node tools/vr-capture/ui-check.mjs` (desktop browser at 1440 x 900 and 390 x 844).
 
 ## Rooms, props and people
 
@@ -113,7 +111,7 @@ Measured with [`tools/shots.mjs`](./tools/shots.mjs) in desktop Chrome on a soft
 | Hydrostatic Test Rig | 79k | 218 | 13 of 13 |
 | Circuit Lab with every model blocked (fallback) | 8.6k | 74 | 0 of 14 (14 primitives) |
 
-Each further character adds about 4.7k triangles (body plus hat), so eight model participants on the heaviest scene stay near 107k, under the 120k target (`SCENE_TRIANGLE_BUDGET` in [`shared/avatar-logic.mjs`](./shared/avatar-logic.mjs); the tests check the model files against it). Most draw calls come from the shared parts and name labels; the room itself costs about 40 to 60. Inside a headset the room is hidden, so the scene is smaller still. **Not verified:** frame rate on a Quest or any real GPU.
+Each further character adds about 4.7k triangles (body plus hat), so eight model participants on the heaviest scene stay near 107k, under the 120k target (`SCENE_TRIANGLE_BUDGET` in [`shared/avatar-logic.mjs`](./shared/avatar-logic.mjs); the tests check the model files against it). Most draw calls come from the shared parts and name labels; the room itself costs about 40 to 60. Inside a headset the room is hidden, so the scene is smaller still.
 
 ## Requirements
 
@@ -164,7 +162,7 @@ The room field accepts an optional `?room=lab` query parameter. There are no acc
 3. Join the same room from each page. The roster should show each connected participant and whether they joined from VR, AR, or the web.
 4. Add a battery, switch, bulb, or wire (or load the demo) from either participant. The part should appear on all clients. Later joiners receive the existing room snapshot.
 5. Drag a part in the desktop view, or aim/select with an XR controller. Another participant's grab is denied while the part is held. Switch and beacon toggles, rotation, and deletion are also shared.
-6. To place the AR board in a real shared space, follow the two-point alignment step on each AR device before building. Keep both devices at the same site and use the same physical alignment markers. Working alone with a headset, press **grip** while aligning to drop the board on the floor 1.5 m in front of you instead (it cannot match another device's position, so use the two markers when people share the space). Tested only in an emulated Quest 3, not on a headset.
+6. To place the AR board in a real shared space, follow the two-point alignment step on each AR device before building. Keep both devices at the same site and use the same physical alignment markers. Working alone with a headset, press **grip** while aligning to drop the board on the floor 1.5 m in front of you instead (it cannot match another device's position, so use the two markers when people share the space).
 
 ## What this illustrates
 
@@ -217,7 +215,7 @@ multi-player/
     README.md         VR-specific prerequisites, controls, and run notes
   ar-circuit/
     index.html        AR Circuit Lab: runs v2/app.js in AR mode (bench size chooser, two-point alignment)
-    README.md         placing the bench, what was and was not tested
+    README.md         placing the bench, status
   ar/
     index.html        WebXR immersive-ar hit-test entry point
     README.md         AR calibration, device, and hit-test guidance

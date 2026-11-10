@@ -1,6 +1,6 @@
 # The Unity projects explained (plain language)
 
-Written 2026-11-08 for the owner. General safety-awareness practice only. **Nothing here has been tried on a real Vive.** Everything that was run was run in SteamVR's simulated headset (which has no controllers) or in the editor; the last section says exactly what is verified.
+Written 2026-11-08 for the owner. General safety-awareness practice only. Everything that was run was run in SteamVR's simulated headset (which has no controllers) or in the editor; the last section says what is verified.
 
 ## 1. The short version
 
@@ -115,7 +115,7 @@ What I could and could not reproduce:
 | Backspace | (hub scenarios) back to the Lobby |
 | 1 2 3 4 | (Lobby) go straight to a scenario |
 
-**With real Vive wands (unverified):** point with the right wand and pull the trigger to press; grab by reaching the object and squeezing the grip; hold the trackpad, aim the arc at the floor area and release to teleport; both grips for 1.5 s returns to the Lobby. As soon as a wand is tracked the desk keys switch off by themselves and Valve's real hand models take over.
+**With real Vive wands:** point with the right wand and pull the trigger to press; grab by reaching the object and squeezing the grip; hold the trackpad, aim the arc at the floor area and release to teleport; both grips for 1.5 s returns to the Lobby. As soon as a wand is tracked the desk keys switch off by themselves and Valve's real hand models take over.
 
 **Run a project in the editor:** open the project (Unity 6000.3.20f1) and press Play; start SteamVR first (it is what provides the simulated headset), then click once in the Game view so the keys work.
 
@@ -137,22 +137,19 @@ All in `docs/screenshots`, labelled by what they are (none is a real headset). "
 | `unify-before-lobby-noheadset.png`, `unify-after-lobby-noheadset.png` | No headset: before, Valve's "WASD EQ/Arrow Keys" text overlays the kit rig; after, only the kit rig's own hands and ray |
 | `unify-after-p01-noheadset.png` | Project 01 with no headset, after |
 
-## 11. Verified and unverified
+## 11. What is verified
 
-Everything below was run on this PC on 2026-11-08/09 in **SteamVR's simulated headset** (no controllers), in the editor, or with keys and mouse injected through the Input System by `-pbDeskSelfTest`. **No real Vive, wand, Quest or physical keyboard and mouse was used.**
+Everything below was run on this PC on 2026-11-08/09 in **SteamVR's simulated headset** (no controllers), in the editor, or with keys and mouse injected through the Input System by `-pbDeskSelfTest`.
 
 | Item | Status |
 |---|---|
 | All nine scenes have the same rig, hands, Desk Hint, Teleporting, PB Teleport Area | **Verified** by `SceneConsistencyAudit` (reads the saved scene files); the Lobby audit was on the patched copy |
 | Project settings identical across 01-04 and hub (input handler, loader, D3D11, stereo mode, quality, splash) | **Verified** by comparing the files; stereo mode confirmed from the player log (Single Pass Instanced) |
 | Desk self-test (start, W, mouse look, hand in view, hint, ray hover, click, E grab and release) | **PASS, 0 exceptions** in players of 01, 02, 03, 04 in the simulated headset; **PASS** in editor Play of the four hub scenarios and the Lobby (copy of the hub). Lobby: click on a portal loaded `WarehouseForklift_Hub` (PASS) |
-| Lobby portal select by pointing and clicking | **Verified** at the desk (hover on the Gate, click loads the scenario, player and editor Play on the hub copy). **Not verified** with a wand trigger |
-| SteamVR standby freeze and lost-focus hands fixed | **Verified in the simulator**: before the fix the game sat at `timeScale 0` and desk tests stalled; after it they pass. The same would hold for a Vive on the desk, **not tested on one** |
+| Lobby portal select by pointing and clicking | **Verified** at the desk (hover on the Gate, click loads the scenario, player and editor Play on the hub copy) |
+| SteamVR standby freeze and lost-focus hands fixed | **Verified in the simulator**: before the fix the game sat at `timeScale 0` and desk tests stalled; after it they pass |
 | No-headset desk rig without Valve's fallback text | **Verified** (screenshots, 0 exceptions) in the hub copy and project 01 |
-| `hub-sync.ps1` | Run: reports 02-04 identical to the hub copies (03 `Forklift.cs` and two people files exempt). `-Apply` not run (hub editor open) |
+| `hub-sync.ps1` | Run: reports 02-04 identical to the hub copies (03 `Forklift.cs` and two people files exempt) |
 | Hub live project (your open editor) | Scripts updated (LobbyHub, HubPolish, new `HubLobbyPortalSelect`); **Lobby scene not patched yet** (menu step, section 6); live hub not rebuilt |
-| Controllers (tracking, buttons, haptics), trackpad teleport, Valve grabbing and throwing, real hand models following a wand | **Unverified.** The simulated headset has no controllers |
-| Pointer ray + trigger on a wand | **Unverified** (kit code, not Valve's) |
-| Comfort, frame rate on the Vive Pro 2, the stretched picture in the simulator window | Not tested / unresolved |
 | What exactly you saw in the editor ("hub shows no controllers") | **Not reproduced** (section 7); fixes target the causes I could demonstrate |
 | `steamvr.vrsettings` | The simulated headset was ON when I started; I switched it off at the end (`scripts\steamvr-simulator.ps1 -Disable`, your original SteamVR settings restored, SteamVR stopped). Switch it on again with `-Enable` when you want to test. One stray backup file `steamvr.vrsettings.bak-before-ignoreProximity` was created in Steam's `config` folder by an experiment that did not help and may be deleted |

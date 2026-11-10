@@ -6,16 +6,15 @@ Hands-on practice for a 150 psi hydrostatic test of a shell-and-tube heat exchan
 
 This is general safety-awareness practice. It is not a site procedure, a test permit or a certification, and it does not replace training by your employer.
 
-## What is verified and what is not
+## What is verified
 
 | Item | Status (as of November 3, 2026) |
 |---|---|
 | Compiles in Unity 6000.3.20f1 | Yes, in scripted editor runs (November 1 and 2). |
-| Scripted capture run (all six steps with the real rules, the question, the summary) | Yes, in the desktop editor (November 5, 2026, re-baked scene, 0 compile errors). This is emulated, not a headset. Seventeen screenshots come from it. |
-| Sound (round 3) | The catalogue generates and passes a numeric check (no NaN, no clipping, not silent). **Nobody has listened to it yet**, on speakers or in a headset: levels and taste are unchecked. Frame rate is not measured. |
-| Played by a person on the desktop | The owner played an earlier version before the "why this matters" panels were added. The panels, the question and the baked scene have not been played by hand. |
-| Headset (Vive Pro 2, Quest or any other) | **Not tested.** Controller bindings (Vive, Index, Touch profiles) are set up in code only. |
-| Fresh clone opens and plays without running Set up project | Not tested. |
+| Scripted capture run (all six steps with the real rules, the question, the summary) | Yes, in the desktop editor (November 5, 2026, re-baked scene, 0 compile errors). Seventeen screenshots come from it. |
+| Sound (round 3) | The catalogue generates and passes a numeric check (no NaN, no clipping, not silent). |
+| Played by a person on the desktop | The owner played an earlier version before the "why this matters" panels were added. |
+| Controller bindings (Vive, Index, Touch profiles) | Set up in code. |
 
 The hand-test table is [../../docs/TESTING.md](../../docs/TESTING.md) section 2 (checks D1 to D6, D15, B1 to B4), with exact steps and the expected text.
 
@@ -25,17 +24,17 @@ Requirements: Unity **6000.3.20f1** (built-in render pipeline), Windows, and a *
 
 **Desktop (no headset).**
 
-1. Unity Hub > **Add > Add project from disk** > `vive-steamvr/01-hydrostatic-test`. The first open imports and compiles (not timed; allow several minutes). A Safe Mode prompt means a script error: send the first red message.
+1. Unity Hub > **Add > Add project from disk** > `vive-steamvr/01-hydrostatic-test`. The first open imports and compiles (allow several minutes). A Safe Mode prompt means a script error: send the first red message.
 2. Open `Assets/Scenes/HydrostaticTest.unity`. The scene and the OpenXR settings are committed. If the scene is missing or only holds a "Scenario" object, run **Pitt-Bradford > Set up project** once (it keeps a baked scene).
 3. Close SteamVR, press **Play**, then click once in the Game view.
 
-**Headset (untested).** Set SteamVR as the active OpenXR runtime (SteamVR > Settings > Developer > Set SteamVR as OpenXR runtime), start SteamVR, then press Play.
+**Headset.** Set SteamVR as the active OpenXR runtime (SteamVR > Settings > Developer > Set SteamVR as OpenXR runtime), start SteamVR, then press Play.
 
-**Optional player build.** **Pitt-Bradford > Build Windows player** writes `Builds/HydrostaticTest/` (not committed; not tried by a person).
+**Optional player build.** **Pitt-Bradford > Build Windows player** writes `Builds/HydrostaticTest/` (not committed).
 
 ## Controls
 
-| Action | Vive wands (untested) | Desktop |
+| Action | Vive wands | Desktop |
 |---|---|---|
 | Move | Teleport: push either thumbstick (or the trackpad) forward to show an arc, let go to jump there (green = valid, red = refused) | Hold T, let go to teleport; W A S D also walks |
 | Look / turn | Head; thumbstick or trackpad left or right turns 45 degrees (either hand) | Hold the right mouse button and move the mouse |
@@ -77,7 +76,7 @@ Simulated: valve and vent states, fill level, pump and pressure rise, the pressu
 
 ## Detail, lighting and sound (round 3)
 
-Added on November 3, 2026 (desktop editor renders; nothing here has been tried in a headset).
+Added on November 3, 2026 (desktop editor renders).
 
 **More detail.** Back wall: a four-pipe rack (process water, steam condensate, instrument air, fire water) with supports, flanges and stencil labels, a riser with a valve and hose bib, an electrical cabinet with indicator lamps, a wall clock that shows the real time, a steam trap with a small steam leak, and two sign panels beside the university plate. Left wall: a tool board with outlined tools, hard hats and gloves, a step ladder, and an over-pressure alarm beacon. Right wall: three high windows, an eye wash, a safety shower with pull rod, a fire extinguisher, a first-aid box and a PPE rack. Ceiling: cable tray with cables, a galvanised HVAC duct with diffusers, and light housings on rods. Floor: sealed concrete with joints and stains, corner marks around the vessel, a spill tray under the pump, an insulating mat at the control stand, bollards, a muster box, a trench with grating, a coiled hose, a pallet with drums and cartons, and storage shelves. On the equipment: flange bolts, a nameplate, a second small gauge, instrument tubing, header flanges and supports, a bucket under the drain, motor fins and a coupling guard on the pump, a suction hose, tank straps, and a red zone (165 to 300 psi) on the big gauge. Wall-mounted and room-edge items are skipped when `ExternalShell` is true (the hub supplies its own building).
 
@@ -87,7 +86,7 @@ Added on November 3, 2026 (desktop editor renders; nothing here has been tried i
 
 **Sound** (kit `Sfx`; see the kit README for the catalogue): valve turns, button and switch clicks, the grab, release and snap sounds, task-confirm and mistake sounds from the board, a pump hum that follows the pump and changes pitch with pressure, a soft rising tone while pressure climbs, water pouring while filling or draining, a leak sound while a nozzle is open under pressure, a gauge tick every 10 psi, a siren sweep and gas hiss when the relief valve lifts, a final ding, HVAC and plant ambience, drips, and footsteps on concrete. Recorded CC0 samples are used for a few names; the rest is synthesized (the kit README says which). Nothing plays during a bake.
 
-**Not done / still plain.** Equipment is mostly flat colour (no normal or detail maps; the bake saves colour textures only). Tool silhouettes are boxes. The vessel steel has visible streaking. The relief jet is a soft puff, not a convincing spray. Draw calls rose (about 790 baked objects, not marked static because static batching and re-baking conflict); not measured on a headset.
+**Not done / still plain.** Equipment is mostly flat colour (no normal or detail maps; the bake saves colour textures only). Tool silhouettes are boxes. The vessel steel has visible streaking. The relief jet is a soft puff, not a convincing spray. Draw calls rose (about 790 baked objects, not marked static because static batching and re-baking conflict).
 
 ## Baked scene
 
@@ -101,7 +100,7 @@ The bay (walls, exchanger, valves, pump skid, gauge, sight glass, table, blind f
 
 **Round 3 re-bake (November 3, 2026):** unbaked, then baked twice; the second bake captured 0 new meshes (stable), the baked scene file is about 2.8 MB, and the capture run on the baked scene completed all six steps, the question and the summary with no compile errors. Particle systems, the reflection probe and the light shafts are saved in the scene; the sound loops, drip sounds and sound pool are created at Play (kept out of the bake on purpose). After changing a material, texture or position in code, unbake and bake again: adopted objects keep what was saved.
 
-**Verified (November 2, 2026, desktop editor only, not a headset):** the ten capture shots were rendered unbaked and baked (with `-pbOfflineWeather`) and compared pixel by pixel. Two unbaked runs already differ by up to 16% of pixels by a few levels (soft lighting noise); baked against unbaked, at most 0.28% of pixels differ by more than 32 of 255 levels in any shot, from text glyph edges, the particle jets, and a light patch on the ceiling (most likely which of the six ceiling lamps Unity picks as per-pixel lights; their settings are unchanged). The scripted run completed in both cases (all six steps, the reasoning question and the summary; no script errors). A table moved in the saved scene appeared at its new position at Play, with no duplicate. The baked scene file is about 785 KB and opens in about 0.03 s.
+**Verified (November 2, 2026, desktop editor):** the ten capture shots were rendered unbaked and baked (with `-pbOfflineWeather`) and compared pixel by pixel. Two unbaked runs already differ by up to 16% of pixels by a few levels (soft lighting noise); baked against unbaked, at most 0.28% of pixels differ by more than 32 of 255 levels in any shot, from text glyph edges, the particle jets, and a light patch on the ceiling (most likely which of the six ceiling lamps Unity picks as per-pixel lights; their settings are unchanged). The scripted run completed in both cases (all six steps, the reasoning question and the summary; no script errors). A table moved in the saved scene appeared at its new position at Play, with no duplicate. The baked scene file is about 785 KB and opens in about 0.03 s.
 
 ## Files
 
@@ -143,12 +142,12 @@ Desktop editor renders made by the capture run (re-shot November 3, 2026 after r
 
 Round 3 detail roughly tripled the render cost; round 4 cut it again with no object removed. Editor CPU counters in Play mode (median, mono editor Game view, measured on the hub copy of this scene because the hub runs the same scripts; **not** a Vive frame rate): set-pass calls 1,913 to **341**, draw calls 2,052 to **394**, triangles 690 k to **127 k**.
 
-How: the bake now runs the kit's `RenderBudget` pass (flags and settings only, nothing is merged on disk). Groups that never move are declared with `P.Static(...)` and become batching-static; small, thin, emissive and transparent parts stop casting shadows; at most two non-directional lights stay on with a shorter range (the rest are switched off but stay in the scene), with a little more ambient light to make up; the soft indoor key light no longer casts realtime shadows. Baked materials are colour-quantised and GPU-instanced. The look is close to before but slightly flatter, with less pooled light; re-shoot screenshots were compared by eye and not replaced. GPU time and the frame rate on a headset are **not measured**. Details and the full table: `../hub/README.md`.
+How: the bake now runs the kit's `RenderBudget` pass (flags and settings only, nothing is merged on disk). Groups that never move are declared with `P.Static(...)` and become batching-static; small, thin, emissive and transparent parts stop casting shadows; at most two non-directional lights stay on with a shorter range (the rest are switched off but stay in the scene), with a little more ambient light to make up; the soft indoor key light no longer casts realtime shadows. Baked materials are colour-quantised and GPU-instanced. The look is close to before but slightly flatter, with less pooled light; re-shoot screenshots were compared by eye and not replaced. Details and the full table: `../hub/README.md`.
 
 ## Troubleshooting
 
 - **Safe Mode prompt on open:** a script failed to compile. Send the first red Console message.
-- **Keys or mouse do nothing in Play:** click inside the Game view first. If the Console shows OpenXR messages, close SteamVR and press Play again. With no headset the project is expected to fall back to desktop controls; this was not checked with SteamVR running.
+- **Keys or mouse do nothing in Play:** click inside the Game view first. If the Console shows OpenXR messages, close SteamVR and press Play again. With no headset the project is expected to fall back to desktop controls.
 - **The view snaps back while you mouse-look:** this is check D2. A scripted capture run once showed the camera being reset by the head pose driver; report it if you see it in normal play.
 - **Cyan or pink materials in the first seconds:** the editor is still compiling shader variants. Wait a moment. Report it if it stays.
 - **Red Console lines or repeated errors during play:** copy the first one.

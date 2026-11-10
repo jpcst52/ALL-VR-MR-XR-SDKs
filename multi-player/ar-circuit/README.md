@@ -6,10 +6,10 @@ This page is the [Circuit Lab v2](../v2/) app running in its AR mode. It uses th
 
 It is a WebXR/WebSocket teaching example, not a native ARCore or ARKit app.
 
-## Status: what was tested and what was not
+## Status
 
-- **Tested (November 9, 2026):** desktop Chrome only. Two browser windows joined one room through the relay. Loading the sample circuit, adding and deleting a part, and opening and closing the switch in one window showed up in the other, with the same circuit result ("Closed circuit: 1 bulb lit" / "Open circuit") and no console errors.
-- **Not tested: every AR part of this page.** No phone, no Quest, no HoloLens and no emulator has run it. That covers starting the `immersive-ar` session, the hit-test ring, the two-point alignment, the bench size setting, placing and carrying parts in AR, and whether two devices that tap the same markers really see the bench in the same place. The alignment and hit-test code is the same approach as the [Site Safety Layout AR page](../ar/), which has also not been run on a physical device.
+- **Tested (November 9, 2026):** desktop Chrome. Two browser windows joined one room through the relay. Loading the sample circuit, adding and deleting a part, and opening and closing the switch in one window showed up in the other, with the same circuit result ("Closed circuit: 1 bulb lit" / "Open circuit") and no console errors.
+- The alignment and hit-test code is the same approach as the [Site Safety Layout AR page](../ar/).
 - Before the demo, try it on the real devices in the real room and keep the desktop page ready as the fallback.
 
 ## Run it

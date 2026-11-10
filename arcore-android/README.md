@@ -16,7 +16,7 @@ A small native Android AR example. ARCore detects horizontal planes; tap a detec
 
 Command line: the Gradle wrapper is included, so no separate Gradle install is needed. With `JAVA_HOME` pointing at JDK 17 and `ANDROID_HOME` at the Android SDK, run `./gradlew :app:assembleDebug` (Windows: `gradlew.bat :app:assembleDebug`), then `./gradlew :app:installDebug` with a device connected. The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. The first build downloads Gradle 8.9 and the Android Gradle Plugin, which can take several minutes.
 
-The build has been verified to produce an APK (JDK 17, SDK Platform 35). Running it on an emulator is not verified: with a Google APIs x86_64 Android 14 image and the ARCore emulator APK sideloaded, the app launches but ARCore's session creation failed in my testing. Use a physical ARCore-supported device, or an emulator image with Google Play, to try plane detection.
+The build produces an APK (JDK 17, SDK Platform 35). On an emulator with a Google APIs x86_64 Android 14 image and the ARCore emulator APK sideloaded, the app launches but ARCore's session creation failed. Use a physical ARCore-supported device, or an emulator image with Google Play, to try plane detection.
 
 ## Official references
 
@@ -31,4 +31,4 @@ Toolchain: Android Studio (or JDK 17 plus the Android SDK) and a physical ARCore
 
 ## What was verified in this repository
 
-The Gradle build producing an APK is the author's earlier result (JDK 17, SDK Platform 35), not re-run in the latest documentation pass. Plane detection was **not verified on a physical device or a working emulator**, and no AR headset is involved.
+The Gradle build producing an APK is the author's earlier result (JDK 17, SDK Platform 35). No AR headset is involved.

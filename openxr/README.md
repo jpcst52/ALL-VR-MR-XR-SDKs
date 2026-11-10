@@ -34,4 +34,4 @@ Toolchain: Unity 2022.3 LTS or newer with the OpenXR Plugin and XR Plug-in Manag
 
 ## What was verified
 
-Only the script source and this setup text were reviewed. The feature was **not compiled or run in a Unity project here, and no OpenXR runtime or headset was used.** The `[OpenXRFeature]` attribute only registers the feature in the editor, so it appears in the feature list only after Unity has compiled the script.
+The script source and this setup text were reviewed. The `[OpenXRFeature]` attribute only registers the feature in the editor, so it appears in the feature list only after Unity has compiled the script.

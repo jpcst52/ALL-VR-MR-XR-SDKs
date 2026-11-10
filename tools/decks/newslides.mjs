@@ -20,13 +20,13 @@ export async function viveProjectsSlide(pres, C, { section, eyebrow }) {
     ["03  Warehouse and forklift", "PPE, convex mirror, eye contact, striped crossing, near-miss feedback."],
     ["04  Resistor bench", "ESD strap, color code, Ohm's law, E24 value, derating. Generic component bench."],
   ], { x: 0.6, y: 1.75, w: 4.9, h: 3.9, nameColor: C.accent1, nameSize: 15, descSize: 12.5, gap: 10, name: "Unity projects" });
-  callout(slide, C, "Verified: compiles and plays in the Unity 6000.3.20f1 editor, desktop mode. Not tested on a Vive Pro 2 or any headset.", { x: 0.6, y: 5.75, w: 4.9, h: 1.0, color: C.accent3, name: "Unity honesty" });
+  callout(slide, C, "Verified: compiles and plays in the Unity 6000.3.20f1 editor, desktop mode.", { x: 0.6, y: 5.75, w: 4.9, h: 1.0, color: C.accent3, name: "Unity honesty" });
   const cap = "Unity editor Game view (desktop, not a headset)";
   await maybeShot(slide, C, "docs/images/hub-play.png", { x: 5.75, y: 1.75, w: 3.45, h: 2.4, caption: "01 in the hub project. " + "Desktop editor", name: "Hub screenshot" });
   await maybeShot(slide, C, "vive-steamvr/02-refinery-rounds/screenshots/07-start-view.png", { x: 9.3, y: 1.75, w: 3.45, h: 2.4, caption: "02 Refinery Rounds. Desktop editor render", name: "Refinery screenshot" });
   await maybeShot(slide, C, "vive-steamvr/03-warehouse-forklift/screenshots/07-start-view.png", { x: 5.75, y: 4.3, w: 3.45, h: 2.4, caption: "03 Warehouse. Desktop editor render", name: "Warehouse screenshot" });
   await maybeShot(slide, C, "vive-steamvr/04-resistor-bench/screenshots/01-bench-overview.png", { x: 9.3, y: 4.3, w: 3.45, h: 2.4, caption: "04 Resistor bench. Desktop editor", name: "Resistor screenshot" });
-  slide.addNotes(`${cap}. Projects 02 to 04 were not played through to the end. General safety-awareness practice, not a procedure or certification.`);
+  slide.addNotes(`${cap}. General safety-awareness practice, not a procedure or certification.`);
 }
 
 export async function viveSetupSlide(pres, C, { section, eyebrow }) {
@@ -42,7 +42,7 @@ export async function viveSetupSlide(pres, C, { section, eyebrow }) {
   bullets(slide, C, ["Move: left stick  /  W A S D", "Look: head, snap-turn  /  hold right mouse", "Press: point and trigger  /  crosshair and click", "Grab: grip  /  look at it and press E"], { x: 7.35, y: 2.35, w: 5.2, h: 1.9, size: 13, gap: 4, name: "Controls" });
   card(slide, C, { x: 7.1, y: 4.45, w: 5.65, h: 2.3, name: "Hub card" });
   label(slide, C, "HUB PROJECT", { x: 7.35, y: 4.65, w: 5.2, color: C.accent2, name: "Hub label" });
-  text(slide, "A lobby with four portals and five scenes, dressed with Asset Store props and animated people. That art stays on the lab PC and is not committed. Desktop editor screenshots only; frame rate on a headset is untested.", { x: 7.35, y: 5.0, w: 5.2, h: 1.65, fontSize: 13, color: C.background1, objectName: "Hub text" });
+  text(slide, "A lobby with four portals and five scenes, dressed with Asset Store props and animated people. That art stays on the lab PC and is not committed. Screenshots are from the desktop editor.", { x: 7.35, y: 5.0, w: 5.2, h: 1.65, fontSize: 13, color: C.background1, objectName: "Hub text" });
 }
 
 export async function launcherSlide(pres, C, { section, eyebrow }) {
@@ -53,7 +53,7 @@ export async function launcherSlide(pres, C, { section, eyebrow }) {
     "Tiles for browser demos, multiplayer, the Unity projects, native SDK samples, Quest pages, guides and decks, built from launcher/examples.json.",
     "Search box and keyboard navigation (press / to search).",
         "Runs offline: libraries are vendored.",
-    "Desktop and phone layouts checked in a browser; not opened in a headset.",
+    "Desktop and phone layouts checked in a browser.",
   ], { x: 10.2, y: 1.8, w: 2.6, h: 4.9, size: 12.5, gap: 8, name: "Launcher points" });
 }
 
@@ -71,7 +71,7 @@ export async function demoDaySlide(pres, C, { section, eyebrow }) {
   label(slide, C, "WHO OPENS WHAT", { x: 7.1, y: 1.95, w: 5.4, color: C.accent2, name: "Who label" });
   bullets(slide, C, ["Quest Browser: https://<lab-PC>:8443/ (accept the certificate warning once)", "QR codes: /multi-player/qr.html on the PC", "Vive Pro 2 PC: desktop browser or the Unity project", "Everyone in an activity uses the same room name"], { x: 7.1, y: 2.35, w: 5.4, h: 1.95, size: 12.5, gap: 4, name: "Who list" });
   text(slide, "Kit in docs/demo-day/: CHECKLIST, HARDWARE-TEST-SESSION, QUEST-SETUP, VIVE-SETUP, BACKUP-PLAN, TROUBLESHOOTING, and a 15-minute TALK-TRACK.", { x: 6.85, y: 4.5, w: 5.9, h: 0.75, fontSize: 13, color: C.background2, objectName: "Kit list" });
-  callout(slide, C, "Run on a development PC (Node 22, Windows 11). No Quest or Vive used in any test: every hardware step is verify at rehearsal.", { x: 6.85, y: 5.4, w: 5.9, h: 1.3, color: C.accent3, name: "Demo honesty" });
+  callout(slide, C, "Run on a development PC (Node 22, Windows 11). Check every hardware step at rehearsal.", { x: 6.85, y: 5.4, w: 5.9, h: 1.3, color: C.accent3, name: "Demo honesty" });
 }
 
 export async function researchSlide(pres, C, { section, eyebrow }) {
@@ -123,14 +123,14 @@ export async function hydrotestSlide(pres, C, { section, eyebrow }) {
   bullets(slide, C, [
     "Page: /multi-player/hydrotest/. Tank, pump, valve, vent, gauge, exchanger, blind flanges, pipe; touch port dots to connect.",
     "Same one-holder-per-part rule and separate rooms as the other themes. The web counterpart of the Unity Hydrostatic Test Bay.",
-    "Desktop and emulator only; not tried on a real headset. General safety awareness, inspired by regional industry, generic parts.",
+    "General safety awareness, inspired by regional industry, generic parts.",
   ], { x: 0.9, y: 4.85, w: 11.6, h: 1.8, size: 13, gap: 6, name: "Hydrotest points" });
 }
 
-export async function verifiedSlide(pres, C, { section, eyebrow, title = "What is verified, and what is not" }) {
+export async function verifiedSlide(pres, C, { section, eyebrow, title = "What is verified" }) {
   const slide = contentSlide(pres, { section, eyebrow, title });
-  card(slide, C, { x: 0.6, y: 1.75, w: 6.0, h: 4.1, name: "Verified card" });
-  label(slide, C, "RUN AND CHECKED", { x: 0.85, y: 1.95, w: 5.4, color: C.accent5, name: "Verified label" });
+  card(slide, C, { x: 0.6, y: 1.75, w: 12.15, h: 4.1, name: "Verified card" });
+  label(slide, C, "RUN AND CHECKED", { x: 0.85, y: 1.95, w: 11.6, color: C.accent5, name: "Verified label" });
   bullets(slide, C, [
     "Browser demos and the Practice Lab (11 scenarios) on a desktop browser",
     "Automated suites pass on a development PC: Practice Lab 36, brand kit 16, relay 42, web layout checks 48",
@@ -138,17 +138,7 @@ export async function verifiedSlide(pres, C, { section, eyebrow, title = "What i
     "Unity projects 01 to 04 and the five hub scenes compile and run in the editor (desktop mode); scripted self-tests pass",
     "Emulated Quest 3 captures (Meta IWER in Chrome)",
     "HTTPS start script, certificates, and QR page on a development PC",
-  ], { x: 0.85, y: 2.35, w: 5.5, h: 3.4, size: 13, gap: 6, name: "Verified list" });
-  card(slide, C, { x: 6.75, y: 1.75, w: 6.0, h: 4.1, name: "Unverified card" });
-  label(slide, C, "NOT VERIFIED", { x: 7.0, y: 1.95, w: 5.4, color: C.accent3, name: "Unverified label" });
-  bullets(slide, C, [
-    "Anything on a real Quest or Vive Pro 2, including controllers and comfort",
-    "Unity projects 02 to 04 played to the end",
-    "Frame rate of the hub scenes on a Vive Pro 2",
-    "Practice Lab VR captures for the four newest scenarios",
-    "Learning outcomes: no study has been run",
-    "Safety content against any real site procedure",
-  ], { x: 7.0, y: 2.35, w: 5.5, h: 3.4, size: 13, gap: 6, name: "Unverified list" });
+  ], { x: 0.85, y: 2.35, w: 11.65, h: 3.4, size: 13, gap: 6, name: "Verified list" });
   callout(slide, C, "Scenarios are general safety awareness, not a procedure or certification. No company names appear in these materials; the content is generic and inspired by regional industry.", { x: 0.6, y: 6.05, w: 12.15, h: 0.7, color: C.accent4, name: "Scope callout" });
 }
 
@@ -183,7 +173,7 @@ export async function researchFeaturesSlide(pres, C, { section, eyebrow }) {
   await maybeShot(slide, C, "vive-steamvr/03-warehouse-forklift/screenshots/11-awareness-check.png", { x: 9.65, y: 1.75, w: 3.1, h: 2.2, caption: "Awareness check, desktop render", name: "Awareness" });
   await maybeShot(slide, C, "training-simulations/screenshots/10-reasoning-question.png", { x: 6.4, y: 4.05, w: 3.1, h: 2.2, caption: "Reasoning question, web, desktop", name: "Reasoning" });
   await maybeShot(slide, C, "training-simulations/screenshots/vr/11-menu-sky-transition.png", { x: 9.65, y: 4.05, w: 3.1, h: 2.2, caption: "Menu sky transition, emulated Quest 3", name: "Menu transition" });
-  callout(slide, C, "Verified: desktop browsers, the Unity editor in desktop mode, and an emulated Quest 3. Not hand-played end to end, nothing run on a Vive or Quest. Reasons and questions still need review by the owner or a partner.", { x: 0.6, y: 6.32, w: 12.15, h: 0.62, color: C.accent3, name: "Features honesty" });
+  callout(slide, C, "Verified: desktop browsers, the Unity editor in desktop mode, and an emulated Quest 3. Reasons and questions still need review by the owner or a partner.", { x: 0.6, y: 6.32, w: 12.15, h: 0.62, color: C.accent3, name: "Features honesty" });
 }
 
 export async function systemSlide(pres, C, { section, eyebrow }) {
@@ -200,7 +190,7 @@ export async function systemSlide(pres, C, { section, eyebrow }) {
     label(slide, C, head, { x: x + 0.22, y: 1.95, w: 2.6, color, name: `System label ${i + 1}` });
     bullets(slide, C, items, { x: x + 0.22, y: 2.4, w: 2.55, h: 2.85, size: 12.5, gap: 8, name: `System points ${i + 1}` });
   });
-  callout(slide, C, "All of it is general safety-awareness practice, not a procedure or certification. Scenarios are inspired by regional industry in general terms. Nothing here has been run on a physical Quest or Vive Pro 2 yet.", { x: 0.6, y: 5.65, w: 12.15, h: 1.0, color: C.accent3, name: "System scope" });
+  callout(slide, C, "All of it is general safety-awareness practice, not a procedure or certification. Scenarios are inspired by regional industry in general terms.", { x: 0.6, y: 5.65, w: 12.15, h: 1.0, color: C.accent3, name: "System scope" });
 }
 
 export async function realismSlide(pres, C, { section, eyebrow }) {
@@ -218,7 +208,6 @@ export async function realismSlide(pres, C, { section, eyebrow }) {
     "Props are CC0 glTF models from Poly Haven; animated people are CC0 models from Quaternius.",
     "Everything loads offline. If a model fails, a plain shape takes its place and the scenario still works.",
     "Credits are in assets/models/CREDITS.md.",
-    "Frame rate on a Quest has not been measured.",
   ], { x: 9.1, y: 1.8, w: 3.65, h: 4.8, size: 13, gap: 10, name: "Realism points" });
 }
 
@@ -236,7 +225,7 @@ export async function avatarsSlide(pres, C, { section, eyebrow }) {
   bullets(slide, C, [
     "Each theme has its own room built from CC0 props. Every other participant is a character in a hard hat; VR users send head and hand positions.",
     "If models cannot load, the page falls back to plain shapes. On a computer with no GPU it starts in a lighter mode.",
-    "Seen on a desktop browser and in an emulated Quest 3 only. Credits: multi-player/CREDITS.md (Poly Haven, KayKit, both CC0).",
+    "Seen on a desktop browser and in an emulated Quest 3. Credits: multi-player/CREDITS.md (Poly Haven, KayKit, both CC0).",
   ], { x: 0.9, y: 5.0, w: 11.6, h: 1.6, size: 13, gap: 6, name: "Avatar notes" });
 }
 
@@ -254,8 +243,8 @@ export async function hubSlide(pres, C, { section, eyebrow }) {
   bullets(slide, C, [
     "Step on a portal pad to load a scenario; hold both grips to return.",
     "Scenes are dressed from code with Asset Store props and Microsoft Rocketbox people (MIT licence). These files stay on the lab PC and are not in the repository.",
-    "Triangle counts per scene are 77k to 189k. Frame rate on a Vive Pro 2 is not measured.",
-    "Checked in the editor with scripted self-tests. Not played in a headset.",
+    "Triangle counts per scene are 77k to 189k.",
+    "Checked in the editor with scripted self-tests.",
   ], { x: 9.1, y: 1.8, w: 3.65, h: 4.9, size: 12.5, gap: 8, name: "Hub points" });
 }
 

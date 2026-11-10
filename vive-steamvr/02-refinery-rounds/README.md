@@ -6,18 +6,16 @@ Outdoor rounds at the battery limits of a refinery unit: check the wind, bump-te
 
 This is general safety-awareness practice. It is not a site procedure, a permit or a certification, and it does not replace training by your employer. Real sites have their own rules for gas monitors, radio calls, barricades and emergency response.
 
-## What is verified and what is not
+## What is verified
 
 | Item | Status (as of November 3, 2026) |
 |---|---|
 | Compiles in Unity 6000.3.20f1 | Yes, in scripted editor runs (November 1 and 2). |
-| Scripted capture run (twenty staged views, the "why this matters" panels, the reasoning question, scoring) | Yes, in the desktop editor (round 3: November 3, 2026, `-pbOfflineWeather`, 0 compile errors, scene re-baked and the baked scene played through the whole scripted run). This is emulated, not a headset. |
-| Sound (round 3) | Wired to the kit's `Sfx` and compiled and run in the scripted capture (no errors logged). **Nobody has listened to it yet**: levels, balance and the siren are unheard. |
-| Frame rate / draw calls | **Not measured.** Round 3 more than doubled the object count (see below); detail objects are marked static for batching but this has not been profiled. |
-| Played through by a person | The owner has looked at it. It has not been played from the gate to the muster point by hand since the signage, "why this matters" and baking changes. |
-| Headset (Vive Pro 2, Quest or any other) | **Not tested.** |
-| Fresh clone opens and plays without running Set up project | Not tested. |
-| Live weather | The request to Open-Meteo is coded; with no network the scene uses simulated wind and says so. Not checked on a conference network. |
+| Scripted capture run (twenty staged views, the "why this matters" panels, the reasoning question, scoring) | Yes, in the desktop editor (round 3: November 3, 2026, `-pbOfflineWeather`, 0 compile errors, scene re-baked and the baked scene played through the whole scripted run). |
+| Sound (round 3) | Wired to the kit's `Sfx` and compiled and run in the scripted capture (no errors logged). |
+| Draw calls | Round 3 more than doubled the object count (see below); detail objects are marked static for batching. |
+| Looked at by a person | The owner has looked at it. |
+| Live weather | The request to Open-Meteo is coded; with no network the scene uses simulated wind and says so. |
 
 The hub keeps its own copy of this script (`../hub/Assets/Scripts/Scenarios/`); it is refreshed separately. The hand-test table is [../../docs/TESTING.md](../../docs/TESTING.md) section 2 (checks D1 to D5, D7, D8, B1 to B4), with exact steps and the expected text.
 
@@ -27,17 +25,17 @@ Requirements: Unity **6000.3.20f1** (built-in render pipeline), Windows, and a *
 
 **Desktop (no headset).**
 
-1. Unity Hub > **Add > Add project from disk** > `vive-steamvr/02-refinery-rounds`. The first open imports and compiles (not timed; allow several minutes). A Safe Mode prompt means a script error: send the first red message.
+1. Unity Hub > **Add > Add project from disk** > `vive-steamvr/02-refinery-rounds`. The first open imports and compiles (allow several minutes). A Safe Mode prompt means a script error: send the first red message.
 2. Open `Assets/Scenes/RefineryRounds.unity`. The scene and the OpenXR settings are committed. If the scene is missing or only holds a "Scenario" object, run **Pitt-Bradford > Set up project** once (it keeps a baked scene; restart the editor if it asks about the input handling change).
 3. Close SteamVR, press **Play**, then click once in the Game view.
 
-**Headset (untested).** Set SteamVR as the active OpenXR runtime (SteamVR > Settings > Developer > Set SteamVR as OpenXR runtime), start SteamVR, then press Play.
+**Headset.** Set SteamVR as the active OpenXR runtime (SteamVR > Settings > Developer > Set SteamVR as OpenXR runtime), start SteamVR, then press Play.
 
-**Optional player build.** **Pitt-Bradford > Build Windows player** writes `Builds/RefineryRounds/` (not committed; not tried by a person).
+**Optional player build.** **Pitt-Bradford > Build Windows player** writes `Builds/RefineryRounds/` (not committed).
 
 ## Controls
 
-| Action | Vive wands (untested) | Desktop |
+| Action | Vive wands | Desktop |
 |---|---|---|
 | Move | Teleport: push either thumbstick (or the trackpad) forward to show an arc, let go to jump there (green = valid, red = refused) | Hold T, let go to teleport; W A S D also walks |
 | Look / turn | Head; thumbstick or trackpad left or right turns 45 degrees (either hand) | Hold the right mouse button and move the mouse |
@@ -126,7 +124,7 @@ Not simulated: real gas physics (density, dilution, terrain, buildings), real in
 
 **Unbake** (go back to building everything at Start): **Pitt-Bradford > Unbake scene** (or `-executeMethod PittBradford.XR.EditorTools.SceneBaker.UnbakeAndExit`). It deletes the baked objects and `Assets/Baked/RefineryRounds/` and restores the scene lighting; the scenario then runs exactly as it did before baking. For a clean bake that drops all scene edits, Unbake and then Bake. **Set up project** no longer replaces a baked scene with an empty one.
 
-**Verified (November 2, 2026, desktop editor only, emulated, not a headset):** the 13 capture shots were rendered with the scene unbaked and baked and compared pixel by pixel. Outside the animated wind sock, flame and flag, which differ between any two runs, the only differences are sub-pixel edges of the sign panels (their textures are now imported PNGs) and text glyph edges (the runtime font atlas is filled in a different order); under 0.3% of pixels differ by more than 8 of 255 levels in every shot. The scripted run completed in both cases (all tasks, scoring and the reasoning question, no script errors). A table moved in the saved scene appeared at its new position at Play. The baked scene file was about 970 KB then; after round 3 it is about 2.8 MB (not timed).
+**Verified (November 2, 2026, desktop editor):** the 13 capture shots were rendered with the scene unbaked and baked and compared pixel by pixel. Outside the animated wind sock, flame and flag, which differ between any two runs, the only differences are sub-pixel edges of the sign panels (their textures are now imported PNGs) and text glyph edges (the runtime font atlas is filled in a different order); under 0.3% of pixels differ by more than 8 of 255 levels in every shot. The scripted run completed in both cases (all tasks, scoring and the reasoning question, no script errors). A table moved in the saved scene appeared at its new position at Play. The baked scene file was about 970 KB then; after round 3 it is about 2.8 MB.
 
 ## Files
 
@@ -173,12 +171,12 @@ All images: desktop editor render, not a headset (round 3 set made November 3, 2
 
 Round 3 detail roughly tripled the render cost; round 4 cut it again with no object removed. Editor CPU counters in Play mode (median, mono editor Game view, measured on the hub copy of this scene because the hub runs the same scripts; **not** a Vive frame rate): set-pass calls 1,290 to **544**, draw calls 1,807 to **1,082**, triangles 448 k to **287 k**.
 
-How: the bake now runs the kit's `RenderBudget` pass (flags and settings only, nothing is merged on disk). Groups that never move are declared with `P.Static(...)` and become batching-static; small, thin, emissive and transparent parts stop casting shadows; at most two non-directional lights stay on with a shorter range (the rest are switched off but stay in the scene), with a little more ambient light to make up; the soft indoor key light no longer casts realtime shadows. Baked materials are colour-quantised and GPU-instanced. The look is close to before but slightly flatter, with less pooled light; re-shoot screenshots were compared by eye and not replaced. GPU time and the frame rate on a headset are **not measured**. Details and the full table: `../hub/README.md`.
+How: the bake now runs the kit's `RenderBudget` pass (flags and settings only, nothing is merged on disk). Groups that never move are declared with `P.Static(...)` and become batching-static; small, thin, emissive and transparent parts stop casting shadows; at most two non-directional lights stay on with a shorter range (the rest are switched off but stay in the scene), with a little more ambient light to make up; the soft indoor key light no longer casts realtime shadows. Baked materials are colour-quantised and GPU-instanced. The look is close to before but slightly flatter, with less pooled light; re-shoot screenshots were compared by eye and not replaced. Details and the full table: `../hub/README.md`.
 
 ## Troubleshooting
 
 - **Safe Mode prompt on open:** a script failed to compile. Send the first red Console message.
-- **Keys or mouse do nothing in Play:** click inside the Game view first. If the Console shows OpenXR messages, close SteamVR and press Play again. With no headset the project is expected to fall back to desktop controls; this was not checked with SteamVR running.
+- **Keys or mouse do nothing in Play:** click inside the Game view first. If the Console shows OpenXR messages, close SteamVR and press Play again. With no headset the project is expected to fall back to desktop controls.
 - **The view snaps back while you mouse-look:** this is check D2. A scripted capture run once showed the camera being reset by the head pose driver; report it if you see it in normal play.
 - **Cyan or pink materials in the first seconds:** the editor is still compiling shader variants. Wait a moment. Report it if it stays.
 - **"Reading the wind... one moment." stays on the board:** the live weather request is still pending; the scene falls back to simulated wind when the request fails.

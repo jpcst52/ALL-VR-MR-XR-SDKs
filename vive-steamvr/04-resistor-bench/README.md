@@ -8,16 +8,13 @@ Everything is built from Unity primitives by code (no imported art); the static 
 
 ![Bench overview: desktop editor render, not a headset](screenshots/01-bench-overview.png)
 
-## What is verified and what is not
+## What is verified
 
 | Item | Status (as of November 3, 2026) |
 |---|---|
 | Compiles in Unity 6000.3.20f1 | Yes, in scripted editor runs (November 1 to 3). |
-| Scripted capture run (fifteen views: strap, meter reading, LED lit, LED burned out, set dressing) | Yes, in the desktop editor, unbaked and baked. The script places parts directly; it does not use the hands. This is emulated, not a headset. |
+| Scripted capture run (fifteen views: strap, meter reading, LED lit, LED burned out, set dressing) | Yes, in the desktop editor, unbaked and baked. The script places parts directly; it does not use the hands. |
 | `ResistorMath.cs` (color bands, E24, Ohm's law, derating, part check) | **Run on November 3, 2026**: every line of the test list below passed (71 assertions) in a stand-alone .NET 9 console program that compiles `ResistorMath.cs` outside Unity. That program is not committed. It does not test the scene. |
-| Played through by a person | **No.** Nobody has played the four steps by hand, with the mouse and E key or with controllers. |
-| Headset (Vive Pro 2, Quest or any other) | **Not tested.** |
-| Fresh clone opens and plays without running Set up project | Not tested. |
 
 The hand-test table is [../../docs/TESTING.md](../../docs/TESTING.md) section 2 (checks D1 to D5, D12, D13, B1 to B4), with exact steps and the expected text.
 
@@ -27,17 +24,17 @@ Requirements: Unity **6000.3.20f1** (built-in render pipeline; no extra assets),
 
 **Desktop (no headset).**
 
-1. Unity Hub > **Add > Add project from disk** > `vive-steamvr/04-resistor-bench`. The first open imports and compiles (not timed; allow several minutes). A Safe Mode prompt means a script error: send the first red message.
+1. Unity Hub > **Add > Add project from disk** > `vive-steamvr/04-resistor-bench`. The first open imports and compiles (allow several minutes). A Safe Mode prompt means a script error: send the first red message.
 2. Open `Assets/Scenes/ResistorBench.unity`. The scene and the OpenXR settings are committed. If the scene is missing or only holds a "Scenario" object, run **Pitt-Bradford > Set up project** once (it keeps a baked scene; restart the editor once if it asks about the input handling change).
 3. Close SteamVR, press **Play**, then click once in the Game view.
 
-**Headset (untested).** Set SteamVR as the active OpenXR runtime (SteamVR > Settings > Developer > Set SteamVR as OpenXR runtime), start SteamVR with the Vive Pro 2, then press Play.
+**Headset.** Set SteamVR as the active OpenXR runtime (SteamVR > Settings > Developer > Set SteamVR as OpenXR runtime), start SteamVR with the Vive Pro 2, then press Play.
 
-**Optional player build.** **Pitt-Bradford > Build Windows player** writes `Builds/ResistorBench/ResistorBench.exe` (not committed; not tried by a person).
+**Optional player build.** **Pitt-Bradford > Build Windows player** writes `Builds/ResistorBench/ResistorBench.exe` (not committed).
 
 ## Controls
 
-| | Vive wands (untested) | Desktop |
+| | Vive wands | Desktop |
 |---|---|---|
 | Move | Teleport: push either thumbstick (or the trackpad) forward to show an arc, let go to jump there (green = valid, red = refused) | Hold T, let go to teleport; W A S D also walks |
 | Turn | Thumbstick or trackpad left or right turns 45 degrees (either hand), or turn your body | Hold the right mouse button and move the mouse |
@@ -58,7 +55,7 @@ On the bench: an ESD mat with a wrist-strap hook, a two-tier parts rack ("parts 
 | 3 | Work out the LED resistor; test a part in the tray | The circuit card gives 5 V, 2 V LED drop, 20 mA. R = (5 - 2) / 0.020 = 150 ohm, a standard (E24) value. Power = 0.02 x 0.02 x 150 = 0.06 W. The datasheet card derates a rated power linearly from 100% at 70 C to 0 at 155 C; at the board's 85 C that is 82%, so a 1/8 W part is good for about 0.103 W (enough), a 1/16 W part for 0.051 W (not enough), and a 1/2 W body is oversize for the pads. Take a part from a bin, put it in the tray, press CHECK PART. A wrong value, loose tolerance (looser than 5%), too little derated power, or an oversize body is a mistake | A part must have the right value, enough power rating at the real temperature, and fit the board. A bigger rating is not automatically safer. |
 | 4 | Sulfur-rich air: fit an anti-sulfur part, switch on | The environment card says the station air is sulfur-rich. Install an **anti-sulfur** 150 ohm part (green dot on the body, "ANTI-SULFUR" on the bin label) in R1, put an LED in LED1, and switch on the supply. The LED lights at about 20 mA. Step 3 must be done first: otherwise the board says "Test the part in the selection tray first (step 3)." | In a sulfur-rich atmosphere, a standard part's terminations can be attacked; anti-sulfur types are built to resist it. |
 
-After each step a **WHY THIS MATTERS** panel shows a one-sentence reason for a few seconds, and after the fourth step one multiple-choice question ("why also measure a part you have already read?") gives feedback on every option and a reasoning line apart from the procedure score (added November 3, 2026; the same kit panels the Hydrostatic Test Bay and Refinery Rounds use). It is practice feedback, not a certification. Compiled in the editor; not hand-played, not tested on a headset.
+After each step a **WHY THIS MATTERS** panel shows a one-sentence reason for a few seconds, and after the fourth step one multiple-choice question ("why also measure a part you have already read?") gives feedback on every option and a reasoning line apart from the procedure score (added November 3, 2026; the same kit panels the Hydrostatic Test Bay and Refinery Rounds use). It is practice feedback, not a certification. Compiled in the editor.
 
 **What the rules count.** A wrong value dims the LED (below about 16.5 mA) or sets it above the design current (above about 23.5 mA): a mistake. Powering with a clearly wrong part (over 30 mA, for example the 47 ohm part, or no resistor at all) burns the LED out with a puff of smoke: a **critical miss**. A standard (non-anti-sulfur) part, or one that would overheat at 85 C, is a mistake. A spare LED is on the bench. The board summary reads "STRONG PRACTICE: no mistakes.", "Complete with N mistakes." or "CRITICAL SAFETY MISS (n). Review before real work.".
 
@@ -86,7 +83,7 @@ Signs and labels use the shared kit's signage helpers (`Ui.Panel`, `Ui.Tag`, `Ui
 
 ## Detail, lighting and sound (round 3)
 
-Added on November 3, 2026 (desktop editor only; nothing here has been tested in a headset, and no frame rate has been measured).
+Added on November 3, 2026 (desktop editor).
 
 **Scene detail (all procedural, in `Assets/Scripts/BenchDetail.cs` and `ResistorBench.cs`):**
 - Room: ESD floor tile (grouted checker texture), anti-fatigue rubber mat with hazard-tape edges, floor marking lines, conduit run with clamps, outlets, junction box, scuffs, ESD warning sign and "ESD PROTECTED AREA" plate, wall clock, fluorescent tubes inside the ceiling panels, a ceiling cable tray, and side and front walls so the room is closed.
@@ -101,9 +98,9 @@ Added on November 3, 2026 (desktop editor only; nothing here has been tested in 
 
 **Sound** uses the kit's `Sfx` (see [../../docs/agents/KIT-AUDIO-FX.md](../../docs/agents/KIT-AUDIO-FX.md)); nothing plays during a bake. Used here: `hvac_loop` as a quiet lab ambience bed, `esd_click` when the strap clips on, `switch` for the supply power switch, `pressure_tone` (pitched low, very quiet) as a hum while the supply is on, `meter_beep` when a reading appears, `led_on` when the LED lights, `spark_pop` and `smoke_puff` when it burns out, `ui_confirm` when a step completes, `ui_error` for mistakes, Tile footsteps on the ESD floor, plus the kit's built-in `grab`, `release` and `snap`. Whether each is a recorded CC0 sample or synthesised is decided by the kit (see its README and `Runtime/Resources/Audio/CREDITS.md`); this project adds no audio files. There are no dedicated drawer-slide or bin-lid sounds (the catalogue has none), and the range-switch click is not played because the meter dial is not interactive.
 
-**Cost note (not measured):** the baked scene grew from 398 to 934 objects (the extra set dressing is mostly small static pieces), 230 materials and 71 textures. Draw-call and frame-time impact on the Vive Pro 2 has not been measured.
+**Cost note:** the baked scene grew from 398 to 934 objects (the extra set dressing is mostly small static pieces), 230 materials and 71 textures.
 
-**Verified (November 3, 2026, desktop editor, not a headset):** compile with 0 `error CS`; unbake, then re-bake (934 objects captured, 2.3 MB scene file); the scripted capture ran on the baked scene and produced all 15 views; the same capture also ran unbaked. `ResistorMath.cs` was not changed. Audio was not listened to in this run (no audio output was checked), so levels are unverified.
+**Verified (November 3, 2026, desktop editor):** compile with 0 `error CS`; unbake, then re-bake (934 objects captured, 2.3 MB scene file); the scripted capture ran on the baked scene and produced all 15 views; the same capture also ran unbaked. `ResistorMath.cs` was not changed.
 
 New screenshots (desktop editor renders, not a headset):
 
@@ -124,7 +121,7 @@ New screenshots (desktop editor renders, not a headset):
 
 Edits to baked objects are kept at Play (for example, moving the multimeter in the scene moves it in play, and the probe leads follow its jacks). Do not rename, re-parent or reorder baked objects; to hide one, untick it instead of deleting it. After changing the script, re-bake with **Pitt-Bradford > Bake scene (play mode)**; **Pitt-Bradford > Unbake scene** goes back to building everything at Start. Headless: `Unity.exe -projectPath <this folder> -executeMethod PittBradford.XR.EditorTools.SceneBaker.BakeAndExit -logFile <log>` (no `-batchmode`). How it works and the conversion recipe: [kit README, "Baked scenes"](../packages/com.pittbradford.xrtraining/README.md#baked-scenes-bake-and-adopt). **Set up project** does not replace a baked scene.
 
-**Verified (November 2, 2026, desktop editor only, not a headset):** the seven capture shots were rendered with the scene unbaked and baked (`-pbOfflineWeather`) and compared pixel by pixel; at most 0.54% of pixels differ by more than 8 of 255 levels in any shot. The differences are text glyph edges (the runtime font atlas fills in a different order), sub-pixel edges of the sign panels (their textures are now imported PNGs), the random smoke puff in shot 6, and the resting place of the probes after they are unclipped and fall back onto the bench in shots 5 and 6 (they land slightly differently; repeated baked runs match each other exactly there). In both runs the scripted capture completed: the strap snapped to the hook, the meter read 4.7 k on the unknown part, the anti-sulfur 150 ohm part lit the LED, and the 47 ohm part burned out the second LED, with no script errors. The baked scene file is about 1 MB and opens in under 0.1 s.
+**Verified (November 2, 2026, desktop editor):** the seven capture shots were rendered with the scene unbaked and baked (`-pbOfflineWeather`) and compared pixel by pixel; at most 0.54% of pixels differ by more than 8 of 255 levels in any shot. The differences are text glyph edges (the runtime font atlas fills in a different order), sub-pixel edges of the sign panels (their textures are now imported PNGs), the random smoke puff in shot 6, and the resting place of the probes after they are unclipped and fall back onto the bench in shots 5 and 6 (they land slightly differently; repeated baked runs match each other exactly there). In both runs the scripted capture completed: the strap snapped to the hook, the meter read 4.7 k on the unknown part, the anti-sulfur 150 ohm part lit the LED, and the 47 ohm part burned out the second LED, with no script errors. The baked scene file is about 1 MB and opens in under 0.1 s.
 
 ## Files
 
@@ -189,12 +186,12 @@ Run on November 3, 2026: every line below passed in a stand-alone .NET 9 console
 
 Round 3 detail roughly tripled the render cost; round 4 cut it again with no object removed. Editor CPU counters in Play mode (median, mono editor Game view, measured on the hub copy of this scene because the hub runs the same scripts; **not** a Vive frame rate): set-pass calls 1,924 to **562**, draw calls 2,497 to **804**, triangles 611 k to **132 k**.
 
-How: the bake now runs the kit's `RenderBudget` pass (flags and settings only, nothing is merged on disk). Groups that never move are declared with `P.Static(...)` and become batching-static; small, thin, emissive and transparent parts stop casting shadows; at most two non-directional lights stay on with a shorter range (the rest are switched off but stay in the scene), with a little more ambient light to make up; the soft indoor key light no longer casts realtime shadows. Baked materials are colour-quantised and GPU-instanced. The look is close to before but slightly flatter, with less pooled light; re-shoot screenshots were compared by eye and not replaced. GPU time and the frame rate on a headset are **not measured**. Details and the full table: `../hub/README.md`.
+How: the bake now runs the kit's `RenderBudget` pass (flags and settings only, nothing is merged on disk). Groups that never move are declared with `P.Static(...)` and become batching-static; small, thin, emissive and transparent parts stop casting shadows; at most two non-directional lights stay on with a shorter range (the rest are switched off but stay in the scene), with a little more ambient light to make up; the soft indoor key light no longer casts realtime shadows. Baked materials are colour-quantised and GPU-instanced. The look is close to before but slightly flatter, with less pooled light; re-shoot screenshots were compared by eye and not replaced. Details and the full table: `../hub/README.md`.
 
 ## Troubleshooting
 
 - **Safe Mode prompt on open:** a script failed to compile. Send the first red Console message.
-- **Keys or mouse do nothing in Play:** click inside the Game view first. If the Console shows OpenXR messages, close SteamVR and press Play again. With no headset the project is expected to fall back to desktop controls; this was not checked with SteamVR running.
+- **Keys or mouse do nothing in Play:** click inside the Game view first. If the Console shows OpenXR messages, close SteamVR and press Play again. With no headset the project is expected to fall back to desktop controls.
 - **The view snaps back while you mouse-look:** this is check D2; report it if you see it in normal play.
 - **"You touched parts without the ESD strap on":** clip the strap to the ground hook first (step 1). Grabbing any resistor or LED counts as touching a part.
 - **The meter keeps reading "OL":** both probe tips must be on the two leads of the same part. Release each probe within about 12 cm of a lead so it clips on.

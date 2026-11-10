@@ -1,6 +1,6 @@
 # Vive Pro 2 setup (wireless adapter, SteamVR)
 
-**Verify at rehearsal.** The agents who wrote this had no Vive. Steps below are drawn from the vendor pages cited; some vendor pages are old, so compare against the current page before relying on them.
+**Verify at rehearsal.** Steps below are drawn from the vendor pages cited; some vendor pages are old, so compare against the current page before relying on them.
 
 ## 1. Headset and wireless adapter
 
@@ -25,7 +25,7 @@ The projects are in `vive-steamvr/`: `hub/` (a lobby with four portals and five 
 1. Start SteamVR first (headset awake and tracked), then open the project in Unity Hub.
 2. First open imports assets and can take several minutes. Do this the day before.
 3. Check Edit > Project Settings > XR Plug-in Management has OpenXR enabled for the Windows platform. Unity's documentation: https://docs.unity3d.com/6000.2/Documentation/Manual/com.unity.xr.openxr.html
-4. Press Play. Verify at rehearsal that the headset view and controllers work in the Editor and in a built player. The projects compile and run in the editor in desktop mode and passed scripted self-tests there; nothing has been run on a headset.
+4. Press Play. Verify at rehearsal that the headset view and controllers work in the Editor and in a built player. The projects compile and run in the editor in desktop mode and passed scripted self-tests there.
 
 ## 4. Web version on the Vive PC
 

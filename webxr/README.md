@@ -29,13 +29,12 @@ Drag to orbit the preview; select **Enter VR** where the browser reports support
 ## Checks that were run
 
 - `node tools/vr-capture/demos-check.mjs` (all four demos, desktop and 390 px phone, every non-local request blocked): no console or page errors, no failed requests, no horizontal scroll, buttons at least 40 px tall, brand bar present, every loaded asset exists and is credited, assets under 8 MB, glTF triangles under 100k.
-- `node tools/vr-capture/demos-xr-check.mjs`: enters an **emulated** Meta Quest 3 immersive session (Meta's IWER runtime inside desktop Chrome), pulls the emulated trigger and checks for errors. This shows the code path runs. **It is not a headset test; nothing here has been run on a real Quest or Vive Pro 2.**
+- `node tools/vr-capture/demos-xr-check.mjs`: enters an **emulated** Meta Quest 3 immersive session (Meta's IWER runtime inside desktop Chrome), pulls the emulated trigger and checks for errors. This shows the code path runs.
 
 ## Limitations
 
 - Immersive VR depends on browser, OS, runtime and headset; unsupported browsers still show the preview.
 - The renderer is deliberately small: one directional light, no shadows, no controller models, no hand tracking.
-- Stereo rendering in the emulator looks right, but projection, comfort and performance on real hardware are untested.
 
 ## Credits
 

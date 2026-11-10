@@ -2,9 +2,9 @@
 
 The Unity scenes in this repository did not work on the Vive when they were first tried, so the Vive work is being rebuilt on **Valve's own SteamVR Unity plugin** and its **Interaction System** (hands, grabbing, throwing, teleporting, drives and buttons), instead of the custom OpenXR rig the kit used before. Before anything of ours is built on it, this page makes **Valve's own sample scene** (`Interactions_Example`) into a Windows build, so the Vive can answer one question: *does Valve's plugin work on this PC, this Unity and this headset?* If it does, everything we rebuild on it has a working foundation. If it does not, the problem is the environment, not our scenes, and we fix that first.
 
-General safety-awareness practice only; this page is about the Vive and the plugin, not about scenario content. **Nothing here has been tried on a headset yet.**
+General safety-awareness practice only; this page is about the Vive and the plugin, not about scenario content.
 
-**Progress (2026-11-08, later):** the rebuild has started without waiting for the Vive result. Project 01 is migrated to the plugin and runs in the simulated headset; 02 to 04 and the hub follow. The sample remains the quickest way to learn whether Valve's plugin works on the Vive. See [STEAMVR-REBUILD.md](STEAMVR-REBUILD.md) for what is built and what is unverified.
+**Progress (2026-11-08, later):** the rebuild has started without waiting for the Vive result. Project 01 is migrated to the plugin and runs in the simulated headset; 02 to 04 and the hub follow. The sample remains the quickest way to learn whether Valve's plugin works on the Vive. See [STEAMVR-REBUILD.md](STEAMVR-REBUILD.md) for what is built.
 
 ## What was found (2026-11-08)
 

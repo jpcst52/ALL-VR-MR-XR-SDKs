@@ -109,7 +109,7 @@ console.table(rows);
   const total = homeExamples.length;
   const vis = () => page.locator(".tile:not([hidden])").count();
   const guidesVis = async () => 0; // guides are on their own page now (checked in section 5)
-  if (await page.locator(".legend li").count() !== 3) problems.push("search: status legend should list 3 kinds");
+  if (await page.locator(".legend li").count() !== 2) problems.push("search: status legend should list 2 kinds");
   if (await page.locator("#q").isDisabled()) problems.push("search: box is disabled after load");
   await page.keyboard.press("/");
   if (!(await page.evaluate(() => document.activeElement && document.activeElement.id === "q"))) problems.push("search: '/' does not focus the box");
@@ -129,7 +129,7 @@ console.table(rows);
   if ((await vis()) !== total || (await page.inputValue("#q")) !== "") problems.push("search: Escape does not restore all tiles");
   console.log(`search: forklift=${hits}/${total} tiles`);
   if (shots) {
-    await page.fill("#q", "quest");
+    await page.fill("#q", "circuit");
     await page.screenshot({ path: join(repo, "docs", "images", "launcher-search.png"), fullPage: false });
     console.log("wrote docs/images/launcher-search.png");
   }

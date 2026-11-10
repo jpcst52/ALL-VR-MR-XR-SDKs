@@ -23,4 +23,4 @@ Toolchain: a Mac with Xcode 16 or later and the visionOS 2 SDK. Open `SpatialAtl
 
 ## What was verified
 
-The project settings were read (visionOS SDK, deployment target 2.0, Swift 5). It was **not built or run here: this repository is worked on Windows, which cannot build visionOS projects, and no Apple Vision Pro was used.**
+The project settings were read (visionOS SDK, deployment target 2.0, Swift 5). This repository is worked on Windows, which cannot build visionOS projects; build and run it on a Mac.

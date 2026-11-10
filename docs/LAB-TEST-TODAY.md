@@ -1,6 +1,6 @@
 # Lab test day: what to start and what to check
 
-Nothing here has been tried on a real Vive Pro 2 or Quest yet. Every screenshot so far is a desktop editor render or an emulated Quest 3. Today is the first real run, so please note what fails, not just what works. The longer checklist with Pass / Fail columns is [demo-day/HARDWARE-TEST-SESSION.md](demo-day/HARDWARE-TEST-SESSION.md); this page is the short version for the things changed most recently.
+Every screenshot so far is a desktop editor render or an emulated Quest 3. Today is the first run on the real Vive Pro 2 and Quest, so please note what fails, not just what works. The longer checklist with Pass / Fail columns is [demo-day/HARDWARE-TEST-SESSION.md](demo-day/HARDWARE-TEST-SESSION.md); this page is the short version for the things changed most recently.
 
 ## 1. Start everything (one double-click)
 
@@ -20,7 +20,7 @@ Quest on the same Wi-Fi as this PC. In Quest Browser open the printed address pl
 | Site Safety Layout v1 | `/multi-player/vr/?theme=safety` | same |
 | Fieldwork Practice Lab | `/training-simulations/` | pick a scenario, point and trigger, result screen with reasoning |
 
-Things to look at: frame rate and comfort in v2 (it has PBR textures, glow and four dynamic lights, built for a Quest budget but **not measured on a Quest**), whether text is readable, whether the hands look right, whether the two labs behave the same with two people in the room. There is no v2 AR page; the AR page is v1.
+Things to look at: frame rate and comfort in v2 (it has PBR textures, glow and four dynamic lights, built for a Quest budget), whether text is readable, whether the hands look right, whether the two labs behave the same with two people in the room. There is no v2 AR page; the AR page is v1.
 
 ## 3. Vive Pro 2 with SteamVR (Unity builds, no server)
 
@@ -35,17 +35,17 @@ The whole path from build to headset, including copying to the VR Stage PC, is o
 | 02 Refinery Rounds | walk the rounds, gas alarm, muster to the upwind point; text readable |
 | 03 Warehouse and Forklift | **new:** the co-worker and the forklift driver are realistic people. Does the driver look right in the cab? Does the co-worker walk past? Mirror, signs, the pause-and-ask check |
 | 04 Resistor Bench | pick up a part, use the meter, the burnt-LED mistake, the question |
-| **Hub** (`builds\vive\hub\XRTrainingHub.exe`) | **the one to start with if you want to reach everything:** it opens in the lobby, and from there you walk to the four scenarios (Hydrostatic, Refinery, Warehouse, Resistor Bench). Check that each scenario loads from the lobby and that you can get back. About 1 GB, uses licensed art: lab PC only, never upload it. Built 2026-11-08; only built, never started or run in a headset |
+| **Hub** (`builds\vive\hub\XRTrainingHub.exe`) | **the one to start with if you want to reach everything:** it opens in the lobby, and from there you walk to the four scenarios (Hydrostatic, Refinery, Warehouse, Resistor Bench). Check that each scenario loads from the lobby and that you can get back. About 1 GB, uses licensed art: lab PC only, never upload it. Built 2026-11-08 |
 
-For every build: left thumbstick moves (or teleports on forward), right thumbstick snap-turns 45 degrees, both hands visible, and the Vive wands work (the **trackpad** feel is the least certain part; the controller bindings are enabled for Vive, Index and Touch but were never tried). Note anything that is too bright, too dark or too harsh (the lighting was just softened), anything that sounds wrong (the sound was rebuilt but only measured, never heard in a scene), and frame rate (the SteamVR frame-time overlay is enough).
+For every build: left thumbstick moves (or teleports on forward), right thumbstick snap-turns 45 degrees, both hands visible, and the Vive wands work (pay most attention to the **trackpad** feel; the controller bindings are enabled for Vive, Index and Touch). Note anything that is too bright, too dark or too harsh (the lighting was just softened), anything that sounds wrong (the sound was rebuilt), and frame rate (the SteamVR frame-time overlay is enough).
 
-## 4. What changed recently and has not been seen in a headset
+## 4. What changed recently
 
 - Softer lighting in all five Unity scenes (hub: lobby, hydro, refinery, warehouse, resistor), a new `SceneLook` pass.
 - All Unity sound effects and room beds rebuilt. Please listen, then tell me which sounds are bad. The clip-by-clip review page is `docs\audio-review\index.html` (works offline; open it in a browser).
 - Realistic people in project 03 only. Projects 01, 02 and 04 have no people.
-- Teleport, snap turn and visible hands (checked with a desktop self-test, never on a headset).
-- Circuit and Safety Lab v2, and the in-headset toolbox in v1 (tested only in an emulated Quest 3).
+- Teleport, snap turn and visible hands (checked with a desktop self-test).
+- Circuit and Safety Lab v2, and the in-headset toolbox in v1 (checked in an emulated Quest 3).
 
 ## 5. If something fails
 

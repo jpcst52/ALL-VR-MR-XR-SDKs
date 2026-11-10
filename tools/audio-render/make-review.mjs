@@ -118,7 +118,7 @@ const sum = (rows, k) => rows.reduce((a, r) => a + Number(r[k]), 0) / rows.lengt
 // ---------------------------------------------------------------- README.md
 let md = `# Audio review: listen to every Unity sound
 
-**Read this first.** The model that made these sounds cannot hear. Every number below is a measurement of the waveform (levels, spectrum, loop seams), not a judgement of how it sounds. Nothing has been played through a Vive Pro 2. Please open \`index.html\` in a browser, click the players, and tell us which sounds are wrong by name (for example "valve_turn squeaks too much", "water_pour sounds like static").
+**Read this first.** The model that made these sounds cannot hear. Every number below is a measurement of the waveform (levels, spectrum, loop seams), not a judgement of how it sounds. Please open \`index.html\` in a browser, click the players, and tell us which sounds are wrong by name (for example "valve_turn squeaks too much", "water_pour sounds like static").
 
 - Open [index.html](index.html) (works offline: relative paths, no scripts needed to play). Use headphones if you can: that is how it is heard in the headset.
 - ${files} WAV files, ${(bytes / 1048576).toFixed(1)} MB, in \`wav/\`: 16-bit mono at each sound's own sample rate (32 kHz one-shots, 22.05 kHz loops; your browser resamples). One file per variation: the game picks them in a shuffled round robin.
@@ -168,7 +168,7 @@ h1{font-size:1.6rem;margin:.2em 0}h2{margin:1.6em 0 .4em;border-bottom:2px solid
 .p{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px}.p label{font-size:.75rem;color:var(--mut);display:block}audio{height:34px;width:260px;max-width:100%}
 </style></head><body><main>
 <h1>Unity sound review</h1>
-<p class="note"><strong>The model that made these sounds cannot hear.</strong> The numbers are measurements of the waveform, not opinions. Nothing has been played through a Vive Pro 2. Please listen (headphones if you can), then tell us which sounds are wrong, by name. Every clip is the exact one the game builds; ${files} files, ${(bytes / 1048576).toFixed(1)} MB. <a href="README.md">README</a>, <a href="report.csv">report.csv</a>.</p>
+<p class="note"><strong>The model that made these sounds cannot hear.</strong> The numbers are measurements of the waveform, not opinions. Please listen (headphones if you can), then tell us which sounds are wrong, by name. Every clip is the exact one the game builds; ${files} files, ${(bytes / 1048576).toFixed(1)} MB. <a href="README.md">README</a>, <a href="report.csv">report.csv</a>.</p>
 `;
 for (const [g, list] of GROUPS) {
   h += `<h2>${esc(g)}</h2>\n`;

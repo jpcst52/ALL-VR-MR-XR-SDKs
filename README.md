@@ -74,7 +74,7 @@ The Unity, Android, and Apple examples need their native toolchains and devices,
 | `unity-xri/` | Unity XR Interaction Toolkit | Grab selection color feedback |
 | `multi-player/vr/` | Three.js + WebXR | Circuit Lab **v1**: build and power electrical circuits together (the original look; also `?theme=safety`) |
 | `multi-player/ar/` | Three.js + WebXR | Site Safety Layout **v1**: shared AR layout with hit-test alignment |
-| `multi-player/ar-circuit/` | Three.js + WebXR | AR Circuit Lab: the v2 circuit bench placed on a real surface in AR, sharing rooms with the Circuit Lab pages (desktop tested only) |
+| `multi-player/ar-circuit/` | Three.js + WebXR | AR Circuit Lab: the v2 circuit bench placed on a real surface in AR, sharing rooms with the Circuit Lab pages |
 | `multi-player/v2/` | Three.js + WebXR | Circuit Lab and Site Safety Lab **v2**: the same rooms and rules with a lit workshop / safety bay, PBR parts and live effects (`?theme=safety` for the safety lab) |
 | `vive-steamvr/` | Unity 6, OpenXR / SteamVR | Hub lobby and four training projects (hydrostatic test, refinery rounds, warehouse and forklift, resistor bench) on a shared kit; [what each project is and how they fit together](docs/UNITY-PROJECTS-GUIDE.md) |
 | `training-simulations/` | Three.js + WebXR | Seventeen hands-on business, research, industrial safety and life-science (draft) practice scenarios |
@@ -107,7 +107,7 @@ Use `Ctrl+C` to stop the server. The libraries are bundled in `vendor/`, so the 
 
 ## GitHub Pages (WebXR on a headset browser)
 
-The browser examples are published as a static site at `https://jpcst52.github.io/xr-training-lab/` (workflow `.github/workflows/pages.yml`; build with `npm run build:site`, check with `npm run check:site`). Type the address or scan the QR code in a Quest, HoloLens 2, Vive XR or phone browser. The relay-based multiplayer pages load but cannot join a room on Pages. Not yet live and not tested on any headset: see [docs/GITHUB-PAGES.md](docs/GITHUB-PAGES.md). Windows player builds of the Unity projects for the VR Stage PC: [docs/BUILDS.md](docs/BUILDS.md).
+The browser examples are published as a static site at `https://jpcst52.github.io/xr-training-lab/` (workflow `.github/workflows/pages.yml`; build with `npm run build:site`, check with `npm run check:site`). Type the address or scan the QR code in a Quest, HoloLens 2, Vive XR or phone browser. The relay-based multiplayer pages load but cannot join a room on Pages. Not yet live: see [docs/GITHUB-PAGES.md](docs/GITHUB-PAGES.md). Windows player builds of the Unity projects for the VR Stage PC: [docs/BUILDS.md](docs/BUILDS.md).
 
 ## Multiplayer examples
 
