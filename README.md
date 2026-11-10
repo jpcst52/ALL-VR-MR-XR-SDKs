@@ -13,7 +13,6 @@ Small, separate examples that highlight a distinctive capability of each technol
 - [Examples](#examples)
 - [Getting started](#getting-started)
 - [Multiplayer examples](#multiplayer-examples)
-- [Fieldwork XR Practice Lab](#fieldwork-xr-practice-lab)
 - [VR emulator captures](#vr-emulator-captures)
 - [Research background](#research-background)
 - [Slide decks](#slide-decks)
@@ -49,12 +48,6 @@ Desktop captures of the browser examples running. Immersive XR sessions need a s
 | Circuit Lab v2 | Site Safety Lab v2 |
 |---|---|
 | [![Circuit Lab v2 desktop](multi-player/screenshots/v2-circuit-lab-desktop.png)](multi-player/v2/) | [![Site Safety Lab v2 desktop](multi-player/screenshots/v2-safety-lab-desktop.png)](multi-player/v2/?theme=safety) |
-
-### Fieldwork XR Practice Lab
-
-| Scenario catalog | Work at height | Electrical isolation |
-|---|---|---|
-| [![Practice Lab scenario catalog](training-simulations/screenshots/02-catalog.png)](training-simulations/) | [![Work at height task](training-simulations/screenshots/03-scenario-1-work-at-height.png)](training-simulations/) | [![Critical mistake in the electrical scenario](training-simulations/screenshots/06-critical-miss.png)](training-simulations/) |
 
 The Unity, Android, and Apple examples need their native toolchains and devices, so they have no screenshots here.
 
