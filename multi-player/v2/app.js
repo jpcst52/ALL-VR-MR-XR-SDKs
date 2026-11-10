@@ -36,11 +36,35 @@ const xrHint = document.querySelector("#xr-hint");
 const roomPattern = /^[a-z0-9][a-z0-9-]{0,23}$/i;
 
 if (params.has("room")) roomInput.value = params.get("room");
-if (!("xr" in navigator)) {
+// xrBlocked: this browser cannot start the page's immersive session, so the Enter button stays off and the desktop view is used.
+let xrBlocked = !("xr" in navigator);
+if (xrBlocked) {
   enterXrButton.disabled = true;
   enterXrButton.textContent = "WebXR unavailable";
   xrHint.hidden = false;
   xrHint.textContent = "WebXR is unavailable in this browser. You can still build together in desktop mode.";
+} else if (mode === "ar") {
+  // Desktop browsers have navigator.xr but no immersive-ar: say so up front instead of failing when the button is pressed.
+  navigator.xr.isSessionSupported("immersive-ar").catch(() => false).then((supported) => {
+    if (supported) return;
+    xrBlocked = true;
+    enterXrButton.disabled = true;
+    enterXrButton.textContent = "AR is not available on this device";
+    xrHint.hidden = false;
+    xrHint.textContent = "This browser cannot start an AR session. You can still build with everyone in desktop mode.";
+  });
+}
+// AR bench size. The board is 7 units across, far too big for a table, so an AR page can offer a size list (#ar-scale, or ?scale=).
+// Everyone in the same physical room must pick the same size, because part positions are shared in board units.
+const arScaleSelect = document.querySelector("#ar-scale");
+if (arScaleSelect && params.has("scale")) {
+  const wanted = [...arScaleSelect.options].find((option) => Number(option.value) === Number(params.get("scale")));
+  if (wanted) arScaleSelect.value = wanted.value;
+}
+function arScale() {
+  if (mode !== "ar") return 1;
+  const value = Number(arScaleSelect ? arScaleSelect.value : params.get("scale"));
+  return value >= 0.05 && value <= 1 ? value : 1;
 }
 
 // Join flow furniture, added here so the three pages share it: numbered steps, a note when the lite view is on, and a
@@ -78,8 +102,11 @@ connection.insertBefore(roomBar, status);
 leaveButton.addEventListener("click", () => leaveRoom());
 
 const scene = new THREE.Scene();
-const sceneColor = themeId === "safety" ? "#0a1426" : "#071433"; // deep Pitt navy
-scene.background = mode === "ar" ? null : new THREE.Color(sceneColor);
+// Deep Pitt navy behind the workshop and the bay. The AR page's desktop preview is a bright room, so it gets a pale backdrop;
+// that backdrop is taken away while an AR session runs (the camera view shows instead) and put back when it ends.
+const sceneColor = mode === "ar" ? "#dfe9f2" : themeId === "safety" ? "#0a1426" : "#071433";
+const desktopBackground = new THREE.Color(sceneColor);
+scene.background = desktopBackground;
 scene.fog = new THREE.Fog(sceneColor, 18, 46);
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 80);
 camera.position.set(2.3, 2.4, 3.5);
@@ -130,7 +157,7 @@ const keyLight = environment.key;
 const board = new THREE.Group();
 scene.add(board);
 
-const surface = buildBoardSurface(themeId);
+const surface = buildBoardSurface(themeId, mode);
 board.add(surface);
 
 const boardGuide = new THREE.Mesh(
@@ -330,7 +357,7 @@ function receive(message) {
       nameInput.disabled = true;
       roomInput.disabled = true;
       joinButton.disabled = true;
-      enterXrButton.disabled = !("xr" in navigator);
+      enterXrButton.disabled = xrBlocked;
       workspace.hidden = false;
       connection.classList.add("joined");
       roomLine.textContent = `Room "${message.room}"`;
@@ -862,10 +889,13 @@ demoButton.textContent = theme.examples?.length ? `Load: ${theme.examples[0].lab
   demoButton.after(row);
 }
 toggleButton.textContent = theme.toggleLabel;
-document.title = `${document.title.split("—")[0]}— ${theme.title}`;
-document.querySelector("h1").textContent = theme.title;
-document.querySelector(".heading > p:last-child").textContent = theme.pitch;
-document.querySelector("#controls").textContent = theme.controls;
+// A page that writes its own heading and controls text (the AR Circuit Lab) sets data-own-text on <body>.
+if (document.body.dataset.ownText === undefined) {
+  document.title = `${document.title.split("—")[0]}— ${theme.title}`;
+  document.querySelector("h1").textContent = theme.title;
+  document.querySelector(".heading > p:last-child").textContent = theme.pitch;
+  document.querySelector("#controls").textContent = theme.controls;
+}
 
 joinButton.addEventListener("click", () => joinRoom(false));
 roomInput.addEventListener("keydown", (event) => {
@@ -944,10 +974,29 @@ function makeGloveHand(side) {
     const length = [0.05, 0.062, 0.058, 0.046][finger];
     piece(leather, new THREE.CapsuleGeometry(0.0085, length, 4, 8), [x, -0.006, -0.04 - length / 2], [Math.PI / 2 + 0.35, 0, 0]); // fingers curl slightly toward the palm
   });
-  piece(leather, new THREE.CapsuleGeometry(0.01, 0.04, 4, 8), [side * 0.052, 0.002, -0.015], [Math.PI / 2 - 0.2, 0, side * 0.9]);
+  // thumb on the inner side of the hand (toward the other hand when the palm faces down)
+  piece(leather, new THREE.CapsuleGeometry(0.01, 0.04, 4, 8), [-side * 0.052, 0.002, -0.015], [Math.PI / 2 - 0.2, 0, -side * 0.9]);
   hand.add(new THREE.Mesh(mergeGeometries(leather), gloveMaterial), new THREE.Mesh(mergeGeometries(gold), cuffMaterial));
   hand.position.set(0, 0, -0.03);
+  // A hand holding a controller is on its side: thumb up, palm toward the other hand. The glove is modelled palm-down, so roll it.
+  hand.rotation.z = -side * Math.PI * 0.45;
   return hand;
+}
+// Which glove a grip shows. The glove is a rigid shape, so it is only for a held controller in VR:
+// - bare tracked hands get the jointed hand model instead (it bends with the real fingers), not a glove on top of it;
+// - in AR the real hand and controller are in view, so no glove is drawn over them;
+// - controller 0 is not always the left hand, so the side comes from the input source when it connects.
+function attachGloves(grip, index) {
+  const gloves = { left: makeGloveHand(-1), right: makeGloveHand(1) };
+  grip.add(gloves.left, gloves.right);
+  const show = (source) => {
+    const side = source?.handedness === "left" || source?.handedness === "right" ? source.handedness : index === 0 ? "left" : "right";
+    const wanted = mode !== "ar" && !source?.hand;
+    gloves.left.visible = wanted && side === "left";
+    gloves.right.visible = wanted && side === "right";
+  };
+  show(null);
+  grip.addEventListener("connected", (event) => show(event.data));
 }
 
 for (let index = 0; index < 2; index += 1) {
@@ -978,7 +1027,7 @@ for (let index = 0; index < 2; index += 1) {
   // A visible hand for every controller (a blue glove with a gold cuff), and a tracked hand when the headset sees bare hands.
   // Nothing is fetched: the stock controller models come from a CDN, which the offline demo cannot use.
   const grip = renderer.xr.getControllerGrip(index);
-  grip.add(makeGloveHand(index === 0 ? -1 : 1));
+  attachGloves(grip, index);
   scene.add(grip);
   const hand = renderer.xr.getHand(index);
   hand.add(handFactory.createHandModel(hand, "boxes"));
@@ -1004,7 +1053,9 @@ function onXrSelectStart(controller) {
     activeXrController = controller;
     return;
   }
-  if (mode === "ar" && hitWorldPoint) {
+  // AR on a phone: the part goes where the reticle (screen centre) meets the real surface. A tracked controller (headset AR)
+  // points at the aligned bench instead, like VR below.
+  if (mode === "ar" && hitWorldPoint && controller.userData.targetRayMode !== "tracked-pointer") {
     spawnAt(selectedPart, hitWorldPoint);
     return;
   }
@@ -1054,7 +1105,7 @@ function updateToolboxHover(time) {
 
 function updateControllerGrab() {
   if (!activeXrController || !drag) return;
-  if (mode === "ar" && hitWorldPoint) {
+  if (mode === "ar" && hitWorldPoint && activeXrController.userData.targetRayMode !== "tracked-pointer") {
     moveGrab(hitWorldPoint);
     return;
   }
@@ -1069,6 +1120,8 @@ function resetArAlignment() {
   arDirection = null;
   board.position.set(0, 0, 0);
   board.quaternion.identity();
+  board.scale.setScalar(1);
+  board.visible = true;
   reticle.visible = false;
   alignmentStatus.textContent = "Tap the shared origin marker, then a second marker along +Z.";
 }
@@ -1092,6 +1145,8 @@ function calibrateArOrigin(point) {
   const basis = new THREE.Matrix4().makeBasis(xAxis, up, direction);
   board.position.copy(arOrigin);
   board.quaternion.setFromRotationMatrix(basis);
+  board.scale.setScalar(arScale());
+  board.visible = true;
   arDirection = direction;
   arCalibrationStep = 2;
   toolbox.group.visible = true;
@@ -1125,7 +1180,9 @@ async function enterXr() {
         domOverlay: { root: document.body },
       });
       await renderer.xr.setSession(session);
+      scene.background = null; // the real room shows through
       await startArHitTesting(session);
+      board.visible = false; // nothing is drawn in the real room until the two alignment points are set
       document.body.classList.add("in-xr");
       xrHint.hidden = false;
       xrHint.textContent = "Tap the shared origin marker. Then tap the agreed +Z direction marker.";
@@ -1137,7 +1194,7 @@ async function enterXr() {
     console.error(`Could not start immersive ${mode.toUpperCase()}.`, error);
     updateStatus(error instanceof Error ? error.message : "The immersive session could not be started.");
   } finally {
-    enterXrButton.disabled = !isConnected();
+    enterXrButton.disabled = !isConnected() || xrBlocked;
   }
 }
 
@@ -1175,8 +1232,8 @@ function onXrSessionEnd() {
   drag = null;
   document.body.classList.remove("in-xr");
   xrHint.hidden = true;
-  enterXrButton.disabled = !isConnected();
-  if (mode === "ar") resetArAlignment();
+  enterXrButton.disabled = !isConnected() || xrBlocked;
+  if (mode === "ar") { resetArAlignment(); scene.background = desktopBackground; }
   updateStatus(`${mode.toUpperCase()} session ended. The shared room remains connected.`);
 }
 
@@ -1250,6 +1307,8 @@ function updateAvatars(time) {
     standing.forEach((peer, index) => peer.avatar.setStation(spread[index]));
   }
   for (const [id, peer] of peers) {
+    // In AR the other AR participants are real people in the same room, so their avatars are not drawn over them.
+    if (mode === "ar") peer.avatar.root.visible = !(renderer.xr.isPresenting && peer.mode === "ar");
     peer.avatar.setHolding(holders.has(id));
     peer.avatar.update(dt);
   }
@@ -1308,4 +1367,4 @@ window.addEventListener("beforeunload", () => {
   renderer.dispose();
 });
 
-enterXrButton.disabled = !isConnected();
+enterXrButton.disabled = !isConnected() || xrBlocked;

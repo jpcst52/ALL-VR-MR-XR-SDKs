@@ -91,6 +91,7 @@ export const DEMO_PAGES = [
   { id: "launcher", label: "Launcher", path: "/" },
   { id: "circuit", label: "Circuit Lab (VR)", path: "/multi-player/vr/" },
   { id: "safety", label: "Site Safety Layout (AR)", path: "/multi-player/ar/" },
+  { id: "ar-circuit", label: "AR Circuit Lab", path: "/multi-player/ar-circuit/" },
 ];
 
 /** URL list for each network adapter (plus localhost). */

@@ -101,7 +101,7 @@ for (const theme of themes) {
   check(`${label} toolbox is visible in VR`, visible);
   const handsVisible = await page.evaluate(() => {
     let gloves = 0;
-    window.__mp.scene.traverse((node) => { if (node.name === "glove-hand") gloves += 1; });
+    window.__mp.scene.traverse((node) => { if (node.name === "glove-hand" && node.visible) gloves += 1; });
     return gloves;
   });
   check(`${label} both hands have a visible model`, handsVisible === 2, `gloves ${handsVisible}`);

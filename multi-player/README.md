@@ -3,6 +3,7 @@
 Two browser-first examples share one lightweight WebSocket relay:
 
 - [`vr/`](./vr/): **Circuit Lab**, a collaborative electronics bench where participants snap together batteries, switches, bulbs, resistors, motors, and wires and see a live circuit result, with a desktop fallback.
+- [`ar-circuit/`](./ar-circuit/): **AR Circuit Lab**, the Circuit Lab bench placed on a real table or floor in immersive AR. It runs the v2 app in AR mode and shares rooms with the v1 and v2 Circuit Lab pages. Desktop tested only; no AR device has run it.
 - [`ar/`](./ar/): **Site Safety Layout**, a shared work-area safety planner (exits, extinguishers, first aid, muster point, hazard beacons, barriers) in immersive AR, with hit-test placement, a calibrated local reference frame, and a live checklist.
 
 The [combined slide deck](./Multiplayer-WebXR-Examples.pptx) explains how to run both examples and what they demonstrate. The [screenshot index](./screenshots/README.md) includes captures of the VR and AR desktop fallbacks.
@@ -42,7 +43,7 @@ The shared parts are generated from Three.js primitives. The room around the boa
 
   **Not measured: frame rate on a real Quest.** These are counts only (SwiftShader frame times mean nothing). The design target is 72 fps, with about 80 draw calls and under 30k triangles per eye and one normal-mapped lighting model with five lights; whether a Quest 3 holds 72 fps (and what a Quest 2 does) has to be measured on the headset, for example with the OVR Metrics Tool. If it is short, the first things to drop are the pendant lamps and light shafts, then normal maps.
 - **Verified** (all in desktop Chrome, an **emulated Quest 3**, never a real headset): `node tools/vr-capture/v2-check.mjs` runs 56 checks (join, toolbox add / examples / reset, Y / B / X, glove hands, frames drawn, environment map and PBR materials present, the light count constant, current dots follow the switch, terminal rings, a lit bulb or beacon gets a real light, draw-call and triangle budget); `npm test` adds `test/v2-flow.test.mjs` (current direction through every example) and `test/v2-assets.test.mjs` (imports resolve, vendored three, no CDN, the relay serves v2 and still serves v1). `node tools/vr-capture/toolbox-check.mjs` (v1, 41 checks) and all earlier tests still pass.
-- **Not verified:** a real Quest (look, comfort, frame rate, controller feel), a Vive, a phone, AR for v2 (there is no `v2/ar/` page yet; the code keeps the AR branch but it was not run), and how bright or dark the rooms look on a headset display.
+- **Not verified:** a real Quest (look, comfort, frame rate, controller feel), a Vive, a phone, AR for v2 (the [`ar-circuit/`](./ar-circuit/) page now uses the AR branch, but it has only been run in its desktop fallback), and how bright or dark the rooms look on a headset display.
 - **Capture:** `node multi-player/tools/v2-shots.mjs` writes `screenshots/v2-*.png` ([circuit desktop](./screenshots/v2-circuit-lab-desktop.png), [close-up](./screenshots/v2-circuit-lab-closeup.png), [bulb](./screenshots/v2-circuit-lab-bulb.png), [safety desktop](./screenshots/v2-safety-lab-desktop.png), [safety close-up](./screenshots/v2-safety-lab-closeup.png), and the emulated Quest 3 views [circuit](./screenshots/v2-circuit-lab-quest.png) and [safety](./screenshots/v2-safety-lab-quest.png)). The other participants in the desktop shots are scripted relay clients.
 - **Found while building it:** the existing glTF prop `bench_vice_01` has its mesh about 5 m off its origin, so in v1's full (non-lite) mode a vice appears in the middle of the board. v1 was left as it is; v2 leaves that prop out, and `v2-shots.mjs` checks that every prop it loads sits near where it was placed.
 
@@ -136,6 +137,7 @@ By default, the service listens on port `8443` over plain HTTP. Open the example
 
 - `http://localhost:8443/multi-player/vr/`
 - `http://localhost:8443/multi-player/ar/`
+- `http://localhost:8443/multi-player/ar-circuit/`
 
 For two desktop browsers on the same development machine, use two tabs and select the same room, such as `lab`. A room name is case-insensitive, 1-24 characters, and may contain letters, numbers, and hyphens. The example uses in-memory room state: it remains while at least one client stays connected and is cleared when the final participant leaves.
 
@@ -213,6 +215,9 @@ multi-player/
   vr/
     index.html        WebXR immersive-vr entry point
     README.md         VR-specific prerequisites, controls, and run notes
+  ar-circuit/
+    index.html        AR Circuit Lab: runs v2/app.js in AR mode (bench size chooser, two-point alignment)
+    README.md         placing the bench, what was and was not tested
   ar/
     index.html        WebXR immersive-ar hit-test entry point
     README.md         AR calibration, device, and hit-test guidance

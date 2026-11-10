@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="AR Circuit Lab: place a shared circuit bench on a real table or floor and build a circuit together. Join from a phone or headset in AR, or from a desktop browser.">
+    <title>Multiplayer AR — Circuit Lab</title>
+    <link rel="stylesheet" href="../../brand-kit/brand.css">
+    <link rel="stylesheet" href="../shared/style.css">
+    <link rel="stylesheet" href="../v2/v2.css">
+    <link rel="stylesheet" href="./ar-circuit.css">
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "../../vendor/three/three.module.js",
+          "three/addons/": "../../vendor/three/addons/"
+        }
+      }
+    </script>
+  </head>
+  <!-- The page runs the Circuit Lab v2 app (../v2/app.js) in its AR mode: same parts, same circuit rules, same relay rooms. -->
+  <body data-mode="ar" data-theme="circuits" data-own-text>
+    <main id="panel" class="panel">
+      <div class="panel-brand">
+        <div data-pitt-brand="compact"></div>
+        <a class="home-link" href="../../">All examples</a>
+      </div>
+      <header class="heading">
+        <p class="eyebrow">MULTIPLAYER WEBXR / AR</p>
+        <h1>AR Circuit Lab</h1>
+        <p>Put the shared circuit bench on a real table or floor. Everyone in the room sees the same parts, and the bulb lights for all of you.</p>
+      </header>
+      <nav class="version-nav" aria-label="Related pages">
+        <a href="../v2/">Open the VR / desktop Circuit Lab</a>
+      </nav>
+      <section class="connection" aria-label="Room connection">
+        <label for="name">Your name</label>
+        <input id="name" maxlength="20" autocomplete="nickname" value="AR Builder">
+        <label for="room">Room</label>
+        <input id="room" maxlength="24" autocomplete="off" value="lab">
+        <button id="join" type="button">Join room</button>
+        <p id="status" role="status" aria-live="polite">Join a room to start collaborating.</p>
+      </section>
+      <section id="workspace" class="workspace" hidden>
+        <p id="roster" class="roster">Participants: 0</p>
+        <div id="parts" class="parts" aria-label="Shared parts"></div>
+        <p id="summary" class="summary" role="status" aria-live="polite"></p>
+        <button id="load-demo" type="button" class="wide"></button>
+        <div class="actions">
+          <button id="toggle-selected" type="button" disabled>Toggle</button>
+          <button id="rotate-selected" type="button" disabled>Rotate 45°</button>
+        </div>
+        <div class="ar-size">
+          <label for="ar-scale">Bench size in AR</label>
+          <select id="ar-scale">
+            <option value="0.15">Table: about 1 m across</option>
+            <option value="0.25" selected>Large table or floor: 1.75 m</option>
+            <option value="0.5">Open floor: 3.5 m</option>
+            <option value="1">Full size: 7 m</option>
+          </select>
+        </div>
+        <button id="enter-xr" class="primary" type="button">Place the bench &amp; enter AR</button>
+        <button id="delete-selected" type="button" disabled>Delete selected</button>
+        <p id="alignment" class="alignment">In AR, aim the ring at the marker for the middle of the bench and tap. Then aim at a second marker toward the front of the bench and tap. Everyone uses the same two markers and the same bench size.</p>
+        <p id="controls" class="controls">Desktop: press a part button to add it (click the bench for more, Esc to stop). Drag to move, or use [ ] and the arrow keys; rotate with R. Touch the gold ends of parts so they connect, close the switch (T), and light the bulb. In AR on a phone: aim the ring at the bench and tap to add the last-chosen part, touch and hold a part to pick it up, aim to carry it, and lift your finger to put it down. In a headset: point a controller at the bench and use the trigger; Y opens and B closes a switch, X or A rotates.</p>
+      </section>
+    </main>
+    <p id="xr-hint" class="xr-hint" hidden></p>
+    <script type="module" src="../../brand-kit/brand.js"></script>
+    <script type="module" src="../v2/app.js"></script>
+  </body>
+</html>

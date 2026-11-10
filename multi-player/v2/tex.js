@@ -198,21 +198,25 @@ export function brushedSet({ size = 256, seed = 31, base = "#aab4c0", repeat = [
   }, { normalStrength: 1.2, repeat });
 }
 
-// Rubber work mat for the Circuit Lab bench: dark green-navy, a printed grid, tick marks and a corner legend.
-export function matSet({ size = 1024, grid = 28 } = {}) {
+// Work mat for the bench: a printed grid and a guide ring. The colours are options so each lab has its own mat:
+// the Circuit Lab uses a green cutting mat (MAT_GREEN), the AR Circuit Lab a pale pad with teal lines (MAT_AR).
+// inner/outer: centre and edge colour; line and ring: "r,g,b"; lineAlpha scales the grid (pale mats need a stronger line).
+export const MAT_GREEN = { inner: "#1f8a63", outer: "#0d4a37", line: "214,255,232", ring: "255,214,120" };
+export const MAT_AR = { inner: "#f6fafc", outer: "#cfdde8", line: "0,128,150", ring: "0,150,170", lineAlpha: 2.4 };
+export function matSet({ size = 1024, grid = 28, inner = "#143a63", outer = "#0a1f3d", line = "160,205,255", ring = "255,184,28", lineAlpha = 1 } = {}) {
   const colour = makeCanvas(size); const g = colour.getContext("2d");
   const grad = g.createRadialGradient(size / 2, size / 2, size * 0.1, size / 2, size / 2, size * 0.72);
-  grad.addColorStop(0, "#143a63"); grad.addColorStop(1, "#0a1f3d");
+  grad.addColorStop(0, inner); grad.addColorStop(1, outer);
   g.fillStyle = grad; g.fillRect(0, 0, size, size);
   const random = rng(77);
   for (let i = 0; i < 9000; i += 1) { g.fillStyle = `rgba(255,255,255,${random() * 0.035})`; g.fillRect(random() * size, random() * size, 1 + random() * 2, 1 + random() * 2); }
   const cell = size / grid;
-  g.strokeStyle = "rgba(160,205,255,0.16)"; g.lineWidth = 1.5;
+  g.strokeStyle = `rgba(${line},${Math.min(1, 0.16 * lineAlpha)})`; g.lineWidth = 1.5;
   for (let i = 0; i <= grid; i += 1) { g.beginPath(); g.moveTo(i * cell, 0); g.lineTo(i * cell, size); g.moveTo(0, i * cell); g.lineTo(size, i * cell); g.stroke(); }
-  g.strokeStyle = "rgba(160,205,255,0.34)"; g.lineWidth = 2.5;
+  g.strokeStyle = `rgba(${line},${Math.min(1, 0.34 * lineAlpha)})`; g.lineWidth = 2.5;
   for (let i = 0; i <= grid; i += 4) { g.beginPath(); g.moveTo(i * cell, 0); g.lineTo(i * cell, size); g.moveTo(0, i * cell); g.lineTo(size, i * cell); g.stroke(); }
-  g.strokeStyle = "rgba(255,184,28,0.55)"; g.lineWidth = 5; g.beginPath(); g.arc(size / 2, size / 2, size * 0.412, 0, Math.PI * 2); g.stroke();
-  g.setLineDash([14, 14]); g.lineWidth = 2; g.strokeStyle = "rgba(255,184,28,0.35)"; g.beginPath(); g.arc(size / 2, size / 2, size * 0.385, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+  g.strokeStyle = `rgba(${ring},${Math.min(1, 0.55 * lineAlpha)})`; g.lineWidth = 5; g.beginPath(); g.arc(size / 2, size / 2, size * 0.412, 0, Math.PI * 2); g.stroke();
+  g.setLineDash([14, 14]); g.lineWidth = 2; g.strokeStyle = `rgba(${ring},${Math.min(1, 0.35 * lineAlpha)})`; g.beginPath(); g.arc(size / 2, size / 2, size * 0.385, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
   const map = new THREE.CanvasTexture(colour); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 8;
   const heightData = new Float32Array(256 * 256);
   const n = wrapNoise(64, 64, 4);

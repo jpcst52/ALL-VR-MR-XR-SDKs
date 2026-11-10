@@ -7,9 +7,10 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { PITT, brandPlate, fontsReady } from "../../brand-kit/panels.js";
 import { loadTemplate, primitiveProp } from "../shared/world.js";
 import { loadWithFallback } from "../shared/avatar-logic.mjs";
-import { woodSet, concreteSet, wallSet, corrugatedSet, pegboardSet, brushedSet, matSet, bayFloorSet, labelTexture, refreshLabels, glowTexture, makeCanvas, rng } from "./tex.js";
+import { woodSet, concreteSet, wallSet, corrugatedSet, pegboardSet, brushedSet, matSet, MAT_GREEN, MAT_AR, bayFloorSet, labelTexture, refreshLabels, glowTexture, makeCanvas, rng } from "./tex.js";
 import { MAT, SPRITE_GLOW } from "./parts2.js";
 
+const AR_TEAL = "#00a3b4"; // the AR Circuit Lab's accent (bench rim, surface outline in its desktop preview room)
 const shared = (m) => { m.userData.shared = true; return m; };
 const std = (opts) => shared(new THREE.MeshStandardMaterial(opts));
 
@@ -69,15 +70,20 @@ export function makeEnvironment(renderer, scene, themeId, mode = "vr") {
 }
 
 // ------------------------------------------------------------------ the board surface
-export function buildBoardSurface(themeId) {
+// Each lab has its own bench so the three do not look alike: the Circuit Lab a green cutting mat on a wood edge, the Safety Lab
+// a painted concrete deck, and the AR Circuit Lab (mode "ar") a pale pad with teal lines on a white edge with a teal rim.
+export function buildBoardSurface(themeId, mode = "vr") {
+  const ar = mode === "ar" && themeId !== "safety";
   const group = new THREE.Group();
   group.name = "board-surface";
   const edgeWood = woodSet({ size: 256, planks: 6, seed: 14, light: "#a9763c", dark: "#5e3a1a", repeat: [6, 1] });
-  const edgeMat = std({ map: edgeWood.map, normalMap: edgeWood.normalMap, roughnessMap: edgeWood.roughnessMap, roughness: 1, metalness: 0 });
+  const edgeMat = ar
+    ? std({ color: "#eef3f7", roughness: 0.45, metalness: 0.05 })
+    : std({ map: edgeWood.map, normalMap: edgeWood.normalMap, roughnessMap: edgeWood.roughnessMap, roughness: 1, metalness: 0 });
   const side = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 3.5, 0.17, 96, 1, true), edgeMat);
   side.position.y = -0.005; side.castShadow = true; side.receiveShadow = true;
   group.add(side);
-  const surface = themeId === "safety" ? bayFloorSet({ size: 1024 }) : matSet({ size: 1024 });
+  const surface = themeId === "safety" ? bayFloorSet({ size: 1024 }) : matSet({ size: 1024, ...(ar ? MAT_AR : MAT_GREEN) });
   const topMat = std({ map: surface.map, normalMap: surface.normalMap, roughnessMap: surface.roughnessMap ?? null, roughness: themeId === "safety" ? 1 : 0.8, metalness: 0, normalScale: new THREE.Vector2(0.3, 0.3) });
   const top = new THREE.Mesh(new THREE.CircleGeometry(3.5, 96), topMat);
   top.rotation.x = -Math.PI / 2; top.position.y = 0.081; top.receiveShadow = true;
@@ -87,7 +93,9 @@ export function buildBoardSurface(themeId) {
   const rim = new THREE.Mesh(new THREE.TorusGeometry(3.5, 0.045, 10, 120), rimMat);
   rim.rotation.x = Math.PI / 2; rim.position.y = 0.083; rim.castShadow = true;
   group.add(rim);
-  const goldRim = new THREE.Mesh(new THREE.TorusGeometry(3.5, 0.016, 6, 120), new THREE.MeshStandardMaterial({ color: PITT.gold, metalness: 0.9, roughness: 0.25 }));
+  const goldRim = new THREE.Mesh(new THREE.TorusGeometry(3.5, ar ? 0.03 : 0.016, 6, 120), ar
+    ? new THREE.MeshStandardMaterial({ color: AR_TEAL, emissive: AR_TEAL, emissiveIntensity: 0.6, metalness: 0.2, roughness: 0.35 })
+    : new THREE.MeshStandardMaterial({ color: PITT.gold, metalness: 0.9, roughness: 0.25 }));
   goldRim.userData.shared = true; goldRim.material.userData.shared = true;
   goldRim.rotation.x = Math.PI / 2; goldRim.position.y = 0.1;
   group.add(goldRim);
@@ -348,6 +356,97 @@ function buildSafetyRoom(room, lod) {
   return group;
 }
 
+// The AR Circuit Lab's desktop preview. In AR the bench sits in the visitor's own room and no room is drawn, so the desktop view
+// stands in for "your room": a bright living space (pale floor, plain walls, a window, a sofa, shelves, a plant) with the kind of
+// surface outline an AR device draws on a floor it has found. It is never shown inside an AR session.
+function buildArPreviewRoom(room) {
+  const group = room;
+  const floorWood = woodSet({ size: 512, planks: 12, seed: 6, light: "#ead7b6", dark: "#c9a877", repeat: [12, 12] });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(42, 42), std({ map: floorWood.map, normalMap: floorWood.normalMap, roughnessMap: floorWood.roughnessMap, roughness: 1, metalness: 0, normalScale: new THREE.Vector2(0.5, 0.5) }));
+  floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; floor.name = "room-floor";
+  group.add(floor);
+
+  // "found surface" outline on the floor: a dashed teal square, corner brackets and a dot grid, as AR devices draw
+  const plane = makeCanvas(1024); const g = plane.getContext("2d");
+  g.fillStyle = "rgba(0,163,180,0.07)"; g.fillRect(60, 60, 904, 904);
+  g.fillStyle = "rgba(0,163,180,0.5)";
+  for (let y = 100; y <= 924; y += 48) for (let x = 100; x <= 924; x += 48) { g.beginPath(); g.arc(x, y, 3, 0, Math.PI * 2); g.fill(); }
+  g.strokeStyle = "rgba(0,163,180,0.85)"; g.lineWidth = 5; g.setLineDash([26, 18]); g.strokeRect(60, 60, 904, 904); g.setLineDash([]);
+  g.lineWidth = 14; g.lineCap = "square";
+  for (const [x, y, sx, sy] of [[60, 60, 1, 1], [964, 60, -1, 1], [60, 964, 1, -1], [964, 964, -1, -1]]) { g.beginPath(); g.moveTo(x + sx * 90, y); g.lineTo(x, y); g.lineTo(x, y + sy * 90); g.stroke(); }
+  const planeTex = new THREE.CanvasTexture(plane); planeTex.colorSpace = THREE.SRGBColorSpace; planeTex.anisotropy = 8;
+  const planeMesh = new THREE.Mesh(new THREE.PlaneGeometry(10.4, 10.4), shared(new THREE.MeshBasicMaterial({ map: planeTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, toneMapped: false })));
+  planeMesh.rotation.x = -Math.PI / 2; planeMesh.position.y = 0.006; planeMesh.name = "ar-surface-outline";
+  group.add(planeMesh);
+
+  // plain pale walls (no brand dado: this stands in for a visitor's room, not the lab)
+  const walls = wallSet({ size: 512, seed: 17, plaster: "#f4f1ea", band: false, repeat: [1, 1] });
+  const wallMat = std({ map: walls.map, normalMap: walls.normalMap, roughnessMap: walls.roughnessMap, roughness: 1, metalness: 0, normalScale: new THREE.Vector2(0.4, 0.4) });
+  const wallMerge = new Merge();
+  wallMerge.add("wall", new THREE.PlaneGeometry(15, 4.2), { pos: [0, 2.1, -7.5], uv: [15 / 4, 1] });
+  wallMerge.add("wall", new THREE.PlaneGeometry(15, 4.2), { pos: [-7.5, 2.1, 0], rot: [0, Math.PI / 2, 0], uv: [15 / 4, 1] });
+  wallMerge.add("wall", new THREE.PlaneGeometry(15, 4.2), { pos: [7.5, 2.1, 0], rot: [0, -Math.PI / 2, 0], uv: [15 / 4, 1] });
+  wallMerge.build({ wall: wallMat }, group, { shadow: false });
+
+  const merged = new Merge();
+  // skirting board
+  merged.box("gloss", 15, 0.14, 0.04, [0, 0.07, -7.47], { color: "#ffffff" });
+  merged.box("gloss", 0.04, 0.14, 15, [-7.47, 0.07, 0], { color: "#ffffff" });
+  merged.box("gloss", 0.04, 0.14, 15, [7.47, 0.07, 0], { color: "#ffffff" });
+  // sofa against the back wall, with cushions, and a rug in front of it
+  merged.box("matte", 3.4, 0.42, 1.05, [-2.6, 0.33, -6.85], { color: "#5f7f8f" });
+  merged.box("matte", 3.4, 0.6, 0.28, [-2.6, 0.82, -7.25], { color: "#56748a" });
+  for (const x of [-4.42, -0.78]) merged.box("matte", 0.26, 0.7, 1.05, [x, 0.47, -6.85], { color: "#56748a" });
+  for (const [x, c] of [[-3.7, "#f2c230"], [-2.6, "#eef2f6"], [-1.5, "#e8674a"]]) merged.box("matte", 0.62, 0.44, 0.16, [x, 0.78, -7.02], { color: c, rot: [-0.25, 0, 0] });
+  for (const [x, z] of [[-4.2, -6.45], [-1.0, -6.45], [-4.2, -7.25], [-1.0, -7.25]]) merged.cyl("metal", 0.03, 0.03, 0.12, [x, 0.06, z], { color: "#3a4352" }, 8);
+  merged.box("matte", 4.6, 0.02, 2.0, [-2.6, 0.012, -5.2], { color: "#d9c9a8" });
+  merged.box("matte", 4.3, 0.022, 1.7, [-2.6, 0.013, -5.2], { color: "#8fb5ae" });
+  // low bookcase on the back wall, to the right of the sofa
+  merged.box("matte", 2.6, 1.2, 0.36, [3.4, 0.6, -7.3], { color: "#f0e6d2" });
+  for (const y of [0.42, 0.82]) merged.box("matte", 2.5, 0.03, 0.34, [3.4, y, -7.28], { color: "#cdb48a" });
+  const random = rng(19);
+  const bookColours = ["#2f6fb5", "#e8674a", "#f2c230", "#1a9f61", "#7b2fa0", "#eef2f6", "#00a3b4"];
+  for (const y of [0.06, 0.46, 0.86]) { let x = 2.24; while (x < 4.5) { const w = 0.05 + random() * 0.07; const h = 0.22 + random() * 0.1; merged.box("gloss", w, h, 0.24, [x + w / 2, y + h / 2, -7.2], { color: bookColours[Math.floor(random() * bookColours.length)] }); x += w + 0.012 + (random() > 0.85 ? 0.2 : 0); } }
+  merged.cyl("gloss", 0.14, 0.1, 0.24, [2.6, 1.32, -7.28], { color: "#e8674a" }, 16);
+  // floor lamp in the corner, a plant by the window, and a side table by the sofa
+  merged.cyl("metal", 0.2, 0.22, 0.04, [6.6, 0.02, -6.6], { color: "#3a4352" }, 20);
+  merged.cyl("metal", 0.02, 0.02, 1.7, [6.6, 0.87, -6.6], { color: "#3a4352" }, 8);
+  merged.add("matte", new THREE.CylinderGeometry(0.2, 0.34, 0.4, 24, 1, true), { pos: [6.6, 1.85, -6.6], color: "#fff3d6" });
+  merged.cyl("gloss", 0.3, 0.22, 0.5, [-6.5, 0.25, 2.4], { color: "#f0e6d2" }, 20);
+  merged.cyl("matte", 0.03, 0.04, 0.7, [-6.5, 0.8, 2.4], { color: "#6b4a2b" }, 8);
+  for (const [dx, dy, dz, s] of [[0, 1.5, 0, 0.5], [0.28, 1.25, 0.1, 0.36], [-0.26, 1.3, -0.12, 0.38], [0.05, 1.2, -0.3, 0.32], [-0.08, 1.75, 0.16, 0.34]]) merged.add("matte", new THREE.IcosahedronGeometry(s, 1), { pos: [-6.5 + dx, dy, 2.4 + dz], color: "#2f8f5a" });
+  merged.cyl("matte", 0.36, 0.36, 0.04, [-0.2, 0.52, -6.75], { color: "#cdb48a" }, 24);
+  merged.cyl("metal", 0.03, 0.03, 0.5, [-0.2, 0.25, -6.75], { color: "#3a4352" }, 8);
+  merged.cyl("gloss", 0.06, 0.05, 0.1, [-0.2, 0.59, -6.75], { color: "#eef2f6" }, 14);
+  // window frame on the left wall (same window as the workshop, white frame)
+  const wz = -1.8;
+  for (const [w, h, d, y, z] of [[0.12, 0.12, 4.3, 3.2, wz], [0.12, 0.12, 4.3, 0.95, wz], [0.12, 2.35, 0.12, 2.1, wz - 2.1], [0.12, 2.35, 0.12, 2.1, wz + 2.1], [0.1, 2.3, 0.07, 2.1, wz]]) merged.add("gloss", new THREE.BoxGeometry(w, h, d), { pos: [-7.46, y, z], color: "#ffffff" });
+  merged.box("gloss", 0.3, 0.05, 4.5, [-7.35, 0.92, wz], { color: "#ffffff" });
+  // picture frames on the right wall
+  for (const [z, y, w, h, c] of [[-2.6, 2.3, 1.1, 0.8, "#8fb5ae"], [-1.2, 2.45, 0.7, 0.9, "#f2c230"], [0.0, 2.2, 0.9, 0.6, "#e8674a"]]) { merged.box("gloss", 0.04, h + 0.1, w + 0.1, [7.46, y, z], { color: "#ffffff" }); merged.box("matte", 0.045, h - 0.1, w - 0.1, [7.455, y, z], { color: c }); }
+  merged.build({ metal: MAT.metal, gloss: MAT.gloss, matte: MAT.matte }, group);
+
+  const windowMesh = new THREE.Mesh(new THREE.PlaneGeometry(4.1, 2.25), new THREE.MeshBasicMaterial({ map: skyTexture(), toneMapped: false }));
+  windowMesh.rotation.y = Math.PI / 2; windowMesh.position.set(-7.49, 2.1, wz);
+  group.add(windowMesh);
+  addGlow(group, [-7.2, 2.1, wz], "#e6f3ff", 6.5, 0.45);
+  addGlow(group, [6.6, 1.8, -6.6], "#ffdf9e", 1.8, 0.55);
+
+  // a framed note on the back wall, so nobody takes the preview for the AR view
+  const note = labelTexture(1024, 256, (c, w, h) => {
+    c.fillStyle = "#ffffff"; c.fillRect(0, 0, w, h); c.strokeStyle = AR_TEAL; c.lineWidth = 12; c.strokeRect(6, 6, w - 12, h - 12);
+    c.fillStyle = "#00205B"; c.textAlign = "center"; c.textBaseline = "middle";
+    c.font = "96px 'League Gothic', Impact, sans-serif"; c.fillText("DESKTOP PREVIEW", w / 2, h * 0.36);
+    c.fillStyle = "#0b5560"; c.font = "500 40px Roboto, sans-serif"; c.fillText("In AR this bench sits in your own room", w / 2, h * 0.72);
+  });
+  const noteMesh = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.8), shared(new THREE.MeshStandardMaterial({ map: note, roughness: 0.5 })));
+  noteMesh.position.set(-2.6, 2.75, -7.47);
+  group.add(noteMesh);
+  group.userData.signs = [note];
+  fontsReady.then(() => refreshLabels([note]));
+  return group;
+}
+
 // ------------------------------------------------------------------ props (optional glTF extras, desktop only)
 const PROPS = {
   circuits: [
@@ -387,7 +486,9 @@ export function buildRoom2({ themeId, mode, scene, renderer, withProps = true, s
   group.position.y = -0.09;
   scene.add(group);
   makeEnvironment(renderer, scene, themeId, mode);
-  if (themeId === "safety") buildSafetyRoom(group, false); else buildCircuitRoom(group, false);
+  // The AR Circuit Lab (mode "ar", circuits) shows a bright "your room" preview on the desktop instead of the workshop.
+  const arPreview = mode === "ar" && themeId !== "safety";
+  if (themeId === "safety") buildSafetyRoom(group, false); else if (arPreview) buildArPreviewRoom(group); else buildCircuitRoom(group, false);
 
   // light from the window (circuits) or the high bay windows (safety)
   const key = new THREE.DirectionalLight(themeId === "safety" ? "#fff4e0" : "#fff0d6", themeId === "safety" ? 3.4 : 3.0);
@@ -397,10 +498,10 @@ export function buildRoom2({ themeId, mode, scene, renderer, withProps = true, s
   Object.assign(key.shadow.camera, { left: -7.5, right: 7.5, top: 7.5, bottom: -7.5, near: 1, far: 22 });
   key.shadow.bias = -0.0005; key.shadow.normalBias = 0.03; key.shadow.radius = 4;
   scene.add(key);
-  const fill = new THREE.HemisphereLight(0xdbe8ff, themeId === "safety" ? 0x6a707a : 0x7a6a58, 0.7);
+  const fill = new THREE.HemisphereLight(0xdbe8ff, themeId === "safety" ? 0x6a707a : arPreview ? 0xd8c8a8 : 0x7a6a58, arPreview ? 1.1 : 0.7);
   scene.add(fill);
 
-  const list = (PROPS[themeId] ?? []);
+  const list = arPreview ? [] : (PROPS[themeId] ?? []); // the workshop's glTF props do not belong in the preview room
   const props = withProps ? list : [];
   const stats = { requested: props.length, loaded: 0, fallbacks: 0 };
   const propGroup = new THREE.Group(); propGroup.name = "props";
@@ -422,7 +523,7 @@ export function buildRoom2({ themeId, mode, scene, renderer, withProps = true, s
   const ready = Promise.all(loads).then(() => stats);
 
   return {
-    group, stats, ready, key, layout: { title: themeId === "safety" ? "Safety bay" : "Workshop" },
+    group, stats, ready, key, layout: { title: themeId === "safety" ? "Safety bay" : arPreview ? "Room preview" : "Workshop" },
     // AR: the real room shows instead. VR: the room stays but sits on the real floor (y = 0), without the glTF props or the shadow.
     applyXr(inXr, xrMode = "vr") {
       group.visible = !inXr || xrMode === "vr";

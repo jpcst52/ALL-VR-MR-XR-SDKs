@@ -958,11 +958,30 @@ function makeGloveHand(side) {
     hand.add(part);
   });
   const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(0.01, 0.04, 4, 8), gloveMaterial);
-  thumb.rotation.set(Math.PI / 2 - 0.2, 0, side * 0.9);
-  thumb.position.set(side * 0.052, 0.002, -0.015);
+  // thumb on the inner side of the hand (toward the other hand when the palm faces down)
+  thumb.rotation.set(Math.PI / 2 - 0.2, 0, -side * 0.9);
+  thumb.position.set(-side * 0.052, 0.002, -0.015);
   hand.add(thumb);
   hand.position.set(0, 0, -0.03);
+  // A hand holding a controller is on its side: thumb up, palm toward the other hand. The glove is modelled palm-down, so roll it.
+  hand.rotation.z = -side * Math.PI * 0.45;
   return hand;
+}
+// Which glove a grip shows. The glove is a rigid shape, so it is only for a held controller in VR:
+// - bare tracked hands get the jointed hand model instead (it bends with the real fingers), not a glove on top of it;
+// - in AR the real hand and controller are in view, so no glove is drawn over them;
+// - controller 0 is not always the left hand, so the side comes from the input source when it connects.
+function attachGloves(grip, index) {
+  const gloves = { left: makeGloveHand(-1), right: makeGloveHand(1) };
+  grip.add(gloves.left, gloves.right);
+  const show = (source) => {
+    const side = source?.handedness === "left" || source?.handedness === "right" ? source.handedness : index === 0 ? "left" : "right";
+    const wanted = mode !== "ar" && !source?.hand;
+    gloves.left.visible = wanted && side === "left";
+    gloves.right.visible = wanted && side === "right";
+  };
+  show(null);
+  grip.addEventListener("connected", (event) => show(event.data));
 }
 
 for (let index = 0; index < 2; index += 1) {
@@ -994,7 +1013,7 @@ for (let index = 0; index < 2; index += 1) {
   // A visible hand for every controller (a blue glove with a gold cuff), and a tracked hand when the headset sees bare hands.
   // Nothing is fetched: the stock controller models come from a CDN, which the offline demo cannot use.
   const grip = renderer.xr.getControllerGrip(index);
-  grip.add(makeGloveHand(index === 0 ? -1 : 1));
+  attachGloves(grip, index);
   scene.add(grip);
   const hand = renderer.xr.getHand(index);
   hand.add(handFactory.createHandModel(hand, "boxes"));

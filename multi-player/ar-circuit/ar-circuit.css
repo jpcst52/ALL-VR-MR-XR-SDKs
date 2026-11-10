@@ -1,0 +1,7 @@
+/* AR Circuit Lab: the bench-size chooser. Everything else comes from ../shared/style.css and ../v2/v2.css. */
+.ar-size { display: grid; grid-template-columns: auto 1fr; gap: 8px 10px; align-items: center; margin-top: 10px; }
+.ar-size select {
+  width: 100%; min-width: 0; min-height: 44px; padding: 8px 10px;
+  border: 1px solid var(--line-strong); border-radius: 9px; background: #031034; color: #fff; font: inherit;
+}
+.ar-size select:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }

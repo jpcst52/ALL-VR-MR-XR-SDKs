@@ -30,13 +30,17 @@ Re-shot after the realism upgrade (see [Rooms, props and people](../README.md#ro
 
 ![Test bay](./test-bay-avatars.png)
 
+## November 9, 2026: AR Circuit Lab
+
+[ar-circuit-desktop.png](./ar-circuit-desktop.png) is the [AR Circuit Lab](../ar-circuit/) page in its desktop preview, written by `node multi-player/tools/v2-shots.mjs`: a bright stand-in room with a pale bench and teal lines, the sample circuit loaded and the switch closed; the other participants are scripted relay clients. **It is not an AR session**; the AR path has not been run on any device or emulator.
+
 ## November 6, 2026: Lab v2 (new look)
 
 Produced by `node multi-player/tools/v2-shots.mjs` (desktop Chrome, software renderer, full detail: shadows and glTF props on). The other participants in the desktop shots are scripted relay clients; the Quest shots are an **emulated Meta Quest 3** (IWER) in lite mode, never a real headset. Render-cost numbers are in [v2-render-cost.json](./v2-render-cost.json) and the [multi-player README](../README.md#lab-v2-circuit-lab-and-safety-lab-with-a-new-look-v1-is-unchanged).
 
 | Capture | What it shows |
 |---|---|
-| [v2-circuit-lab-desktop.png](./v2-circuit-lab-desktop.png) | Circuit Lab v2: workshop with window light, a closed "Motor and bulb" circuit with current dots, the lit bulb and terminal rings. |
+| [v2-circuit-lab-desktop.png](./v2-circuit-lab-desktop.png) | Circuit Lab v2: workshop with window light and a green cutting-mat bench, a closed "Motor and bulb" circuit with current dots, the lit bulb and terminal rings. |
 | [v2-circuit-lab-closeup.png](./v2-circuit-lab-closeup.png) | Close-up of the battery, switch, motor and sagging wire. |
 | [v2-circuit-lab-bulb.png](./v2-circuit-lab-bulb.png) | The lit bulb (glass, filament, halo glow) next to the battery and switch. |
 | [v2-circuit-lab-quest.png](./v2-circuit-lab-quest.png) | Emulated Quest 3 inside the session: toolbox, glove hands, the room around the table-top board. |

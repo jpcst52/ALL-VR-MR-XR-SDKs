@@ -191,6 +191,23 @@
       "featured": true
     },
     {
+      "id": "circuit-lab-ar",
+      "title": "AR Circuit Lab (multiplayer AR)",
+      "summary": "Place the shared circuit bench on a real table or floor from a phone or headset. Same rooms as Circuit Lab v2, so the bulb lights for everyone.",
+      "section": "multiplayer",
+      "badges": [
+        "NEW",
+        "Browser",
+        "Needs relay on :8443"
+      ],
+      "status": "Desktop tested; AR not tested on a device",
+      "statusKind": "pending",
+      "url": "multi-player/ar-circuit/",
+      "screenshot": "multi-player/screenshots/ar-circuit-desktop.png",
+      "screenshotNote": "Desktop fallback, not AR",
+      "relay": true
+    },
+    {
       "id": "circuit-lab",
       "title": "Circuit Lab v1 (older look)",
       "summary": "The first version of the shared electronics bench, kept for comparison. Use v2 for demos.",
@@ -407,6 +424,22 @@
       "url": "multi-player/v2/",
       "screenshot": "multi-player/screenshots/v2-circuit-lab-quest.png",
       "screenshotNote": "Emulated Quest 3",
+      "relay": true
+    },
+    {
+      "id": "circuit-lab-ar-quest",
+      "title": "AR Circuit Lab in the Quest Browser",
+      "summary": "The shared circuit bench in passthrough AR: align on two markers, then point a controller at the bench. Needs HTTPS from the lab PC that the Quest trusts.",
+      "section": "quest",
+      "badges": [
+        "Quest",
+        "Needs relay on :8443"
+      ],
+      "status": "Hardware test pending; not emulated",
+      "statusKind": "pending",
+      "url": "multi-player/ar-circuit/",
+      "screenshot": "multi-player/screenshots/ar-circuit-desktop.png",
+      "screenshotNote": "Desktop fallback, not AR",
       "relay": true
     },
     {

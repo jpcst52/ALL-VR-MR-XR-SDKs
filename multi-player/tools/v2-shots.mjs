@@ -38,8 +38,8 @@ async function newPage({ width = 1440, height = 810, quest = false } = {}) {
   }
   return page;
 }
-async function join(page, theme, room, query = "lite=0") {
-  await page.goto(`${base}multi-player/v2/?theme=${theme}&${query}`);
+async function join(page, theme, room, query = "lite=0", path = "multi-player/v2/") {
+  await page.goto(`${base}${path}?theme=${theme}&${query}`);
   await page.fill("#name", "Builder");
   await page.fill("#room", room);
   await page.click("#join");
@@ -116,6 +116,27 @@ for (const lab of [
     await settle(page, 2500);
     await page.screenshot({ path: pathJoin(out, "v2-safety-lab-closeup.png") });
   }
+  guests.forEach((g) => g.close());
+  await page.context().close();
+}
+
+// -------- AR Circuit Lab, desktop preview (multi-player/ar-circuit). NOT an AR session: desktop Chrome cannot start one.
+if (wants("ar") || wants("desktop")) {
+  const room = `v2-ar-${Date.now() % 100000}`;
+  const page = await newPage();
+  await join(page, "circuits", room, process.env.FULL === "0" ? "lite=1" : "lite=0", "multi-player/ar-circuit/");
+  const guests = [peer("circuits", room, "Priya", "web"), peer("circuits", room, "Marcus", "web")];
+  await Promise.all(guests.map((g) => g.ready));
+  guests[0].send({ type: "cursor", position: [-2.4, -1.6] });
+  guests[1].send({ type: "cursor", position: [2.7, -1.5] });
+  await waitProps(page);
+  await loadExample(page, "Simple loop");
+  await page.evaluate(() => { document.querySelector("#panel").style.display = "none"; document.querySelector("#xr-hint").hidden = true; });
+  await settle(page, 4000);
+  await setView(page, [3.4, 2.7, 4.8], [-0.6, 0.5, -1.2]);
+  await settle(page, 2500);
+  await page.screenshot({ path: pathJoin(out, "ar-circuit-desktop.png") });
+  costs["ar-circuit desktop preview (full, shadows on)"] = await stats(page);
   guests.forEach((g) => g.close());
   await page.context().close();
 }

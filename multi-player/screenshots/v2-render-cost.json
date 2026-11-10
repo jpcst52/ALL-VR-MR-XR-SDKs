@@ -1,17 +1,24 @@
 {
   "circuits desktop (full, shadows on)": {
     "calls": 162,
-    "triangles": 84726,
+    "triangles": 85194,
     "textures": 56,
     "geometries": 86,
     "programs": 28
   },
   "safety desktop (full, shadows on)": {
     "calls": 199,
-    "triangles": 90448,
-    "textures": 77,
-    "geometries": 102,
+    "triangles": 90948,
+    "textures": 78,
+    "geometries": 108,
     "programs": 27
+  },
+  "ar-circuit desktop preview (full, shadows on)": {
+    "calls": 122,
+    "triangles": 58988,
+    "textures": 34,
+    "geometries": 58,
+    "programs": 21
   },
   "circuits emulated Quest 3 (in session, no shadow map)": {
     "calls": 158,

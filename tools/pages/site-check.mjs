@@ -115,7 +115,7 @@ try {
     report("launcher as github.io", problems);
     await context.close();
   }
-  for (const u of ["multi-player/vr/", "multi-player/ar/", "multi-player/hydrotest/"]) {
+  for (const u of ["multi-player/vr/", "multi-player/ar/", "multi-player/ar-circuit/", "multi-player/hydrotest/"]) {
     const { page, context, problems } = await open(`${PAGES_ORIGIN}${PREFIX}${u}`, { asPages: true });
     await page.waitForTimeout(2500);
     const txt = await page.locator("body").innerText();
