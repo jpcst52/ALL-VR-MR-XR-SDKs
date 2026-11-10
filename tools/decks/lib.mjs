@@ -129,7 +129,7 @@ export function callout(slide, C, str, { x, y, w, h = 0.6, color, name = "Callou
 export async function shot(slide, C, file, { x, y, w, h, caption, name = "Screenshot", crop }) {
   let source = sharp(file);
   if (crop) source = source.extract(crop);
-  const buffer = await source.png().toBuffer();
+  const buffer = await source.resize({ width: 1600, withoutEnlargement: true }).png({ compressionLevel: 9 }).toBuffer();
   const meta = await sharp(buffer).metadata();
   const captionH = caption ? 0.34 : 0;
   slide.addShape("roundRect", { x, y, w, h, rectRadius: 0.12, fill: { color: C.text2 }, line: { color: C.background2, width: 0.75, transparency: 75 }, objectName: `${name} frame` });
